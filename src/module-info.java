@@ -1,0 +1,9 @@
+/**
+ * 
+ */
+/**
+ * @author bencurrie
+ *
+ */
+module bitLogic {
+}
