@@ -12,7 +12,7 @@ public class Power extends Container{
 	
 
 	@Override
-	public void print() {
+	public String toString(String modif) {
 		
 		if(expo instanceof Power) {
 			Power expoPower = (Power)expo;
@@ -21,15 +21,15 @@ public class Power extends Container{
 				IntC expoPowerExpo = (IntC)expoPower.expo;
 				if(expoPowerExpo.value.equals(BigInteger.valueOf(-1))) {
 					if(expoPowerBase.value.equals(BigInteger.TWO)) {
-						System.out.print("sqrt(");
-						base.print();
-						System.out.print(')');
-						return;
+						modif+="sqrt(";
+						modif+=base.toString();
+						modif+=")";
+						return modif;
 					}else if(expoPowerBase.value.equals(BigInteger.valueOf(3))) {
-						System.out.print("cbrt(");
-						base.print();
-						System.out.print(')');
-						return;
+						modif+="cbrt(";
+						modif+=base.toString();
+						modif+=")";
+						return modif;
 					}
 				}
 			}
@@ -52,19 +52,19 @@ public class Power extends Container{
 		}
 		
 		if(div) {
-			System.out.print("1/");
+			modif+="1/";
 			if(base instanceof IntC) prBase = false;
 			
-			if(prBase) System.out.print('(');
-			base.print();
-			if(prBase) System.out.print(')');
+			if(prBase) modif+="(";
+			modif+=base.toString();
+			if(prBase) modif+=")";
 		}else if(!div) {
 			
-			if(prBase) System.out.print('(');
-			base.print();
-			if(prBase) System.out.print(')');
+			if(prBase) modif+="(";
+			modif+=base.toString();
+			if(prBase) modif+=")";
 		
-			System.out.print('^');
+			modif+="^";
 			
 			boolean prExpo = false;
 			
@@ -76,10 +76,11 @@ public class Power extends Container{
 					if( ((IntC)expoPower.expo).value.equals(BigInteger.valueOf(-1)) ) prExpo = true;
 			}
 			
-			if(prExpo) System.out.print('(');
-			expo.print();
-			if(prExpo) System.out.print(')');
+			if(prExpo) modif+="(";
+			modif+=expo.toString();
+			if(prExpo) modif+=")";
 		}
+		return modif;
 	}
 	@Override
 	public void classicPrint() {
@@ -103,8 +104,8 @@ public class Power extends Container{
 	}
 
 	@Override
-	public Container copy() {
-		return new Power(this.base.copy(),this.expo.copy());
+	public Container clone() {
+		return new Power(this.base.clone(),this.expo.clone());
 	}
 
 	@Override
@@ -116,9 +117,9 @@ public class Power extends Container{
 		if(expo instanceof IntC) {
 			BigInteger v = ((IntC)expo).value;
 			if(v.equals(BigInteger.ZERO)) return new IntC(1);
-			if(v.equals(BigInteger.ONE)) return base.copy();
+			if(v.equals(BigInteger.ONE)) return base.clone();
 		}
-		return this.copy();
+		return this.clone();
 	}
 	
 	Container baseZeroOrOne() {
@@ -127,11 +128,11 @@ public class Power extends Container{
 			if(v.equals(BigInteger.ZERO)) return new IntC(0);
 			if(v.equals(BigInteger.ONE)) return new IntC(1);
 		}
-		return this.copy();
+		return this.clone();
 	}
 	
 	Container powerIntC() {
-		if(!constant()) return this.copy();
+		if(!constant()) return this.clone();
 		if(base instanceof IntC && expo instanceof IntC) {
 			BigInteger expoVal = ((IntC)expo).value;
 			if(expoVal.equals(BigInteger.valueOf(-1))) return this;
@@ -153,7 +154,12 @@ public class Power extends Container{
 					
 					BigInteger root = ((IntC)expoPower.base).value;
 					BigInteger baseValue = ((IntC)base).value;
+					boolean flip = false;
 					
+					if(root.signum() == -1) {
+						flip = true;
+						root = root.abs();
+					}
 					if(!IntArith.Prime.isPrime(baseValue)) {
 						Product factors = IntArith.Prime.primeFactor(baseValue);
 						if(factors != null) {
@@ -179,8 +185,10 @@ public class Power extends Container{
 							}
 							
 							out.add(new Power(in,new Power(new IntC(root),new IntC(-1))));
+							Container outObj = out;
+							if(flip) outObj = new Power(out,new IntC(-1));
 							if(modified) {
-								return out.simplify();
+								return outObj.simplify();
 							}
 						}
 					}
@@ -208,7 +216,7 @@ public class Power extends Container{
 				if(powerRef.base instanceof IntC && powerRef.expo instanceof IntC) {
 					if(((IntC)powerRef.expo).value.equals(BigInteger.valueOf(-1))) {
 						
-						Container pwr = new Power(base.copy(),powerRef.copy()).simplify();
+						Container pwr = new Power(base.clone(),powerRef.clone()).simplify();
 						if(pwr instanceof IntC) return new Power(pwr,intRef).simplify();
 						
 					}
@@ -217,25 +225,25 @@ public class Power extends Container{
 			}
 			
 		}
-		return this.copy();
+		return this.clone();
 	}
 	
 	public Container baseContainsPower() {
-		if(!(base instanceof Power)) return this.copy();
+		if(!(base instanceof Power)) return this.clone();
 		Power basePower = (Power)base;
 		Product newExpo = new Product();
-		newExpo.add(this.expo.copy());
-		newExpo.add(basePower.expo.copy());
+		newExpo.add(this.expo.clone());
+		newExpo.add(basePower.expo.clone());
 		return new Power(basePower.base,newExpo.simplify());
 	}
 	
 	public Container distributeExpo() {
-		if(!(base instanceof Product)) return this.copy();
+		if(!(base instanceof Product)) return this.clone();
 		Product baseProduct = (Product)base;
 		
 		Product newProd = new Product();
 		for(Container c:baseProduct.containers) {
-			newProd.add(new Power(c.copy(),expo.copy()));
+			newProd.add(new Power(c.clone(),expo.clone()));
 		}
 		
 		return newProd.simplify();
@@ -245,127 +253,42 @@ public class Power extends Container{
 		
 		Product expoProductCopy = null;
 		if(expo instanceof Product)
-			expoProductCopy = (Product)expo.copy();
+			expoProductCopy = (Product)expo.clone();
 		else {
 			expoProductCopy = new Product();
-			expoProductCopy.add(expo.copy());
+			expoProductCopy.add(expo.clone());
 		}
 		
-		boolean hasLogInExpo = false;
-		
-		for(Container c:expoProductCopy.containers) {
-			if(c instanceof Power) {
-				Power cPower = (Power)c;
-				if (cPower.base instanceof Log) hasLogInExpo = true;
-			}else if(c instanceof Log) hasLogInExpo = true;
-		}
-		
-		if(!hasLogInExpo) return this.copy();
-		
-		expoProductCopy.add(new Log(base.copy()));
+		expoProductCopy.add(new Log(base.clone()));
 		
 		Container simpleExpoProductCopy = expoProductCopy.simplify();
-		if(simpleExpoProductCopy.equalStruct(expoProductCopy)) return this.copy();
 		return new Power(new E(),simpleExpoProductCopy);
 	}
 	
 	public Container baseEExpoWithLog() {
-		if(!(base instanceof E))return this.copy();
-		if(!(expo instanceof Product || expo instanceof Log)) return this.copy();
+		if(!(base instanceof E))return this.clone();
+		if(!(expo instanceof Product || expo instanceof Log)) return this.clone();
 		if(expo instanceof Product) {
-			Product expoProduct = (Product)expo.copy();
+			Product expoProduct = (Product)expo.clone();
 			Log log = null;
 			boolean found = false;
+			int count = 0;
 			for(int i = 0;i<expoProduct.containers.size();i++) {
 				Container temp = expoProduct.containers.get(i);
 				if(temp instanceof Log) {
 					log = (Log)temp;
 					expoProduct.containers.remove(i);
 					found = true;
-					break;
+					count++;
+					i--;
 				}
 			}
-			if(!found) return this.copy();
+			if(!found || count!=1) return this.clone();
 			return new Power(log.container,expoProduct.alone());
 		}else {
-			return ((Log)expo).container.copy();
+			return ((Log)expo).container.clone();
 		}
 		
-	}
-	
-	public Container baseIntExpoProductWithFrac() {
-		
-		Power modible = (Power)this.copy();
-		
-		if(modible.expo instanceof Product && modible.base instanceof IntC) {
-			Product expoProd = (Product)modible.expo;
-			
-			boolean moreThanInts = true;
-			
-			if(this.constant()) {
-				moreThanInts = false;
-				for(Container c:expoProd.containers) {
-					boolean justANumber = false;
-					if(c instanceof IntC) {
-						justANumber = true;
-					}else if(c instanceof Power) {
-						Power cPow = (Power)c;
-						if(cPow.base instanceof IntC && cPow.expo instanceof IntC) {
-							justANumber = true;
-						}
-					}
-					
-					if(!justANumber) {
-						moreThanInts = true;
-						break;
-					}
-					
-				}
-			}
-			
-			if(!moreThanInts) return modible;
-			
-			BigInteger num = BigInteger.ONE;
-			BigInteger den = BigInteger.ONE;
-			
-			for(int i = 0;i < expoProd.containers.size();i++) {
-				Container c = expoProd.containers.get(i);
-				if(c instanceof IntC) {
-					num = ((IntC)c).value;
-					expoProd.containers.remove(i);
-					i--;
-				}else if(c instanceof Power) {
-					
-					Power cPow = (Power)c;
-					
-					if(cPow.base instanceof IntC && cPow.expo instanceof IntC) {
-						if( ((IntC)cPow.expo).value.equals(BigInteger.valueOf(-1))) {
-							den = ((IntC)cPow.base).value;
-							expoProd.containers.remove(i);
-							i--;
-						}
-					}
-					
-				}
-			}
-			
-			BigInteger base = ((IntC)modible.base).value;
-			
-			Product frac = new Product();
-			frac.add(new IntC(num));
-			frac.add(new Power(new IntC(den),new IntC(-1)));
-			
-			Container check = new Power(new IntC(base),frac).simplify();
-			
-			if(check instanceof IntC) {
-				if( ((IntC)check).value.compareTo( base ) == -1) {
-					return new Power(check,modible.expo).simplify();
-				}else return this.copy();
-			}
-			
-		}
-		
-		return modible;
 	}
 	
 	public Container trigConvert() {
@@ -409,7 +332,7 @@ public class Power extends Container{
 			}
 		}
 		
-		return this.copy();
+		return this.clone();
 	}
 	@Override
 	public boolean containsVars() {
@@ -417,26 +340,39 @@ public class Power extends Container{
 	}
 	
 	public Container baseReduction() {
-		if(base instanceof IntC && this.containsVars()) {
-			IntC baseInt = (IntC)base;
-			Power newPow = IntArith.toPower(baseInt.value);
-			Product pr = new Product();
-			pr.add(newPow.expo);
-			pr.add(expo.copy());
-			return new Power(newPow.base,pr.simplify());
-		}else return this.copy();
+		if(base instanceof IntC) {
+			if(!IntArith.Prime.isPrime(((IntC)base).value)) {
+				IntC baseInt = (IntC)base;
+				Power newPow = IntArith.toPower(baseInt.value);
+				Product pr = new Product();
+				pr.add(newPow.expo);
+				pr.add(expo.clone());
+				return new Power(newPow.base,pr.simplify());
+			}
+		}
+		return this.clone();
 	}
 	
 	public Container desumIfSimpler() {
-		if(!(expo instanceof Sum)) return this.copy();
+		if(!(expo instanceof Sum || expo instanceof Product)) return this.clone();
+		if(!this.containsVars()) return this.clone();
 		Product out = new Product();
-		Sum expoSum = (Sum)expo.copy();
+		Sum expoSum = null;
+		if(expo instanceof Sum) {
+			expoSum = (Sum)expo.clone();
+		}else {
+			Container temp = ((Product)expo).seperateFraction();
+			if(temp instanceof Sum) {
+				expoSum = (Sum)temp;
+			}else return this.clone();
+		}
+		
 		int count = 0;
 		
 		for(int i = 0;i<expoSum.containers.size();i++) {
 			Container temp = expoSum.containers.get(i);
 			if(temp.equalStruct(new IntC(1))) continue;
-			Power original = new Power(base.copy(),temp.copy());
+			Power original = new Power(base.clone(),temp.clone());
 			Container simpler = original.simplify();
 			if(!original.equalStruct(simpler)) {
 				out.add(simpler);
@@ -445,11 +381,23 @@ public class Power extends Container{
 				i--;
 			}
 		}
-		out.add(new Power(base.copy(),expoSum));
+		out.add(new Power(base.clone(),expoSum));
 		
-		if(count == 0) return this.copy();
+		if(count == 0) return this.clone();
 		
 		return out.simplify();
+	}
+	
+	public Container negOneToNegOne() {
+		if(base instanceof IntC && expo instanceof IntC) {
+			IntC baseI = (IntC)base;
+			IntC expoI = (IntC)expo;
+			BigInteger mOne = BigInteger.valueOf(-1);
+			if(baseI.value.equals(mOne) && expoI.value.equals(mOne)) {
+				return new IntC(-1);
+			}
+		}
+		return this.clone();
 	}
 	
 	@Override
@@ -471,16 +419,13 @@ public class Power extends Container{
 		current = ((Power)current).expoTrick();//a^b -> e^(ln(a)*b) allows logs to cancel out 
 		
 		if(!(current instanceof Power)) return current;
+		current = ((Power)current).baseEExpoWithLog();//e^(ln(a)*b) -> a^b reverses expo trick //needs revision
+		
+		if(!(current instanceof Power)) return current;
 		current = ((Power)current).distributeExpo();//(x*y)^z -> x^z*y^z
 		
 		if(!(current instanceof Power)) return current;
-		current = ((Power)current).baseEExpoWithLog();//e^(ln(a)*b) -> a^b reverses expo trick
-		
-		if(!(current instanceof Power)) return current;
-		current = ((Power)current).desumIfSimpler();
-		
-		if(!(current instanceof Power)) return current;
-		current = ((Power)current).baseIntExpoProductWithFrac();//4^(x/2) -> 2^x
+		current = ((Power)current).desumIfSimpler();//e^(ln(x)+b) -> x*e^b
 		
 		if(!(current instanceof Power)) return current;
 		current = ((Power)current).baseReduction();//4^x -> 2^(2*x)
@@ -490,6 +435,9 @@ public class Power extends Container{
 		
 		if(!(current instanceof Power)) return current;
 		current = ((Power)current).baseZeroOrOne();//0^x -> 0 1^x -> 1
+		
+		if(!(current instanceof Power)) return current;
+		current = ((Power)current).negOneToNegOne();//(-1)^(-1) -> 1
 		
 		if(!(current instanceof Power)) return current;
 		current = ((Power)current).trigConvert();//sin(x)^2 -> (1-cos(2*x))/2

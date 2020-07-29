@@ -13,12 +13,13 @@ public class IntC extends Container{
 	public IntC() {
 	}
 	@Override
-	public void print() {
-		System.out.print(value);
+	public String toString(String modif) {
+		modif+=value.toString();
+		return modif;
 	}
 	@Override
 	public void classicPrint() {
-		print();
+		System.out.print(value);
 	}
 	@Override
 	public boolean equalStruct(Container other) {
@@ -29,7 +30,7 @@ public class IntC extends Container{
 		return false;
 	}
 	@Override
-	public Container copy() {
+	public Container clone() {
 		return new IntC(this.value);
 	}
 	@Override
@@ -42,7 +43,7 @@ public class IntC extends Container{
 	}
 	@Override
 	public Container simplify() {
-		return this.copy();
+		return this.clone();
 	}
 	@Override
 	public boolean containsVar(String name) {

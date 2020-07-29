@@ -2,7 +2,7 @@ package math.algebra;
 
 import java.util.ArrayList;
 
-public class List extends Container{
+public abstract class List extends Container{
 	public ArrayList<Container> containers;
 	public List() {
 		containers = new ArrayList<Container>();
@@ -37,14 +37,7 @@ public class List extends Container{
 		return false;
 	}
 	@Override
-	public void print() {
-		System.out.print('[');
-		for(int i = 0;i<containers.size();i++) {
-			containers.get(i).print();
-			if(i<containers.size()-1) System.out.print(',');
-		}
-		System.out.print(']');
-	}
+	public abstract String toString(String modif);
 	@Override
 	public void classicPrint() {
 		System.out.print('[');
@@ -60,11 +53,7 @@ public class List extends Container{
 		return equalList(other);
 	}
 	@Override
-	public Container copy() {
-		ArrayList<Container> listCopy = new ArrayList<Container>();
-		for(Container c:this.containers) listCopy.add(c.copy());
-		return new List(listCopy);
-	}
+	public abstract Container clone();
 	@Override
 	public boolean constant() {
 		for(Container c:containers) {
@@ -74,8 +63,8 @@ public class List extends Container{
 	}
 	public Container alone() {
 		int length = this.containers.size();
-		if(length == 1) return this.containers.get(0).copy();
-		return this.copy();
+		if(length == 1) return this.containers.get(0).clone();
+		return this.clone();
 	}
 	@Override
 	public boolean containsVars() {
@@ -85,21 +74,7 @@ public class List extends Container{
 		return false;
 	}
 	@Override
-	public Container simplify() {
-		
-		List temp = new List();
-		
-		for(Container c:this.containers) {
-			Container simplePart = c.simplify();
-			temp.add(simplePart);
-		}
-		Container current = temp;
-		
-		if(!(current instanceof List)) return current;
-		current = ((List)current).alone();
-		
-		return current;
-	}
+	public abstract Container simplify();
 	@Override
 	public boolean containsVar(String name) {
 		for(Container c:containers) {

@@ -79,7 +79,7 @@ public class Interpreter {
 							System.out.print(v.name+": undefined");
 						}else {
 							System.out.print(v.name+"=");
-							v.container.print();
+							System.out.println(v.container);
 						}
 						System.out.println();
 					}
@@ -123,17 +123,15 @@ public class Interpreter {
 					}else {
 						Container c = stringToContainer(command);
 						//c.classicPrint();
-						System.out.println(c.approx());
+						if(c.constant()) System.out.println("precalc aprox: "+c.approx());
 						long startTime = System.nanoTime();
 						Container csimp = c.simplify();
 						long endTime = System.nanoTime();
 						System.out.println("calculation time: "+(endTime-startTime)/1000000.0+" ms");
 						ans = csimp;
-						csimp.print();
-						System.out.println();
+						System.out.println("simple: "+csimp);
 						if(csimp.constant()) {
-							System.out.println();
-							System.out.print(csimp.approx());
+							System.out.println("afercalc aprox: "+csimp.approx());
 						}
 					}
 				}
@@ -141,9 +139,8 @@ public class Interpreter {
 				e.printStackTrace();
 				FileOutputStream fos;
 				try {
-					long time = System.currentTimeMillis();
 					Path currentRelativePath = Paths.get("");
-					fos = new FileOutputStream(new File(currentRelativePath.toAbsolutePath().toString()+"/"+time+"_log.txt"));
+					fos = new FileOutputStream(new File(currentRelativePath.toAbsolutePath().toString()+"/_log.txt"));
 					PrintStream ps = new PrintStream(fos);
 					e.printStackTrace(ps);
 					for(String s:inputHistory) {
@@ -155,7 +152,6 @@ public class Interpreter {
 					e3.printStackTrace();
 				}
 			}
-			System.out.println();
 		}
 	}
 	
@@ -282,7 +278,6 @@ public class Interpreter {
 			
 			for(int i = tokens.size()-1;i>-1;i--) {
 				Token t = tokens.get(i);
-				//special functions
 				
 				String lower = t.text.toLowerCase();
 				if(lower.equals("ln")||lower.equals("log")) {
@@ -332,7 +327,7 @@ public class Interpreter {
 								continue;
 							}
 							if(lower.equals("ans")) {
-								lastCont = ans.copy();
+								lastCont = ans.clone();
 								continue;
 							}
 							//
@@ -406,6 +401,7 @@ public class Interpreter {
 					//remove 
 					temp.text = temp.text.replaceAll("\\+","");
 					temp.text = temp.text.replaceAll("\\*","");
+					temp.text = temp.text.replaceAll("·","");
 					temp.text = temp.text.replaceAll("\\^","");
 					temp.text = temp.text.replaceAll("/","");
 					temp.text = temp.text.replaceAll("\\-","");
@@ -433,10 +429,10 @@ public class Interpreter {
 					else tokens.add(new Token(text.substring(indexOfLastFlip, i),false));
 					indexOfLastFlip = i;
 				}
-				if((text.charAt(i)=='+'||text.charAt(i)=='*'||text.charAt(i)=='^'||text.charAt(i)=='/' || text.charAt(i)=='-' || text.charAt(i)=='!' || text.charAt(i)=='|' || text.charAt(i)=='&')&&level[i]==0) {
+				if((text.charAt(i)=='+'||text.charAt(i)=='*'||text.charAt(i)=='·'||text.charAt(i)=='^'||text.charAt(i)=='/' || text.charAt(i)=='-' || text.charAt(i)=='!' || text.charAt(i)=='|' || text.charAt(i)=='&')&&level[i]==0) {
 					tokens.add(new Token(text.substring(indexOfLastFlip, i),false));
 					if(text.charAt(i)=='+') tokens.add(new Token("sum#",false,true));
-					else if(text.charAt(i)=='*') tokens.add(new Token("prod#",false,true));
+					else if(text.charAt(i)=='*' || text.charAt(i)=='·') tokens.add(new Token("prod#",false,true));
 					else if(text.charAt(i)=='^') tokens.add(new Token("pow#",false,true));
 					else if(text.charAt(i)=='/') tokens.add(new Token("div#",false,true));
 					else if(text.charAt(i)=='-') tokens.add(new Token("sub#",false,true));

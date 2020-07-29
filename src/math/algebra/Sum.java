@@ -13,7 +13,7 @@ public class Sum extends List{
 	
 
 	@Override
-	public void print() {
+	public String toString(String modif) {
 		for(int i = containers.size()-1;i>-1;i--) {
 			Container temp = containers.get(i);
 			
@@ -42,7 +42,7 @@ public class Sum extends List{
 			
 			
 			if(minus && temp instanceof Product) {
-				temp = temp.copy();
+				temp = temp.clone();
 				
 				Product tempProd = (Product)temp;
 				for(int j = 0;j<tempProd.containers.size();j++) {
@@ -64,21 +64,22 @@ public class Sum extends List{
 			}
 			
 			
-			if(minus) System.out.print('-');
+			if(minus) modif+="-";
 			
-			if(i != containers.size()-1&& !minus) System.out.print('+');
+			if(i != containers.size()-1&& !minus) modif+="+";
 			
 			boolean pr = false;
 			if(temp instanceof Sum) pr = true;
 			
 			
-			if(pr) System.out.print('(');
-			temp.print();
-			if(pr) System.out.print(')');
+			if(pr) modif+="(";
+			modif+=temp.toString();
+			if(pr) modif+=")";
 			
 			
 			
 		}
+		return modif;
 	}
 	
 	@Override
@@ -98,14 +99,14 @@ public class Sum extends List{
 	}
 
 	@Override
-	public Container copy() {
+	public Container clone() {
 		ArrayList<Container> listCopy = new ArrayList<Container>();
-		for(Container c:this.containers) listCopy.add(c.copy());
+		for(Container c:this.containers) listCopy.add(c.clone());
 		return new Sum(listCopy);
 	}
 	
 	public Container addIntC() {
-		Sum newSum = (Sum)this.copy();
+		Sum newSum = (Sum)this.clone();
 		BigInteger num = BigInteger.ZERO;
 		BigInteger den = BigInteger.ONE;
 		for(int i = 0;i<newSum.containers.size();i++) {
@@ -195,7 +196,7 @@ public class Sum extends List{
 	}
 	
 	public Container merge() {
-		Sum newSum = (Sum)this.copy();
+		Sum newSum = (Sum)this.clone();
 		for(int i = 0;i<newSum.containers.size();i++) {
 			Container temp = newSum.containers.get(i);
 			if(temp instanceof Sum) {
@@ -210,13 +211,13 @@ public class Sum extends List{
 	
 	public Container alone() {
 		int length = this.containers.size();
-		if(length == 1) return this.containers.get(0).copy();
+		if(length == 1) return this.containers.get(0).clone();
 		if(length == 0) return new IntC(0);
-		return this.copy();
+		return this.clone();
 	}
 	
 	public Container combineProduct() {
-		if(containers.size()<2) return this.copy();
+		if(containers.size()<2) return this.clone();
 		boolean justInts = true;
 		for(Container c:containers) {
 			if(!(c instanceof IntC)) {
@@ -224,14 +225,14 @@ public class Sum extends List{
 				break;
 			}
 		}
-		if(justInts) return this.copy();
+		if(justInts) return this.clone();
 		
-		Sum modSum = (Sum)this.copy();
+		Sum modSum = (Sum)this.clone();
 		Sum newSum = new Sum();
 		for(int i = 0;i<modSum.containers.size();i++) {
 			Sum sum = new Sum();
 			Container temp = modSum.containers.get(i);
-			Container original = temp.copy();
+			Container original = temp.clone();
 			if(temp instanceof Product) {
 				Product tempProduct = (Product)temp;
 				Product productForSum = new Product();
@@ -248,7 +249,7 @@ public class Sum extends List{
 			}else sum.add(new IntC(1));
 			boolean found = false;
 			for(int j = i+1;j < modSum.containers.size();j++) {
-				Container compare = modSum.containers.get(j).copy();
+				Container compare = modSum.containers.get(j).clone();
 				if(temp.equalStruct(compare)) {
 					modSum.containers.remove(j);
 					sum.add(new IntC(1));
@@ -290,7 +291,7 @@ public class Sum extends List{
 	}
 	
 	public Container logCompression() {
-		Sum modible = (Sum)this.copy();
+		Sum modible = (Sum)this.clone();
 		
 		Product pr = new Product();
 		Log log = new Log(pr);
@@ -308,7 +309,7 @@ public class Sum extends List{
 			}
 		}
 		
-		if(count == 1) return this.copy();
+		if(count == 1) return this.clone();
 		
 		if(pr.containers.size()>0) {
 			modible.add(log);
@@ -319,8 +320,7 @@ public class Sum extends List{
 	}
 	
 	public Container combineFractions() {
-		//if(this.containsVars())return this.copy();
-		Sum modible = (Sum)this.copy();
+		Sum modible = (Sum)this.clone();
 		boolean frac = false;
 		for(Container c:modible.containers) {
 			if(c instanceof Product) {
@@ -371,16 +371,16 @@ public class Sum extends List{
 					{
 						Product pr = new Product();
 						pr.add(num);
-						pr.add(denTemp.copy());
+						pr.add(denTemp.clone());
 						newNum.add(pr);
 					}
 					{
 						Product pr = new Product();
-						pr.add(numTemp.copy());
-						pr.add(den.copy());
+						pr.add(numTemp.clone());
+						pr.add(den.clone());
 						newNum.add(pr);
 					}
-					den.add(denTemp.copy());
+					den.add(denTemp.clone());
 					num = newNum;
 				}else if(c instanceof Power) {
 					boolean inverse = false;
@@ -388,7 +388,7 @@ public class Sum extends List{
 					if(cPower.expo instanceof IntC) {
 						if(((IntC)cPower.expo).value.equals(BigInteger.valueOf(-1))){
 							Sum newNum = new Sum();
-							newNum.add(den.copy());
+							newNum.add(den.clone());
 							{
 								Product pr = new Product();
 								pr.add(num);
@@ -396,20 +396,20 @@ public class Sum extends List{
 								newNum.add(pr);
 							}
 							num = newNum;
-							den.add(cPower.base.copy());
+							den.add(cPower.base.clone());
 							inverse = true;
 						}
 					}
 					if(!inverse) {
 						Product numPart = new Product();
 						numPart.add(c);
-						numPart.add(den.copy());
+						numPart.add(den.clone());
 						num.add(numPart);
 					}
 				}else {
 					Product numPart = new Product();
 					numPart.add(c);
-					numPart.add(den.copy());
+					numPart.add(den.clone());
 					num.add(numPart);
 				}
 			}
@@ -427,16 +427,16 @@ public class Sum extends List{
 	}
 	
 	public Container factorOut() {
-		if(containers.size()<2) return this.copy();
-		if(!this.containsVars()) return this.copy();
+		if(containers.size()<2) return this.clone();
+		if(!this.containsVars()) return this.clone();
 		//
-		Sum modible = (Sum)this.copy();
+		Sum modible = (Sum)this.clone();
 		Product factoredParts = new Product();
 		//
 		
 		//
 		Product firstElement = null;
-		Container first = modible.containers.get(0).copy();
+		Container first = modible.containers.get(0).clone();
 		if(first instanceof Product) firstElement = (Product)first;
 		else {
 			Product pr = new Product();
@@ -496,16 +496,16 @@ public class Sum extends List{
 				boolean neg = false;
 				
 				if(c instanceof Power) {
-					Power temp = (Power)c;
+					Power temp = (Power)c;;
 					if(temp.expo instanceof IntC)
-						cPow = (Power)c;
-					else cPow = new Power(c,new IntC(1));
-				}
-				else cPow = new Power(c,new IntC(1));
+						cPow = (Power)c.clone();
+					else cPow = new Power(c.clone(),new IntC(1));
+				}else cPow = new Power(c.clone(),new IntC(1));
+				
 				if(((IntC)cPow.expo).value.signum() == -1) 
 					neg = true;
 				
-				BigInteger largestExpo = ((IntC)cPow.expo).value;
+				BigInteger smallestExpo = ((IntC)cPow.expo).value;
 				
 				//the sign of all exponents should be the same
 				
@@ -521,12 +521,63 @@ public class Sum extends List{
 					
 					boolean foundSim = false;
 					for(Container c2:tempProd.containers) {
-						///Power 
+						Power c2Pow = null;
+						
+						if(c2 instanceof Power) {
+							Power tempC2Pow = (Power)c2;
+							if(tempC2Pow.expo instanceof IntC ) {
+								c2Pow = tempC2Pow;
+							}else c2Pow = new Power(c2,new IntC(1));
+						}else c2Pow = new Power(c2,new IntC(1));
+						
+						if(c2Pow.base.equalStruct(cPow.base)) {
+							if(((IntC)c2Pow.expo).value.signum()==-1 == neg)
+							foundSim = true;
+							if(smallestExpo.abs().compareTo(((IntC)c2Pow.expo).value.abs()) == 1) {
+								smallestExpo = ((IntC)c2Pow.expo).value;
+							}
+							break;
+						}
 					}
-					
+					if(!foundSim) continue outer;
 				}
 				
+				cPow.expo = new IntC(smallestExpo);
+				
+				
+				//removal
+				for(int i = 0;i<modible.containers.size();i++) {
+					Container temp = modible.containers.get(i);
+					Product tempProd = null;
+					if(temp instanceof Product)
+						tempProd = (Product)temp;
+					else {
+						tempProd = new Product();
+						tempProd.add(temp);
+					}
 					
+					for(int j = 0;j<tempProd.containers.size();j++) {
+						Container c2 = tempProd.containers.get(j);
+						Power c2Pow = null;
+						
+						if(c2 instanceof Power) {
+							Power tempC2Pow = (Power)c2;
+							if(tempC2Pow.expo instanceof IntC ) {
+								c2Pow = tempC2Pow;
+							}else c2Pow = new Power(c2,new IntC(1));
+						}else c2Pow = new Power(c2,new IntC(1));
+						
+						if(c2Pow.base.equalStruct(cPow.base)) {
+							
+							((IntC)c2Pow.expo).value = ((IntC)c2Pow.expo).value.subtract(smallestExpo);
+							tempProd.containers.set(j, c2Pow);
+							break;
+						}
+					}
+					modible.containers.set(i, tempProd);
+				}
+				//
+				factoredParts.add(cPow);
 			}
 			
 		}
@@ -534,6 +585,7 @@ public class Sum extends List{
 		Product pr = new Product();
 		pr.add(modible);
 		pr.add(factoredParts);
+
 		
 		if(factoredParts.containers.size()>0)
 			return pr.simplify();
@@ -543,7 +595,7 @@ public class Sum extends List{
 	public Container simplify() {
 		if(showSteps) {
 			System.out.println("simplifying sum");
-			print();
+			classicPrint();
 			System.out.println();
 		}
 		
@@ -554,6 +606,7 @@ public class Sum extends List{
 			temp.add(simplePart);
 		}
 		current = temp;
+		
 		
 		if(!(current instanceof Sum)) return current;
 		current = ((Sum)current).merge();//(x+y)+z -> x+y+z
@@ -575,6 +628,7 @@ public class Sum extends List{
 		
 		if(!(current instanceof Sum)) return current;
 		current = ((Sum)current).alone();//empty sum
+		
 		return current;
 	}
 	@Override

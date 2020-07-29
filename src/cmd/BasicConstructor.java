@@ -95,13 +95,7 @@ public class BasicConstructor {
 		}else if(choice == 6) {
 			out = new E();
 		}else if(choice == 7) {
-			System.out.println("how many elements");
-			long n = in.nextLong();
-			List s = new List();
-			for(int i = 0;i<n;i++) {
-				s.add(makeContainer());
-			}
-			out = s;
+			
 		}else if(choice == 8) {
 			System.out.println("describe expression");
 			out = new Cos(makeContainer());

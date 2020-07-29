@@ -10,12 +10,12 @@ public class Truth {
 		this.right = right;
 	}
 	public void print() {
-		left.print();
+		System.out.print(left);
 		System.out.print('=');
-		right.print();
+		System.out.print(right);
 	}
-	public Truth copy() {
-		return new Truth(left.copy(),right.copy());
+	public Truth clone() {
+		return new Truth(left.clone(),right.clone());
 	}
 	public Truth simplify() {
 		return new Truth(left.simplify(),right.simplify());
@@ -28,7 +28,7 @@ public class Truth {
 		Truth current = null;
 		{//all one side //the left side
 			Sum sum = new Sum();
-			sum.add(left.copy());
+			sum.add(left.clone());
 			Product pr = new Product();
 			pr.add(right);
 			pr.add(new IntC(-1));
@@ -45,7 +45,7 @@ public class Truth {
 			current.left = current.left.simplify();
 			
 			if(current.equalStruct(oldCurrent)) break simpleiso;
-			oldCurrent  = current.copy();
+			oldCurrent  = current.clone();
 			//
 			
 			if(current.left instanceof Sum) {
@@ -96,7 +96,7 @@ public class Truth {
 						rightJustZero = true;
 						Product prLeft = (Product)current.left;
 						for(Container c:prLeft.containers) {
-							Truth tr = new Truth(c.copy(),new IntC(0));
+							Truth tr = new Truth(c.clone(),new IntC(0));
 							ArrayList<Truth> list = tr.solve(name);
 							for(Truth t:list) {
 								solutions.add(t);
@@ -167,24 +167,24 @@ public class Truth {
 									{
 										Product pr = new Product();
 										pr.add(new IntC(2));
-										pr.add(nonSVarPr.copy());
-										pr.add(xTerm.copy());
+										pr.add(nonSVarPr.clone());
+										pr.add(xTerm.clone());
 										innerSum.add(pr);
 									}
-									innerSum.add(nonSVarSm.copy());
+									innerSum.add(nonSVarSm.clone());
 									
 									Sum outerSum = new Sum();
 									outerSum.add(new Power(innerSum,new IntC(2)));
 									{
 										Product pr = new Product();
 										pr.add(new IntC(-1));
-										pr.add(new Power(nonSVarSm.copy(),new IntC(2)));
+										pr.add(new Power(nonSVarSm.clone(),new IntC(2)));
 										outerSum.add(pr);
 									}
 									Product pr = new Product();
 									pr.add(outerSum);
 									pr.add(new Power(new IntC(4),new IntC(-1)));
-									pr.add(new Power(nonSVarPr.copy(),new IntC(-1)));
+									pr.add(new Power(nonSVarPr.clone(),new IntC(-1)));
 									
 									current.left = pr;
 									
@@ -221,11 +221,11 @@ public class Truth {
 						current.left = pow.base;
 						current.right = new Power(current.right,new Power(pow.expo,new IntC(-1)));
 					}else {
-						Truth v1 = new Truth(pow.base.copy(),new Power(current.right,new Power(pow.expo,new IntC(-1))));
+						Truth v1 = new Truth(pow.base.clone(),new Power(current.right,new Power(pow.expo,new IntC(-1))));
 						Product pr = new Product();
 						pr.add(new IntC(-1));
 						pr.add(new Power(current.right,new Power(pow.expo,new IntC(-1))));
-						Truth v2 = new Truth(pow.base.copy(),pr);
+						Truth v2 = new Truth(pow.base.clone(),pr);
 						
 						
 						ArrayList<Truth> soluV1 = v1.solve(name);

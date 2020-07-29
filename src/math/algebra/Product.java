@@ -12,7 +12,7 @@ public class Product extends List{
 	}
 
 	@Override
-	public void print() {
+	public String toString(String modif) {
 		
 		boolean minus = false;
 		
@@ -30,7 +30,7 @@ public class Product extends List{
 		}
 		
 		if(minus) {
-			modible = (Product)this.copy();
+			modible = (Product)this.clone();
 			for(int i = 0;i<modible.containers.size();i++) {
 				Container temp = modible.containers.get(i);
 				if(temp instanceof IntC) {
@@ -41,26 +41,44 @@ public class Product extends List{
 					}
 				}
 			}
-			System.out.print("-");
+			modif+="-";
 		}
 		
 		if(modible.containers.size()>0) {
-			if(modible.containers.get(modible.containers.size()-1) instanceof Power) {
-				Power p = (Power)modible.containers.get(modible.containers.size()-1);
-				if(p.expo instanceof IntC) {
-					if( ((IntC)p.expo).value.equals(BigInteger.valueOf(-1)) ) {
-						Container obj = p;
-						modible.containers.remove(modible.containers.size()-1);
-						modible.containers.add(0, obj);
+			int indexToMoveToBack = -1;
+			for(int i = 0;i<modible.containers.size();i++) {
+				//find non fraction and put it in the last element in modible
+				Container temp = modible.containers.get(i);
+				if(temp instanceof Power) {
+					Power tempPow = (Power)temp;
+					if(tempPow.expo instanceof IntC) {
+						IntC tempPowExpo = (IntC)tempPow.expo;
+						if(tempPowExpo.value.equals(BigInteger.valueOf(-1))) {
+							continue;
+						}else {
+							indexToMoveToBack = i;
+							break;
+						}
+					}else {
+						indexToMoveToBack = i;
+						break;
 					}
+				}else {
+					indexToMoveToBack = i;
+					break;
 				}
-				
+			}
+			
+			if(indexToMoveToBack != -1) {
+				Container mem = modible.containers.get(indexToMoveToBack);
+				modible.containers.remove(indexToMoveToBack);
+				modible.containers.add(mem);
 			}
 			
 			if(modible.containers.get(modible.containers.size()-1) instanceof Power) {
 				Power first = (Power)modible.containers.get(modible.containers.size()-1);
 				if(first.expo instanceof IntC) {
-					if(((IntC)first.expo).value.equals(BigInteger.valueOf(-1))) System.out.print('1');
+					if(((IntC)first.expo).value.equals(BigInteger.valueOf(-1))) modif+="1";
 				}
 			}
 		}
@@ -81,19 +99,20 @@ public class Product extends List{
 			}
 			
 			
-			if(div) System.out.print('/');
-			else if(i != modible.containers.size()-1) System.out.print('*');
+			if(div) modif+="/";
+			else if(i != modible.containers.size()-1) modif+="·";
 			
 			
 			boolean pr = false;
 			if(temp instanceof Sum) pr = true;
 			else if(temp instanceof Product) pr = true;
 			
-			if(pr)System.out.print('(');
-			temp.print();
-			if(pr)System.out.print(')');
+			if(pr)modif+="(";
+			modif+=temp.toString();
+			if(pr)modif+=")";
 			
 		}
+		return modif;
 	}
 	@Override
 	public void classicPrint() {
@@ -112,14 +131,14 @@ public class Product extends List{
 	}
 
 	@Override
-	public Container copy() {
+	public Container clone() {
 		ArrayList<Container> listCopy = new ArrayList<Container>();
-		for(Container c:this.containers) listCopy.add(c.copy());
+		for(Container c:this.containers) listCopy.add(c.clone());
 		return new Product(listCopy);
 	}
 	
 	public Container multiplyIntC() {
-		Product newProduct = (Product)this.copy();
+		Product newProduct = (Product)this.clone();
 		BigInteger prod = BigInteger.ONE;
 		BigInteger inverseProd = BigInteger.ONE;
 		for(int i = 0;i<newProduct.containers.size();i++) {
@@ -160,7 +179,7 @@ public class Product extends List{
 	}
 	
 	public Container merge() {
-		Product newProduct = (Product)this.copy();
+		Product newProduct = (Product)this.clone();
 		for(int i = 0;i<newProduct.containers.size();i++) {
 			Container temp = newProduct.containers.get(i);
 			if(temp instanceof Product) {
@@ -175,13 +194,13 @@ public class Product extends List{
 	
 	public Container alone() {
 		int length = this.containers.size();
-		if(length == 1) return this.containers.get(0).copy();
+		if(length == 1) return this.containers.get(0).clone();
 		if(length == 0) return new IntC(1);
-		return this.copy();
+		return this.clone();
 	}
 	
 	public Container addPowersInProduct() {
-		Product oldProduct = (Product)this.copy();
+		Product oldProduct = (Product)this.clone();
 		Product newProd = new Product();
 		for(int i = 0;i<oldProduct.containers.size();i++) {
 			Sum expoSum = new Sum();
@@ -218,18 +237,9 @@ public class Product extends List{
 		return newProd;
 	}
 	
-	
-	public Container distribute() {
-		
-		
-		
-		return this.copy();
-		
-	}
-	
 	public Container expoSameIntCBase(){
 		
-		Product modible = (Product)this.copy();
+		Product modible = (Product)this.clone();
 		
 		Product out = new Product();
 		
@@ -283,10 +293,10 @@ public class Product extends List{
 				Power cPow = (Power)c;
 				if(cPow.expo instanceof IntC) {
 					if(((IntC)cPow.expo).value.equals(BigInteger.valueOf(-1)) ) {
-						den.add(cPow.base.copy());
-					}else num.add(c.copy());
-				}else num.add(c.copy());
-			}else num.add(c.copy());
+						den.add(cPow.base.clone());
+					}else num.add(c.clone());
+				}else num.add(c.clone());
+			}else num.add(c.clone());
 		}
 		
 		Product newProd = new Product();
@@ -356,12 +366,12 @@ public class Product extends List{
 		
 		for(Container c:containers) {
 			if(c instanceof IntC)
-				num = ((IntC)c).value;
+				num = num.multiply(((IntC)c).value);
 			else if(c instanceof Power) {
 				Power cPow = (Power)c;
 				if(cPow.base instanceof IntC && cPow.expo instanceof IntC) {
 					if(((IntC)cPow.expo).value.equals(BigInteger.valueOf(-1)) )
-						den = ((IntC)cPow.base).value;
+						den = den.multiply(((IntC)cPow.base).value);
 				}
 			}
 		}
@@ -369,7 +379,7 @@ public class Product extends List{
 		//go through each element if base is intc and expo contains vars see if num or den can be divided by it
 
 		if(!(num.equals(BigInteger.ONE) && den.equals(BigInteger.ONE))) {
-			Product modible = (Product)this.copy();
+			Product modible = (Product)this.clone();
 			
 			for(int i = 0;i<modible.containers.size();i++) {
 				Container temp = modible.containers.get(i);
@@ -388,18 +398,21 @@ public class Product extends List{
 							boolean didSomething = false;
 							BigInteger count = BigInteger.ZERO;
 							if(base.signum() == 1) {
-								while(num.mod(base).equals(BigInteger.ZERO)) {
+								
+								
+								while(num.mod(base).equals(BigInteger.ZERO) && !num.equals(BigInteger.ZERO)) {
 									num = num.divide(base);
 									didSomething = true;
 									count = count.add(BigInteger.ONE);
 								}
 							
 							
-								while(den.mod(base).equals(BigInteger.ZERO)) {
+								while(den.mod(base).equals(BigInteger.ZERO) && !den.equals(BigInteger.ZERO)) {
 									den = den.divide(base);
 									didSomething = true;
 									count = count.add(BigInteger.valueOf(-1));
 								}
+								
 							}
 							if(didSomething) {
 								Sum sm = new Sum();
@@ -430,12 +443,111 @@ public class Product extends List{
 			return modible;
 		}
 		
-		return this.copy();
+		return this.clone();
 	}
 	
-	public Container fracNumSimp() {
+	public Container distribute() {
+		//check for a sum
+		if(this.containsVars()) return this.clone();
 		
-		return this.copy();
+		boolean foundAtLeastOne = false;
+		for(Container c:this.containers) {
+			if(c instanceof Sum) {
+				foundAtLeastOne = true;
+				break;
+			}
+		}
+		if(!foundAtLeastOne) return this.clone();
+		
+			
+		Product modible = (Product)this.clone();
+		Sum sum = null;
+		
+		for(Container c:modible.containers) {
+			if(c instanceof Sum) {
+				sum = (Sum)c;
+			}
+		}
+		
+		modible.containers.remove(sum);
+		
+		boolean nevermind = false;
+		for(Container c:modible.containers) {
+			if(c instanceof Power) {
+				Power cPow = (Power)c;
+				if(cPow.expo instanceof IntC) {
+					IntC cPowInt = (IntC)cPow.expo;
+					if(cPowInt.value.equals(BigInteger.valueOf(-1))) {
+						nevermind = true;
+						break;
+					}
+				}
+			}
+		}
+		if(nevermind) {
+			modible.add(sum);
+			return modible;
+		}
+		
+		for(int i = 0;i<sum.containers.size();i++) {
+			Product temp = null;
+			if(sum.containers.get(i) instanceof Product) {
+				temp = (Product)sum.containers.get(i);
+			}else {
+				temp = new Product();
+				temp.add(sum.containers.get(i));
+			}
+			
+			temp.add(modible.clone());
+			sum.containers.set(i, temp);
+		}
+		return sum.simplify();
+		
+	}
+	
+	public Container seperateFraction() {
+		//check if it has a sum as numerator and rest is denominator
+		
+		Product modible = (Product)clone();
+		int count = 0;
+		
+		Sum sm = null;
+		for(Container c:modible.containers) {
+			if(c instanceof Sum) {
+				sm = (Sum)c;
+				count++;
+			}else if(c instanceof Power){
+				Power cPow = (Power)c;
+				if((cPow.expo instanceof IntC)) {
+					if(!((IntC)cPow.expo).value.equals(BigInteger.valueOf(-1))) return modible;
+				}else return modible;
+			}else return modible;
+		}
+		if(count>1 || count == 0) return modible;
+		
+		modible.containers.remove(sm);
+		//distribute denominator to each element
+		//simplify every object in the sum
+		//return sum
+		for(int i = 0;i<sm.containers.size();i++) {
+			Container c = sm.containers.get(i);
+			Product pr = null;
+			if(c instanceof Product) {
+				pr = (Product)c;
+			}else {
+				pr = new Product();
+				pr.add(c);
+			}
+			pr.add(modible.clone());
+			
+			Container replace = pr.seperateFraction();
+			replace = replace.simplify();
+			
+			if(replace instanceof Product) replace = ((Product)replace).seperateFraction();
+			sm.containers.set(i, replace);
+		}
+		
+		return sm.merge();
 	}
 	
 	@Override
@@ -468,15 +580,14 @@ public class Product extends List{
 		current = ((Product)current).addPowersInProduct();//x^2*x^3->x^5
 		
 		if(!(current instanceof Product)) return current;
-		current = ((Product)current).divideToPower();//12*2^x->2^(x+2)*3
-		
-		if(!(current instanceof Product)) return current;
-		current = ((Product)current).distribute();//5*(a+b) -> 5*a+5*b
+		current = ((Product)current).divideToPower();//12*2^x->2^(x+2)*3 also multiples constants
 		
 		//cancel integers in fractions
 		if(!(current instanceof Product)) return current;
-		current = ((Product)current).multiplyIntC();//2*5->10
-		//remove ones
+		current = ((Product)current).multiplyIntC();//changes (-1*(3)^(-1)*) -> (-3)^(-1). removes useless ones
+		
+		if(!(current instanceof Product)) return current;
+		current = ((Product)current).distribute();
 		
 		if(!(current instanceof Product)) return current;
 		current = ((Product)current).alone();//empty product

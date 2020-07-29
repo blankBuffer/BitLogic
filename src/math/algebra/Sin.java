@@ -14,10 +14,11 @@ public class Sin extends Trig{
 	}
 
 	@Override
-	public void print() {
-		System.out.print("sin(");
-		container.print();
-		System.out.print(')');
+	public String toString(String modif) {
+		modif+="sin(";
+		modif+=container.toString();
+		modif+=")";
+		return modif;
 	}
 	
 	@Override
@@ -37,8 +38,8 @@ public class Sin extends Trig{
 	}
 
 	@Override
-	public Container copy() {
-		return new Sin(container.copy());
+	public Container clone() {
+		return new Sin(container.clone());
 	}
 	
 	public Container unitCircle() {
@@ -72,7 +73,7 @@ public class Sin extends Trig{
 		}
 		if (container.equalStruct(threePiOver2))
 			return new IntC(-1);
-		return this.copy();
+		return this.clone();
 	}
 
 	public Container periodicUnitCircle() {
@@ -92,7 +93,7 @@ public class Sin extends Trig{
 
 			if (hasPi) {
 				Sum out = new Sum();
-				out.add(container.copy());
+				out.add(container.clone());
 				Product prod = new Product();
 				int over = (int) (container.approx() / (Math.PI * 2));
 				prod.add(new IntC(over));
@@ -104,7 +105,7 @@ public class Sin extends Trig{
 			}
 
 		}
-		return this.copy();
+		return this.clone();
 	}
 
 	public Container odd() {
@@ -123,7 +124,7 @@ public class Sin extends Trig{
 				if (value.signum() == -1) {
 					Product out = new Product();
 					out.add(new IntC(-1));
-					out.add(new Sin(new Power(new IntC(value.multiply(BigInteger.valueOf(-1))), cPower.expo.copy())));
+					out.add(new Sin(new Power(new IntC(value.multiply(BigInteger.valueOf(-1))), cPower.expo.clone())));
 					return out.simplify();
 				}
 			}
@@ -143,11 +144,11 @@ public class Sin extends Trig{
 						BigInteger value = ((IntC) cPower.base).value;
 						if (value.signum() == -1)
 							sign *= -1;
-						out.add(new Power(new IntC(value.abs()), cPower.expo.copy()));
+						out.add(new Power(new IntC(value.abs()), cPower.expo.clone()));
 					} else
-						out.add(c.copy());
+						out.add(c.clone());
 				} else
-					out.add(c.copy());
+					out.add(c.clone());
 			}
 			if (sign == -1) {
 				Product pr = new Product();
@@ -157,28 +158,31 @@ public class Sin extends Trig{
 			} else
 				return new Sin(out.simplify());
 		}
-		return this.copy();
+		return this.clone();
 	}
 	
 	public Container sumSep() {
 		
-		Sin modible = (Sin)this.copy();
+		Sin modible = (Sin)this.clone();
 		
 		if(modible.container instanceof Sum) {
 			//try to simplify a term in the sum
 			Sum containerSum = (Sum)modible.container;
 			
 			for(Container c:containerSum.containers) {
-				Sin sin = new Sin(c.copy());
+				if(!c.constant()) continue;
+				if(!c.containsVar("π")) continue;
+				if(c.containsVar("e")) continue;
+				Sin sin = new Sin(c.clone());
 				Container simpSin = sin.simplify();
 				if(!simpSin.equalStruct(sin)) {
 					
-					Container simpCos = new Cos(c.copy());
+					Container simpCos = new Cos(c.clone());
 					
 					containerSum.containers.remove(c);
 					
-					Sin remainSin = new Sin(containerSum.copy());
-					Cos remainCos = new Cos(containerSum.copy());
+					Sin remainSin = new Sin(containerSum.clone());
+					Cos remainCos = new Cos(containerSum.clone());
 					
 					Sum sm = new Sum();
 					Product pr1 = new Product();
@@ -203,7 +207,13 @@ public class Sin extends Trig{
 	public Container simplify() {
 		
 		Container current = new Sin(this.container.simplify());
-
+		
+		
+		if(current instanceof Sin) {
+			Sin currentSin = (Sin)current;
+			if(currentSin.container instanceof Product) currentSin.container = ((Product)currentSin.container).seperateFraction();
+		}
+		
 		if (!(current instanceof Sin))
 			return current;
 		current = ((Sin) current).odd();

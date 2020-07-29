@@ -11,7 +11,7 @@ public class Pi extends Var{
 	}
 
 	@Override
-	public Container copy() {
+	public Container clone() {
 		return new Pi();
 	}
 	@Override

@@ -53,12 +53,13 @@ public class Var extends Container{
 		return true;
 	}
 	@Override
-	public void print() {
-		System.out.print(name);
+	public String toString(String modif) {
+		modif+=name;
+		return modif;
 	}
 	@Override
 	public void classicPrint() {
-		print();
+		System.out.print(name);
 	}
 	@Override
 	public boolean equalStruct(Container other) {
@@ -69,7 +70,7 @@ public class Var extends Container{
 		return false;
 	}
 	@Override
-	public Container copy() {
+	public Container clone() {
 		return this;
 	}
 	@Override
@@ -88,7 +89,7 @@ public class Var extends Container{
 		if(container != null) {
 			return container.simplify();
 		}
-		return this.copy();
+		return this.clone();
 	}
 	@Override
 	public double approx() {

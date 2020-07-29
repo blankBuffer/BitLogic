@@ -13,10 +13,11 @@ public class Cos extends Trig {
 	}
 
 	@Override
-	public void print() {
-		System.out.print("cos(");
-		container.print();
-		System.out.print(')');
+	public String toString(String modif) {
+		modif+="cos(";
+		modif+=container.toString();
+		modif+=")";
+		return modif;
 	}
 	
 	@Override
@@ -36,8 +37,8 @@ public class Cos extends Trig {
 	}
 
 	@Override
-	public Container copy() {
-		return new Cos(container.copy());
+	public Container clone() {
+		return new Cos(container.clone());
 	}
 
 	@Override
@@ -76,7 +77,7 @@ public class Cos extends Trig {
 		}
 		if (container.equalStruct(twoPiOver3) || container.equalStruct(fourPiOver3))
 			return new Power(new IntC(-2), new IntC(-1));
-		return this.copy();
+		return this.clone();
 	}
 
 	public Container even() {
@@ -89,25 +90,25 @@ public class Cos extends Trig {
 				else if (c instanceof Power) {
 					Power cPower = (Power) c;
 					if (cPower.base instanceof IntC)
-						out.add(new Power(new IntC(((IntC) cPower.base).value.abs()), cPower.expo.copy()));
+						out.add(new Power(new IntC(((IntC) cPower.base).value.abs()), cPower.expo.clone()));
 					else
-						out.add(c.copy());
+						out.add(c.clone());
 				} else
-					out.add(c.copy());
+					out.add(c.clone());
 			}
 			return new Cos(out.simplify());
 		} else if (container instanceof Power) {
 			Power cPower = (Power) container;
 			Product out = new Product();
 			if (cPower.base instanceof IntC)
-				out.add(new Power(new IntC(((IntC) cPower.base).value.abs()), cPower.expo.copy()));
+				out.add(new Power(new IntC(((IntC) cPower.base).value.abs()), cPower.expo.clone()));
 			else
-				out.add(cPower.copy());
+				out.add(cPower.clone());
 			return new Cos(out.simplify());
 		} else if (container instanceof IntC) {
 			return new Cos(new IntC(((IntC) container).value.abs()));
 		} else
-			return this.copy();
+			return this.clone();
 	}
 
 	public Container periodicUnitCircle() {
@@ -127,7 +128,7 @@ public class Cos extends Trig {
 
 			if (hasPi) {
 				Sum out = new Sum();
-				out.add(container.copy());
+				out.add(container.clone());
 				Product prod = new Product();
 				int over = (int) (container.approx() / (Math.PI * 2));
 				prod.add(new IntC(over));
@@ -139,28 +140,31 @@ public class Cos extends Trig {
 			}
 
 		}
-		return this.copy();
+		return this.clone();
 	}
 	
 public Container sumSep() {
 		
-		Cos modible = (Cos)this.copy();
+		Cos modible = (Cos)this.clone();
 		
 		if(modible.container instanceof Sum) {
 			//try to simplify a term in the sum
 			Sum containerSum = (Sum)modible.container;
 			
 			for(Container c:containerSum.containers) {
-				Cos cos = new Cos(c.copy());
+				if(!c.constant()) continue;
+				if(!c.containsVar("π")) continue;
+				if(c.containsVar("e")) continue;
+				Cos cos = new Cos(c.clone());
 				Container simpCos = cos.simplify();
 				if(!simpCos.equalStruct(cos)) {
 					
-					Container simpSin = new Sin(c.copy());
+					Container simpSin = new Sin(c.clone());
 					
 					containerSum.containers.remove(c);
 					
-					Sin remainSin = new Sin(containerSum.copy());
-					Cos remainCos = new Cos(containerSum.copy());
+					Sin remainSin = new Sin(containerSum.clone());
+					Cos remainCos = new Cos(containerSum.clone());
 					
 					Sum sm = new Sum();
 					Product pr1 = new Product();
@@ -192,6 +196,11 @@ public Container sumSep() {
 	public Container simplify() {
 		
 		Container current = new Cos(this.container.simplify());
+		
+		if(current instanceof Cos) {
+			Cos currentCos = (Cos)current;
+			if(currentCos.container instanceof Product) currentCos.container = ((Product)currentCos.container).seperateFraction();
+		}
 
 		if (!(current instanceof Cos))
 			return current;

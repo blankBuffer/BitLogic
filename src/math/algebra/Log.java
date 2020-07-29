@@ -8,10 +8,11 @@ public class Log extends Container{
 		this.container = container;
 	}
 	@Override
-	public void print() {
-		System.out.print("ln(");
-		container.print();
-		System.out.print(')');
+	public String toString(String modif) {
+		modif+="ln(";
+		modif+=container.toString();
+		modif+=")";
+		return modif;
 	}
 	@Override
 	public void classicPrint() {
@@ -28,8 +29,8 @@ public class Log extends Container{
 		return false;
 	}
 	@Override
-	public Container copy() {
-		return new Log(this.container.copy());
+	public Container clone() {
+		return new Log(this.container.clone());
 	}
 	@Override
 	public boolean constant() {
@@ -40,11 +41,11 @@ public class Log extends Container{
 		if(this.container instanceof Power) {
 			Power innerPow = (Power)container;
 			Product pr = new Product();
-			pr.add(new Log(innerPow.base.copy()));
-			pr.add(innerPow.expo.copy());
+			pr.add(new Log(innerPow.base.clone()));
+			pr.add(innerPow.expo.clone());
 			return pr.simplify();
 		}
-		return this.copy();
+		return this.clone();
 	}
 	
 	public Container containsE() {
@@ -55,13 +56,13 @@ public class Log extends Container{
 				return contPow.expo;
 			}
 		}
-		return this.copy();
+		return this.clone();
 	}
 	
 	public Container valueOne() {
-		if(!(this.container instanceof IntC)) return this.copy();
+		if(!(this.container instanceof IntC)) return this.clone();
 		if(((IntC)this.container).value.equals(BigInteger.ONE)) return new IntC(0);
-		return this.copy();
+		return this.clone();
 	}
 	@Override
 	public boolean containsVars() {

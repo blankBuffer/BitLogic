@@ -15,7 +15,7 @@ public class E extends Var{
 		return true;
 	}
 	@Override
-	public Container copy() {
+	public Container clone() {
 		return new E();
 	}
 
