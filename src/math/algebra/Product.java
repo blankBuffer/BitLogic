@@ -45,6 +45,7 @@ public class Product extends List{
 		}
 		
 		if(modible.containers.size()>0) {
+			
 			int indexToMoveToBack = -1;
 			for(int i = 0;i<modible.containers.size();i++) {
 				//find non fraction and put it in the last element in modible
@@ -100,7 +101,7 @@ public class Product extends List{
 			
 			
 			if(div) modif+="/";
-			else if(i != modible.containers.size()-1) modif+="·";
+			else if(i != modible.containers.size()-1) modif+="*";
 			
 			
 			boolean pr = false;
@@ -283,82 +284,6 @@ public class Product extends List{
 		return out;
 	}
 	
-	public Container logFrac() {
-		
-		ArrayList<Container> num = new ArrayList<Container>();
-		ArrayList<Container> den = new ArrayList<Container>();
-		
-		for(Container c:containers) {
-			if(c instanceof Power) {
-				Power cPow = (Power)c;
-				if(cPow.expo instanceof IntC) {
-					if(((IntC)cPow.expo).value.equals(BigInteger.valueOf(-1)) ) {
-						den.add(cPow.base.clone());
-					}else num.add(c.clone());
-				}else num.add(c.clone());
-			}else num.add(c.clone());
-		}
-		
-		Product newProd = new Product();
-		
-		//try to cancel out logs
-		outer:for(int i = 0;i<num.size();i++) {
-			Container numObj = num.get(i);
-			
-			if(numObj instanceof Log) {
-				
-				Log numObjLog = (Log)numObj;
-				
-				
-				Power numToPow = null;
-				if(numObjLog.container instanceof IntC)
-					numToPow = IntArith.toPower(((IntC)numObjLog.container).value);
-				
-				if(numToPow!=null) {
-					for(int j = 0;j<den.size();j++) {
-						Container denObj = den.get(j);
-						
-						if(denObj instanceof Log) {
-							
-							Log denObjLog = (Log)denObj;
-							
-							Power denToPow = null;
-							if(denObjLog.container instanceof IntC) 
-								denToPow = IntArith.toPower(((IntC)denObjLog.container).value);
-							
-							if(denToPow!=null) {
-								
-								if(numToPow.base.equalStruct(denToPow.base)) {
-									newProd.add(numToPow.expo);
-									newProd.add(new Power(denToPow.expo,new IntC(-1)));
-									den.remove(j);
-									
-									
-									continue outer;
-								}
-								
-							}
-							
-						}
-						
-					}
-				}
-				
-				
-				
-			}
-			
-			newProd.add(numObj);
-			
-		}
-		for(Container c:den) {
-			newProd.add(new Power(c,new IntC(-1)));
-		}
-		
-		return newProd;
-		
-	}
-	
 	public Container divideToPower() {
 		//get numerator and denominator
 		
@@ -448,7 +373,7 @@ public class Product extends List{
 	
 	public Container distribute() {
 		//check for a sum
-		if(this.containsVars()) return this.clone();
+		//if(this.containsVars()) return this.clone();
 		
 		boolean foundAtLeastOne = false;
 		for(Container c:this.containers) {
@@ -471,6 +396,7 @@ public class Product extends List{
 		
 		modible.containers.remove(sum);
 		
+		
 		boolean nevermind = false;
 		for(Container c:modible.containers) {
 			if(c instanceof Power) {
@@ -488,6 +414,7 @@ public class Product extends List{
 			modible.add(sum);
 			return modible;
 		}
+		
 		
 		for(int i = 0;i<sum.containers.size();i++) {
 			Product temp = null;
@@ -550,6 +477,19 @@ public class Product extends List{
 		return sm.merge();
 	}
 	
+	public Container factorSums() {
+		Product modible = (Product)clone();
+		for(int i = 0;i<modible.containers.size();i++) {
+			Container c = modible.containers.get(i);
+			if(c instanceof Sum) {
+				Container repl = ((Sum)c).factorOut();
+				modible.containers.set(i,repl);
+				
+			}
+		}
+		return modible;
+	}
+	
 	@Override
 	public Container simplify() {
 		
@@ -568,10 +508,10 @@ public class Product extends List{
 		current = temp;
 		
 		if(!(current instanceof Product)) return current;
-		current = ((Product)current).merge();//(a*b)*c -> a*b*c
+		current = ((Product)current).factorSums();
 		
 		if(!(current instanceof Product)) return current;
-		current = ((Product)current).logFrac();//ln(100)/ln(10) ->2 | ln(x^y)/ln(x) -> y//needs rewrite
+		current = ((Product)current).merge();//(a*b)*c -> a*b*c
 		
 		if(!(current instanceof Product)) return current;
 		current = ((Product)current).expoSameIntCBase();//2^(x)*2^(y)
@@ -582,12 +522,8 @@ public class Product extends List{
 		if(!(current instanceof Product)) return current;
 		current = ((Product)current).divideToPower();//12*2^x->2^(x+2)*3 also multiples constants
 		
-		//cancel integers in fractions
 		if(!(current instanceof Product)) return current;
 		current = ((Product)current).multiplyIntC();//changes (-1*(3)^(-1)*) -> (-3)^(-1). removes useless ones
-		
-		if(!(current instanceof Product)) return current;
-		current = ((Product)current).distribute();
 		
 		if(!(current instanceof Product)) return current;
 		current = ((Product)current).alone();//empty product

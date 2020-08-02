@@ -16,13 +16,14 @@ public class BoolList extends BoolContainer{
 	}
 
 	@Override
-	public void print() {
-		System.out.print('[');
+	public String toString(String modif) {
+		modif+=('[');
 		for(int i = 0;i<containers.size();i++) {
-			containers.get(i).print();
-			if(i<containers.size()-1) System.out.print(',');
+			modif+=containers.get(i).toString();
+			if(i<containers.size()-1) modif+=(',');
 		}
-		System.out.print(']');
+		modif+=(']');
+		return modif;
 	}
 
 	public boolean equalList(BoolContainer other) {

@@ -428,7 +428,6 @@ public class Sum extends List{
 	
 	public Container factorOut() {
 		if(containers.size()<2) return this.clone();
-		if(!this.containsVars()) return this.clone();
 		//
 		Sum modible = (Sum)this.clone();
 		Product factoredParts = new Product();
@@ -592,6 +591,17 @@ public class Sum extends List{
 		else return modible;
 	}
 	
+	public Container distrobuteProducts() {
+		Sum modible = (Sum)clone();
+		for(int i = 0;i<modible.containers.size();i++) {
+			Container c = modible.containers.get(i);
+			if(c instanceof Product) {
+				modible.containers.set(i, ((Product)c).distribute());
+			}
+		}
+		return modible;
+	}
+	
 	public Container simplify() {
 		if(showSteps) {
 			System.out.println("simplifying sum");
@@ -607,6 +617,8 @@ public class Sum extends List{
 		}
 		current = temp;
 		
+		if(!(current instanceof Sum)) return current;
+		current = ((Sum)current).distrobuteProducts();
 		
 		if(!(current instanceof Sum)) return current;
 		current = ((Sum)current).merge();//(x+y)+z -> x+y+z
@@ -622,9 +634,6 @@ public class Sum extends List{
 		
 		if(!(current instanceof Sum)) return current;
 		current = ((Sum)current).combineFractions();//adds fractions with variables a/b+c/d -> (c*a+b^2)/b/c
-		
-		if(!(current instanceof Sum)) return current;
-		current = ((Sum)current).factorOut();//a*x^2+b*x^2 ->x^2*(a+b) does it only with variables
 		
 		if(!(current instanceof Sum)) return current;
 		current = ((Sum)current).alone();//empty sum

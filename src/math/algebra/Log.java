@@ -7,6 +7,8 @@ public class Log extends Container{
 	public Log(Container container) {
 		this.container = container;
 	}
+	public Log() {
+	}
 	@Override
 	public String toString(String modif) {
 		modif+="ln(";
@@ -37,15 +39,47 @@ public class Log extends Container{
 		return this.container.constant();
 	}
 	
-	public Container powerToProduct() {
-		if(this.container instanceof Power) {
-			Power innerPow = (Power)container;
-			Product pr = new Product();
-			pr.add(new Log(innerPow.base.clone()));
-			pr.add(innerPow.expo.clone());
-			return pr.simplify();
+	public Container removePowers() {
+		if(!(container instanceof Product || container instanceof Power || container instanceof IntC)) return clone();
+		if(container instanceof IntC) {
+			IntC cI = (IntC)container;
+			if(IntArith.Prime.isPrime(cI.value)) return clone();
 		}
-		return this.clone();
+		boolean allOnes = true;
+		Sum res = new Sum();
+		Product pr = null;
+		Product thePlainLogPr = new Product();
+		
+		if(container instanceof Product) pr = (Product)container.clone();
+		else {
+			pr = new Product();
+			pr.add(container.clone());
+		}
+		for(Container c:pr.containers) {
+			if(c instanceof IntC) {
+				IntC cI = (IntC)c;
+				Power toPow = IntArith.toPower(cI.value);
+				if(!((IntC)toPow.expo).value.equals(BigInteger.ONE) ) {
+					Product tpr = new Product();
+					tpr.add(new Log(toPow.base));
+					tpr.add(toPow.expo);
+					res.add(tpr);
+					allOnes = false;
+				}else thePlainLogPr.add(c);
+			}else if(c instanceof Power) {
+				Power cPow = (Power)c;
+				Product tpr = new Product();
+				tpr.add(new Log(cPow.base));
+				tpr.add(cPow.expo);
+				res.add(tpr);
+				allOnes = false;
+			}else thePlainLogPr.add(c);
+		}
+		if(thePlainLogPr.containers.size()>0) res.add(new Log(thePlainLogPr));
+		if(allOnes) return clone();
+		Container fres = res.alone();
+		if(fres instanceof Sum) fres = fres.simplify();
+		return fres;
 	}
 	
 	public Container containsE() {
@@ -87,7 +121,7 @@ public class Log extends Container{
 		current = ((Log)current).valueOne();//ln(1) -> 0
 		
 		if(!(current instanceof Log)) return current;
-		current = ((Log)current).powerToProduct();
+		current = ((Log)current).removePowers();
 		
 		if(!(current instanceof Log)) return current;
 		current = ((Log)current).containsE();//ln(e^x)->x

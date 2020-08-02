@@ -5,8 +5,7 @@ import math.algebra.*;
 import math.booleanAlgebra.*;
 
 public class BasicConstructor {
-	static Scanner in = new Scanner(System.in);
-	
+	static Scanner in = null;
 	public static BoolContainer makeBoolContainer() {
 		System.out.println("0 state,1 var,2 and,3 or,4 not,5 list");
 		
@@ -121,7 +120,7 @@ public class BasicConstructor {
 		System.out.println(simp.approx());
 		
 	}
-	
+	/*
 	public static void boolBasicProg() {
 		BoolContainer c = BasicConstructor.makeBoolContainer();
 		c.print();
@@ -132,7 +131,7 @@ public class BasicConstructor {
 		System.out.println();
 		
 	}
-	
+	*/
 	
 	
 }

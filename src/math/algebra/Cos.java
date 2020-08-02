@@ -1,14 +1,14 @@
 package math.algebra;
 
+import java.math.BigInteger;
+
 public class Cos extends Trig {
 	Container container;
 
 	public Cos() {
-		init();
 	}
 
 	public Cos(Container container) {
-		init();
 		this.container = container;
 	}
 
@@ -46,40 +46,6 @@ public class Cos extends Trig {
 		return container.constant();
 	}
 
-	public Container unitCircle() {
-		if (container.equalStruct(zero) || container.equalStruct(twoPi))
-			return new IntC(1);
-		if (container instanceof Pi)
-			return new IntC(-1);
-		if (container.equalStruct(piOver2) || container.equalStruct(threePiOver2))
-			return new IntC(0);
-		if (container.equalStruct(piOver4) || container.equalStruct(sevenPiOver4))
-			return new Power(new IntC(2), new Power(new IntC(-2), new IntC(-1)));
-		if (container.equalStruct(piOver3) || container.equalStruct(fivePiOver3))
-			return new Power(new IntC(2), new IntC(-1));
-		if (container.equalStruct(piOver6) || container.equalStruct(elevenPiOver6)) {
-			Product prod = new Product();
-			prod.add(new Power(new IntC(2), new IntC(-1)));
-			prod.add(new Power(new IntC(3), new Power(new IntC(2), new IntC(-1))));
-			return prod;
-		}
-		if (container.equalStruct(fivePiOver6) || container.equalStruct(sevenPiOver6)) {
-			Product prod = new Product();
-			prod.add(new Power(new IntC(-2), new IntC(-1)));
-			prod.add(new Power(new IntC(3), new Power(new IntC(2), new IntC(-1))));
-			return prod;
-		}
-		if (container.equalStruct(threePiOver4) || container.equalStruct(fivePiOver4)) {
-			Product prod = new Product();
-			prod.add(new Power(new IntC(2), new Power(new IntC(-2), new IntC(-1))));
-			prod.add(new IntC(-1));
-			return prod;
-		}
-		if (container.equalStruct(twoPiOver3) || container.equalStruct(fourPiOver3))
-			return new Power(new IntC(-2), new IntC(-1));
-		return this.clone();
-	}
-
 	public Container even() {
 		if (container instanceof Product) {
 			Product containerProduct = (Product) container;
@@ -110,86 +76,86 @@ public class Cos extends Trig {
 		} else
 			return this.clone();
 	}
-
-	public Container periodicUnitCircle() {
-		double approx = container.approx();
-		if (Math.abs(approx) > Math.PI * 2 && container.constant() && container instanceof Product) {
-
-			Product containerProduct = (Product) container;
-
-			boolean hasPi = false;
-
-			for (Container c : containerProduct.containers) {
-				if (c instanceof Pi) {
-					hasPi = true;
-					break;
-				}
-			}
-
-			if (hasPi) {
-				Sum out = new Sum();
-				out.add(container.clone());
-				Product prod = new Product();
-				int over = (int) (container.approx() / (Math.PI * 2));
-				prod.add(new IntC(over));
-				prod.add(new Pi());
-				prod.add(new IntC(-2));
-				out.add(prod);
-
-				return new Cos(out.simplify());
-			}
-
-		}
-		return this.clone();
-	}
 	
-public Container sumSep() {
-		
-		Cos modible = (Cos)this.clone();
-		
-		if(modible.container instanceof Sum) {
-			//try to simplify a term in the sum
-			Sum containerSum = (Sum)modible.container;
-			
-			for(Container c:containerSum.containers) {
-				if(!c.constant()) continue;
-				if(!c.containsVar("π")) continue;
-				if(c.containsVar("e")) continue;
-				Cos cos = new Cos(c.clone());
-				Container simpCos = cos.simplify();
-				if(!simpCos.equalStruct(cos)) {
-					
-					Container simpSin = new Sin(c.clone());
-					
-					containerSum.containers.remove(c);
-					
-					Sin remainSin = new Sin(containerSum.clone());
-					Cos remainCos = new Cos(containerSum.clone());
-					
-					Sum sm = new Sum();
-					Product pr1 = new Product();
-					pr1.add(remainCos);
-					pr1.add(simpCos);
-					Product pr2 = new Product();
-					pr2.add(new IntC(-1));
-					pr2.add(remainSin);
-					pr2.add(simpSin);
-					sm.add(pr1);
-					sm.add(pr2);
-					
-					return sm.simplify();
-					
-				}
-				
-			}
-		}
-		
-		return modible;
-	}
 
 	@Override
 	public boolean containsVars() {
 		return container.containsVars();
+	}
+	
+	public Container unitCircle() {
+		if(!constant()) return clone();
+		IntC zero = new IntC(0);
+		if(container.equalStruct(zero)) return new IntC(1);
+		if(container instanceof Pi) return new IntC(-1);
+		if(container instanceof Product) {
+			
+			Product prCon = (Product)container.clone();
+			Sum sm = new Sum();
+			sm.add(prCon);
+			Product tpr = new Product();
+			tpr.add(new Pi());
+			tpr.add(new Power(new IntC(2),new IntC(-1)));
+			sm.add(tpr);
+			Container mer = sm.simplify();
+			
+			Sin sin = new Sin(mer);
+			Container sinSimp = sin.simplify();
+			if(!sinSimp.equals(sin)) {
+				return sinSimp;
+			}else return clone();
+			
+		}
+		
+		return clone();
+	}
+	
+	public Container basicShift() {
+		if(!(container instanceof Sum)) return clone();
+		Sum smCast = (Sum)container;
+		outer:for(Container c:smCast.containers) {
+			Product cPr = null;
+			
+			if(c instanceof Product)cPr = (Product)c;
+			else {
+				cPr = new Product();
+				cPr.add(c);
+			}
+			if(cPr.constant() && cPr.containsVar("π")) {
+				for(Container c2:cPr.containers) {
+					if(c2 instanceof IntC) {
+						continue;
+					}
+					if(c2 instanceof Power) {
+						Power c2Pow = (Power)c2;
+						if(c2Pow.base instanceof IntC && c2Pow.expo instanceof IntC) {
+							if(((IntC)c2Pow.expo).value.equals(BigInteger.valueOf(-1))) {
+								continue;
+							}
+						}
+					}
+					if(c2 instanceof Pi) {
+						continue;
+					}
+					continue outer;
+				}
+				this.convertToSin().classicPrint();
+				return this.convertToSin().simplify();
+				
+			}
+			
+		}
+		return clone();
+	}
+	
+	public Container convertToSin() {
+		Product pr = new Product();
+		pr.add(new Pi());
+		pr.add(new Power(new IntC(2),new IntC(-1)));
+		Sum sm = new Sum();
+		sm.add(container.clone());
+		sm.add(pr);
+		return new Sin(sm);
 	}
 
 	@Override
@@ -197,27 +163,29 @@ public Container sumSep() {
 		
 		Container current = new Cos(this.container.simplify());
 		
-		if(current instanceof Cos) {
+		if (current instanceof Cos){
 			Cos currentCos = (Cos)current;
-			if(currentCos.container instanceof Product) currentCos.container = ((Product)currentCos.container).seperateFraction();
+			if(currentCos.container instanceof Sum) currentCos.container = ((Sum)currentCos.container).factorOut();
 		}
 
 		if (!(current instanceof Cos))
 			return current;
 		current = ((Cos) current).even();
-
+		
+		if(current instanceof Cos) {
+			Cos currentCos = (Cos)current;
+			if(currentCos.container instanceof Product) currentCos.container = ((Product)currentCos.container).seperateFraction();
+			if(currentCos.container instanceof Product) currentCos.container = ((Product)currentCos.container).distribute();
+		}
+		
 		if (!(current instanceof Cos))
 			return current;
-		current = ((Cos) current).periodicUnitCircle();
-
+		current = ((Cos) current).basicShift();
+		
 		if (!(current instanceof Cos))
 			return current;
 		current = ((Cos) current).unitCircle();
 
-		if (!(current instanceof Cos))
-			return current;
-		current = ((Cos) current).sumSep();
-		
 		return current;
 	}
 	@Override

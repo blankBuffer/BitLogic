@@ -135,11 +135,12 @@ public class Power extends Container{
 		if(!constant()) return this.clone();
 		if(base instanceof IntC && expo instanceof IntC) {
 			BigInteger expoVal = ((IntC)expo).value;
-			if(expoVal.equals(BigInteger.valueOf(-1))) return this;
 			BigInteger baseVal = ((IntC)base).value;
-			
+			BigInteger mOne = BigInteger.valueOf(-1);
+			if(baseVal.equals(mOne) && expoVal.equals(mOne)) return new IntC(-1);
+			if(expoVal.equals(BigInteger.valueOf(-1))) return clone();
 			boolean negExpo = expoVal.signum() == -1;
-			if(negExpo) expoVal = expoVal.multiply(BigInteger.valueOf(-1));
+			if(negExpo) expoVal = expoVal.abs();
 			
 			BigInteger res = IntArith.power(baseVal, expoVal);
 			if(negExpo) return new Power(new IntC(res),new IntC(-1));
@@ -360,8 +361,9 @@ public class Power extends Container{
 		Sum expoSum = null;
 		if(expo instanceof Sum) {
 			expoSum = (Sum)expo.clone();
-		}else {
+		}else{
 			Container temp = ((Product)expo).seperateFraction();
+			if(temp instanceof Product) temp = ((Product)temp).distribute();
 			if(temp instanceof Sum) {
 				expoSum = (Sum)temp;
 			}else return this.clone();
@@ -388,16 +390,12 @@ public class Power extends Container{
 		return out.simplify();
 	}
 	
-	public Container negOneToNegOne() {
-		if(base instanceof IntC && expo instanceof IntC) {
-			IntC baseI = (IntC)base;
-			IntC expoI = (IntC)expo;
-			BigInteger mOne = BigInteger.valueOf(-1);
-			if(baseI.value.equals(mOne) && expoI.value.equals(mOne)) {
-				return new IntC(-1);
-			}
+	public Container baseOrExpoIsSum() {
+		Power modible = (Power)clone();
+		if(base instanceof Sum) {
+			modible.base = ((Sum)modible.base).factorOut();
 		}
-		return this.clone();
+		return modible;
 	}
 	
 	@Override
@@ -411,6 +409,8 @@ public class Power extends Container{
 		
 		Container current = new Power(this.base.simplify(),this.expo.simplify());
 		
+		if(!(current instanceof Power)) return current;
+		current = ((Power)current).baseOrExpoIsSum();
 		
 		if(!(current instanceof Power)) return current;
 		current = ((Power)current).baseContainsPower();//(a^b)^c -> a^(b*c)
@@ -435,9 +435,6 @@ public class Power extends Container{
 		
 		if(!(current instanceof Power)) return current;
 		current = ((Power)current).baseZeroOrOne();//0^x -> 0 1^x -> 1
-		
-		if(!(current instanceof Power)) return current;
-		current = ((Power)current).negOneToNegOne();//(-1)^(-1) -> 1
 		
 		if(!(current instanceof Power)) return current;
 		current = ((Power)current).trigConvert();//sin(x)^2 -> (1-cos(2*x))/2

@@ -12,8 +12,8 @@ public class BoolState extends BoolContainer{
 	}
 	
 	@Override
-	public void print() {
-		System.out.print(value);
+	public String toString(String modif) {
+		return modif+=value;
 	}
 
 	@Override

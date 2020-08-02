@@ -9,9 +9,10 @@ public class Not extends BoolContainer{
 		this.container = container;
 	}
 	@Override
-	public void print() {
-		System.out.print('!');
-		container.print();
+	public String toString(String modif) {
+		modif+=('!');
+		modif+=container.toString();
+		return modif;
 	}
 
 	@Override

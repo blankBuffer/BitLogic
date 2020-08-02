@@ -3,7 +3,12 @@ package math.booleanAlgebra;
 import java.util.ArrayList;
 
 public abstract class BoolContainer {
-	public abstract void print();
+	
+	public abstract String toString(String modif);
+	@Override
+	public String toString() {
+		return toString("");
+	}
 
 	public abstract boolean equalStruct(BoolContainer other);
 

@@ -6,4 +6,5 @@
  *
  */
 module bitLogic {
+	requires java.desktop;
 }

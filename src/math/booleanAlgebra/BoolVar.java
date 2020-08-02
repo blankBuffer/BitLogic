@@ -8,8 +8,9 @@ public class BoolVar extends BoolContainer{
 		this.name = name;
 	}
 	@Override
-	public void print() {
-		System.out.print(name);
+	public String toString(String modif) {
+		modif+=(name);
+		return modif;
 	}
 	@Override
 	public boolean equalStruct(BoolContainer other) {
