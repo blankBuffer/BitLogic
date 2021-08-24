@@ -1,0 +1,10 @@
+cd "$( dirname "${BASH_SOURCE[0]}" )"
+
+bash compile
+
+cd bin
+
+jar -cfe BensToolBox.jar Main *.class cas/*.class 
+
+mv BensToolBox.jar ..
+
