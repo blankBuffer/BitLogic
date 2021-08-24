@@ -1,7 +1,3 @@
-# BitLogic
-simple java computer algebra system
+Completely re written.
 
-This lets you solve and simplify algebraic and boolean expressions.
-
-To run, download the jar files and then open a terminal go to the directory of the jar file and type
-"java -jar BitLogic.jar"
+Now has symbolic integration
