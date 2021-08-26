@@ -27,9 +27,10 @@ public class Prod extends Expr{
 			
 		if(hasManyIntBases) expandIntBases((Prod)toBeSimplified,settings);//12^x*m -> 2^(2*x)*3^x*m
 			
-		if(!settings.powExpandMode) {
-			multiplyLikeTerms((Prod)toBeSimplified,settings);//x*x = x^2
-			
+		
+		multiplyLikeTerms((Prod)toBeSimplified,settings);//x*x = x^2
+		
+		if(!settings.powExpandMode) {	
 			if(hasManyIntBases) expoIntoBase((Prod)toBeSimplified,settings);//10^(2*x)*a -> 100^x*a
 			
 			if(hasManyIntBases)multiplyIntBases((Prod)toBeSimplified);//2^x*10^x -> 20^x
@@ -197,6 +198,9 @@ public class Prod extends Expr{
 		for(int i = 0;i < prod.size();i++) {
 			
 			Expr current = prod.get(i);//get the current object in the array check
+			
+			if(settings.powExpandMode && current instanceof Sum) continue; 
+			
 			Expr expo = new Sum();//create a sum object for the exponent
 			
 			if(current instanceof Num) continue;//ignore integers
@@ -209,6 +213,8 @@ public class Prod extends Expr{
 				current = currentCasted.getBase();//extract out the base and reassign current, current now represents the base of power
 				expo.add(currentCasted.getExpo());//extract out the exponent
 			}else expo.add(new Num(1));//if its not a power asume exponent to be 1
+			
+			if(settings.powExpandMode && current instanceof Sum) continue; 
 			
 			boolean found = false;
 			for(int j = i+1; j< prod.size();j++) {

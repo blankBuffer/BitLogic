@@ -17,7 +17,6 @@ public class Distr extends Expr{
 		Expr toBeSimplified = copy();
 		if(flags.simple) return toBeSimplified;
 		
-		Settings oldSettings = settings;
 		settings = new Settings(settings);
 		settings.factor = false;
 		toBeSimplified.simplifyChildren(settings);
@@ -25,9 +24,8 @@ public class Distr extends Expr{
 		toBeSimplified = toBeSimplified.get();
 		
 		if(settings.distr) {
-			settings.powExpandMode = false;
 			toBeSimplified = generalDistr(toBeSimplified,settings);
-			if(oldSettings.powExpandMode) toBeSimplified = powExpand(toBeSimplified,settings);
+			if(settings.powExpandMode) toBeSimplified = powExpand(toBeSimplified,settings);
 		}
 		
 		toBeSimplified.flags.simple = true;
