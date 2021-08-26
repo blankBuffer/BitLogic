@@ -167,8 +167,8 @@ public class QuickMath {
 	static Expr[] extractFrac(Expr in) {//general fraction extraction
 		if(in instanceof Prod) {
 			Prod prod = (Prod)in;
-			Prod numerParts = new Prod();
-			Prod denomParts = new Prod();
+			Expr numerParts = new Prod();
+			Expr denomParts = new Prod();
 			for(int j = 0;j<prod.size();j++) {
 				if(prod.get(j) instanceof Power) {
 					Power pow = (Power)prod.get(j);
@@ -184,6 +184,8 @@ public class QuickMath {
 				}
 				
 			}
+			if(numerParts.size() == 1) numerParts = numerParts.get();
+			if(denomParts.size() == 1) denomParts = denomParts.get();
 			return new Expr[] {numerParts,denomParts};
 		}else if(in instanceof Power) {
 			Power pow = (Power)in;
@@ -197,7 +199,7 @@ public class QuickMath {
 		return new Expr[] {in.copy(),num(1)};
 	}
 	
-	static Num[] extractNormalFrac(Expr in){//numerical based fraction extraction, returns null if it does not meet criteria
+	static Num[] extractNumFrac(Expr in){//numerical based fraction extraction, returns null if it does not meet criteria
 		Num num = null,den = null;
 		if(in instanceof Num) {
 			num = (Num)in.copy();
@@ -236,6 +238,106 @@ public class QuickMath {
 		return null;
 	}
 	
+	public static Expr partialFrac(Expr expr,Var v,Settings settings) {
+		Settings yesFactor = new Settings();
+		yesFactor.factor = true;
+		Settings noFactor = new Settings();
+		expr = expr.simplify(yesFactor);
+		
+		Expr[] frac = extractFrac(expr);
+		
+		if(!isPolynomial(frac[0],v)) {
+			return expr;
+		}
+		
+		Prod denom = null;
+		if(frac[1] instanceof Prod) {
+			denom = (Prod) frac[1];
+		}else {
+			denom = new Prod();
+			denom.add(frac[1]);
+		}
+		
+		ExprList denTerms = new ExprList();
+		
+		BigInteger denDegree = BigInteger.ZERO;
+		
+		for(int i = 0;i<denom.size();i++) {
+			noFactor.factor = false;
+			Expr e = inv(denom.get(i)).simplify(noFactor);
+			
+			if(e instanceof Power) {
+				Power casted = (Power)e;
+				if(casted.getExpo() instanceof Num && !casted.getExpo().negative()) {
+					BigInteger d = degree(casted.getBase(),v);
+					if(!d.equals(BigInteger.ONE)) return expr;
+					denDegree = denDegree.add(((Num)casted.getExpo()).value);
+				}else return expr;
+			}else {
+				BigInteger d = degree(e,v);
+				if(!d.equals(BigInteger.ONE)) return expr;
+				denDegree = denDegree.add(BigInteger.ONE);
+			}
+			
+			denTerms.add(e);
+		}
+		
+		if(denDegree.compareTo(BigInteger.TWO) == -1) return expr;
+		
+		if(degree(frac[0],v).compareTo(denDegree) != -1) return expr;
+		//all the checks for if it fits the form are done by this point
+		Expr out = new Sum();
+		
+		for(int i = 0;i<denTerms.size();i++) {
+			Expr function = prod(expr,denTerms.get(i)).simplify(settings);
+			
+			
+			if(!(denTerms.get(i) instanceof Power)) {
+				ExprList poly = polyExtract(denTerms.get(i),v,settings);
+				Expr solution = div(neg(poly.get(0)),poly.get(1)).simplify(settings);
+				
+				Expr numer = function.replace(equ(v,solution)).simplify(settings);
+				
+				out.add(div(numer,denTerms.get(i)).simplify(settings));
+			}else {
+				Power pw = (Power)denTerms.get(i);
+				ExprList poly = polyExtract(pw.getBase(),v,settings);
+				
+				Expr solution = div(neg(poly.get(0)),poly.get(1)).simplify(settings);
+				
+				BigInteger currentExpo = ((Num)pw.getExpo()).value;
+				
+				BigInteger count = BigInteger.ZERO;
+				BigInteger factorial = BigInteger.ONE;
+				
+				while(currentExpo.compareTo(BigInteger.ONE) == 1) {
+					
+					Expr numer = function.replace(equ(v,solution)).simplify(settings);
+					
+					Prod outProd = prod(numer,pow(pw.getBase(),num(currentExpo.negate())),inv(num(factorial)));
+					outProd.add(pow(poly.get(1),num(count.negate())));
+					out.add(outProd.simplify(settings));
+					
+					count = count.add(BigInteger.ONE);
+					factorial = factorial.multiply(count);
+					function = diff(function,v).simplify(settings);
+					currentExpo = currentExpo.subtract(BigInteger.ONE);
+				}
+				
+				Expr numer = function.replace(equ(v,solution)).simplify(settings);
+				
+				
+				Prod outProd = prod(numer,pow(pw.getBase(),num(currentExpo.negate())),inv(num(factorial)));
+				outProd.add(pow(poly.get(1),num(count.negate())));
+				out.add(outProd.simplify(settings));
+				
+			}
+			
+		}
+		out = out.simplify(noFactor);
+		return out;
+	}
+	
 	public static ExprList[] polyDiv(ExprList num,ExprList den,Settings settings) {//returns output + remainder
 		ExprList remain = (ExprList)num.copy();
 		Num zero = num(0);
@@ -269,19 +371,90 @@ public class QuickMath {
 		return new ExprList[] { out,remain };
 	}
 	
-	public static BigInteger degree(Expr expr,Var v) {
-		if(expr instanceof Sum) {
-			
-		}else if(expr instanceof Power) {
+	public static BigInteger degree(Expr expr,Var v) {//returns -1 if it does not fit polynomial form
+		
+		if(!expr.contains(v)) return BigInteger.ZERO;
+		if(expr instanceof Power) {
 			Power casted = (Power)expr;
-			if(casted.getBase().equalStruct(v)) {
+			if(casted.getBase().equalStruct(v) && casted.getExpo() instanceof Num && !casted.getExpo().negative()) {
+				return ((Num)casted.getExpo()).value;
+			}
+		}else if(expr instanceof Sum) {
+			BigInteger maxDegree = BigInteger.ZERO;
+			
+			for(int j = 0;j<expr.size();j++) {
+				Expr inner = expr.get(j);
+				if(!inner.contains(v)) continue;
+				
+				if(inner instanceof Power) {
+					Power casted = (Power)inner;
+					if(casted.getBase().equalStruct(v) && casted.getExpo() instanceof Num && !casted.getExpo().negative()) {
+						maxDegree = maxDegree.max(  ((Num)casted.getExpo()).value  );
+					}else {
+						return BigInteger.valueOf(-1);
+					}
+				}else if(inner instanceof Prod) {
+					
+					int termsWithVar = 0;
+					int indexOfVarThing = 0;
+					for(int i = 0;i<inner.size();i++) {
+						if(inner.get(i).contains(v)) {
+							termsWithVar++;
+							indexOfVarThing = i;
+						}
+					}
+					
+					if(termsWithVar == 1) {
+						Expr e = inner.get(indexOfVarThing);
+						if(e.equalStruct(v)) maxDegree = maxDegree.max(BigInteger.ONE);
+						else if(e instanceof Power ) {
+							Power casted = (Power)e;
+							if(casted.getBase().equalStruct(v) && casted.getExpo() instanceof Num && !casted.getExpo().negative()) {
+								maxDegree = maxDegree.max(  ((Num)casted.getExpo()).value  );
+							}
+						}else return BigInteger.valueOf(-1);
+					}else {
+						return BigInteger.valueOf(-1);
+					}
+					
+					
+				}else if(inner.equalStruct(v)) {
+					maxDegree = maxDegree.max(BigInteger.ONE);
+				}else {
+					return BigInteger.valueOf(-1);
+				}
+				
 				
 			}
+			return maxDegree;
+			
+		}else if(expr instanceof Prod) {
+			int termsWithVar = 0;
+			int indexOfVarThing = 0;
+			for(int i = 0;i<expr.size();i++) {
+				if(expr.get(i).contains(v)) {
+					termsWithVar++;
+					indexOfVarThing = i;
+				}
+			}
+			
+			if(termsWithVar == 1) {
+				Expr e = expr.get(indexOfVarThing);
+				if(e.equalStruct(v)) return BigInteger.ONE;
+				else if(e instanceof Power ) {
+					Power casted = (Power)e;
+					if(casted.getBase().equalStruct(v) && casted.getExpo() instanceof Num && !casted.getExpo().negative()) {
+						return ((Num)casted.getExpo()).value;
+					}
+				}
+			}
+		}else if(expr.equalStruct(v)) {
+			return BigInteger.ONE;
 		}
 		
 		
 		
-		return BigInteger.ZERO;
+		return BigInteger.valueOf(-1);
 	}
 	
 	public static boolean isPolynomial(Expr expr,Var v) {
@@ -468,141 +641,208 @@ public class QuickMath {
 		return pow(n.copy(),num(1));
 	}
 	
-	static ArrayList<Integer> smallPrimes = new ArrayList<Integer>();//small prime cache
-	static ArrayList<BigInteger> recentBigPrimes = new ArrayList<BigInteger>();//recent big primes
-	static boolean madePrimeCache = false;
-	
-	static int smallPrimeIterations = 8192;
-	
-	static void generatePrimeCache() {
-		smallPrimes.add(2);
-		smallPrimes.add(3);
+	private static class IntFactor {//uses a mix of rho and wheel factorization
 		
-		for(int n = 1;n<smallPrimeIterations;n++) {
-			int possiblePrime1 = 6*n-1;
-			int possiblePrime2 = 6*n+1;
-			
-			boolean found = false;
-			for(int i:smallPrimes) {
-				if(possiblePrime1%i==0) {
-					found = true;
-					break;
-				}
+		static boolean initializedWheel = false;
+		static long[] initialSet = new long[]{2,3,5,7};
+		static ArrayList<BigInteger> wheelSet = new ArrayList<BigInteger>();
+		static BigInteger increase = BigInteger.ONE;
+		static BigInteger maxCheck = BigInteger.TWO.pow(24);//maximum check for wheel factor
+		static int limit = (int)Math.pow(2, 15);//maximum loops for rho
+		
+		static boolean isPartOfWheelSet(long l){
+			for(long i:initialSet){
+				if(l%i == 0)return false;
 			}
-			if(!found) smallPrimes.add(possiblePrime1);
-			
-			found = false;
-			for(int i:smallPrimes) {
-				if(possiblePrime2%i==0) {
-					found = true;
-					break;
-				}
-			}
-			if(!found) smallPrimes.add(possiblePrime2);
+			return true;
 		}
-		madePrimeCache = true;
+		static void initWheel(){
+			if(initializedWheel) return;
+			
+			initializedWheel = true;
+			for(Long l:initialSet) increase = increase.multiply(BigInteger.valueOf(l));
+			int increaseInt = increase.intValue();
+			for(int i = 2;i<increaseInt+2;i++){
+				if(isPartOfWheelSet(i)){
+					wheelSet.add(BigInteger.valueOf(i));
+				}
+			}
+		}
+		static ArrayList<BigInteger> wheelFactor(BigInteger l){
+			ArrayList<BigInteger> factors = new ArrayList<BigInteger>();
+			if(l.isProbablePrime(1)){
+				factors.add(l);
+				return factors;
+			}
+			if(l.compareTo(BigInteger.TWO) == -1) return factors;
+			
+			BigInteger sqrtVal = l.sqrt();
+			for(int i = 0;i<initialSet.length;i++){
+				BigInteger test = BigInteger.valueOf(initialSet[i]);
+				if(test.compareTo(sqrtVal)==1){
+					if(!l.equals(BigInteger.ONE)) factors.add(l);
+					return factors;
+				}
+				boolean worked = false;
+				while(l.mod(test).equals(BigInteger.ZERO)){
+					l = l.divide(test);
+					factors.add(test);
+					worked = true;
+				}
+				if(worked) sqrtVal = l.sqrt();
+			}
+			
+			if(l.isProbablePrime(1)){
+				factors.add(l);
+				return factors;
+			}
+			BigInteger i = BigInteger.ZERO;
+			while(true){
+				for(BigInteger test:wheelSet){
+					test = test.add(i.multiply(increase));
+					if(test.compareTo(sqrtVal)==1 || test.compareTo(maxCheck)==1){
+						if(!l.equals(BigInteger.ONE)) factors.add(l);
+						return factors;
+					}
+					boolean worked = false;
+					while(l.mod(test).equals(BigInteger.ZERO)){
+						l = l.divide(test);
+						factors.add(test);
+						worked = true;
+					}
+					if(worked){
+						
+						if(l.isProbablePrime(1)){
+							factors.add(l);
+							return factors;
+						}
+						
+						sqrtVal = l.sqrt();
+					}
+				}
+				i = i.add(BigInteger.ONE);
+			}
+		}
+		
+		
+		static BigInteger rhoFunc(BigInteger in,BigInteger n){
+			return in.pow(2).add(BigInteger.ONE).mod(n);
+		}
+		
+		static ArrayList<BigInteger> cachedBigPrimes = new ArrayList<BigInteger>();
+		static BigInteger big = BigInteger.valueOf(Short.MAX_VALUE);
+		static void addToCache(BigInteger i){
+			if(i.compareTo(big)==1 ){
+				if(!cachedBigPrimes.contains(i)) cachedBigPrimes.add(i);
+			}
+		}
+		static void resizeCache(){
+			while(cachedBigPrimes.size() > 1024){
+				cachedBigPrimes.remove(0);
+			}
+		}
+		
+		static ArrayList<BigInteger> rhoFactor(BigInteger n){
+			ArrayList<BigInteger> factors = new ArrayList<BigInteger>();
+			if(n.compareTo(BigInteger.TWO) == -1) return factors;
+			
+			if(n.isProbablePrime(1)){
+				factors.add(n);
+				return factors;
+			}
+			initWheel();
+			resizeCache();
+			
+			///cached primes
+			if(n.compareTo(big) == 1){
+				boolean usedCache = false;
+				for(BigInteger i:cachedBigPrimes){
+					if(n.mod(i).equals(BigInteger.ZERO)){
+						usedCache = true;
+						n = n.divide(i);
+						factors.add(i);
+					}
+				}
+				if(usedCache){
+					if(n.isProbablePrime(1)){
+						addToCache(n);
+						factors.add(n);
+						return factors;
+					}
+					if(n.equals(BigInteger.ONE)){
+						return factors;
+					}
+				}
+			}
+			///
+			
+			while (true) {
+				BigInteger x = BigInteger.TWO,y=x,d = BigInteger.ONE;
+				long counter = 0;
+				while (d.equals(BigInteger.ONE)) {
+					if(counter>limit){
+						addToCache(n);
+						factors.add(n);
+						return factors;
+					}
+					x = rhoFunc(x,n);
+					y = rhoFunc(rhoFunc(y,n),n);
+					d = x.subtract(y).gcd(n);
+					counter++;
+				}
+				ArrayList<BigInteger> subList = wheelFactor(d);
+				if(subList.size() > 1){
+					for(BigInteger d2:subList){
+						addToCache(d2);
+						factors.add(d2);
+						n = n.divide(d2);
+					}
+				
+				}else{
+					addToCache(d);
+					factors.add(d);
+					n = n.divide(d);
+					while(n.mod(d).equals(BigInteger.ZERO)){
+						factors.add(d);
+						n = n.divide(d);
+					}
+				}
+				if(n.isProbablePrime(1)){
+					addToCache(n);
+					factors.add(n);
+					break;
+				}
+				if(n.equals(BigInteger.ONE)){
+					break;
+				}
+			}
+			return factors;
+		}
 	}
 	
-	public static Prod primeFactor(Num n) {
-		while(recentBigPrimes.size()>1024) {
-			recentBigPrimes.remove(0);//remove old
-		}
-			
-		if(!madePrimeCache) generatePrimeCache();
+	public static Prod primeFactor(Num num) {
+		
 		Prod p = new Prod();
-		BigInteger whatsLeft = n.value;
-		if(whatsLeft.signum()==-1) {
-			whatsLeft = whatsLeft.abs();
+		BigInteger n = num.value;
+		if(n.signum()==-1) {
+			n = n.abs();
 			p.add(pow(num(-1),num(1)));
 		}
 		
-		//check big prime cache
-		
-		for(BigInteger i:recentBigPrimes) {
-			
-			if(whatsLeft.mod(i).equals(BigInteger.ZERO)) {
-				int expoCount = 1;
-				whatsLeft = whatsLeft.divide(i);
-				while(whatsLeft.mod(i).equals(BigInteger.ZERO)) {
-					whatsLeft = whatsLeft.divide(i);
-					expoCount++;
-				}
-				p.add(pow(num(i),num(expoCount)));
-			}
-		}
-					
-		if(whatsLeft.equals(BigInteger.ONE)) return p;
-		if(whatsLeft.isProbablePrime(128)) {
-			p.add(pow(num(whatsLeft),num(1)));
-			return p;
-		}
-		
-		int counter = 0;
-		int checkSpacing = 32;
-		
-		
-		//go through small primes
-		for(int i:smallPrimes) {
-			counter++;
-			BigInteger bigI = BigInteger.valueOf(i);
-			if(counter%checkSpacing == 0) {
-				if(bigI.compareTo(whatsLeft.sqrt()) == 1) break;
-				if(whatsLeft.isProbablePrime(128)) {
-					p.add(pow(num(whatsLeft),num(1)));
-					return p;
+		ArrayList<BigInteger> factors = IntFactor.rhoFactor(n);
+		for(int i = 0;i<factors.size();i++) {
+			BigInteger currentVal = factors.get(i);
+			int count = 1;
+			for(int j = i+1;j<factors.size();j++) {
+				if(currentVal.equals(factors.get(j))) {
+					factors.remove(j);
+					count++;
+					j--;
 				}
 			}
-			if(whatsLeft.mod(bigI).equals(BigInteger.ZERO)) {
-				int expoCount = 1;
-				whatsLeft = whatsLeft.divide(bigI);
-				while(whatsLeft.mod(bigI).equals(BigInteger.ZERO)) {
-					whatsLeft = whatsLeft.divide(bigI);
-					expoCount++;
-				}
-				p.add(pow(num(i),num(expoCount)));
-			}
-		}
-			
-		
-		
-		if(whatsLeft.equals(BigInteger.ONE)) return p;
-		if(whatsLeft.isProbablePrime(128)) {
-			p.add(pow(num(whatsLeft),num(1)));
-			return p;
+			p.add(new Power(num(currentVal),num(count)));
 		}
 		
-		
-		//look for new big primes
-		BigInteger currentPrime = BigInteger.valueOf(smallPrimeIterations*6+1).nextProbablePrime();
-		while(currentPrime.compareTo(BigInteger.valueOf(1000000)) == -1) {
-			counter++;
-			if(counter%checkSpacing == 0) {
-				if(currentPrime.compareTo(whatsLeft.sqrt()) == 1) break;
-				if(whatsLeft.isProbablePrime(128)) {
-					p.add(pow(num(whatsLeft),num(1)));
-					return p;
-				}
-			}
-				
-			if(whatsLeft.mod(currentPrime).equals(BigInteger.ZERO)) {
-				if(!recentBigPrimes.contains(currentPrime)) recentBigPrimes.add(currentPrime);
-				int expoCount = 1;
-				whatsLeft = whatsLeft.divide(currentPrime);
-				while(whatsLeft.mod(currentPrime).equals(BigInteger.ZERO)) {
-					whatsLeft = whatsLeft.divide(currentPrime);
-					expoCount++;
-				}
-				p.add(pow(num(currentPrime),num(expoCount)));
-			}
-			currentPrime = currentPrime.nextProbablePrime();
-		}
-			
-		
-		
-		if(!whatsLeft.equals(BigInteger.ONE)) {
-			recentBigPrimes.add(whatsLeft);//we pretend that what's left is prime
-			p.add(pow(num(whatsLeft),num(1)));
-		}
 		
 		return p;
 	}

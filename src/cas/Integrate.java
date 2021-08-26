@@ -56,6 +56,7 @@ public class Integrate extends Expr{
 		if(toBeSimplified instanceof Integrate) toBeSimplified = toBeSimplified.modifyFromExample(sinCase,settings);
 		if(toBeSimplified instanceof Integrate) toBeSimplified = arctanCase((Integrate)toBeSimplified,settings);
 		if(toBeSimplified instanceof Integrate) toBeSimplified = polyDiv((Integrate)toBeSimplified,settings);
+		if(toBeSimplified instanceof Integrate) toBeSimplified = partialFraction((Integrate)toBeSimplified,settings);
 		if(toBeSimplified instanceof Integrate) toBeSimplified = specialUSub((Integrate)toBeSimplified,settings);
 		if(toBeSimplified instanceof Integrate) toBeSimplified = normalUSub((Integrate)toBeSimplified,settings);
 		if(toBeSimplified instanceof Integrate) toBeSimplified.set(0, distr(((Integrate)toBeSimplified).get()).simplify(settings));
@@ -71,7 +72,7 @@ public class Integrate extends Expr{
 		if(invObj.fastSimilarStruct(integ.get())) {
 			Expr denom = integ.get().get();
 			ExprList poly = polyExtract(denom, integ.getVar(), settings);
-			if(poly != null) {
+			if(poly != null && poly.size() == 3) {
 				Expr c = poly.get(0),b = poly.get(1),a = poly.get(2);
 				
 				Expr check = sub(prod(num(4),a,c),pow(b,num(2))).simplify(settings);
@@ -80,6 +81,14 @@ public class Integrate extends Expr{
 					return prod(num(2),check,atan(prod(check, sum(prod(num(2),a,integ.getVar()),b) )) ).simplify(settings);
 				}
 			}
+		}
+		return integ;
+	}
+	
+	Expr partialFraction(Integrate integ,Settings settings) {
+		integ.set(0, partialFrac(integ.get(), integ.getVar(), settings) );
+		if(integ.get() instanceof Sum) {
+			return integralSum((Integrate)integ,settings);
 		}
 		return integ;
 	}
@@ -95,7 +104,7 @@ public class Integrate extends Expr{
 			settings = new Settings(settings);
 			settings.powExpandMode = true;
 			frac[1] = distr(  inv(frac[1])  ).simplify(settings);
-			settings.powExpandMode = true;
+			settings.powExpandMode = false;
 			
 			ExprList numPoly = polyExtract(frac[0],integ.getVar(),settings);
 			ExprList denPoly = polyExtract(frac[1],integ.getVar(),settings);
@@ -124,7 +133,7 @@ public class Integrate extends Expr{
 					Power pow = (Power)innerProd.get(i);
 					if(pow.getBase().contains(integ.getVar())) {
 						
-						Num[] frac = extractNormalFrac(pow.getExpo());
+						Num[] frac = extractNumFrac(pow.getExpo());
 						if(frac!=null) {
 							if(frac[0].value.abs().compareTo(frac[1].value) == 1 && frac[0].value.signum() == -1) {
 								bestIndex = i;
@@ -164,7 +173,7 @@ public class Integrate extends Expr{
 					Power pow = (Power)innerProd.get(i);
 					if(pow.getBase().contains(integ.getVar())) {
 						
-						Num[] frac = extractNormalFrac(pow.getExpo());
+						Num[] frac = extractNumFrac(pow.getExpo());
 						if(frac!=null ) {
 							if(frac[0].value.signum() == 1) {
 								bestIndex = i;

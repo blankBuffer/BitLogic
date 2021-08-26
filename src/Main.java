@@ -38,7 +38,7 @@ public class Main extends QuickMath{
 	}
 	
 	public static void main(String[] args) {
-		System.out.println("Benjamin Currie @2021 v 1.2.2 , java runtime version: "+System.getProperty("java.version"));
+		System.out.println("Benjamin Currie @2021 v 1.3.0 , java runtime version: "+System.getProperty("java.version"));
 		
 		for(String arg:args) {
 			if(arg.equals("no-gui")) GUI = false;

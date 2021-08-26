@@ -272,7 +272,7 @@ public class Factor extends Expr{
 				Num[] frac = new Num[] {num(1),num(1)};
 				if(current instanceof Power) {
 					Power currentPower = (Power)current;
-					Num[] fracTemp = extractNormalFrac(currentPower.getExpo());
+					Num[] fracTemp = extractNumFrac(currentPower.getExpo());
 					if(fracTemp != null) {
 						current = currentPower.getBase();
 						frac = fracTemp;
@@ -294,7 +294,7 @@ public class Factor extends Expr{
 						Num[] otherFrac = new Num[] {num(1),num(1)};
 						if(other instanceof Power) {
 							Power otherPower = (Power)other;
-							Num[] otherFracTemp = extractNormalFrac(otherPower.getExpo());
+							Num[] otherFracTemp = extractNumFrac(otherPower.getExpo());
 							if(otherFracTemp !=null) {
 								other = otherPower.getBase();
 								otherFrac = otherFracTemp;

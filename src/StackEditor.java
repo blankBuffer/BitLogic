@@ -391,7 +391,11 @@ public class StackEditor extends cas.QuickMath{
 				integrateOver();
 			}else if(command.equals("poly")) {
 				Var v = var("x");
-				stack.addElement(polyExtract(last(), v,Settings.normal));
+				partialFrac(last(), v, currentSettings);
+			}else if(command.equals("degree")) {
+				Var v = var("x");
+				
+				System.out.println( degree(last(),v) );
 			}else if(command.equals("pow-expand")) {
 				stack.set(size()-1, Distr.powExpand( (Power) last(),currentSettings) );
 			}else if(command.equals("hash")) {

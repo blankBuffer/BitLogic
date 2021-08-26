@@ -17,6 +17,7 @@ public class Distr extends Expr{
 		Expr toBeSimplified = copy();
 		if(flags.simple) return toBeSimplified;
 		
+		Settings oldSettings = settings;
 		settings = new Settings(settings);
 		settings.factor = false;
 		toBeSimplified.simplifyChildren(settings);
@@ -24,8 +25,9 @@ public class Distr extends Expr{
 		toBeSimplified = toBeSimplified.get();
 		
 		if(settings.distr) {
+			settings.powExpandMode = false;
 			toBeSimplified = generalDistr(toBeSimplified,settings);
-			if(settings.powExpandMode) toBeSimplified = powExpand(toBeSimplified,settings);
+			if(oldSettings.powExpandMode) toBeSimplified = powExpand(toBeSimplified,settings);
 		}
 		
 		toBeSimplified.flags.simple = true;
@@ -37,7 +39,7 @@ public class Distr extends Expr{
 			Expr needsExpand = null;
 			Prod prod = null;
 			for(int i = 0;i<expr.size();i++) {
-				if(expr.get(i) instanceof Sum || (settings.powExpandMode && expr.get(i) instanceof Power && ((Power)expr.get(i)).getBase() instanceof Sum )) {
+				if(expr.get(i) instanceof Sum || (settings.powExpandMode && expr.get(i) instanceof Power && ((Power)expr.get(i)).getBase() instanceof Sum &&  ((Power)expr.get(i)).getExpo() instanceof Num && !((Power)expr.get(i)).getExpo().negative() )) {
 					needsExpand = expr.get(i).copy();
 					prod = (Prod)expr.copy();
 					prod.remove(i);

@@ -172,7 +172,7 @@ public class Sum extends Expr{
 		Num[] total = new Num[] {num(0),num(1)};
 		
 		for(int i = 0;i < sum.size();i++) {
-			Num[] frac = extractNormalFrac(sum.get(i));
+			Num[] frac = extractNumFrac(sum.get(i));
 			if(frac != null) {
 				total[0].value = total[0].value.multiply(frac[1].value).add(frac[0].value.multiply(total[1].value));
 				total[1].value = total[1].value.multiply(frac[1].value);

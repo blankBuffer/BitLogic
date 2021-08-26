@@ -100,7 +100,7 @@ public class Power extends Expr{
 			//if expo is a frac turn it into a mixed fraction sum
 			
 			Num[] frac;
-			frac = extractNormalFrac(pow.getExpo());
+			frac = extractNumFrac(pow.getExpo());
 			if(frac!=null) {
 				Num numer = frac[0];
 				Num denom = frac[1];
@@ -128,7 +128,7 @@ public class Power extends Expr{
 					}
 					
 					frac = null;
-					frac = extractNormalFrac(expo.get(i));
+					frac = extractNumFrac(expo.get(i));
 					
 					if(frac!=null) {
 						Num numer = frac[0];
@@ -223,7 +223,7 @@ public class Power extends Expr{
 	Expr productInBase(Power pow,Settings settings) {
 		if(pow.getBase() instanceof Prod) {
 			Prod casted = (Prod)pow.getBase().copy();
-			Num[] frac = extractNormalFrac(pow.getExpo());
+			Num[] frac = extractNumFrac(pow.getExpo());
 			boolean createsComplexNumber = false;
 			if(!settings.allowComplexNumbers && frac != null) {
 				if(frac[1].value.mod(BigInteger.TWO).equals(BigInteger.ZERO)) createsComplexNumber = true;
