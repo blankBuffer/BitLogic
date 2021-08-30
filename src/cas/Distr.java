@@ -63,7 +63,7 @@ public class Distr extends Expr{
 			Power pow = (Power)expr;
 			if(pow.getExpo() instanceof Num && pow.getBase() instanceof Sum && pow.getBase().size() == 2) {
 				Num expo  = (Num)pow.getExpo();
-				if(expo.value.compareTo(BigInteger.valueOf(8)) == -1 && expo.value.compareTo(BigInteger.ONE) == 1) {
+				if(expo.value.compareTo(BigInteger.valueOf(16)) == -1 && expo.value.compareTo(BigInteger.ONE) == 1) {
 					settings = new Settings(settings);
 					settings.powExpandMode = true;
 					settings.factor = false;

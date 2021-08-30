@@ -18,6 +18,9 @@ public class Sum extends Expr{
 		Expr toBeSimplified = copy();
 		if(flags.simple) return toBeSimplified;
 		
+		settings = new Settings(settings);
+		settings.factor = false;
+		
 		toBeSimplified.simplifyChildren(settings);//simplify all the sub expressions
 		
 		distrSubProds((Sum)toBeSimplified,settings);

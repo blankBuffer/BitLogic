@@ -16,6 +16,7 @@ public class Integrate extends Expr{
 	static Equ logCase = (Equ)createExpr("integrate(ln(x),x)=ln(x)*x-x");
 	static Equ cosCase = (Equ)createExpr("integrate(cos(x),x)=sin(x)");
 	static Equ sinCase = (Equ)createExpr("integrate(sin(x),x)=-cos(x)");
+	static Equ atanCase = (Equ)createExpr("integrate(atan(x),x)=x*atan(x)+ln(x^2+1)/-2");
 	
 	public Integrate(Expr e,Var v){
 		add(e);
@@ -54,7 +55,8 @@ public class Integrate extends Expr{
 		if(toBeSimplified instanceof Integrate) toBeSimplified = toBeSimplified.modifyFromExample(logCase,settings);
 		if(toBeSimplified instanceof Integrate) toBeSimplified = toBeSimplified.modifyFromExample(cosCase,settings);
 		if(toBeSimplified instanceof Integrate) toBeSimplified = toBeSimplified.modifyFromExample(sinCase,settings);
-		if(toBeSimplified instanceof Integrate) toBeSimplified = arctanCase((Integrate)toBeSimplified,settings);
+		if(toBeSimplified instanceof Integrate) toBeSimplified = toBeSimplified.modifyFromExample(atanCase,settings);
+		if(toBeSimplified instanceof Integrate) toBeSimplified = arctanCase((Integrate)toBeSimplified,settings);//integration of inverse quadratic
 		if(toBeSimplified instanceof Integrate) toBeSimplified = polyDiv((Integrate)toBeSimplified,settings);
 		if(toBeSimplified instanceof Integrate) toBeSimplified = partialFraction((Integrate)toBeSimplified,settings);
 		if(toBeSimplified instanceof Integrate) toBeSimplified = specialUSub((Integrate)toBeSimplified,settings);
@@ -63,6 +65,16 @@ public class Integrate extends Expr{
 		if(toBeSimplified instanceof Integrate) toBeSimplified = ibp((Integrate)toBeSimplified,settings);
 		if(toBeSimplified instanceof Integrate) toBeSimplified = ibpSpecial((Integrate)toBeSimplified,settings);
 		if(toBeSimplified instanceof Integrate) toBeSimplified = integralSum((Integrate)toBeSimplified,settings);
+		
+		if(toBeSimplified instanceof Sum) {//remove constants
+			Sum casted = (Sum)toBeSimplified;
+			for(int i = 0;i<casted.size();i++) {
+				if(!casted.get(i).contains( getVar() )) {
+					casted.remove(i);
+					i--;
+				}
+			}
+		}
 		
 		toBeSimplified.flags.simple = true;
 		return toBeSimplified;
@@ -188,7 +200,7 @@ public class Integrate extends Expr{
 				}
 			}
 			for(int i = 0;i < innerProd.size();i++) {
-				if(innerProd.get(i) instanceof Log) {//log and inverse trigonometric
+				if(innerProd.get(i) instanceof Log || innerProd.get(i) instanceof Atan) {//log and inverse trigonometric
 					bestIndex = i;
 					break;
 				}

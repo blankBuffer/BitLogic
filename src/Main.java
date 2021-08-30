@@ -21,6 +21,11 @@ public class Main extends QuickMath{
 		}
 	}
 	
+	static void clearTerm() {
+		System.out.print("\033[H\033[2J");
+		System.out.flush();
+	}
+	
 	static void startCommandLineInterface() {
 		StackEditor editor = new StackEditor();
 		@SuppressWarnings("resource")
@@ -28,6 +33,9 @@ public class Main extends QuickMath{
 		while(true) {
 			System.out.print("> ");
 			String s = scanner.nextLine();
+			
+			clearTerm();
+			
 			if(s.equals("GUI")) {
 				GUI = true;
 				break;
@@ -38,7 +46,7 @@ public class Main extends QuickMath{
 	}
 	
 	public static void main(String[] args) {
-		System.out.println("Benjamin Currie @2021 v 1.3.0 , java runtime version: "+System.getProperty("java.version"));
+		System.out.println("Benjamin Currie @2021 v 1.3.1 , java runtime version: "+System.getProperty("java.version"));
 		
 		for(String arg:args) {
 			if(arg.equals("no-gui")) GUI = false;

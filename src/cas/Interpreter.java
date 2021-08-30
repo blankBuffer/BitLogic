@@ -12,7 +12,7 @@ public class Interpreter extends QuickMath{
 			ArrayList<String> tokens = generateTokens(string);
 			return createExprFromTokens(tokens);
 		}catch(Exception e) {
-			System.err.println(e);
+			e.printStackTrace();
 			return null;
 		}
 	}
@@ -24,6 +24,7 @@ public class Interpreter extends QuickMath{
 	}
 	
 	static void errors(ArrayList<String> tokens) throws Exception {
+		//System.out.println(tokens);
 		if(tokens == null) throw new Exception("missing tokens");
 		
 		String initToken = tokens.get(0);
@@ -43,9 +44,10 @@ public class Interpreter extends QuickMath{
 	static boolean containsOperators(String string) {
 		for(char c:string.toCharArray()) {
 			if(c == '+') return true;
+			else if(c == '(') return true;
+			else if(c == ')') return true;
 			else if(c == '-') return true;
 			else if(c == '^') return true;
-			else if(c == '(') return true;
 			else if(c == '/') return true;
 			else if(c == '*') return true;
 			else if(c == ',') return true;
@@ -210,6 +212,8 @@ public class Interpreter extends QuickMath{
 						e.printStackTrace();
 					}
 					return expr;
+				}else if(Character.isDigit(op.charAt(0)) || containsOperators(op)) {
+					throw new Exception("expected operator before '('");
 				}
 				else throw new Exception("function \""+op+"\" is not part of the system");
 				
@@ -281,7 +285,7 @@ public class Interpreter extends QuickMath{
 				String token = tokens.get(i);
 				if(token.equals("+") || token.equals("-")) {
 					if(i != 0) {
-						if(tokens.get(i-1).equals("^")) continue;//avoids error created by e^-x+x where the negative is actually in the exponent
+						if(tokens.get(i-1).equals("^") || tokens.get(i-1).equals("/")) continue;//avoids error created by e^-x+x where the negative is actually in the exponent same things with x+y/-2
 						ArrayList<String> tokenSet = new ArrayList<String>();
 						for(int j = indexOfLastAdd;j<i;j++) {
 							tokenSet.add(tokens.get(j));
@@ -389,7 +393,12 @@ public class Interpreter extends QuickMath{
 		int lastIndex = 0;
 		for(int i = 0;i < string.length();i++) {
 			if(string.charAt(i) == '(' || string.charAt(i) == '[') count++;
-			else if(string.charAt(i) == ')' || string.charAt(i) == ']') count--;
+			else if(string.charAt(i) == ')' || string.charAt(i) == ']') {
+				count--;
+				if(i != string.length()-1  && !containsOperators(Character.toString(  string.charAt(i+1) ))) {
+					throw new Exception("expected operator after ')'");
+				}
+			}
 			
 			if(count == 0) {
 				if(string.charAt(i) == '*') {
@@ -442,7 +451,7 @@ public class Interpreter extends QuickMath{
 				lastIndex = i;
 			}
 		}
-		if(count != 0) throw new Exception("could not find parenthesis");
+		if(count != 0) throw new Exception("missing ')'");
 		if(lastIndex < string.length()+1) {
 			String subString = string.substring(lastIndex, string.length());
 			if(!subString.isEmpty())tokens.add(subString);

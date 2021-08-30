@@ -18,6 +18,7 @@ public class Factor extends Expr{
 
 	@Override
 	public Expr simplify(Settings settings) {
+		
 		Expr toBeSimplified = copy();
 		if(flags.simple) return toBeSimplified;
 		settings = new Settings(settings);
@@ -36,11 +37,36 @@ public class Factor extends Expr{
 			toBeSimplified = quadraticFactor(toBeSimplified,varcounts,settings);
 			toBeSimplified = generalFactor(toBeSimplified,settings);
 			toBeSimplified = reversePascalsTriangle(toBeSimplified,varcounts,settings);
-			
 			toBeSimplified = reExpandSubSums(toBeSimplified,settings);//yeah this does slow things down a bit
+			toBeSimplified = pullOutNegatives(toBeSimplified);
 		}
 		toBeSimplified.flags.simple = true;
 		return toBeSimplified;
+	}
+	
+	Expr pullOutNegatives(Expr expr) {
+		if(expr instanceof Sum) {
+			long highest  = Long.MIN_VALUE;
+			int index = 0;
+			for(int i = 0;i<expr.size();i++) {
+				long current = expr.get(i).generateHash();
+				if(current>highest) {
+					highest = current;
+					index = i;
+				}
+			}
+			
+			Expr lowestHashExpr = expr.get(index);
+			if(lowestHashExpr.negative()) {
+				Settings settings = new Settings();
+				settings.factor = false;
+				settings.distr = true;
+				Expr out = distr(neg(expr)).simplify(settings);
+				return neg(out);
+			}
+			
+		}
+		return expr;
 	}
 	
 	Expr reExpandSubSums(Expr expr,Settings settings) {
@@ -60,74 +86,46 @@ public class Factor extends Expr{
 		
 		return expr;
 	}
-
-	private static ArrayList<Expr> triangleCache1 = new ArrayList<Expr>();//positive version
-	private static ArrayList<Expr> triangleCache2 = new ArrayList<Expr>();//negative version
-	
-	static void initTriangleCache(Settings settings) {//keeping a list on hand to speed things up even though its rarely used
-		for(int i = 2;i<8;i++) {
-			Power toBeExpanded = pow(sum(var("a"),var("b")),num(i));
-			triangleCache1.add(Distr.powExpand(toBeExpanded,settings));
-			toBeExpanded = pow(sub(var("a"),var("b")),num(i));
-			triangleCache2.add(Distr.powExpand(toBeExpanded,settings));
-		}
-	}
 	
 	Expr reversePascalsTriangle(Expr expr,ArrayList<VarCount> varcounts,Settings settings) {
 		if(expr instanceof Sum) {
-			if(triangleCache1.size() == 0) {//initiate cache
-				initTriangleCache(settings);
-			}
 			if(expr.size() > 2 && expr.containsVars() && isPolynomial(expr,varcounts.get(0).v)) {
+				
 				if(varcounts.size() == 2) {
 					int expo = expr.size()-1;
-					int index = expr.size()-3;
-					if(index > -1 && index<triangleCache1.size()) {
-						Expr toBeTried = triangleCache1.get(index);
-						expr = expr.modifyFromExample(equ(toBeTried, pow(sum(var("a"),var("b")),num(expo)) ),settings);
-						toBeTried = triangleCache2.get(index);
-						expr = expr.modifyFromExample(equ(toBeTried, pow(sub(var("a"),var("b")),num(expo)) ),settings);
-					}
+					
+					Expr test = pow(sum(varcounts.get(0).v,varcounts.get(1).v),num(expo));
+					if(Distr.powExpand(test, settings).equalStruct(expr)) return test;
+					test = pow(sum(varcounts.get(0).v,neg(varcounts.get(1).v)),num(expo));
+					if(Distr.powExpand(test, settings).equalStruct(expr)) return test;
+					test = pow(sum(neg(varcounts.get(0).v),varcounts.get(1).v),num(expo));
+					if(Distr.powExpand(test, settings).equalStruct(expr)) return test;
+					
 				}else if(varcounts.size() == 1) {
-					Num n = null;
-					for(int i = 0;i<expr.size();i++) {
-						if(expr.get(i) instanceof Num) {
-							n = (Num)expr.get(i).copy();
-							break;
-						}
-					}
-					if(n==null) return expr;
+					System.out.println("called"+expr);
+					Var v = varcounts.get(0).v;
 					
-					boolean negative = false;
-					if(n.value.signum() == -1) {
-						negative = true;
-					}
-					int expo = expr.size()-1;
-					if(!negative && expo%2 == 0) {
-						for(int i = 0;i<expr.size();i++) {
-							if(expr.get(i) instanceof Prod && expr.get(i).size() == 2) {
-								ExprList test = polyExtract(expr.get(i), varcounts.get(0).v,settings);
-								Expr coef = test.get(test.size()-1);
-								if(coef instanceof Num && ((Num)coef).value.signum() == -1 ) {
-									negative = true;
-									break;
-								}
-							}
-						}
-					}
+					ExprList poly = polyExtract(expr,v, settings);
+					if(poly == null || !(poly.get(poly.size()-1) instanceof Num) || !(poly.get(0) instanceof Num)) return expr;
 					
-					if(negative) {
-						n.value = n.value.abs();
-					}
+					Num leadingCoef = (Num)poly.get(poly.size()-1);
+					Num n = (Num)poly.get(0);
 					
-					BigInteger n2 = bigRoot(n.value, BigInteger.valueOf(expo));
-					if(n2.pow(expo).equals(n.value)) {
-						if(negative) n2 = n2.negate();
-						Power beforeState = pow(sum(varcounts.get(0).v,num(n2)),num(expo));
-						Expr test = Distr.powExpand(beforeState,settings);
-						if(test.equalStruct(expr)) {
-							return beforeState;
-						}
+					BigInteger expo =  BigInteger.valueOf(poly.size()-1);
+					BigInteger varCoef = bigRoot(leadingCoef.value.abs(), expo);
+					if(!varCoef.pow(expo.intValue()).equals(leadingCoef.value.abs())) return expr;
+					BigInteger constant = bigRoot(n.value.abs(), expo);
+					if(!constant.pow(expo.intValue()).equals(n.value.abs())) return expr;
+					
+					
+					for(int i = 0;i<4;i++) {//try negative and positive version
+						
+						Expr test = pow(sum(prod(v,num(varCoef)),num(constant)),num(expo));
+						Expr toCompare = Distr.powExpand(test, settings);
+						if(toCompare.equalStruct(expr)) return test.simplify(settings);
+						
+						constant = constant.negate();
+						if(i%2==1) varCoef = varCoef.negate();
 					}
 					
 				}
