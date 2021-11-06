@@ -1,4 +1,5 @@
 Features
+*write your questions in plain english like wolfram alpha.(buggy as heck)
 *differenciate and integrate equations symbolically and numerically
 *simplify distribute and factor
 *plot equations
