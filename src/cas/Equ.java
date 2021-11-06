@@ -1,5 +1,4 @@
 package cas;
-import java.util.ArrayList;
 
 public class Equ extends Expr{
 	
@@ -85,8 +84,11 @@ public class Equ extends Expr{
 	}
 
 	@Override
-	public Expr replace(ArrayList<Equ> equs) {
-		for(Equ e:equs) if(equalStruct(e.getLeftSide())) return e.getRightSide().copy();
+	public Expr replace(ExprList equs) {
+		for(int i = 0;i<equs.size();i++) {
+			Equ e = (Equ)equs.get(i);
+			if(equalStruct(e.getLeftSide())) return e.getRightSide().copy();
+		}
 		Expr left = getLeftSide().replace(equs);
 		Expr right = getRightSide().replace(equs);
 		return new Equ(left,right);
@@ -98,8 +100,8 @@ public class Equ extends Expr{
 	}
 
 	@Override
-	public double convertToFloat(ExprList varDefs) {
-		return 0;
+	public ComplexFloat convertToFloat(ExprList varDefs) {
+		return new ComplexFloat(0,0);
 	}
 
 }

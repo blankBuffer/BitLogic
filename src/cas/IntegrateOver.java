@@ -1,7 +1,5 @@
 package cas;
 
-import java.util.ArrayList;
-
 public class IntegrateOver extends Expr {
 
 	private static final long serialVersionUID = -418375860392765107L;
@@ -33,7 +31,7 @@ public class IntegrateOver extends Expr {
 		toBeSimplified.simplifyChildren(settings);
 		
 		Expr test = integrate(((IntegrateOver)toBeSimplified).getExpr(),((IntegrateOver)toBeSimplified).getVar()).simplify(settings);
-		if(!test.containsIntegrals()) {
+		if(!test.containsType(Integrate.class)) {
 			toBeSimplified = sub(test.replace(equ(  ((IntegrateOver)toBeSimplified).getVar() , ((IntegrateOver)toBeSimplified).getMax() )),test.replace(equ(  ((IntegrateOver)toBeSimplified).getVar() , ((IntegrateOver)toBeSimplified).getMin() ))).simplify(settings);
 		}
 		
@@ -80,21 +78,24 @@ public class IntegrateOver extends Expr {
 	}
 
 	@Override
-	public Expr replace(ArrayList<Equ> equs) {
-		for(Equ e:equs) if(equalStruct(e.getLeftSide())) return e.getRightSide().copy();
+	public Expr replace(ExprList equs) {
+		for(int i = 0;i<equs.size();i++) {
+			Equ e = (Equ)equs.get(i);
+			if(equalStruct(e.getLeftSide())) return e.getRightSide().copy();
+		}
 		Expr min = getMin().replace(equs);
-		Expr max = getMin().replace(equs);
+		Expr max = getMax().replace(equs);
 		Expr mainPart = getExpr().replace(equs);
 		Var v = (Var)getVar().replace(equs);
 		return integrateOver(min,max,mainPart,v);
 	}
 
 	@Override
-	public double convertToFloat(ExprList varDefs) {//using simpson's rule
+	public ComplexFloat convertToFloat(ExprList varDefs) {//using simpson's rule
 		int n = 32;//should be an even number
-		double sum = 0;
-		double min = getMin().convertToFloat(varDefs),max = getMax().convertToFloat(varDefs);
-		double step = (max-min)/n;
+		ComplexFloat sum = new ComplexFloat(0,0);
+		ComplexFloat min = getMin().convertToFloat(varDefs),max = getMax().convertToFloat(varDefs);
+		ComplexFloat step = ComplexFloat.div( ComplexFloat.sub(max, min),new ComplexFloat(n,0));
 		
 		Equ vDef = equ(getVar(),floatExpr(min));
 		ExprList varDefs2 = (ExprList) varDefs.copy();
@@ -109,17 +110,18 @@ public class IntegrateOver extends Expr {
 		}
 		varDefs2.add(vDef);
 		
-		sum+=getExpr().convertToFloat(varDefs2);
-		((FloatExpr)vDef.getRightSide()).value+=step;
+		sum = ComplexFloat.add(sum, getExpr().convertToFloat(varDefs2));
+		((FloatExpr)vDef.getRightSide()).value = ComplexFloat.add(((FloatExpr)vDef.getRightSide()).value, step);
 		
 		for(int i = 1;i<n;i++) {
-			sum+=((i%2)*2+2)*getExpr().convertToFloat(varDefs2);
-			((FloatExpr)vDef.getRightSide()).value+=step;
+			sum=ComplexFloat.add(sum,  ComplexFloat.mult( new ComplexFloat(((i%2)*2+2),0) ,getExpr().convertToFloat(varDefs2)) );
+			((FloatExpr)vDef.getRightSide()).value = ComplexFloat.add(((FloatExpr)vDef.getRightSide()).value, step);
 		}
 		
-		sum+=getExpr().convertToFloat(varDefs2);
+		sum=ComplexFloat.add(sum, getExpr().convertToFloat(varDefs2));
 		
-		return sum*(step/3.0);
+		return ComplexFloat.mult(sum,ComplexFloat.mult(step, new ComplexFloat(1.0/3.0,0)));
+		
 	}
 
 	@Override

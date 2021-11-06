@@ -1,6 +1,5 @@
 package cas;
 import java.math.BigInteger;
-import java.util.ArrayList;
 
 public class Solve extends Expr{
 	
@@ -8,6 +7,8 @@ public class Solve extends Expr{
 	static Equ logCase = equ( createExpr("ln(a)=b") , createExpr("a=e^b") );//ln(a)=b -> a=e^b
 	static Equ rootCase = equ( createExpr("m^n=a") , createExpr("m=a^inv(n)")  );//m^n=a -> m=a^(1/n)
 	static Equ expoCase = equ( createExpr("m^n=a")   ,createExpr("n=ln(a)/ln(m)")  );//m^n=a -> n=ln(a)/ln(m)
+	static Equ divCase1 = equ(createExpr("a/b=y"),createExpr("a=y*b"));
+	static Equ divCase2 = equ(createExpr("a/b=y"),createExpr("b=a/y"));
 	
 	//Special case with variants involving roots
 	static Expr rareCase1Ans = createExpr("x=(a+k^2)^2*k^-2/4-a");
@@ -87,6 +88,70 @@ public class Solve extends Expr{
 			}
 				
 			prodMoveNonImportantToRightSide(casted,settings);//x*a*b=c -> x=c*inv(a)*inv(b)
+			
+			if(casted.getEqu().getLeftSide() instanceof Div){
+				Div castedDiv = (Div)casted.getEqu().getLeftSide();
+				boolean numerHasVar = castedDiv.getNumer().contains(casted.getVar());
+				boolean denomHasVar = castedDiv.getDenom().contains(casted.getVar());
+				
+				if(numerHasVar && !denomHasVar) {
+					casted.setEqu((Equ) casted.getEqu().modifyFromExample(divCase1, settings));
+				}else if(!numerHasVar && denomHasVar){
+					casted.setEqu((Equ) casted.getEqu().modifyFromExample(divCase2, settings));
+				}
+			}
+			
+			{
+				Equ eq = casted.getEqu();
+				if(eq.getLeftSide() instanceof Prod) {
+					Prod pr = (Prod)eq.getLeftSide();
+					if(pr.size() == 2) {
+						Sum sumPart = null;
+						Expr varPart = null;
+						for(int i = 0;i<2;i++) {
+							if(pr.get(i) instanceof Sum) {
+								if(sumPart != null) break;
+								sumPart = (Sum)pr.get(i);
+							}else {
+								varPart = pr.get(i);
+							}
+						}
+						if(sumPart!=null && varPart != null) {//I'm not going to use poly extract because i want it to solve more than the generic quadratic like sin(x)^2+sin(x)+2=0
+							Expr a = new Sum(),b = new Sum();
+							for(int i = 0;i<sumPart.size();i++) {
+								if(!sumPart.get(i).contains(varPart)) {
+									b.add(sumPart.get(i));
+								}else {
+									if(sumPart.get(i).equalStruct(varPart)) a.add(num(1));
+									else if(sumPart.get(i) instanceof Prod) {
+										Prod subProd = (Prod)sumPart.get(i);
+										Prod p = new Prod();
+										for(int j = 0;j<subProd.size();j++) {
+											if(!subProd.get(j).equalStruct(varPart)) {
+												p.add(subProd.get(j));
+											}
+										}
+										a.add(p);
+									}
+								}
+							}
+							if(!a.contains(casted.getVar()) && !b.contains(casted.getVar())) {
+								Expr c = eq.getRightSide();
+								
+								ExprList out = new ExprList();
+								out.add(     solve(equ(varPart,prod(sub(sqrt(  sum(pow(b,num(2)),prod(num(4),a,c))) , b ),inv(num(2)),inv(a))),casted.getVar())     );
+								out.add(     solve(equ(varPart,prod(sum(sqrt(  sum(pow(b,num(2)),prod(num(4),a,c))) , b ),inv(num(-2)),inv(a))),casted.getVar())    );
+								
+								toBeSimplified = out.simplify(settings);
+								
+								break;
+							}
+							
+						}
+					}
+				}
+				
+			}
 				
 			casted.setEqu( (Equ)casted.getEqu().modifyFromExample(logCase,settings)  );//ln(x)=b -> x=e^b
 				
@@ -98,7 +163,7 @@ public class Solve extends Expr{
 					casted.setEqu( (Equ)casted.getEqu().modifyFromExample(rootCase,settings)  );
 					if(castedPower.getExpo() instanceof Num) {
 						Num num = (Num)castedPower.getExpo();
-						if(num.value.mod(BigInteger.TWO).equals(BigInteger.ZERO)) {//if exponent is divisible by two then there are two solutions
+						if(num.realValue.mod(BigInteger.TWO).equals(BigInteger.ZERO) && !num.isComplex()) {//if exponent is divisible by two then there are two solutions
 							ExprList repl = new ExprList();//result has more than one solution so stored in a list
 							repl.add(casted.copy());
 							casted.getEqu().setRightSide(neg(casted.getEqu().getRightSide()));
@@ -193,8 +258,11 @@ public class Solve extends Expr{
 	}
 
 	@Override
-	public Expr replace(ArrayList<Equ> equs) {
-		for(Equ e:equs) if(equalStruct(e.getLeftSide())) return e.getRightSide().copy();
+	public Expr replace(ExprList equs) {
+		for(int i = 0;i<equs.size();i++) {
+			Equ e = (Equ)equs.get(i);
+			if(equalStruct(e.getLeftSide())) return e.getRightSide().copy();
+		}
 		Equ equ = (Equ)getEqu().replace(equs);
 		Var var = (Var)getVar().replace(equs);
 		
@@ -216,7 +284,7 @@ public class Solve extends Expr{
 	}
 
 	@Override
-	public double convertToFloat(ExprList varDefs) {//newton's method
+	public ComplexFloat convertToFloat(ExprList varDefs) {//newton's method
 		FloatExpr guess = floatExpr(1);
 		Expr expr = sub(getEqu().getLeftSide(),getEqu().getRightSide());
 		expr = sub(getVar(),div(expr,diff(expr,getVar())));

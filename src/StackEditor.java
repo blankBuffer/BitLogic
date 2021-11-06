@@ -5,6 +5,7 @@ import cas.*;
 public class StackEditor extends cas.QuickMath{	
 	
 	Settings currentSettings = new Settings();
+	Defs currentDefs = new Defs();
 	
 	DefaultListModel<Expr> stack = new DefaultListModel<Expr>();
 	DefaultListModel<Expr> stackOld = new DefaultListModel<Expr>();
@@ -97,9 +98,10 @@ public class StackEditor extends cas.QuickMath{
 			@Override
 			public void run() {
 				long oldTime = System.nanoTime();
-				expr = expr.simplify(currentSettings);
+				expr = expr.replace(currentDefs.getVars()).simplify(currentSettings);//Substitutes the variables and simplifies
+				
 				long delta = System.nanoTime()-oldTime;
-				System.out.println("took "+delta/1000000.0+" ms");
+				System.out.println("took "+delta/1000000.0+" ms to compute");
 			}
 		};
 		compute.start();
@@ -130,9 +132,13 @@ public class StackEditor extends cas.QuickMath{
 		stack.remove(size()-1);
 	}
 	
-	void log() {
+	void ln() {
 		if(last() == null) return;
 		stack.set(size()-1, ln( last() ) );
+	}
+	void log() {
+		if(sLast() == null) return;
+		stack.set(size()-1, div(ln( sLast()),ln(last()) ) );
 	}
 	
 	void factor() {
@@ -157,13 +163,9 @@ public class StackEditor extends cas.QuickMath{
 	
 	void divide() {
 		if(sLast() == null) return;
-		if(sLast() instanceof Prod) {
-			sLast().add(inv(last()));
-			stack.remove(size()-1);
-		}else {
-			stack.set(size()-2, div( sLast() ,stack.get(size()-1 )) );
-			stack.remove(size()-1);
-		}
+		
+		stack.set(size()-2, div( sLast() ,stack.get(size()-1 )) );
+		stack.remove(size()-1);
 	}
 	
 	void inverse() {
@@ -275,6 +277,22 @@ public class StackEditor extends cas.QuickMath{
 		if(last() == null) return;
 		stack.set(size()-1, tan(last()));
 	}
+	
+	void sinh() {
+		if(last() == null) return;
+		stack.set(size()-1, sinh(last()));
+	}
+	
+	void cosh() {
+		if(last() == null) return;
+		stack.set(size()-1, cosh(last()));
+	}
+	
+	void tanh() {
+		if(last() == null) return;
+		stack.set(size()-1, tanh(last()));
+	}
+	
 	void atan() {
 		if(last() == null) return;
 		stack.set(size()-1, atan(last()));
@@ -369,8 +387,6 @@ public class StackEditor extends cas.QuickMath{
 				}
 			}else if(command.equals("roll")) {
 				roll();
-			}else if(command.equals("i")) {
-				stack.addElement( i());
 			}else if(command.equals("pi")) {
 				stack.addElement( pi());
 			}else if(command.equals("sin")) {
@@ -379,12 +395,18 @@ public class StackEditor extends cas.QuickMath{
 				cos();
 			}else if(command.equals("tan")) {
 				tan();
+			}else if(command.equals("sinh")) {
+				sinh();
+			}else if(command.equals("cosh")) {
+				cosh();
+			}else if(command.equals("tanh")) {
+				tanh();
 			}else if(command.equals("atan")) {
 				atan();
 			}else if(command.equals("quit") || command.equals("exit") || command.equals("close")) {
 				System.exit(0);
 			}else if(command.equals("plot")) {
-				new Plot(stack);
+				new Plot(this);
 			}else if(command.equals("approx")) {
 				approx();
 			}else if(command.equals("integrateOver")) {
@@ -392,16 +414,19 @@ public class StackEditor extends cas.QuickMath{
 			}else if(command.equals("poly")) {
 				Var v = var("x");
 				partialFrac(last(), v, currentSettings);
-			}else if(command.equals("degree")) {
-				Var v = var("x");
-				
-				System.out.println( degree(last(),v) );
 			}else if(command.equals("pow-expand")) {
-				stack.set(size()-1, Distr.powExpand( (Power) last(),currentSettings) );
+				//stack.set(size()-1, Distr.powExpand( (Power) last(),currentSettings) );
 			}else if(command.equals("hash")) {
 				System.out.println(last().generateHash());
 			}else if(command.equals("equal-struct")) {
 				stack.addElement(new BoolState( last().equalStruct(sLast()) ));
+			}else if(command.equals("define")) {
+				currentDefs.addVar( ((Var)sLast()).name , last());
+				stack.removeRange(size()-2, size()-1);
+			}else if(command.equals("defineFunc")) {
+				String name = ((Var)stack.get(size()-3)).name;
+				currentDefs.addFunc(name, func(name,(ExprList)sLast(),last()));
+				stack.removeRange(size()-3, size()-1);
 			}else if(command.contains(":")) {
 				String[] parts = command.split(":");
 				command = parts[0];
@@ -424,14 +449,19 @@ public class StackEditor extends cas.QuickMath{
 						stack.set(size()-1,temp);
 					}else Main.createMessege("invalid index");
 				}
-			}
-			else {
-				Expr newExpr = Interpreter.createExpr(command);
-				if(newExpr != null) stack.addElement(newExpr);
-				else Main.createMessege("invalid syntax");
+			}else {
+				long oldTime = System.nanoTime();
+				Expr convertedQ = Ask.ask(command,currentDefs,currentSettings);
+
+				long delta = System.nanoTime()-oldTime;
+				System.out.println("took "+delta/1000000.0+" ms to understand");
+					
+				System.out.println("meaning: "+convertedQ);
+				stack.addElement(convertedQ);
+				
 			}
 		}catch(Exception e) {
-			Main.createMessege( "An error has occured\n"+e);
+			Main.createMessege( "An error has occured\nreason: "+e.getMessage());
 			e.printStackTrace();
 		}
 			

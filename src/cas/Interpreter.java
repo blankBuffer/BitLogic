@@ -4,23 +4,33 @@ import java.util.ArrayList;
 
 public class Interpreter extends QuickMath{
 	
-	private static Expr expr = null;//used for running the r() on own thread for avoiding getting stuck
+	public static Expr SUCCESS = var("done!");
 	
-	public static Expr createExpr(String string){
+	public static Expr createExpr(String string,Defs defs,Settings settings){
 		string = string.replaceAll(" ", "");//remove spaces
 		try {
 			ArrayList<String> tokens = generateTokens(string);
-			return createExprFromTokens(tokens);
+			return createExprFromTokens(tokens,defs,settings);
 		}catch(Exception e) {
 			e.printStackTrace();
 			return null;
 		}
 	}
 	
-	static Expr createExprFromToken(String token) throws Exception {
+	public static Expr createExprWithThrow(String string,Defs defs,Settings settings) throws Exception{
+		string = string.replaceAll(" ", "");//remove spaces
+		ArrayList<String> tokens = generateTokens(string);
+		return createExprFromTokens(tokens,defs,settings);
+	}
+	
+	public static Expr createExpr(String string) {
+		return createExpr(string,Defs.blank,Settings.normal);
+	}
+	
+	static Expr createExprFromToken(String token,Defs defs,Settings settings) throws Exception {
 		ArrayList<String> tokens = new ArrayList<String>();
 		tokens.add(token);
-		return createExprFromTokens(tokens);
+		return createExprFromTokens(tokens,defs,settings);
 	}
 	
 	static void errors(ArrayList<String> tokens) throws Exception {
@@ -41,18 +51,41 @@ public class Interpreter extends QuickMath{
 		
 	}
 	
-	static boolean containsOperators(String string) {
+	public static boolean isOperator(String string) {
+		if(string.equals("+")) return true;
+		else if(string.equals("(")) return true;
+		else if(string.equals(")")) return true;
+		else if(string.equals("{")) return true;
+		else if(string.equals("}")) return true;
+		else if(string.equals("-")) return true;
+		else if(string.equals("^")) return true;
+		else if(string.equals("/")) return true;
+		else if(string.equals("*")) return true;
+		else if(string.equals(",")) return true;
+		else if(string.equals("[")) return true;
+		else if(string.equals("]")) return true;
+		else if(string.equals("=")) return true;
+		else if(string.equals("!")) return true;
+		
+		return false;
+	}
+	
+	public static boolean containsOperators(String string) {
 		for(char c:string.toCharArray()) {
 			if(c == '+') return true;
 			else if(c == '(') return true;
 			else if(c == ')') return true;
+			else if(c == '{') return true;
+			else if(c == '}') return true;
 			else if(c == '-') return true;
 			else if(c == '^') return true;
 			else if(c == '/') return true;
 			else if(c == '*') return true;
 			else if(c == ',') return true;
 			else if(c == '[') return true;
+			else if(c == ']') return true;
 			else if(c == '=') return true;
+			else if(c == '!') return true;
 		}
 		return false;
 	}
@@ -65,7 +98,7 @@ public class Interpreter extends QuickMath{
 		System.out.println();
 	}
 	
-	static Expr createExprFromTokens(ArrayList<String> tokens) throws Exception{
+	static Expr createExprFromTokens(ArrayList<String> tokens,Defs defs,Settings settings) throws Exception{
 		
 		errors(tokens);
 		
@@ -81,13 +114,15 @@ public class Interpreter extends QuickMath{
 			if(num != null){
 				return num;
 			}else if(!containsOperators(string)){
-				if(string.equals("i")) return i();
+				if(string.equals("i")) return num(0,1);
 				else if(string.equals("pi")) return pi();
 				else if(string.equals("e")) return e();
-				else return var(string);
+				else {//variables
+					return var(string);
+				}
 			}else if(string.charAt(0) == '[') {
 				if(string.equals("[]")) return new ExprList();
-				Expr expr = createExprFromToken(string.substring(1, string.length()-1));
+				Expr expr = createExprFromToken(string.substring(1, string.length()-1),defs,settings);
 				if(expr instanceof ExprList) return expr;
 				else {
 					ExprList temp = new ExprList();
@@ -95,26 +130,22 @@ public class Interpreter extends QuickMath{
 					return temp;
 				}
 			}else {
-				return createExprFromTokens(generateTokens(tokens.get(0)));
+				return createExprFromTokens(generateTokens(tokens.get(0)),defs,settings);
 			}
 		}else if(tokens.size() == 2) {
 			if(tokens.get(0) == "-") {
-				String string = tokens.get(1);
-				Expr num = null;
-				try {
-					if(string.contains(".")) num = floatExpr(string);
-					else num = num(string);
-				}catch(Exception e) {}
-				
-				if(num != null) {
-					if(num instanceof Num) ((Num)num).value = ((Num)num).value.negate();
-					else ((FloatExpr)num).value = -((FloatExpr)num).value;
-					return num;
-				}
-			}else {
+				return neg(createExpr(tokens.get(1),defs,settings));
+			}else if(!tokens.get(1).equals("!")){
 				String op = tokens.get(0);
 				if(op.isBlank()) throw new Exception("confusing parenthesis");
-				Expr params = createExprFromToken(tokens.get(1));
+				Expr paramsTemp = createExprFromToken(tokens.get(1),defs,settings);
+				ExprList params;
+				if(paramsTemp instanceof ExprList) params = (ExprList)paramsTemp;
+				else {
+					params = new ExprList();
+					params.add(paramsTemp);
+				}
+				
 				Exception wrongParams = new Exception("wrong number of parameters");
 				if(!(params instanceof ExprList)) {
 					ExprList temp = new ExprList();
@@ -127,9 +158,21 @@ public class Interpreter extends QuickMath{
 				}else if(op.equals("integrate")) {
 					if(params.size() != 2) throw wrongParams;
 					return integrate(params.get(0),(Var)params.get(1));
+				}else if(op.equals("sinh")) {
+					if(params.size() != 1) throw wrongParams;
+					return sinh(params.get(0));
+				}else if(op.equals("cosh")) {
+					if(params.size() != 1) throw wrongParams;
+					return cosh(params.get(0));
+				}else if(op.equals("tanh")) {
+					if(params.size() != 1) throw wrongParams;
+					return tanh(params.get(0));
 				}else if(op.equals("sqrt")) {
 					if(params.size() != 1) throw wrongParams;
 					return sqrt(params.get(0));
+				}else if(op.equals("cbrt")) {
+					if(params.size() != 1) throw wrongParams;
+					return cbrt(params.get(0));
 				}else if(op.equals("sin")) {
 					if(params.size() != 1) throw wrongParams;
 					return sin(params.get(0));
@@ -145,11 +188,18 @@ public class Interpreter extends QuickMath{
 				}else if(op.equals("ln") || op.equals("log")) {
 					if(params.size() != 1) throw wrongParams;
 					return ln(params.get(0));
+				}else if(op.equals("exp")) {
+					if(params.size() != 1) throw wrongParams;
+					return exp(params.get(0));
+				}else if(op.equals("gamma")) {
+					if(params.size() != 1) throw wrongParams;
+					return gamma(params.get(0));
 				}else if(op.equals("integrateOver")) {
 					if(params.size() != 4) throw wrongParams;
 					return integrateOver(params.get(0),params.get(1),params.get(2),(Var)params.get(3));
 				}else if(op.equals("solve")) {
 					if(params.size() != 2) throw wrongParams;
+					if(!(params.get() instanceof Equ)) throw new Exception("the first parameter should be an equation");
 					return solve((Equ)params.get(0),(Var)params.get(1));
 				}else if(op.equals("inv")) {
 					if(params.size() != 1) throw wrongParams;
@@ -164,8 +214,20 @@ public class Interpreter extends QuickMath{
 				}else if(op.equals("distr")) {
 					if(params.size() != 1) throw wrongParams;
 					return distr(params.get(0));
-				}
-				else if(op.equals("open")) {
+				}else if(op.equals("delete")) {
+					String name = ((Var)params.get(0)).name;
+					defs.removeVar(name);
+					return SUCCESS;
+				}else if(op.equals("deleteFunc")) {
+					String name = ((Var)params.get(0)).name;
+					defs.removeFunc(name);
+					return SUCCESS;
+				}else if(op.equals("clear")) {
+					defs.clear();
+					return SUCCESS;
+				}else if(op.equals("showDefs")) {
+					return var(defs.toString());
+				}else if(op.equals("open")) {
 					if(params.size() != 1) throw wrongParams;
 					try {
 						return Expr.openExpr(params.get(0).toString());
@@ -178,49 +240,49 @@ public class Interpreter extends QuickMath{
 					if(params.size() != 2) throw wrongParams;
 					try {
 						Expr.saveExpr(params.get(0), params.get(1).toString());
-						return var("done!");
+						return SUCCESS;
 					} catch (IOException e) {
 						e.printStackTrace();
 					}
-				}else if(op.equals("r")) {
-					if(params.size() != 1) throw wrongParams;
-					expr = params.get(0);
-					Thread compute = new Thread() {
-						@Override
-						public void run() {
-							expr = expr.simplify(Settings.normal);
-						}
-					};
-					compute.start();
-					Thread stuckCheck = new Thread() {
-						@Override
-						public void run() {
-							try {
-								while(compute.isAlive()) {
-									sleep(1000);
-									if(compute.isAlive()) System.out.println("thinking...");
-								}
-							} catch (InterruptedException e) {
-								e.printStackTrace();
-							}
-						}
-					};
-					stuckCheck.start();
-					try {
-						compute.join();
-					} catch (InterruptedException e) {
-						e.printStackTrace();
-					}
-					return expr;
-				}else if(Character.isDigit(op.charAt(0)) || containsOperators(op)) {
-					throw new Exception("expected operator before '('");
+				}else if(op.equals("define")) {
+					String name = ((Var)params.get(0)).name;
+					defs.addVar(name, params.get(1).simplify(Settings.normal));
+					return SUCCESS;
 				}
-				else throw new Exception("function \""+op+"\" is not part of the system");
+				else if(op.equals("defineFunc")) {
+					String name = ((Var)params.get(0)).name;
+					ExprList functionParams = null;
+					if(params.get(1) instanceof ExprList) {
+						functionParams = (ExprList)params.get(1);
+					}else {
+						functionParams = new ExprList();
+						functionParams.add(paramsTemp.get(1));
+					}
+					for(int i = 0;i<functionParams.size();i++) {
+						functionParams.set(i, equ(functionParams.get(i),functionParams.get(i).copy()));
+					}
+					Func f = func(name ,functionParams ,params.get(2).simplify(Settings.normal ));
+					f.example = true;
+					defs.addFunc( name , f);
+					return SUCCESS;
+				}else {
+					Func f = defs.getFunc(op);
+					if(f == null) {
+						throw new Exception("function: \""+op+"\" is not defined");
+					}
+					ExprList vars = f.getVars();
+					
+					for(int i = 0;i<vars.size();i++) {
+						Equ equ = (Equ)vars.get(i);
+						equ.setRightSide(params.get(i));
+					}
+					
+					return f;
+				}
 				
 			}
 		}
-		
-		boolean isSum = false,isProd = false,isList = false;
+		boolean isSum = false,isProd = false,isList = false,isFactorial = false;
 		int indexOfPowToken = -1,indexOfEquToken = -1;
 		boolean lastWasOperator = false;
 		for(int i = 0;i<tokens.size();i++) {
@@ -241,6 +303,9 @@ public class Interpreter extends QuickMath{
 			}else if(token.equals("^")) {
 				if(indexOfPowToken == -1) indexOfPowToken = i;
 				lastWasOperator = true;
+			}else if(token.equals("!")) {
+				isFactorial = true;
+				lastWasOperator = true;
 			}else {
 				lastWasOperator = false;
 			}
@@ -256,14 +321,14 @@ public class Interpreter extends QuickMath{
 					
 					ArrayList<String> tokenSet = new ArrayList<String>();
 					for(int j = indexOfLastComma;j<i;j++)  tokenSet.add(tokens.get(j));
-					list.add(createExprFromTokens(tokenSet));
+					list.add(createExprFromTokens(tokenSet,defs,settings));
 					indexOfLastComma = i+1;
 				}
 			}
 			
 			ArrayList<String> tokenSet = new ArrayList<String>();
 			for(int j = indexOfLastComma;j<tokens.size();j++)  tokenSet.add(tokens.get(j));
-			list.add(createExprFromTokens(tokenSet));
+			list.add(createExprFromTokens(tokenSet,defs,settings));
 			
 			return list;
 			
@@ -276,7 +341,7 @@ public class Interpreter extends QuickMath{
 			for(int i = indexOfEquToken+1;i<tokens.size();i++) {
 				rightSideTokens.add(tokens.get(i));
 			}
-			return equ(createExprFromTokens(leftSideTokens),createExprFromTokens(rightSideTokens));
+			return equ(createExprFromTokens(leftSideTokens,defs,settings),createExprFromTokens(rightSideTokens,defs,settings));
 		}else if(isSum) {
 			Expr sum = new Sum();
 			int indexOfLastAdd = 0;
@@ -291,13 +356,13 @@ public class Interpreter extends QuickMath{
 							tokenSet.add(tokens.get(j));
 						}
 						if(nextIsSub) {
-							Expr toBeAdded = createExprFromTokens(tokenSet);
+							Expr toBeAdded = createExprFromTokens(tokenSet,defs,settings);
 							if(toBeAdded instanceof Prod) {
 								boolean foundNum = false;
 								for(int k = 0;k<toBeAdded.size();k++) {
 									if(toBeAdded.get(k) instanceof Num) {
 										Num casted = (Num)toBeAdded.get(k);
-										casted.value = casted.value.negate();
+										casted.realValue = casted.realValue.negate();
 										foundNum = true;
 										break;
 									}
@@ -309,7 +374,7 @@ public class Interpreter extends QuickMath{
 							}else sum.add(neg(toBeAdded));
 						}
 						else {
-							sum.add(createExprFromTokens(tokenSet));
+							sum.add(createExprFromTokens(tokenSet,defs,settings));
 						}
 					}
 					indexOfLastAdd = i+1;
@@ -321,13 +386,13 @@ public class Interpreter extends QuickMath{
 				tokenSet.add(tokens.get(j));
 			}
 			if(nextIsSub) {
-				Expr toBeAdded = createExprFromTokens(tokenSet);
+				Expr toBeAdded = createExprFromTokens(tokenSet,defs,settings);
 				if(toBeAdded instanceof Prod) {
 					boolean foundNum = false;
 					for(int k = 0;k<toBeAdded.size();k++) {
 						if(toBeAdded.get(k) instanceof Num) {
 							Num casted = (Num)toBeAdded.get(k);
-							casted.value = casted.value.negate();
+							casted.realValue = casted.realValue.negate();
 							foundNum = true;
 							break;
 						}
@@ -337,12 +402,13 @@ public class Interpreter extends QuickMath{
 					}
 					sum.add(toBeAdded);
 				}else sum.add(neg(toBeAdded));
-			}else sum.add(createExprFromTokens(tokenSet));
+			}else sum.add(createExprFromTokens(tokenSet,defs,settings));
 			
 			if(sum.size() == 1) return sum.get();
 			return sum;
 		}else if(isProd) {
-			Expr prod = new Prod();
+			Expr numerProd = new Prod();
+			Expr denomProd = new Prod();
 			int indexOfLastProd = 0;
 			boolean nextDiv = false;
 			for(int i = 0;i<tokens.size();i++) {
@@ -352,38 +418,46 @@ public class Interpreter extends QuickMath{
 					for(int j = indexOfLastProd;j<i;j++) {
 						tokenSet.add(tokens.get(j));
 					}
-					if(nextDiv) prod.add(inv(createExprFromTokens(tokenSet)));
-					else prod.add(createExprFromTokens(tokenSet));
+					if(nextDiv) denomProd.add(createExprFromTokens(tokenSet,defs,settings));
+					else numerProd.add(createExprFromTokens(tokenSet,defs,settings));
 					if(token.equals("/")) nextDiv = true;
 					else nextDiv = false;
 					
 					indexOfLastProd = i+1;
 				}
 			}
+			
 			ArrayList<String> tokenSet = new ArrayList<String>();
 			for(int j = indexOfLastProd;j<tokens.size();j++) {
 				tokenSet.add(tokens.get(j));
 			}
-			if(nextDiv) prod.add(inv(createExprFromTokens(tokenSet)));
-			else prod.add(createExprFromTokens(tokenSet));
+			if(nextDiv) denomProd.add(createExprFromTokens(tokenSet,defs,settings));
+			else {
+				Expr test = createExprFromTokens(tokenSet,defs,settings);
+				numerProd.add(test);
+			}
+			if(numerProd.size() == 1) numerProd = numerProd.get();
+			if(denomProd.size() == 1) denomProd = denomProd.get();
 			
-			if(prod.get(0).equalStruct(num(1))) prod.remove(0);
-			if(prod.size() == 1) return prod.get();
-			
-			return prod;
+			if(denomProd instanceof Prod && denomProd.size() == 0) {
+				return numerProd;
+			}else {
+				return div(numerProd,denomProd);
+			}
 		}else if(indexOfPowToken != -1) {
 			ArrayList<String> baseTokens = new ArrayList<String>();
 			for(int i = 0;i<indexOfPowToken;i++) baseTokens.add(tokens.get(i));
-			Expr base = createExprFromTokens(baseTokens);
+			Expr base = createExprFromTokens(baseTokens,defs,settings);
 			
 			ArrayList<String> expoTokens = new ArrayList<String>();
 			for(int i = indexOfPowToken+1;i<tokens.size();i++) expoTokens.add(tokens.get(i));
-			Expr expo = createExprFromTokens(expoTokens);
+			Expr expo = createExprFromTokens(expoTokens,defs,settings);
 			
 			return pow(base,expo);
+		}else if(isFactorial) {
+			return gamma(sum(createExpr(tokens.get(0),defs,settings),num(1)));
 		}
-		
-		return null;
+		throw new Exception("unrecognized format:"+tokens);
 	}
 	
 	static ArrayList<String> generateTokens(String string) throws Exception{//splits up a string into its relevant subsections and removes parentheses
@@ -392,11 +466,11 @@ public class Interpreter extends QuickMath{
 		int count = 0;
 		int lastIndex = 0;
 		for(int i = 0;i < string.length();i++) {
-			if(string.charAt(i) == '(' || string.charAt(i) == '[') count++;
-			else if(string.charAt(i) == ')' || string.charAt(i) == ']') {
+			if(string.charAt(i) == '(' || string.charAt(i) == '[' || string.charAt(i) == '{') count++;
+			else if(string.charAt(i) == ')' || string.charAt(i) == ']' || string.charAt(i) == '}') {
 				count--;
 				if(i != string.length()-1  && !containsOperators(Character.toString(  string.charAt(i+1) ))) {
-					throw new Exception("expected operator after ')'");
+					//throw new Exception("expected operator after ')'");
 				}
 			}
 			
@@ -436,16 +510,21 @@ public class Interpreter extends QuickMath{
 					if(!subString.isEmpty())tokens.add(subString);
 					tokens.add("=");
 					lastIndex = i+1;
+				}else if(string.charAt(i) == '!') {
+					String subString = string.substring(lastIndex, i);
+					if(!subString.isEmpty())tokens.add(subString);
+					tokens.add("!");
+					lastIndex = i+1;
 				}else if(string.charAt(i) == ')') {
 					tokens.add(string.substring(lastIndex+1, i));
 					lastIndex = i+1;
-				}else if(string.charAt(i) == ']') {
+				}else if(string.charAt(i) == '}') {
 					tokens.add(string.substring(lastIndex, i+1));
-					lastIndex = i+2;
+					lastIndex = i+1;
 				}
 				
 				
-			}else if(count == 1 && (string.charAt(i) == '(')) {//this is important for detecting sin(x) into [sin,x]
+			}else if(count == 1 && ((string.charAt(i) == '(') || string.charAt(i) == '{')) {//this is important for detecting sin(x) into [sin,x]
 				String subString = string.substring(lastIndex, i);
 				if(!subString.isEmpty())tokens.add(subString);
 				lastIndex = i;

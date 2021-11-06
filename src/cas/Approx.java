@@ -1,7 +1,5 @@
 package cas;
 
-import java.util.ArrayList;
-
 public class Approx extends Expr{
 	
 	private static final long serialVersionUID = 5922084948843351440L;
@@ -45,13 +43,19 @@ public class Approx extends Expr{
 	}
 
 	@Override
-	public Expr replace(ArrayList<Equ> equs) {
-		// TODO Auto-generated method stub
-		return null;
+	public Expr replace(ExprList equs) {
+		for(int i = 0;i<equs.size();i++) {
+			Equ e = (Equ)equs.get(i);
+			if(equalStruct(e.getLeftSide())) return e.getRightSide().copy();
+		}
+		
+		
+		
+		return new Approx(get().replace(equs),(ExprList) get(1).copy());
 	}
 
 	@Override
-	public double convertToFloat(ExprList varDefs) {
+	public ComplexFloat convertToFloat(ExprList varDefs) {
 		return get().convertToFloat((ExprList)get(1));//kinda pointless but whatever
 	}
 

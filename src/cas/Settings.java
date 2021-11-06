@@ -1,18 +1,25 @@
 package cas;
 
-public class Settings extends QuickMath{
-	public boolean factor = true;
-	public boolean distr = true;
+import java.io.Serializable;
+
+public class Settings extends QuickMath implements Serializable{
+	/**
+	 * 
+	 */
+	private static final long serialVersionUID = -423836233586167621L;
 	public boolean allowComplexNumbers = false;
-	public boolean powExpandMode = false;
 	
 	public Settings() {
 	}
-	public Settings(Settings other) {
-		factor = other.factor;
-		distr = other.distr;
-		allowComplexNumbers = other.allowComplexNumbers;
-		powExpandMode = other.powExpandMode;
-	}
 	public static Settings normal = new Settings();
+	
+	@Override
+	public String toString() {
+		return "allowComplexNumbers:"+allowComplexNumbers+"\n";
+		
+	}
+	
+	public boolean isSame(Settings other) {
+		return allowComplexNumbers == other.allowComplexNumbers;
+	}
 }

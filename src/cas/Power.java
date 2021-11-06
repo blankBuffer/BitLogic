@@ -1,17 +1,16 @@
 package cas;
 import java.math.BigInteger;
-import java.util.ArrayList;
 
 public class Power extends Expr{
 	
 	private static final long serialVersionUID = 3916987907762535821L;
-	static Equ baseHasPower = (Equ) createExpr("(a^b)^c=a^(b*c)");//(a^b)^c -> a^(b*c)
-	static Equ powerOfZero = (Equ) createExpr("a^0=1");//a^0 -> 1
-	static Equ powerOfOne = (Equ) createExpr("a^1=a");//a^1 -> a
-	static Equ eToLn = (Equ) createExpr("e^ln(a)=a");//e^ln(a) -> a
-	static Equ oneToExpo = (Equ) createExpr("1^x=1");//1^x -> 1
-	static Equ zeroToExpo = (Equ) createExpr("0^x=0");//0^x -> 0
-	static Equ baseToLn = (Equ) createExpr("a^ln(b)=e^(ln(a)*ln(b))");//a^ln(b) -> e^(ln(a)*ln(b))
+	static Equ baseHasPower = (Equ) createExpr("(a^b)^c=a^(b*c)");
+	static Equ powerOfZero = (Equ) createExpr("a^0=1");
+	static Equ powerOfOne = (Equ) createExpr("a^1=a");
+	static Equ eToLn = (Equ) createExpr("e^ln(a)=a");
+	static Equ oneToExpo = (Equ) createExpr("1^x=1");
+	static Equ zeroToExpo = (Equ) createExpr("0^x=0");
+	static Equ baseToLn = (Equ) createExpr("a^ln(b)=e^(ln(a)*ln(b))");
 	
 	void setBase(Expr base) {
 		set(0, base);
@@ -39,11 +38,15 @@ public class Power extends Expr{
 		
 		toBeSimplified.simplifyChildren(settings);//simplify sub expressions
 		
-		((Power)toBeSimplified).setExpo( factor(((Power)toBeSimplified).getExpo()).simplify(settings) );
+		((Power)toBeSimplified).setExpo( factor(((Power)toBeSimplified).getExpo()).simplify(settings) );//factor expo
 		
 		toBeSimplified = toBeSimplified.modifyFromExample(baseHasPower,settings);//(a^b)^c -> a^(b*c)
 		
+		if(toBeSimplified instanceof Power) toBeSimplified = negativeExpoToInv((Power)toBeSimplified,settings);
+		
 		if(toBeSimplified instanceof Power) toBeSimplified = toBeSimplified.modifyFromExample(oneToExpo,settings);//1^x -> x
+		
+		if(toBeSimplified instanceof Power) toBeSimplified = logToBase((Power)toBeSimplified,settings);//e^(ln(x)*b)->x^b
 		
 		if(toBeSimplified instanceof Power) toBeSimplified = rootExpand((Power)toBeSimplified);//12^(x/2) find divisible squares in this case to -> (4*2)^x/2, also works with cubes and stuff
 		
@@ -63,7 +66,7 @@ public class Power extends Expr{
 		
 		if(toBeSimplified instanceof Power) toBeSimplified = toBeSimplified.modifyFromExample(zeroToExpo,settings);//0^x -> 0
 		
-		if(toBeSimplified instanceof Power) toBeSimplified = toBeSimplified.modifyFromExample(powerOfOne,settings);//a^1 -> a
+		if(toBeSimplified instanceof Power) toBeSimplified = Power.unCast(toBeSimplified);//a^1 -> a
 		
 		if(toBeSimplified instanceof Power) toBeSimplified = toBeSimplified.modifyFromExample(eToLn,settings);//e^ln(a) -> a
 		
@@ -71,6 +74,41 @@ public class Power extends Expr{
 		
 		toBeSimplified.flags.simple = true;
 		return toBeSimplified;
+	}
+	
+	Expr negativeExpoToInv(Power pow,Settings settings) {
+		if(pow.getExpo().negative()) {
+			pow.setExpo(neg(pow.getExpo()));
+			return inv( pow ).simplify(settings);
+		}
+		return pow;
+	}
+	
+	Expr logToBase(Power pow,Settings settings) {//e^(ln(x)*b)->x^b
+		
+		if(pow.getBase() instanceof E && pow.getExpo() instanceof Prod) {
+			int logCount = 0;
+			Prod expoProd = (Prod)pow.getExpo();
+			int index = -1;
+			
+			for(int i = 0;i<expoProd.size();i++) {
+				if(expoProd.get(i) instanceof Log) {
+					if(logCount != 0) return pow;
+					logCount++;
+					index = i;
+				}
+			}
+			
+			if(index == -1) return pow;
+			
+			pow.setBase(expoProd.get(index).get());
+			expoProd.remove(index);
+			
+			pow.setExpo(expoProd.simplify(settings));
+			
+		}
+		
+		return pow;
 	}
 	
 	Expr expoSumHasLog(Power pow,Settings settings) {
@@ -97,27 +135,22 @@ public class Power extends Expr{
 	Expr expoHasIntegerInSum(Power pow,Settings settings) {
 		
 		if(pow.getBase() instanceof Num && !(pow.getExpo() instanceof Num)) {
+			
+			pow.setExpo(distr(pow.getExpo()).simplify(settings));//distribute exponent
+			
 			//if expo is a frac turn it into a mixed fraction sum
 			
-			Num[] frac;
-			frac = extractNumFrac(pow.getExpo());
-			if(frac!=null) {
-				Num numer = frac[0];
-				Num denom = frac[1];
-				if(numer.value.compareTo(denom.value) == 1 || numer.value.signum() == -1) {
-					Num integer = num(numer.value.divide(denom.value));
-					if(numer.value.signum() == -1) integer.value = integer.value.subtract(BigInteger.ONE);
-					numer.value = numer.value.mod(denom.value);
-					pow.setExpo( sum(div(numer,denom).simplify(settings) ,integer) );	
-				}
+			Sum fracSum = null;
+			if(pow.getExpo() instanceof Div) fracSum = Div.mixedFraction((Div)pow.getExpo());
+			if(fracSum!=null) {
+				pow.setExpo(fracSum);
 			}
-			
 			
 			if(pow.getExpo() instanceof Sum) {
 				Expr expo = pow.getExpo();
 				for(int i = 0;i<expo.size();i++) {
 					
-					if(expo.get(i) instanceof Num) {
+					if(expo.get(i) instanceof Num) {//the actual expansion
 						
 						Num num = (Num)expo.get(i);
 						expo.remove(i);
@@ -127,19 +160,11 @@ public class Power extends Expr{
 						
 					}
 					
-					frac = null;
-					frac = extractNumFrac(expo.get(i));
-					
-					if(frac!=null) {
-						Num numer = frac[0];
-						Num denom = frac[1];
-						if(numer.value.compareTo(denom.value) == 1 || numer.value.signum() == -1) {
-							Num integer = num(numer.value.divide(denom.value));
-							if(numer.value.signum() == -1) integer.value = integer.value.subtract(BigInteger.ONE);
-							numer.value = numer.value.mod(denom.value);
-							expo.set(i, div(numer,denom).simplify(settings) );
-							expo.add(integer);
-						}
+					fracSum = null;
+					if(expo.get(i) instanceof Div) fracSum = Div.mixedFraction((Div)expo.get(i));
+					if(fracSum!=null) {//if expo is a frac turn it into a mixed fraction sum
+						expo.set(i, fracSum.get(1));
+						expo.add(fracSum.get(0));
 					}
 					
 				}
@@ -153,40 +178,31 @@ public class Power extends Expr{
 			Num numBase = (Num)pow.getBase();
 			BigInteger den = null;
 			
-			if(invObj.fastSimilarStruct(pow.getExpo())) {
-				Expr e = pow.getExpo().get();
-				if(e instanceof Num) den = ((Num)e).value;
-			}else if(pow.getExpo() instanceof Prod) {
+			if(pow.getExpo() instanceof Div) {
+				Expr e = ((Div)pow.getExpo()).getDenom();
+				Num denNum = e.getCoefficient();
 				
-				Prod prod = (Prod)pow.getExpo();
-				
-				for(int i = 0;i<prod.size();i++) {
-					if(invObj.fastSimilarStruct(prod.get(i))) {
-						Expr e = prod.get(i).get();
-						if(e instanceof Num) den = ((Num)e).value;
-					}
-				}
+				if(!denNum.isComplex() && !denNum.equalStruct(Num.ONE)) den = denNum.realValue;
 				
 			}
 			
 			BigInteger negOne = BigInteger.valueOf(-1);
 			
-			if(numBase.value.signum() == -1 && !numBase.value.equals(negOne)) {
-				pow.setBase(prod(num(-1),num(numBase.value.abs())));
+			if(numBase.realValue.signum() == -1 && !numBase.realValue.equals(negOne)) {
+				pow.setBase(prod(num(-1),num(numBase.realValue.abs())));
 				return pow;
 			}
-			
 			if(den!=null) {
 				
-				if(numBase.value.equals(negOne)) {
-					if(!den.equals(BigInteger.TWO)) {
+				if(numBase.realValue.equals(negOne)) {
+					if(!den.mod(BigInteger.TWO).equals(BigInteger.ZERO)) {
 						return num(-1);
 					}
 				}
 				
 				BigInteger i = BigInteger.TWO;
 				
-				BigInteger leftOver = numBase.value;
+				BigInteger leftOver = numBase.realValue;
 				
 				BigInteger currentPower = i.pow(Math.abs(den.intValue()));
 				
@@ -223,10 +239,11 @@ public class Power extends Expr{
 	Expr productInBase(Power pow,Settings settings) {
 		if(pow.getBase() instanceof Prod) {
 			Prod casted = (Prod)pow.getBase().copy();
-			Num[] frac = extractNumFrac(pow.getExpo());
+			Div frac = null;
+			if(pow.getExpo() instanceof Div) frac = (Div)pow.getExpo();
 			boolean createsComplexNumber = false;
-			if(!settings.allowComplexNumbers && frac != null) {
-				if(frac[1].value.mod(BigInteger.TWO).equals(BigInteger.ZERO)) createsComplexNumber = true;
+			if(!settings.allowComplexNumbers && frac != null && frac.isNumericalAndReal()) {
+				if(((Num)frac.getDenom()).realValue.mod(BigInteger.TWO).equals(BigInteger.ZERO)) createsComplexNumber = true;
 			}
 			
 			Prod out = new Prod();
@@ -254,7 +271,7 @@ public class Power extends Expr{
 		if(power.getBase() instanceof Num) {
 			Power pp = perfectPower((Num)power.getBase());
 			
-			if( ((Num)pp.getExpo()).value.equals(BigInteger.ONE) ) return;
+			if( ((Num)pp.getExpo()).realValue.equals(BigInteger.ONE) ) return;
 			
 			power.setBase(pp.getBase());
 			
@@ -268,17 +285,17 @@ public class Power extends Expr{
 	
 	Expr exponentiateIntegers(Power power) {
 		if(power.getBase() instanceof Num && power.getExpo() instanceof Num) {
-			BigInteger base = ((Num)power.getBase()).value;
-			BigInteger expo = ((Num)power.getExpo()).value;
+			Num base = (Num)power.getBase();
+			Num expo = (Num)power.getExpo();
 			
-			BigInteger minusOne = BigInteger.valueOf(-1);
-			if(base.equals(minusOne) && expo.equals(minusOne)) return num(-1);
-			else if(expo.signum()!=-1) {
-				BigInteger result = base.pow(expo.intValue());
-				return new Num(result);
-			}else if(!expo.equals(BigInteger.valueOf(-1))) {
-				BigInteger result = base.pow(-expo.intValue());
-				return inv(num(result));
+			if(base.equals(Num.NEG_ONE) && expo.equals(Num.NEG_ONE)) {
+				return num(-1);
+			}else if(!expo.isComplex()) {
+				if(expo.signum()!=-1) {
+					return base.pow(expo.realValue);
+				}else{
+					return inv(base.pow(expo.realValue.negate()));
+				}
 			}
 			
 		}
@@ -295,19 +312,10 @@ public class Power extends Expr{
 	@Override
 	public String toString() {
 		String out = "";
-		if(equalStruct(i())) {
-			out+="i";
-		}else if(sqrtObj.fastSimilarStruct(this)) {//fancy and having set to true makes it faster
+		if(sqrtObj.fastSimilarStruct(this)) {//fancy and having set to true makes it faster
 			out+="sqrt(";
 			out+=getBase().toString();
 			out+=')';
-		}else if(invObj.fastSimilarStruct(this)) {
-			boolean paren = false;
-			if(get() instanceof Sum || get() instanceof Prod) paren = true;
-			out+="1/";
-			if(paren) out+='(';
-			out+=getBase().toString();
-			if(paren) out+=')';
 		}else if(cbrtObj.fastSimilarStruct(this)) {
 			out+="cbrt(";
 			out+=getBase().toString();
@@ -316,10 +324,10 @@ public class Power extends Expr{
 			boolean useParenOnBase = false;//parentheses if
 			//base is a negative integer
 			//base is a sum or product or power
-			if(getBase() instanceof Sum || getBase() instanceof Prod || getBase() instanceof Power) useParenOnBase = true;
+			if(getBase() instanceof Sum || getBase() instanceof Prod || getBase() instanceof Power || getBase() instanceof Div) useParenOnBase = true;
 			if(getBase() instanceof Num) {
 				Num baseCasted = (Num)getBase();
-				if(baseCasted.value.signum() == -1) useParenOnBase = true;
+				if(baseCasted.realValue.signum() == -1) useParenOnBase = true;
 			}
 			if(useParenOnBase) out+="(";
 			out+=getBase().toString();
@@ -327,7 +335,7 @@ public class Power extends Expr{
 			out+="^";
 			
 			boolean useParenOnExpo = false;
-			if(getExpo() instanceof Sum || getExpo() instanceof Prod || getExpo() instanceof Power) useParenOnExpo = true;
+			if(getExpo() instanceof Sum || getExpo() instanceof Prod || getExpo() instanceof Power || getExpo() instanceof Div) useParenOnExpo = true;
 			if(useParenOnExpo) out+="(";
 			out+=getExpo().toString();
 			if(useParenOnExpo) out+=")";
@@ -357,12 +365,28 @@ public class Power extends Expr{
 		}
 		return false;
 	}
+	
+	public static Power cast(Expr e) {
+		if(e instanceof Power) {
+			return (Power)e;
+		}else {
+			return pow(e,num(1));
+		}
+	}
+	
+	public static Expr unCast(Expr e) {
+		return e.modifyFromExample(powerOfOne, Settings.normal);
+	}
 
 	@Override
-	public Expr replace(ArrayList<Equ> equs) {
-		for(Equ e:equs) if(equalStruct(e.getLeftSide())) return e.getRightSide().copy();
+	public Expr replace(ExprList equs) {
+		for(int i = 0;i<equs.size();i++) {
+			Equ e = (Equ)equs.get(i);
+			if(equalStruct(e.getLeftSide())) return e.getRightSide().copy();
+		}
 		Expr base = getBase().replace(equs);
 		Expr expo = getExpo().replace(equs);
+		
 		return pow(base,expo);
 	}
 	@Override
@@ -370,8 +394,8 @@ public class Power extends Expr{
 		return (getBase().generateHash()+87234*getExpo().generateHash())-8176428751232101230L;
 	}
 	@Override
-	public double convertToFloat(ExprList varDefs) {
-		return Math.pow(getBase().convertToFloat(varDefs), getExpo().convertToFloat(varDefs));
+	public ComplexFloat convertToFloat(ExprList varDefs) {
+		return ComplexFloat.pow(getBase().convertToFloat(varDefs), getExpo().convertToFloat(varDefs));
 	}
 
 }

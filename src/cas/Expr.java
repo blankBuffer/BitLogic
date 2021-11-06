@@ -14,15 +14,20 @@ public abstract class Expr extends QuickMath implements Comparable<Expr>, Serial
 		private static final long serialVersionUID = -2823404902493132716L;
 		boolean simple = false;
 		boolean sorted = false;
+		Settings settingsUsedForSimplify = Settings.normal;
+		
 		void set(Flags other) {
 			simple = other.simple;
 			sorted = other.sorted;
+			settingsUsedForSimplify = other.settingsUsedForSimplify;
 		}
 		
 		void reset() {
 			simple = false;
 			sorted = false;
+			settingsUsedForSimplify = Settings.normal;
 		}
+		
 	}
 	
 	public Flags flags = new Flags();
@@ -42,55 +47,71 @@ public abstract class Expr extends QuickMath implements Comparable<Expr>, Serial
 	
 	public abstract long generateHash();
 	
-	public abstract Expr replace(ArrayList<Equ> equs);
+	public abstract Expr replace(ExprList equs);
 	
-	public abstract double convertToFloat(ExprList varDefs);
+	public abstract ComplexFloat convertToFloat(ExprList varDefs);
 	
-	public boolean negative() {
-		if(this instanceof Num) return ((Num)this).value.signum() == -1;
+	public boolean negative() {//Assumes its already simplified
+		if(this instanceof Num) return ((Num)this).signum() == -1;
 		else if(this instanceof Prod) {
 			for(int i = 0;i<size();i++) {
-				if(get(i) instanceof Num) if(((Num)get(i)).value.signum() == -1) return true;
-				else if(invObj.fastSimilarStruct(get(i))) {
-					Power castedPower = (Power)get(i);
-					if(castedPower.getBase() instanceof Num) {
-						if(((Num)castedPower.getBase()).value.signum() == -1) return true;
-					}
+				if(get(i) instanceof Num) {
+					if(((Num)get(i)).signum() == -1) return true;
 				}
 			}
+		}else if(this instanceof Div) {
+			Div casted = (Div)this;
+			return casted.getNumer().negative() || casted.getDenom().negative();
+		}else if(this instanceof Sum) {
+			Sum casted = (Sum)this;
+			
+			long highest  = Long.MIN_VALUE;
+			int index = 0;
+			for(int i = 0;i<casted.size();i++) {
+				long current = casted.get(i).abs(Settings.normal).generateHash();//its very important to use the absolute value
+				if(current>highest) {
+					highest = current;
+					index = i;
+				}
+			}
+			
+			Expr lowestHashExpr = casted.get(index);
+			return lowestHashExpr.negative();
+			
 		}
 		return false;
 	}
 	
-	public Expr abs(Settings settings) {
-		if(this instanceof Num) return num(((Num)this).value.abs());
+	public Expr abs(Settings settings) {//Assumes its already simplified
+		if(this instanceof Num) return ((Num)this).strangeAbs();
 		else if(this instanceof Prod) {
 			for(int i = 0;i<size();i++) {
 				if(get(i) instanceof Num) {
-					if(((Num)get(i)).value.signum() == -1) {
+					if(((Num)get(i)).signum() == -1) {
 						Expr copy = (Prod)copy();
-						copy.set(i, num(((Num)get(i)).value.abs()) );
+						copy.set(i, ((Num)get(i)).strangeAbs() );
 						return copy.simplify(settings);
-					}
-				}else if(invObj.fastSimilarStruct(get(i))) {
-					Power castedPower = (Power)get(i);
-					if(castedPower.getBase() instanceof Num) {
-						if(((Num)castedPower.getBase()).value.signum() == -1) {
-							Expr copy = (Prod)copy();
-							copy.set(i, inv(num(((Num)castedPower.getBase()).value.abs())));
-							return copy.simplify(settings);
-						}
 					}
 				}
 			}
+		}else if(this instanceof Div) {
+			Div casted = (Div)this;
+			return div(casted.getNumer().abs(settings), casted.getDenom().abs(settings)).simplify(settings);
 		}
 		return copy();
 	}
 	
-	Num getCoefficient() {
+	Num getCoefficient() {//returns numerator coefficient
 		if(this instanceof Prod) {
 			for(int i = 0;i<size();i++) if(get(i) instanceof Num) return (Num)get(i).copy();
 		}else if(this instanceof Num) return (Num)copy();
+		return num(1);
+	}
+	
+	Num getInverseCoef() {
+		if(this instanceof Div) {
+			return ((Div)this).getDenom().getCoefficient();
+		}
 		return num(1);
 	}
 	
@@ -118,16 +139,20 @@ public abstract class Expr extends QuickMath implements Comparable<Expr>, Serial
 		return similarStruct(other,false);
 	}
 	
-	void getParts(ArrayList<Var> vars,ArrayList<Expr> exprs,Expr other) {//other is input,vars and exprs are outputs
-			
+	boolean getParts(ExprList vars,ExprList exprs,Expr other) {//other and this is input,vars and exprs are outputs
 		if(this instanceof Var) {
-			if(vars != null) vars.add((Var)copy());
-			if(other != null) exprs.add(other.copy());
-		}else if(other != null) {
+			vars.add((Var)copy());
+			exprs.add(other.copy());
+		}else{
 			if(size()==other.size()) {
-				for(int i = 0;i<size();i++) get(i).getParts(vars,exprs,other.get(i));
+				for(int i = 0;i<size();i++) {
+					if(!get(i).getParts(vars,exprs,other.get(i))) return false;
+				}
+			}else {
+				return false;//different size so variables will obviously not match
 			}
 		}
+		return true;
 	}
 	
 	void countVars(ArrayList<VarCount> varcounts) {
@@ -146,17 +171,17 @@ public abstract class Expr extends QuickMath implements Comparable<Expr>, Serial
 	
 	
 	
-	boolean checkForMatches(ArrayList<Var> vars,ArrayList<Expr> exprs,Expr other) {//other is input,vars and exprs are outputs
+	boolean checkForMatches(ExprList vars,ExprList exprs,Expr other) {//other is input,vars and exprs are outputs
 		
 		//part one, create index pairs
 		
-		ArrayList<Var> usedVars = new ArrayList<Var>();
+		ExprList usedVars = new ExprList();
 		ArrayList<IndexSet> indexSets = new ArrayList<IndexSet>();
 		
 		sort();
 		other.sort();
 		
-		getParts(vars,exprs,other);
+		if(!getParts(vars,exprs,other)) return false;//its possible for expressions to be un-strictly similar
 		
 		if(vars.size()!=exprs.size()) return false;
 		
@@ -209,8 +234,8 @@ public abstract class Expr extends QuickMath implements Comparable<Expr>, Serial
 	}
 	
 	boolean checkForMatches(Expr other) {//shortcut
-		ArrayList<Var> vars = new ArrayList<Var>();
-		ArrayList<Expr> exprs = new ArrayList<Expr>();
+		ExprList vars = new ExprList();
+		ExprList exprs = new ExprList();
 		return checkForMatches(vars,exprs,other);
 	}
 	
@@ -230,13 +255,14 @@ public abstract class Expr extends QuickMath implements Comparable<Expr>, Serial
 	public ModifyFromExampleResult modifyFromExampleSpecific(Equ example,Settings settings) {//returns object describing weather or not it was successful
 		if(example.getLeftSide().fastSimilarStruct(this)) {//we use fast similar struct here because we don't want to call the getParts function twice and its faster
 			
-			ArrayList<Var> exampleParts = new ArrayList<Var>();
-			ArrayList<Expr> parts = new ArrayList<Expr>();
+			ExprList exampleParts = new ExprList();
+			ExprList parts = new ExprList();
+			
 			boolean match = example.getLeftSide().checkForMatches(exampleParts,parts,this);
 			if(!match) {
 				return new ModifyFromExampleResult(this,false);
 			}
-			ArrayList<Equ> equs = new ArrayList<Equ>();
+			ExprList equs = new ExprList();
 			for(int i = 0;i<parts.size();i++) equs.add(new Equ(exampleParts.get(i),parts.get(i)));
 			
 			Expr out = example.getRightSide().replace(equs);
@@ -253,19 +279,19 @@ public abstract class Expr extends QuickMath implements Comparable<Expr>, Serial
 		}
 	}
 	
-	public boolean containsIntegrals() {
-		if(this instanceof Integrate) {
+	public boolean containsType(@SuppressWarnings("rawtypes") Class c) {//used for faster processing
+		if(this.getClass().equals(c)) {
 			return true;
 		}else {
 			for(int i = 0; i< size();i++) {
-				if(get(i).containsIntegrals()) return true;
+				if(get(i).containsType(c)) return true;
 			}
 		}
 		return false;
 	}
 	
 	public Expr replace(Equ equ) {
-		ArrayList<Equ> l = new ArrayList<Equ>();
+		ExprList l = new ExprList();
 		l.add(equ);
 		return replace(l);
 	}
@@ -386,7 +412,6 @@ public abstract class Expr extends QuickMath implements Comparable<Expr>, Serial
 	@Override
 	public int compareTo(Expr other) {
 		int c = -Integer.compare(nestDepth(), other.nestDepth());
-		if(c == 0) return Long.compare(generateHash(), other.generateHash());
 		return c;
 	}
 	

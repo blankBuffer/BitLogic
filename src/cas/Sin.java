@@ -1,6 +1,6 @@
 package cas;
 
-import java.util.ArrayList;
+import java.math.BigInteger;
 
 public class Sin extends Expr{
 	
@@ -16,12 +16,92 @@ public class Sin extends Expr{
 		if(flags.simple) return toBeSimplified;
 		
 		toBeSimplified.simplifyChildren(settings);
+		if(toBeSimplified instanceof Sin) {
+			toBeSimplified.set(0,factor(toBeSimplified.get()).simplify(settings));
+			if(toBeSimplified.get().negative()) {
+				toBeSimplified = prod(num(-1),sin(toBeSimplified.get().abs(settings)).simplify(settings) );
+			}
+		}
+		if(toBeSimplified instanceof Sin) toBeSimplified.set(0,distr(toBeSimplified.get()).simplify(settings));
 		
-		if(toBeSimplified instanceof Sin) if(toBeSimplified.get().negative()) toBeSimplified = prod(num(-1),sin(toBeSimplified.get().abs(settings)).simplify(settings) );
+		if(toBeSimplified instanceof Sin) toBeSimplified = unitCircle((Sin)toBeSimplified);
 		
 		toBeSimplified.flags.simple = true;
 		
 		return toBeSimplified;
+	}
+	
+	public Expr unitCircle(Sin sin) {
+		Pi pi = new Pi();
+		BigInteger three = BigInteger.valueOf(3),six = BigInteger.valueOf(6),four = BigInteger.valueOf(4);
+		
+		Expr innerExpr = sin.get();
+		if(innerExpr.equalStruct(num(0))) {
+			return num(0);
+		}else if(innerExpr instanceof Pi)
+			return num(0);
+		if(innerExpr instanceof Div && innerExpr.contains(pi())){
+			Div frac = ((Div)innerExpr).ratioOfUnitCircle();
+			
+			if(frac != null) {
+				BigInteger numer = ((Num)frac.getNumer()).realValue,denom = ((Num)frac.getDenom()).realValue;
+				
+				numer = numer.mod(denom.multiply(BigInteger.TWO));
+				int negate = 1;
+				
+				if(numer.compareTo(denom) == 1) {
+					negate = -1;
+					numer = numer.mod(denom);
+				}
+				
+				if(numer.compareTo(denom.divide(BigInteger.TWO)) == 1) {
+					numer = denom.subtract(numer);
+				}
+				
+				if(numer.equals(BigInteger.ONE) && denom.equals(BigInteger.TWO)) return num(negate);
+				else if(numer.equals(BigInteger.ONE) && denom.equals(three)) return div(sqrt(num(3)),num(2*negate));
+				else if(numer.equals(BigInteger.ONE) && denom.equals(six)) return inv(num(2*negate));
+				else if(numer.equals(BigInteger.ONE) && denom.equals(four)) return div(sqrt(num(2)),num(2*negate));
+				else if(numer.equals(BigInteger.ZERO)) return num(0);
+				else {
+					if(negate == -1) {
+						return neg(sin(div(prod(pi(),num(numer)),num(denom)).simplify(Settings.normal)));
+					}else {
+						return sin(div(prod(pi(),num(numer)),num(denom)).simplify(Settings.normal));
+					}
+				}
+				
+				
+			}
+			
+		}else if(innerExpr instanceof Sum) {//sin(x-pi/4) can be turned into sin(x+7*pi/4) because sin has symmetry
+			for(int i = 0;i<innerExpr.size();i++) {
+				if(innerExpr.get(i) instanceof Div && !innerExpr.get(i).containsVars() && innerExpr.get(i).contains(pi)) {
+					
+					Div frac = ((Div)innerExpr.get(i)).ratioOfUnitCircle();
+					
+					if(frac!=null) {
+						BigInteger numer = ((Num)frac.getNumer()).realValue,denom = ((Num)frac.getDenom()).realValue;
+						
+						numer = numer.mod(denom.multiply(BigInteger.TWO));//to do this we take the mod
+						
+						if(numer.equals(BigInteger.ONE) && denom.equals(BigInteger.TWO)) {//sin(x+pi/2) = cos(x)
+							innerExpr.remove(i);
+							return cos(innerExpr.simplify(Settings.normal));
+						}else if(numer.equals(three) && denom.equals(BigInteger.TWO)) {
+							innerExpr.remove(i);
+							return neg(cos(innerExpr.simplify(Settings.normal)));
+						}
+						
+						innerExpr.set(i,  div(prod(num(numer),pi()),num(denom)) );
+						sin.set(0, innerExpr.simplify(Settings.normal));
+						
+					}
+					
+				}
+			}
+		}
+		return sin;
 	}
 
 	@Override
@@ -54,8 +134,11 @@ public class Sin extends Expr{
 	}
 
 	@Override
-	public Expr replace(ArrayList<Equ> equs) {
-		for(Equ e:equs) if(equalStruct(e.getLeftSide())) return e.getRightSide().copy();
+	public Expr replace(ExprList equs) {
+		for(int i = 0;i<equs.size();i++) {
+			Equ e = (Equ)equs.get(i);
+			if(equalStruct(e.getLeftSide())) return e.getRightSide().copy();
+		}
 		return new Sin(get().replace(equs));
 	}
 
@@ -69,8 +152,8 @@ public class Sin extends Expr{
 	}
 
 	@Override
-	public double convertToFloat(ExprList varDefs) {
-		return Math.sin(get().convertToFloat(varDefs));
+	public ComplexFloat convertToFloat(ExprList varDefs) {
+		return ComplexFloat.sin(get().convertToFloat(varDefs));
 	}
 
 }

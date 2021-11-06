@@ -1,5 +1,4 @@
 package cas;
-import java.util.ArrayList;
 
 public class ExprList extends Expr{
 
@@ -96,9 +95,16 @@ public class ExprList extends Expr{
 	}
 
 	@Override
-	public Expr replace(ArrayList<Equ> equs) {
-		// TODO Auto-generated method stub
-		return null;
+	public Expr replace(ExprList equs) {
+		for(int i = 0;i<equs.size();i++) {
+			Equ e = (Equ)equs.get(i);
+			if(equalStruct(e.getLeftSide())) return e.getRightSide().copy();
+		}
+		ExprList repl = new ExprList();
+		for(int i = 0;i<size();i++) {
+			repl.add(get(i).replace(equs));
+		}
+		return repl;
 	}
 
 	@Override
@@ -131,8 +137,8 @@ public class ExprList extends Expr{
 	}
 
 	@Override
-	public double convertToFloat(ExprList varDefs) {
-		return 0;
+	public ComplexFloat convertToFloat(ExprList varDefs) {
+		return new ComplexFloat(0,0);
 	}
 
 }

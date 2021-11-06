@@ -8,7 +8,7 @@ public class QuickMath {
 	 * this file is for shortcuts and general algorithms used everywhere
 	 */
 	
-	static Expr createExpr(String expr) {
+	public static Expr createExpr(String expr) {
 		return Interpreter.createExpr(expr);
 	}
 	
@@ -45,7 +45,6 @@ public class QuickMath {
 	
 	//
 	public static Expr sqrtObj = sqrt(var("x"));//used for comparing to
-	public static Expr invObj = inv(var("x"));//used for comparing to
 	public static Expr cbrtObj = cbrt(var("x"));//used for comparing to
 	
 	//
@@ -78,14 +77,23 @@ public class QuickMath {
 	public static Num num(long i) {
 		return new Num(i);
 	}
+	public static Num num(long r,long i) {
+		return new Num(r,i);
+	}
 	public static Num num(BigInteger i) {
 		return new Num(i);
 	}
 	public static Num num(String s) {
 		return new Num(s);
 	}
-	public static FloatExpr floatExpr(double v) {
-		return new FloatExpr(v);
+	public static Num num(BigInteger real,BigInteger imag) {
+		return new Num(real,imag);
+	}
+	public static FloatExpr floatExpr(ComplexFloat complexFloat) {
+		return new FloatExpr(complexFloat);
+	}
+	public static FloatExpr floatExpr(double d) {
+		return new FloatExpr(d);
 	}
 	public static FloatExpr floatExpr(String s) {
 		return new FloatExpr(s);
@@ -102,8 +110,8 @@ public class QuickMath {
 	public static Sum sub(Expr a,Expr b) {
 		return sum(a,prod(num(-1),b));
 	}
-	public static Power inv(Expr a) {
-		return pow(a,num(-1));
+	public static Div inv(Expr a) {
+		return div(num(1),a);
 	}
 	public static Power sqrt(Expr a) {
 		return pow(a,inv(num(2)));
@@ -114,17 +122,14 @@ public class QuickMath {
 	public static Prod neg(Expr a) {
 		return prod(num(-1),a);
 	}
-	public static Prod div(Expr a,Expr b) {
-		return prod(a,inv(b));
+	public static Div div(Expr a,Expr b) {
+		return new Div(a,b);
 	}
 	public static E e() {
 		return new E();
 	}
 	public static Pi pi() {
 		return new Pi();
-	}
-	public static Power i() {
-		return sqrt(num(-1));
 	}
 	public static Diff diff(Expr e,Var v) {
 		return new Diff(e,v);
@@ -150,6 +155,15 @@ public class QuickMath {
 	public static Tan tan(Expr expr) {
 		return new Tan(expr);
 	}
+	public static Div sinh(Expr expr) {
+		return div(sub(exp(expr),exp(neg(expr))),num(2));
+	}
+	public static Div cosh(Expr expr) {
+		return div(sum(exp(expr),exp(neg(expr))),num(2));
+	}
+	public static Div tanh(Expr expr) {
+		return div(sub(exp(expr),exp(neg(expr))),sum(exp(expr),exp(neg(expr))));
+	}
 	public static Atan atan(Expr expr) {
 		return new Atan(expr);
 	}
@@ -162,116 +176,48 @@ public class QuickMath {
 	public static Distr distr(Expr expr) {
 		return new Distr(expr);
 	}
+	public static Gamma gamma(Expr expr) {
+		return new Gamma(expr);
+	}
+	public static Func func(String name,ExprList vars,Expr expr) {
+		return new Func(name,vars,expr);
+	}
+	public static Func func(String name,Equ v,Expr expr) {
+		return new Func(name,v,expr);
+	}
 	//
 	
-	static Expr[] extractFrac(Expr in) {//general fraction extraction
-		if(in instanceof Prod) {
-			Prod prod = (Prod)in;
-			Expr numerParts = new Prod();
-			Expr denomParts = new Prod();
-			for(int j = 0;j<prod.size();j++) {
-				if(prod.get(j) instanceof Power) {
-					Power pow = (Power)prod.get(j);
-					
-					if(pow.getExpo().negative()) {
-						denomParts.add(pow.copy());
-					}else {
-						numerParts.add(pow.copy());
-					}
-					
-				}else {
-					numerParts.add(prod.get(j).copy());
-				}
-				
-			}
-			if(numerParts.size() == 1) numerParts = numerParts.get();
-			if(denomParts.size() == 1) denomParts = denomParts.get();
-			return new Expr[] {numerParts,denomParts};
-		}else if(in instanceof Power) {
-			Power pow = (Power)in;
-			
-			if(pow.getExpo().negative()) {
-				return new Expr[] {num(1),pow.copy()};
-			}else {
-				return new Expr[] {pow.copy(),num(1)};
-			}
-		}
-		return new Expr[] {in.copy(),num(1)};
-	}
-	
-	static Num[] extractNumFrac(Expr in){//numerical based fraction extraction, returns null if it does not meet criteria
-		Num num = null,den = null;
-		if(in instanceof Num) {
-			num = (Num)in.copy();
-			den = num(1);
-			return new Num[] {num,den};
-		}else if(invObj.fastSimilarStruct(in)) {
-			if(in.get() instanceof Num) {
-				den = (Num)in.get().copy();
-				if(den.value.signum() == -1) {
-					num = num(-1);
-					den.value = den.value.abs();
-				}else num = num(1);
-				
-				return new Num[]{num,den};
-			}
-		}else if(in instanceof Prod && in.size() == 2) {
-			for(int i = 0;i<2;i++) {
-				if(in.get(i) instanceof Num) {
-					num = (Num)in.get(i).copy();
-				}else if(invObj.fastSimilarStruct(in.get(i))) {
-					Power inv = (Power)in.get(i);
-					if(inv.get() instanceof Num) {
-						den = (Num)inv.get().copy();
-					}
-				}
-				
-			}
-			if(num!=null && den !=null) {
-				if(den.value.signum() == -1) {
-					den.value = den.value.abs();
-					num.value = num.value.negate();
-				}
-				return new Num[]{num,den};
-			}
-		}
-		return null;
-	}
-	
 	public static Expr partialFrac(Expr expr,Var v,Settings settings) {
-		Settings yesFactor = new Settings();
-		yesFactor.factor = true;
-		Settings noFactor = new Settings();
-		expr = expr.simplify(yesFactor);
 		
-		Expr[] frac = extractFrac(expr);
+		if(!(expr instanceof Div)) return expr;
 		
-		if(!isPolynomial(frac[0],v)) {
+		Div frac = (Div)expr.copy();
+		
+		if(!isPolynomial(frac.getNumer(),v)) {//make sure the numerator is a polynomial
 			return expr;
 		}
 		
-		Prod denom = null;
-		if(frac[1] instanceof Prod) {
-			denom = (Prod) frac[1];
+		Prod denom = null;//we want to have the denominator in a product form
+		if(frac.getDenom() instanceof Prod) {
+			denom = (Prod) frac.getDenom();
 		}else {
 			denom = new Prod();
-			denom.add(frac[1]);
+			denom.add(frac.getDenom());
 		}
 		
 		ExprList denTerms = new ExprList();
 		
-		BigInteger denDegree = BigInteger.ZERO;
+		BigInteger denDegree = BigInteger.ZERO;//we need to calculate the degree of the denominator
 		
 		for(int i = 0;i<denom.size();i++) {
-			noFactor.factor = false;
-			Expr e = inv(denom.get(i)).simplify(noFactor);
+			Expr e = inv(denom.get(i)).simplify(settings);
 			
 			if(e instanceof Power) {
 				Power casted = (Power)e;
-				if(casted.getExpo() instanceof Num && !casted.getExpo().negative()) {
+				if(casted.getExpo() instanceof Num && !casted.getExpo().negative() && !((Num)casted.getExpo()).isComplex()  ) {
 					BigInteger d = degree(casted.getBase(),v);
 					if(!d.equals(BigInteger.ONE)) return expr;
-					denDegree = denDegree.add(((Num)casted.getExpo()).value);
+					denDegree = denDegree.add(((Num)casted.getExpo()).realValue);
 				}else return expr;
 			}else {
 				BigInteger d = degree(e,v);
@@ -284,7 +230,7 @@ public class QuickMath {
 		
 		if(denDegree.compareTo(BigInteger.TWO) == -1) return expr;
 		
-		if(degree(frac[0],v).compareTo(denDegree) != -1) return expr;
+		if(degree(frac.getNumer(),v).compareTo(denDegree) != -1) return expr;
 		//all the checks for if it fits the form are done by this point
 		Expr out = new Sum();
 		
@@ -305,7 +251,7 @@ public class QuickMath {
 				
 				Expr solution = div(neg(poly.get(0)),poly.get(1)).simplify(settings);
 				
-				BigInteger currentExpo = ((Num)pw.getExpo()).value;
+				BigInteger currentExpo = ((Num)pw.getExpo()).realValue;
 				
 				BigInteger count = BigInteger.ZERO;
 				BigInteger factorial = BigInteger.ONE;
@@ -334,8 +280,35 @@ public class QuickMath {
 			}
 			
 		}
-		out = out.simplify(noFactor);
+		out = out.simplify(settings);
 		return out;
+	}
+	
+	public static Expr polyDiv(Expr expr,Var v,Settings settings) {
+		if(expr instanceof Div) {
+			Div frac = (Div)expr.copy();
+			
+			Expr oldDen = frac.getDenom();
+			
+			frac.setNumer(distr(frac.getNumer()).simplify(settings));
+			
+			frac.setDenom(distr(  inv(frac.getDenom())  ).simplify(settings));
+			
+			ExprList numPoly = polyExtract(frac.getNumer(),v,settings);
+			ExprList denPoly = polyExtract(frac.getDenom(),v,settings);
+			
+			if(numPoly != null && denPoly != null && numPoly.size()>=denPoly.size()) {
+				
+				ExprList[] result = polyDiv(numPoly,denPoly,settings);
+				Expr outPart =  exprListToPoly(result[0],v,settings);
+				Expr remainPart =  prod(exprListToPoly(result[1],v,settings),oldDen);
+				
+				expr = sum(outPart,remainPart);
+			}
+			
+		}
+		
+		return expr;
 	}
 	
 	public static ExprList[] polyDiv(ExprList num,ExprList den,Settings settings) {//returns output + remainder
@@ -376,8 +349,8 @@ public class QuickMath {
 		if(!expr.contains(v)) return BigInteger.ZERO;
 		if(expr instanceof Power) {
 			Power casted = (Power)expr;
-			if(casted.getBase().equalStruct(v) && casted.getExpo() instanceof Num && !casted.getExpo().negative()) {
-				return ((Num)casted.getExpo()).value;
+			if(casted.getBase().equalStruct(v) && casted.getExpo() instanceof Num && !casted.getExpo().negative() && !((Num)casted.getExpo()).isComplex() ) {
+				return ((Num)casted.getExpo()).realValue;
 			}
 		}else if(expr instanceof Sum) {
 			BigInteger maxDegree = BigInteger.ZERO;
@@ -388,8 +361,8 @@ public class QuickMath {
 				
 				if(inner instanceof Power) {
 					Power casted = (Power)inner;
-					if(casted.getBase().equalStruct(v) && casted.getExpo() instanceof Num && !casted.getExpo().negative()) {
-						maxDegree = maxDegree.max(  ((Num)casted.getExpo()).value  );
+					if(casted.getBase().equalStruct(v) && casted.getExpo() instanceof Num && !casted.getExpo().negative() && !((Num)casted.getExpo()).isComplex()) {
+						maxDegree = maxDegree.max(  ((Num)casted.getExpo()).realValue  );
 					}else {
 						return BigInteger.valueOf(-1);
 					}
@@ -409,20 +382,18 @@ public class QuickMath {
 						if(e.equalStruct(v)) maxDegree = maxDegree.max(BigInteger.ONE);
 						else if(e instanceof Power ) {
 							Power casted = (Power)e;
-							if(casted.getBase().equalStruct(v) && casted.getExpo() instanceof Num && !casted.getExpo().negative()) {
-								maxDegree = maxDegree.max(  ((Num)casted.getExpo()).value  );
+							if(casted.getBase().equalStruct(v) && casted.getExpo() instanceof Num && !casted.getExpo().negative() && !((Num)casted.getExpo()).isComplex()) {
+								maxDegree = maxDegree.max(  ((Num)casted.getExpo()).realValue  );
+							}else {
+								return BigInteger.valueOf(-1);
 							}
-						}else return BigInteger.valueOf(-1);
-					}else {
-						return BigInteger.valueOf(-1);
+						}
 					}
 					
 					
 				}else if(inner.equalStruct(v)) {
 					maxDegree = maxDegree.max(BigInteger.ONE);
-				}else {
-					return BigInteger.valueOf(-1);
-				}
+				}else return BigInteger.valueOf(-1);
 				
 				
 			}
@@ -443,8 +414,8 @@ public class QuickMath {
 				if(e.equalStruct(v)) return BigInteger.ONE;
 				else if(e instanceof Power ) {
 					Power casted = (Power)e;
-					if(casted.getBase().equalStruct(v) && casted.getExpo() instanceof Num && !casted.getExpo().negative()) {
-						return ((Num)casted.getExpo()).value;
+					if(casted.getBase().equalStruct(v) && casted.getExpo() instanceof Num && !casted.getExpo().negative() && !((Num)casted.getExpo()).isComplex()) {
+						return ((Num)casted.getExpo()).realValue;
 					}
 				}
 			}
@@ -495,7 +466,7 @@ public class QuickMath {
 						Power casted = (Power)e;
 						if(casted.getExpo() instanceof Num && casted.getBase().equalStruct(v)) {
 							Num num = (Num)casted.getExpo();
-							if(num.value.compareTo(BigInteger.ZERO) != 1) return false;
+							if(num.realValue.compareTo(BigInteger.ZERO) != 1) return false;
 						}else return false;
 					}else return false;
 					
@@ -505,7 +476,7 @@ public class QuickMath {
 					Power casted = (Power)e;
 					if(casted.getExpo() instanceof Num && casted.getBase().equalStruct(v)) {
 						Num num = (Num)casted.getExpo();
-						if(num.value.compareTo(BigInteger.ZERO) != 1) return false;
+						if(num.realValue.compareTo(BigInteger.ZERO) != 1) return false;
 					}else return false;
 				}else return false;
 			}
@@ -560,7 +531,7 @@ public class QuickMath {
 						Power casted = (Power)e;
 						if(casted.getExpo() instanceof Num && casted.getBase().equalStruct(v)) {
 							Num num = (Num)casted.getExpo();
-							if(num.value.compareTo(BigInteger.ZERO) == 1) degree = num.value;
+							if(num.realValue.compareTo(BigInteger.ZERO) == 1) degree = num.realValue;
 							else return null;
 						}else return null;
 					}else return null;
@@ -571,7 +542,7 @@ public class QuickMath {
 					Power casted = (Power)e;
 					if(casted.getExpo() instanceof Num && casted.getBase().equalStruct(v)) {
 						Num num = (Num)casted.getExpo();
-						if(num.value.compareTo(BigInteger.ZERO) == 1) degree = num.value;
+						if(num.realValue.compareTo(BigInteger.ZERO) == 1) degree = num.realValue;
 						else return null;
 					}else return null;
 				}else return null;
@@ -602,7 +573,7 @@ public class QuickMath {
 		return coef;
 	}
 	
-	Expr exprListToPoly(ExprList poly,Var v,Settings settings){
+	static Expr exprListToPoly(ExprList poly,Var v,Settings settings){
 		if(poly.size()==0) return num(0);
 		Sum out = new Sum();
 		for(int i = 0;i<poly.size();i++) {
@@ -628,17 +599,21 @@ public class QuickMath {
 		return x;
 	}
 	
-	public static Power perfectPower(Num n) {
-		if(n.value.compareTo(BigInteger.TWO) == -1) return pow(n.copy(),num(1));//make it accept any number without errors
-		int currentExpo = n.value.bitLength();//maximum exponent is log base 2 of that number
+	public static Power perfectPower(Num n) {//basically tries to do a big root with all possible exponents
+		if(n.realValue.compareTo(BigInteger.TWO) == -1 || n.isComplex()) return pow(n.copy(),num(1));//make it accept any number without errors
+		int currentExpo = n.realValue.bitLength();//maximum exponent is log base 2 of that number. This is because 2 is the smallest base possible
 		while(currentExpo != 1) {
-			BigInteger possibleBase = bigRoot(n.value,BigInteger.valueOf(currentExpo));
-			if(possibleBase.pow(currentExpo).equals(n.value)) {
+			BigInteger possibleBase = bigRoot(n.realValue,BigInteger.valueOf(currentExpo));
+			if(possibleBase.pow(currentExpo).equals(n.realValue)) {//testing if re exponentiating it gives the same result
 				return pow(num(possibleBase),num(currentExpo));
 			}
 			currentExpo--;
 		}
 		return pow(n.copy(),num(1));
+	}
+	
+	BigInteger gcm(BigInteger a,BigInteger b) {
+		return a.multiply(b).divide(a.gcd(b));
 	}
 	
 	private static class IntFactor {//uses a mix of rho and wheel factorization
@@ -822,8 +797,12 @@ public class QuickMath {
 	
 	public static Prod primeFactor(Num num) {
 		
+		if(num.isComplex()) {
+			System.err.println("prime factor function recieved a complex number.");
+			return null;
+		}
 		Prod p = new Prod();
-		BigInteger n = num.value;
+		BigInteger n = num.realValue;
 		if(n.signum()==-1) {
 			n = n.abs();
 			p.add(pow(num(-1),num(1)));
@@ -845,6 +824,29 @@ public class QuickMath {
 		
 		
 		return p;
+	}
+	
+	public static double factorial(double x) {//using https://journalofinequalitiesandapplications.springeropen.com/articles/10.1186/s13660-018-1646-6
+		int focusLevel = 8;
+		x+=(double)focusLevel;
+		//getting (x+8)!
+		double stirling = Math.sqrt(2*Math.PI*x)*Math.pow(x/Math.E, x);
+		double concentrate = Math.pow(x*Math.sinh(1.0/x),x/2.0);
+		double concentratePart2 = Math.exp(7.0/(324.0*x*x*x*(35.0*x*x+33.0)));
+		
+		double xPlus8Fact = stirling*concentrate*concentratePart2;
+		
+		x-=(double)focusLevel;
+		//the shift then division is a hacky way of getting more precision from the factorial
+		//x!=x*(x-1)! -> x!/x=(x-1)! shifting x by 1 -> (x+1)!/(x+1)=x!, this increases the precision because the sterling approximation
+		//increases in correct significant digits as x approaches infinity. This is why (x+1)!/(x+1) would increase precision because we are
+		//now evaluating at a larger value of x with the (x+1)!
+		double denomProd = 1.0;
+		for(int i = 1;i<=focusLevel;i++) {
+			denomProd*=(x+(double)i);
+		}
+		
+		return xPlus8Fact/denomProd;
 	}
 	
 }

@@ -21,49 +21,34 @@ public class Factor extends Expr{
 		
 		Expr toBeSimplified = copy();
 		if(flags.simple) return toBeSimplified;
-		settings = new Settings(settings);
-		settings.distr = false;
 		toBeSimplified.simplifyChildren(settings);
 		toBeSimplified = toBeSimplified.get();
 		
-		if(settings.factor) {
-			ArrayList<VarCount> varcounts = new ArrayList<VarCount>();
-			toBeSimplified.countVars(varcounts);
-			Collections.sort(varcounts);
+		ArrayList<VarCount> varcounts = new ArrayList<VarCount>();
+		toBeSimplified.countVars(varcounts);
+		Collections.sort(varcounts);
 			
-			toBeSimplified = toBeSimplified.modifyFromExample(differenceOfSquares,settings);
-			toBeSimplified = toBeSimplified.modifyFromExample(sumOfCubes,settings);
-			toBeSimplified = toBeSimplified.modifyFromExample(differenceOfCubes,settings);
-			toBeSimplified = quadraticFactor(toBeSimplified,varcounts,settings);
-			toBeSimplified = generalFactor(toBeSimplified,settings);
-			toBeSimplified = reversePascalsTriangle(toBeSimplified,varcounts,settings);
-			toBeSimplified = reExpandSubSums(toBeSimplified,settings);//yeah this does slow things down a bit
-			toBeSimplified = pullOutNegatives(toBeSimplified);
-		}
+		toBeSimplified = toBeSimplified.modifyFromExample(differenceOfSquares,settings);
+		toBeSimplified = toBeSimplified.modifyFromExample(sumOfCubes,settings);
+		toBeSimplified = toBeSimplified.modifyFromExample(differenceOfCubes,settings);
+		toBeSimplified = quadraticFactor(toBeSimplified,varcounts,settings);
+		//toBeSimplified = generalFactor(toBeSimplified,settings);
+		//toBeSimplified = reversePascalsTriangle(toBeSimplified,varcounts,settings);
+		toBeSimplified = reExpandSubSums(toBeSimplified,settings);//yeah this does slow things down a bit
+		toBeSimplified = pullOutNegatives(toBeSimplified,settings);
 		toBeSimplified.flags.simple = true;
 		return toBeSimplified;
 	}
 	
-	Expr pullOutNegatives(Expr expr) {
-		if(expr instanceof Sum) {
-			long highest  = Long.MIN_VALUE;
-			int index = 0;
-			for(int i = 0;i<expr.size();i++) {
-				long current = expr.get(i).generateHash();
-				if(current>highest) {
-					highest = current;
-					index = i;
+	Expr pullOutNegatives(Expr expr,Settings settings) {
+		if(expr instanceof Sum && expr.negative()) {
+			
+			{//negate all sub elements
+				for (int i = 0;i<expr.size();i++) {
+					expr.set(i, neg(expr.get(i)));
 				}
 			}
-			
-			Expr lowestHashExpr = expr.get(index);
-			if(lowestHashExpr.negative()) {
-				Settings settings = new Settings();
-				settings.factor = false;
-				settings.distr = true;
-				Expr out = distr(neg(expr)).simplify(settings);
-				return neg(out);
-			}
+			return neg(expr.simplify(settings));
 			
 		}
 		return expr;
@@ -71,10 +56,7 @@ public class Factor extends Expr{
 	
 	Expr reExpandSubSums(Expr expr,Settings settings) {
 		if(expr instanceof Prod) {
-			settings = new Settings(settings);
-			settings.distr = true;
-			settings.factor = true;
-			
+
 			for(int i = 0;i<expr.size();i++) {
 				if(expr.get(i) instanceof Sum) {
 					Expr subSum = expr.get(i);
@@ -86,7 +68,7 @@ public class Factor extends Expr{
 		
 		return expr;
 	}
-	
+	/*
 	Expr reversePascalsTriangle(Expr expr,ArrayList<VarCount> varcounts,Settings settings) {
 		if(expr instanceof Sum) {
 			if(expr.size() > 2 && expr.containsVars() && isPolynomial(expr,varcounts.get(0).v)) {
@@ -134,7 +116,7 @@ public class Factor extends Expr{
 		}
 		return expr;
 	}
-	
+	*/
 	Expr quadraticFactor(Expr expr,ArrayList<VarCount> varcounts,Settings settings) {
 		
 		if(expr instanceof Sum) {
@@ -155,12 +137,13 @@ public class Factor extends Expr{
 					}
 					Num a =  (Num)coef.get(2),b = (Num)coef.get(1),c = (Num)coef.get(0);
 					
+					if(a.isComplex() || b.isComplex() || c.isComplex()) return expr;
 					
-					Num discrNum = num(b.value.pow(2).subtract(BigInteger.valueOf(4).multiply(a.value).multiply(c.value)));
+					Num discrNum = num(b.realValue.pow(2).subtract(BigInteger.valueOf(4).multiply(a.realValue).multiply(c.realValue)));
 				
 					
 					
-					if(discrNum.value.signum() != -1 && discrNum.value.sqrt().pow(2).equals(discrNum.value)) {
+					if(discrNum.realValue.signum() != -1 && discrNum.realValue.sqrt().pow(2).equals(discrNum.realValue)) {
 					
 						Expr discr = sqrt(discrNum);
 						
@@ -184,7 +167,7 @@ public class Factor extends Expr{
 		
 		return expr;
 	}
-
+	/*
 	Expr generalFactor(Expr expr, Settings settings) {
 		if(expr instanceof Sum) {
 			//step one, combine fractions
@@ -243,11 +226,11 @@ public class Factor extends Expr{
 			
 			//end of step one
 			//now we factor out gcd number
-			BigInteger numFactor = numer.get(0).getCoefficient().value.abs();
+			BigInteger numFactor = numer.get(0).getCoefficient().realValue.abs();
 			
 			//now get the factored out number
 			for(int i = 1;i<numer.size();i++) {
-				numFactor = numer.get(i).getCoefficient().value.abs().gcd(numFactor);
+				numFactor = numer.get(i).getCoefficient().realValue.abs().gcd(numFactor);
 			}
 			
 			
@@ -300,7 +283,7 @@ public class Factor extends Expr{
 						}
 						if(other.equalStruct(current)) {
 							Num a = frac[0],b = frac[1],c = otherFrac[0],d = otherFrac[1];
-							if(c.value.multiply(b.value).subtract(a.value.multiply(d.value)).multiply(BigInteger.valueOf(d.value.signum())).multiply(BigInteger.valueOf(b.value.signum())).signum() == -1) {
+							if(c.realValue.multiply(b.realValue).subtract(a.realValue.multiply(d.realValue)).multiply(BigInteger.valueOf(d.realValue.signum())).multiply(BigInteger.valueOf(b.realValue.signum())).signum() == -1) {
 								frac = otherFrac;
 							}
 							found = true;
@@ -339,7 +322,7 @@ public class Factor extends Expr{
 						}else if(factor instanceof Num && e instanceof Num){
 							Num casted = (Num)e;
 							found = true;
-							innerExpr.set(k, num(casted.value.divide(((Num)factor).value)));
+							innerExpr.set(k, num(casted.realValue.divide(((Num)factor).realValue)));
 						}
 					}
 					if(!found) {
@@ -380,7 +363,7 @@ public class Factor extends Expr{
 		}
 		return expr;
 	}
-
+	*/
 	@Override
 	public Expr copy() {
 		Factor out = new Factor(get().copy());
@@ -409,13 +392,16 @@ public class Factor extends Expr{
 	}
 
 	@Override
-	public Expr replace(ArrayList<Equ> equs) {
-		for(Equ e:equs) if(equalStruct(e.getLeftSide())) return e.getRightSide().copy();
+	public Expr replace(ExprList equs) {
+		for(int i = 0;i<equs.size();i++) {
+			Equ e = (Equ)equs.get(i);
+			if(equalStruct(e.getLeftSide())) return e.getRightSide().copy();
+		}
 		return factor(get().replace(equs));
 	}
 
 	@Override
-	public double convertToFloat(ExprList varDefs) {
+	public ComplexFloat convertToFloat(ExprList varDefs) {
 		return get().convertToFloat(varDefs);
 	}
 

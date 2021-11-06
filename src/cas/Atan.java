@@ -1,10 +1,10 @@
 package cas;
 
-import java.util.ArrayList;
-
 public class Atan extends Expr{
 	
 	private static final long serialVersionUID = -8122799157835574716L;
+	
+	static Equ containsInverse = (Equ)createExpr("atan(tan(x))=x");
 
 	public Atan(Expr expr) {
 		add(expr);
@@ -17,7 +17,15 @@ public class Atan extends Expr{
 		
 		toBeSimplified.simplifyChildren(settings);
 		
-		if(toBeSimplified instanceof Atan) if(toBeSimplified.get().negative()) toBeSimplified = prod(num(-1),atan(toBeSimplified.get().abs(settings)).simplify(settings) );
+		if(toBeSimplified instanceof Atan) {
+			toBeSimplified.set(0,factor(toBeSimplified.get()).simplify(settings));
+			if(toBeSimplified.get().negative()) {
+				toBeSimplified = prod(num(-1),atan(toBeSimplified.get().abs(settings)).simplify(settings) );
+			}
+		}
+		if(toBeSimplified instanceof Atan) toBeSimplified.set(0,distr(toBeSimplified.get()).simplify(settings));
+		
+		if(toBeSimplified instanceof Atan) toBeSimplified = toBeSimplified.modifyFromExample(containsInverse, settings);
 		
 		toBeSimplified.flags.simple = true;
 		
@@ -54,14 +62,17 @@ public class Atan extends Expr{
 	}
 
 	@Override
-	public Expr replace(ArrayList<Equ> equs) {
-		for(Equ e:equs) if(equalStruct(e.getLeftSide())) return e.getRightSide().copy();
+	public Expr replace(ExprList equs) {
+		for(int i = 0;i<equs.size();i++) {
+			Equ e = (Equ)equs.get(i);
+			if(equalStruct(e.getLeftSide())) return e.getRightSide().copy();
+		}
 		return new Atan(get().replace(equs));
 	}
 
 	@Override
-	public double convertToFloat(ExprList varDefs) {
-		return Math.atan(get().convertToFloat(varDefs));
+	public ComplexFloat convertToFloat(ExprList varDefs) {
+		return ComplexFloat.atan(get().convertToFloat(varDefs));
 	}
 
 	@Override

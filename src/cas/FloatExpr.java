@@ -1,12 +1,10 @@
 package cas;
 
-import java.util.ArrayList;
-
 public class FloatExpr extends Expr{
 	
 	private static final long serialVersionUID = 1919695097463437480L;
 	
-	public double value = 0;
+	public ComplexFloat value = new ComplexFloat(0,0);
 	
 	private void setFlags() {
 		flags.simple = true;
@@ -14,12 +12,16 @@ public class FloatExpr extends Expr{
 	}
 	
 	public FloatExpr(double value) {
-		this.value = value;
+		this.value.real = value;
+		setFlags();
+	}
+	public FloatExpr(ComplexFloat complexFloat) {
+		value.set(complexFloat);
 		setFlags();
 	}
 	
 	public FloatExpr(String str) {
-		value = Double.parseDouble(str);
+		value.real = Double.parseDouble(str);
 		setFlags();
 	}
 
@@ -35,7 +37,7 @@ public class FloatExpr extends Expr{
 
 	@Override
 	public String toString() {
-		return Double.toString(value);
+		return value.toString();
 	}
 
 	@Override
@@ -49,17 +51,20 @@ public class FloatExpr extends Expr{
 
 	@Override
 	public long generateHash() {
-		return Double.doubleToLongBits(value);//lol
+		return Double.doubleToLongBits(value.real)+120987234*Double.doubleToLongBits(value.imag);//lol
 	}
 
 	@Override
-	public Expr replace(ArrayList<Equ> equs) {
-		for(Equ e:equs) if(equalStruct(e.getLeftSide())) return e.getRightSide().copy();
+	public Expr replace(ExprList equs) {
+		for(int i = 0;i<equs.size();i++) {
+			Equ e = (Equ)equs.get(i);
+			if(equalStruct(e.getLeftSide())) return e.getRightSide().copy();
+		}
 		return copy();
 	}
 
 	@Override
-	public double convertToFloat(ExprList varDefs) {
+	public ComplexFloat convertToFloat(ExprList varDefs) {
 		return value;
 	}
 

@@ -1,7 +1,5 @@
 package cas;
 
-import java.util.ArrayList;
-
 public class Integrate extends Expr{
 
 	private static final long serialVersionUID = 5071855237530369367L;
@@ -16,7 +14,11 @@ public class Integrate extends Expr{
 	static Equ logCase = (Equ)createExpr("integrate(ln(x),x)=ln(x)*x-x");
 	static Equ cosCase = (Equ)createExpr("integrate(cos(x),x)=sin(x)");
 	static Equ sinCase = (Equ)createExpr("integrate(sin(x),x)=-cos(x)");
+	static Equ tanCase = (Equ)createExpr("integrate(tan(x),x)=-ln(cos(x))");
+	static Equ secSqr = (Equ)createExpr("integrate(cos(x)^-2,x)=tan(x)");
 	static Equ atanCase = (Equ)createExpr("integrate(atan(x),x)=x*atan(x)+ln(x^2+1)/-2");
+	static Equ eToXTimesSinX = (Equ)createExpr("integrate(e^x*sin(x),x)=e^x*(sin(x)-cos(x))/2");
+	static Equ eToXTimesCosX = (Equ)createExpr("integrate(e^x*cos(x),x)=e^x*(sin(x)+cos(x))/2");
 	
 	public Integrate(Expr e,Var v){
 		add(e);
@@ -32,10 +34,6 @@ public class Integrate extends Expr{
 		Expr toBeSimplified = copy();
 		if(flags.simple) return toBeSimplified;
 		toBeSimplified.simplifyChildren(settings);
-		
-		
-		settings = new Settings(settings);//create new settings object with same parameters
-		settings.factor = false;//disable factoring for faster processing
 		
 		toBeSimplified = toBeSimplified.modifyFromExample(zeroCase,settings);
 		if(toBeSimplified instanceof Integrate) toBeSimplified = noVarCase((Integrate)toBeSimplified,settings);
@@ -55,8 +53,12 @@ public class Integrate extends Expr{
 		if(toBeSimplified instanceof Integrate) toBeSimplified = toBeSimplified.modifyFromExample(logCase,settings);
 		if(toBeSimplified instanceof Integrate) toBeSimplified = toBeSimplified.modifyFromExample(cosCase,settings);
 		if(toBeSimplified instanceof Integrate) toBeSimplified = toBeSimplified.modifyFromExample(sinCase,settings);
+		if(toBeSimplified instanceof Integrate) toBeSimplified = toBeSimplified.modifyFromExample(tanCase,settings);
+		if(toBeSimplified instanceof Integrate) toBeSimplified = toBeSimplified.modifyFromExample(secSqr,settings);
 		if(toBeSimplified instanceof Integrate) toBeSimplified = toBeSimplified.modifyFromExample(atanCase,settings);
-		if(toBeSimplified instanceof Integrate) toBeSimplified = arctanCase((Integrate)toBeSimplified,settings);//integration of inverse quadratic
+		if(toBeSimplified instanceof Integrate) toBeSimplified = toBeSimplified.modifyFromExample(eToXTimesSinX,settings);
+		if(toBeSimplified instanceof Integrate) toBeSimplified = toBeSimplified.modifyFromExample(eToXTimesCosX,settings);
+		if(toBeSimplified instanceof Integrate) toBeSimplified = inverseQuadratic((Integrate)toBeSimplified,settings);//integration of inverse quadratic
 		if(toBeSimplified instanceof Integrate) toBeSimplified = polyDiv((Integrate)toBeSimplified,settings);
 		if(toBeSimplified instanceof Integrate) toBeSimplified = partialFraction((Integrate)toBeSimplified,settings);
 		if(toBeSimplified instanceof Integrate) toBeSimplified = specialUSub((Integrate)toBeSimplified,settings);
@@ -66,6 +68,7 @@ public class Integrate extends Expr{
 		if(toBeSimplified instanceof Integrate) toBeSimplified = ibpSpecial((Integrate)toBeSimplified,settings);
 		if(toBeSimplified instanceof Integrate) toBeSimplified = integralSum((Integrate)toBeSimplified,settings);
 		
+		if(toBeSimplified instanceof Prod) toBeSimplified = distr(toBeSimplified).simplify(settings);
 		if(toBeSimplified instanceof Sum) {//remove constants
 			Sum casted = (Sum)toBeSimplified;
 			for(int i = 0;i<casted.size();i++) {
@@ -80,9 +83,32 @@ public class Integrate extends Expr{
 		return toBeSimplified;
 	}
 	
+	Expr inverseQuadratic(Integrate integ,Settings settings) {
+		if(integ.get() instanceof Div) {
+			Expr denom = ((Div)integ.get()).getDenom();
+			ExprList poly = polyExtract(denom, integ.getVar(), settings);
+			if(poly != null && poly.size() == 3) {
+				Expr c = poly.get(0),b = poly.get(1),a = poly.get(2);
+				
+				Expr check = sub(prod(num(4),a,c),pow(b,num(2))).simplify(settings);
+				if(!check.negative()) {
+					check = pow(check,inv(num(-2)));
+					return prod(num(2),check,atan(prod(check, sum(prod(num(2),a,integ.getVar()),b) )) ).simplify(settings);
+				}else {
+					Expr bsquare4ac = sqrt(sub(pow(b,num(2)),prod(num(4),a,c)));
+					Expr twoaxpb = sum(prod(num(2),a,integ.getVar()),b);
+					
+					return div(ln( div( sub(twoaxpb,bsquare4ac) , sum(twoaxpb,bsquare4ac)  ) ),bsquare4ac).simplify(settings);
+					
+				}
+			}
+		}
+		return integ;
+	}
+	
 	Expr arctanCase(Integrate integ,Settings settings) {
-		if(invObj.fastSimilarStruct(integ.get())) {
-			Expr denom = integ.get().get();
+		if(integ.get() instanceof Div) {
+			Expr denom = ((Div)integ.get()).getDenom();
 			ExprList poly = polyExtract(denom, integ.getVar(), settings);
 			if(poly != null && poly.size() == 3) {
 				Expr c = poly.get(0),b = poly.get(1),a = poly.get(2);
@@ -106,48 +132,25 @@ public class Integrate extends Expr{
 	}
 	
 	Expr polyDiv(Integrate integ,Settings settings) {//polynomial division
-		Expr out = integ;
-		if(integ.get() instanceof Prod) {
-			Expr[] frac = extractFrac((Prod)integ.get());
-			Expr oldDen = frac[1];
-			
-			frac[0] = distr(frac[0]).simplify(settings);
-			
-			settings = new Settings(settings);
-			settings.powExpandMode = true;
-			frac[1] = distr(  inv(frac[1])  ).simplify(settings);
-			settings.powExpandMode = false;
-			
-			ExprList numPoly = polyExtract(frac[0],integ.getVar(),settings);
-			ExprList denPoly = polyExtract(frac[1],integ.getVar(),settings);
-			
-			if(numPoly != null && denPoly != null && numPoly.size()>=denPoly.size()) {
-				
-				ExprList[] result = polyDiv(numPoly,denPoly,settings);
-				Expr outPart =  exprListToPoly(result[0],integ.getVar(),settings);
-				Expr remainPart =  prod(exprListToPoly(result[1],integ.getVar(),settings),oldDen);
-				
-				integ.set(0, sum(outPart,remainPart));
-				out = integralSum((Integrate)integ,settings);
-			}
-			
+		integ.set(0, polyDiv(integ.get(), integ.getVar(), settings) );
+		if(integ.get() instanceof Sum) {
+			return integralSum((Integrate)integ,settings);
 		}
-		
-		return out;
+		return integ;
 	}
 
 	Expr ibpSpecial(Integrate integ,Settings settings) {
-		if(integ.get() instanceof Prod) {
+		if(integ.get() instanceof Prod && !integ.get().containsType(Integrate.class)) {
 			Prod innerProd = (Prod)integ.get().copy();
 			int bestIndex = -1;
 			for(int i = 0;i < innerProd.size();i++) {
 				if(innerProd.get(i) instanceof Power) {
 					Power pow = (Power)innerProd.get(i);
-					if(pow.getBase().contains(integ.getVar())) {
+					if(pow.getBase().contains(integ.getVar()) && pow.getExpo() instanceof Div) {
 						
-						Num[] frac = extractNumFrac(pow.getExpo());
-						if(frac!=null) {
-							if(frac[0].value.abs().compareTo(frac[1].value) == 1 && frac[0].value.signum() == -1) {
+						Div frac = (Div)pow.getExpo();
+						if(frac!=null && frac.isNumericalAndReal()) {
+							if(((Num)frac.getNumer()).realValue.abs().compareTo(((Num)frac.getDenom()).realValue) == 1 && ((Num)frac.getNumer()).realValue.signum() == -1) {
 								bestIndex = i;
 								break;
 							}
@@ -159,7 +162,7 @@ public class Integrate extends Expr{
 			if(bestIndex != -1) {
 				Expr bestExpr = innerProd.get(bestIndex);
 				Expr iBest = integrate(bestExpr ,(Var)integ.getVar().copy()).simplify(settings);
-				if(!iBest.containsIntegrals()) {
+				if(!iBest.containsType(Integrate.class)) {
 					innerProd.remove(bestIndex);
 					
 					Expr out = sub(prod(innerProd,iBest),integrate( prod(diff(innerProd.copy(),(Var)integ.getVar()),iBest.copy()) ,(Var)integ.getVar().copy()));
@@ -176,23 +179,27 @@ public class Integrate extends Expr{
 	}
 	
 	Expr ibp(Integrate integ,Settings settings) {
-		
-		if(integ.get() instanceof Prod) {
+		if(integ.get() instanceof Prod && !integ.get().containsType(Integrate.class)) {
 			Prod innerProd = (Prod)integ.get().copy();
 			int bestIndex = -1;
 			for(int i = 0;i < innerProd.size();i++) {
 				if(innerProd.get(i) instanceof Power) {
 					Power pow = (Power)innerProd.get(i);
 					if(pow.getBase().contains(integ.getVar())) {
-						
-						Num[] frac = extractNumFrac(pow.getExpo());
-						if(frac!=null ) {
-							if(frac[0].value.signum() == 1) {
-								bestIndex = i;
-								break;
+						if(pow.getExpo() instanceof Div) {
+							
+							Div frac = (Div)pow.getExpo();
+							if(frac!=null && frac.isNumericalAndReal()) {
+								if(((Num)frac.getNumer()).realValue.signum() == 1) {
+									bestIndex = i;
+									break;
+								}
 							}
+							
+						}else if(pow.getExpo() instanceof Num && !pow.getExpo().negative() && !((Num)pow.getExpo()).isComplex() ) {
+							bestIndex = i;
+							break;
 						}
-						
 					}
 				}else if(innerProd.get(i).equalStruct(integ.getVar())) {
 					bestIndex = i;
@@ -205,11 +212,12 @@ public class Integrate extends Expr{
 					break;
 				}
 			}
+			System.out.println(integ+"best:"+bestIndex);
 			if(bestIndex != -1) {
 				Expr best = innerProd.get(bestIndex);
 				innerProd.remove(bestIndex);
 				Expr newIntegral = integrate(innerProd,(Var)integ.getVar()).simplify(settings);
-				if(!newIntegral.containsIntegrals()) {
+				if(!newIntegral.containsType(Integrate.class)) {
 					Expr out = sub(prod(newIntegral,best),integrate(prod(newIntegral.copy(),diff(best.copy(),integ.getVar())),(Var)integ.getVar()));
 					if(showSteps) {
 						System.out.println(integ+":integration by parts, diff:"+best+":result:"+out);
@@ -225,7 +233,7 @@ public class Integrate extends Expr{
 	private static Var uSubVar = var("0u");
 	
 	Expr normalUSub(Integrate integ,Settings settings) {
-		if(integ.contains(uSubVar)) return integ;
+		if(integ.contains(uSubVar) || integ.get().containsType(Integrate.class)) return integ;
 		Expr u = null;
 		if(integ.get() instanceof Prod) {
 			Prod innerProd = (Prod)integ.get();
@@ -253,7 +261,7 @@ public class Integrate extends Expr{
 					Expr newExpr = div(integ.get().replace(eq),diffObj).simplify(settings);
 					if(!newExpr.contains(integ.getVar())) {//no solve needed
 						newExpr = integrate(newExpr,uSubVar).simplify(settings);
-						if(!newExpr.containsIntegrals()) {
+						if(!newExpr.containsType(Integrate.class)) {
 							Expr out = newExpr.replace(equ(uSubVar,u));
 							if(showSteps) {
 								System.out.println(integ+":u sub:"+eq+":result:"+out);
@@ -268,7 +276,7 @@ public class Integrate extends Expr{
 							newExpr = integrate(newExpr.replace(equ(integ.getVar(),solved)),uSubVar);
 							newExpr = newExpr.simplify(settings);
 							
-							if(!newExpr.containsIntegrals()) {
+							if(!newExpr.containsType(Integrate.class)) {
 								Expr out = newExpr.replace(equ(uSubVar,u)).simplify(settings);
 								if(showSteps) {
 									System.out.println(integ+":u sub with solve:"+eq+":result:"+out);
@@ -390,8 +398,11 @@ public class Integrate extends Expr{
 	}
 
 	@Override
-	public Expr replace(ArrayList<Equ> equs) {
-		for(Equ e:equs) if(equalStruct(e.getLeftSide())) return e.getRightSide().copy();
+	public Expr replace(ExprList equs) {
+		for(int i = 0;i<equs.size();i++) {
+			Equ e = (Equ)equs.get(i);
+			if(equalStruct(e.getLeftSide())) return e.getRightSide().copy();
+		}
 		Expr mainPart = get().replace(equs);
 		Var v = (Var)getVar().replace(equs);
 		return integrate(mainPart,v);
@@ -408,7 +419,7 @@ public class Integrate extends Expr{
 	}
 
 	@Override
-	public double convertToFloat(ExprList varDefs) {
+	public ComplexFloat convertToFloat(ExprList varDefs) {
 		return integrateOver(num(0),getVar(),get(),getVar()).convertToFloat(varDefs);
 	}
 

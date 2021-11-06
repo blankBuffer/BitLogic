@@ -1,6 +1,6 @@
 package cas;
 
-import java.util.ArrayList;
+import java.math.BigInteger;
 
 public class Cos extends Expr{
 	
@@ -17,11 +17,87 @@ public class Cos extends Expr{
 		
 		toBeSimplified.simplifyChildren(settings);
 		
+		if(toBeSimplified instanceof Cos) toBeSimplified.set(0,factor(toBeSimplified.get()).simplify(settings));
 		if(toBeSimplified instanceof Cos) toBeSimplified.set(0, toBeSimplified.get().abs(settings));
+		if(toBeSimplified instanceof Cos) toBeSimplified.set(0,distr(toBeSimplified.get()).simplify(settings));
+		
+		if(toBeSimplified instanceof Cos) toBeSimplified = unitCircle((Cos)toBeSimplified);
 		
 		toBeSimplified.flags.simple = true;
 		
 		return toBeSimplified;
+	}
+	
+	public Expr unitCircle(Cos cos) {
+		Pi pi = new Pi();
+		BigInteger three = BigInteger.valueOf(3),six = BigInteger.valueOf(6),four = BigInteger.valueOf(4);
+		Expr innerExpr = cos.get();
+		if(innerExpr.equalStruct(num(0))) {
+			return num(1);
+		}else if(innerExpr instanceof Pi)
+			return num(-1);
+		if(innerExpr instanceof Div && innerExpr.contains(pi())){
+			Div frac =((Div)innerExpr).ratioOfUnitCircle();
+			
+			if(frac!=null) {
+				
+				BigInteger numer = ((Num)frac.getNumer()).realValue,denom = ((Num)frac.getDenom()).realValue;
+				
+				numer = numer.mod(denom.multiply(BigInteger.TWO));
+				int negate = 1;
+				
+				if(numer.compareTo(denom) == 1) {
+					numer = numer.mod(denom);
+				}
+				
+				if(numer.compareTo(denom.divide(BigInteger.TWO)) == 1) {
+					negate = -1;
+					numer = denom.subtract(numer);
+				}
+				
+				if(numer.equals(BigInteger.ONE) && denom.equals(BigInteger.TWO)) return num(0);
+				else if(numer.equals(BigInteger.ONE) && denom.equals(three)) return inv(num(2*negate));
+				else if(numer.equals(BigInteger.ONE) && denom.equals(six)) return div(sqrt(num(3)),num(2*negate));
+				else if(numer.equals(BigInteger.ONE) && denom.equals(four)) return div(sqrt(num(2)),num(2*negate));
+				else if(numer.equals(BigInteger.ZERO)) return num(negate);
+				else {
+					if(negate == -1) {
+						return neg(sin(div(prod(pi(),num(numer)),inv(num(denom))).simplify(Settings.normal)));
+					}else {
+						return sin(div(prod(pi(),num(numer)),inv(num(denom))).simplify(Settings.normal));
+					}
+				}
+				
+				
+			}
+			
+		}else if(innerExpr instanceof Sum) {//sin(x-pi/4) can be turned into sin(x+7*pi/4) because sin has symmetry
+			for(int i = 0;i<innerExpr.size();i++) {
+				if(innerExpr.get(i) instanceof Div && !innerExpr.get(i).containsVars() && innerExpr.get(i).contains(pi)) {
+					Div frac = ((Div)innerExpr.get(i)).ratioOfUnitCircle();
+					
+					if(frac!=null) {
+						BigInteger numer = ((Num)frac.getNumer()).realValue,denom = ((Num)frac.getDenom()).realValue;
+						
+						numer = numer.mod(denom.multiply(BigInteger.TWO));//to do this we take the mod
+						
+						if(numer.equals(BigInteger.ONE) && denom.equals(BigInteger.TWO)) {//cos(x+pi/2) = -sin(x)
+							innerExpr.remove(i);
+							return neg(sin(innerExpr.simplify(Settings.normal)));
+						}else if(numer.equals(three) && denom.equals(BigInteger.TWO)) {
+							innerExpr.remove(i);
+							return sin(innerExpr.simplify(Settings.normal));
+						}
+						
+						innerExpr.set(i,  div(prod(num(numer),pi()),num(denom)) );
+						cos.set(0, innerExpr.simplify(Settings.normal));
+						
+					}
+					
+				}
+			}
+		}
+		return cos;
 	}
 
 	@Override
@@ -54,8 +130,11 @@ public class Cos extends Expr{
 	}
 
 	@Override
-	public Expr replace(ArrayList<Equ> equs) {
-		for(Equ e:equs) if(equalStruct(e.getLeftSide())) return e.getRightSide().copy();
+	public Expr replace(ExprList equs) {
+		for(int i = 0;i<equs.size();i++) {
+			Equ e = (Equ)equs.get(i);
+			if(equalStruct(e.getLeftSide())) return e.getRightSide().copy();
+		}
 		return new Cos(get().replace(equs));
 	}
 
@@ -68,7 +147,7 @@ public class Cos extends Expr{
 		return false;
 	}
 	@Override
-	public double convertToFloat(ExprList varDefs) {
-		return Math.cos(get().convertToFloat(varDefs));
+	public ComplexFloat convertToFloat(ExprList varDefs) {
+		return ComplexFloat.cos(get().convertToFloat(varDefs));
 	}
 }

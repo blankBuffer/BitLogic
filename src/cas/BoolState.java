@@ -1,5 +1,4 @@
 package cas;
-import java.util.ArrayList;
 
 public class BoolState extends Expr{
 
@@ -43,8 +42,11 @@ public class BoolState extends Expr{
 	}
 
 	@Override
-	public Expr replace(ArrayList<Equ> equs) {
-		for(Equ e:equs) if(equalStruct(e.getLeftSide())) return e.getRightSide().copy();
+	public Expr replace(ExprList equs) {
+		for(int i = 0;i<equs.size();i++) {
+			Equ e = (Equ)equs.get(i);
+			if(equalStruct(e.getLeftSide())) return e.getRightSide().copy();
+		}
 		return copy();
 	}
 
@@ -55,9 +57,9 @@ public class BoolState extends Expr{
 	}
 
 	@Override
-	public double convertToFloat(ExprList varDefs) {
-		if(state == true) return 1;
-		else return 0;
+	public ComplexFloat convertToFloat(ExprList varDefs) {
+		if(state == true) return new ComplexFloat(1,0);
+		else return new ComplexFloat(0,0);
 	}
 
 }

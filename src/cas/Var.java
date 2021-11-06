@@ -1,5 +1,4 @@
 package cas;
-import java.util.ArrayList;
 
 public class Var extends Expr{
 	
@@ -41,8 +40,11 @@ public class Var extends Expr{
 	}
 	
 	@Override
-	public Expr replace(ArrayList<Equ> equs) {
-		for(Equ e:equs) if(equalStruct(e.getLeftSide())) return e.getRightSide().copy();
+	public Expr replace(ExprList equs) {
+		for(int i = 0;i<equs.size();i++) {
+			Equ e = (Equ)equs.get(i);
+			if(equalStruct(e.getLeftSide())) return e.getRightSide().copy();
+		}
 		return copy();
 	}
 
@@ -58,7 +60,7 @@ public class Var extends Expr{
 	}
 
 	@Override
-	public double convertToFloat(ExprList varDefs) {
+	public ComplexFloat convertToFloat(ExprList varDefs) {
 		for(int i = 0;i<varDefs.size();i++) {
 			Equ temp = (Equ)varDefs.get(i);
 			Var otherVar = (Var)temp.getLeftSide();
@@ -70,7 +72,7 @@ public class Var extends Expr{
 				}
 			}
 		}
-		return 0;
+		return new ComplexFloat(0,0);
 	}
 
 }

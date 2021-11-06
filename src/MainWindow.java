@@ -9,7 +9,7 @@ public class MainWindow extends JFrame{
 
 	private static final long serialVersionUID = -3880026026104218593L;
 	JFrame saveWindow,openWindow;
-	StackEditor currentStackEditor = new StackEditor();
+	StackEditor currentStackEditor;
 	
 	JPanel createTopMenu() {
 		JPanel topMenu = new JPanel();
@@ -44,72 +44,25 @@ public class MainWindow extends JFrame{
 			
 		});
 		
+		JButton plotButton = new JButton("plot/graph");
+		plotButton.addActionListener(new ActionListener() {
+
+			@Override
+			public void actionPerformed(ActionEvent e) {
+				currentStackEditor.command("plot");
+			}
+			
+		});
+		
 		topMenu.setLayout(new FlowLayout());
 		topMenu.add(saveStackButton);
 		topMenu.add(openStackButton);
 		topMenu.add(helpButton);
+		topMenu.add(plotButton);
 		
 		return topMenu;
 	}
 	
-	
-	JButton createControlButton(String text,String command) {
-		JButton b = new JButton(text);
-		b.addActionListener(new ActionListener() {
-			@Override
-			public void actionPerformed(ActionEvent e) {
-				currentStackEditor.command(command);
-			}
-		});
-		return b;
-	}
-	
-	JPanel createControlPanel() {
-		JPanel controlPanel = new JPanel();
-		controlPanel.setBackground(Color.GRAY);
-		
-		controlPanel.setLayout(new BoxLayout(controlPanel,BoxLayout.Y_AXIS));
-		
-		controlPanel.add(createControlButton("clear","clear"));
-		controlPanel.add(createControlButton("duplicate","dup"));
-		controlPanel.add(createControlButton("swap","swap"));
-		controlPanel.add(createControlButton("pop/delete","pop"));
-		controlPanel.add(createControlButton("break apart","break"));
-		controlPanel.add(createControlButton("roll","roll"));
-		controlPanel.add(createControlButton("undo","undo"));
-		controlPanel.add(createControlButton("result","result"));
-		controlPanel.add(createControlButton("show graph","plot"));
-		
-		
-		return controlPanel;
-	}
-	
-	JPanel createConstructPanel() {
-		JPanel constructPanel = new JPanel();
-		constructPanel.setBackground(Color.GRAY);
-		
-		constructPanel.setLayout(new BoxLayout(constructPanel,BoxLayout.Y_AXIS));
-		
-		constructPanel.add(createControlButton("[]+[]","+"));
-		constructPanel.add(createControlButton("[]-[]","-"));
-		constructPanel.add(createControlButton("[]*[]","*"));
-		constructPanel.add(createControlButton("[]^[]","^"));
-		constructPanel.add(createControlButton("[]/[]","/"));
-		constructPanel.add(createControlButton("-[]","--"));
-		constructPanel.add(createControlButton("1/[]","inv"));
-		constructPanel.add(createControlButton("√[]","sqrt"));
-		constructPanel.add(createControlButton("ln[]","ln"));
-		constructPanel.add(createControlButton("sin","sin"));
-		constructPanel.add(createControlButton("cos","cos"));
-		constructPanel.add(createControlButton("tan","tan"));
-		constructPanel.add(createControlButton("∂[expr]/∂[var]","diff"));
-		constructPanel.add(createControlButton("∫(expr,var)","integrate"));
-		constructPanel.add(createControlButton("∫(min,max,expr,var)","integrateOver"));
-		constructPanel.add(createControlButton("[]=[]","="));
-		constructPanel.add(createControlButton("solve(equ,var)","solve"));
-		
-		return constructPanel;
-	}
 	
 	JPanel createStackEditor() {
 		JPanel stackEditorPanel = new JPanel();
@@ -151,23 +104,39 @@ public class MainWindow extends JFrame{
 		
 		stackEditorPanel.setLayout(new BorderLayout());
 		stackEditorPanel.add(stackView);
-		stackEditorPanel.add(entryArea,BorderLayout.SOUTH);
+		stackEditorPanel.add(entryArea,BorderLayout.NORTH);
 		JScrollPane scrollBars = new JScrollPane(stackView);
 		stackEditorPanel.add(scrollBars);
 		
 		return stackEditorPanel;
 	}
 	
-	MainWindow(){
-		super("Ben's Tool Box");
+	JPanel createDefsView() {
+		JPanel defsPanel = new JPanel();
 		
-		//adding elements
+		JList<Func> funcDefsList =  new JList<Func>(currentStackEditor.currentDefs.functionsArrayList);
+		funcDefsList.setBackground(new Color(255,220,220));
+		JList<Equ> varsDefsList =  new JList<Equ>(currentStackEditor.currentDefs.varsArrayList);
+		varsDefsList.setBackground(new Color(255,220,220));
+		defsPanel.add(funcDefsList);
+		defsPanel.add(varsDefsList);
+		
+		defsPanel.setLayout(new BoxLayout(defsPanel,BoxLayout.Y_AXIS));
+		defsPanel.add(new JLabel("functions"));
+		defsPanel.add(new JScrollPane(funcDefsList));
+		defsPanel.add(new JLabel("variables"));
+		defsPanel.add(new JScrollPane(varsDefsList));
+		
+		
+		return defsPanel;
+	}
+	
+	void init() {//adding elements
 		JPanel panel = new JPanel();
 		panel.setLayout(new BorderLayout(2,2));
 		panel.add(createTopMenu(),BorderLayout.NORTH);
 		panel.add(createStackEditor(),BorderLayout.CENTER);
-		panel.add(createControlPanel(),BorderLayout.EAST);
-		panel.add(createConstructPanel(),BorderLayout.WEST);
+		panel.add(createDefsView(),BorderLayout.WEST);
 		add(panel);
 		setSize(600,600);
 		setLocationRelativeTo(null);
@@ -177,6 +146,19 @@ public class MainWindow extends JFrame{
 		
 		saveWindow = new SaveStackWindow(this);
 		openWindow = new OpenStackWindow(this);
+	}
+	
+	MainWindow(){
+		super("Ben's Tool Box / BitLogic "+Main.VERSION);
+		currentStackEditor = new StackEditor();
+		init();
+	}
+	
+	MainWindow(StackEditor stackEditor){
+		super("Ben's Tool Box / BitLogic "+Main.VERSION);
+		this.currentStackEditor = stackEditor;
+		init();
+		
 	}
 
 }

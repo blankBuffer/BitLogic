@@ -6,7 +6,8 @@ import cas.*;
 
 public class Main extends QuickMath{
 	
-	public static boolean GUI = true;
+	public static boolean GUI = true,CLEAR_TERM = false;
+	public static final String VERSION = "1.4.1";
 	
 	static void createMessege(String messege) {
 		if(Main.GUI) {
@@ -34,27 +35,30 @@ public class Main extends QuickMath{
 			System.out.print("> ");
 			String s = scanner.nextLine();
 			
-			clearTerm();
+			if(CLEAR_TERM) clearTerm();
 			
 			if(s.equals("GUI")) {
 				GUI = true;
-				break;
+				new MainWindow(editor);
+				continue;
 			}
 			editor.command(s);
 			editor.printStack();
 		}
+		
 	}
 	
 	public static void main(String[] args) {
-		System.out.println("Benjamin Currie @2021 v 1.3.1 , java runtime version: "+System.getProperty("java.version"));
+		System.out.println("Benjamin Currie @2021 v "+VERSION+" , java runtime version: "+System.getProperty("java.version"));
 		
 		for(String arg:args) {
 			if(arg.equals("no-gui")) GUI = false;
+			if(arg.equals("clear-term")) CLEAR_TERM = true;
 		}
 		
-		if(!GUI) startCommandLineInterface();
-		new MainWindow();
 		
+		if(!GUI) startCommandLineInterface();
+		else new MainWindow();
 		
 	}
 	

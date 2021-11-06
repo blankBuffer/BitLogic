@@ -1,8 +1,5 @@
 package cas;
 
-import java.math.BigInteger;
-import java.util.ArrayList;
-
 public class Distr extends Expr{
 
 	
@@ -17,16 +14,11 @@ public class Distr extends Expr{
 		Expr toBeSimplified = copy();
 		if(flags.simple) return toBeSimplified;
 		
-		settings = new Settings(settings);
-		settings.factor = false;
 		toBeSimplified.simplifyChildren(settings);
 		
 		toBeSimplified = toBeSimplified.get();
 		
-		if(settings.distr) {
-			toBeSimplified = generalDistr(toBeSimplified,settings);
-			if(settings.powExpandMode) toBeSimplified = powExpand(toBeSimplified,settings);
-		}
+		toBeSimplified = generalDistr(toBeSimplified,settings);
 		
 		toBeSimplified.flags.simple = true;
 		return toBeSimplified;
@@ -37,7 +29,7 @@ public class Distr extends Expr{
 			Expr needsExpand = null;
 			Prod prod = null;
 			for(int i = 0;i<expr.size();i++) {
-				if(expr.get(i) instanceof Sum || (settings.powExpandMode && expr.get(i) instanceof Power && ((Power)expr.get(i)).getBase() instanceof Sum &&  ((Power)expr.get(i)).getExpo() instanceof Num && !((Power)expr.get(i)).getExpo().negative() )) {
+				if(expr.get(i) instanceof Sum) {
 					needsExpand = expr.get(i).copy();
 					prod = (Prod)expr.copy();
 					prod.remove(i);
@@ -54,41 +46,18 @@ public class Distr extends Expr{
 				}
 				return needsExpand.simplify(settings);
 			}
-		}
-		return expr;
-	}
-	
-	public static Expr powExpand(Expr expr,Settings settings) {
-		if(expr instanceof Power) {
-			Power pow = (Power)expr;
-			if(pow.getExpo() instanceof Num && pow.getBase() instanceof Sum && pow.getBase().size() == 2) {
-				Num expo  = (Num)pow.getExpo();
-				if(expo.value.compareTo(BigInteger.valueOf(16)) == -1 && expo.value.compareTo(BigInteger.ONE) == 1) {
-					settings = new Settings(settings);
-					settings.powExpandMode = true;
-					settings.factor = false;
-					settings.distr = true;
-					
-					int expoInt = expo.value.intValue();
-					
-					Prod p = new Prod();
-					for(int i = 0;i<expoInt;i++) {
-						p.add(pow.getBase());
-					}
-					Sum out = (Sum)distr(p).simplify(settings);
-					
-					settings.powExpandMode = false;
-					for(int i = 0;i<out.size();i++) {
-						if(out.get(i) instanceof Prod) {
-							out.get(i).flags.simple = false;
-							out.set(i, out.get(i).simplify(settings));
-						}
-					}
-					return out;
+		}else if(expr instanceof Div) {//(x+y)/3 -> x/3+y/3
+			Div casted = (Div)expr;
+			
+			if(casted.getNumer() instanceof Sum) {
+				for (int i = 0;i < casted.getNumer().size();i++) {
+					casted.getNumer().set(i, div(casted.getNumer().get(i),casted.getDenom().copy()));
 				}
+				return casted.getNumer();
+				
 			}
+			
 		}
-		
 		return expr;
 	}
 	
@@ -120,13 +89,16 @@ public class Distr extends Expr{
 	}
 
 	@Override
-	public Expr replace(ArrayList<Equ> equs) {
-		for(Equ e:equs) if(equalStruct(e.getLeftSide())) return e.getRightSide().copy();
+	public Expr replace(ExprList equs) {
+		for(int i = 0;i<equs.size();i++) {
+			Equ e = (Equ)equs.get(i);
+			if(equalStruct(e.getLeftSide())) return e.getRightSide().copy();
+		}
 		return distr(get().replace(equs));
 	}
 
 	@Override
-	public double convertToFloat(ExprList varDefs) {
+	public ComplexFloat convertToFloat(ExprList varDefs) {
 		return get().convertToFloat(varDefs);
 	}
 

@@ -1,17 +1,17 @@
 package cas;
-import java.util.ArrayList;
 
 public class Diff extends Expr{
 	
 	private static final long serialVersionUID = -4094192362094389130L;
 	
-	static Equ baseCase = (Equ)createExpr("diff(x,x)=1");//diff(x,x)->1
-	static Equ logCase = (Equ)createExpr("diff(ln(a),x)=diff(a,x)/a");//diff(ln(a),x)->inv(a)*diff(a,x)
-	static Equ powCase = equ( diff( pow(var("a"),var("b")) ,var("x")) , prod( pow(var("a"),var("b")) , diff( prod( ln(var("a")) , var("b") ) ,var("x")) ) );//diff(a^b,x) -> a^b*diff(ln(a)*b,x) 
-	static Equ sinCase = equ( diff(sin(var("a")),var("x")) , prod(cos(var("a")),diff(var("a"),var("x"))) );//diff of sin
-	static Equ cosCase = equ( diff(cos(var("a")),var("x")) , prod(num(-1),sin(var("a")),diff(var("a"),var("x"))) );//diff of cos
-	static Equ tanCase = equ( diff(tan(var("a")),var("x")) , prod(sum(pow(tan(var("a")),num(2)),num(1)), diff(var("a"),var("x")) ));//diff of tan, diff(tan(a),x) -> (tan(a)^2+1)*diff(a,x)
+	static Equ baseCase = (Equ)createExpr("diff(x,x)=1");
+	static Equ logCase = (Equ)createExpr("diff(ln(a),x)=diff(a,x)/a");
+	static Equ powCase = (Equ)createExpr("diff(a^b,x)=a^b*diff(ln(a)*b,x)");
+	static Equ sinCase = (Equ)createExpr("diff(sin(a),x)=cos(a)*diff(a,x)");
+	static Equ cosCase = (Equ)createExpr("diff(cos(a),x)=-sin(a)*diff(a,x)");
+	static Equ tanCase = (Equ)createExpr("diff(tan(a),x)=(cos(a)^-2)*diff(a,x)");
 	static Equ atanCase = (Equ)createExpr("diff(atan(a),x)=diff(a,x)/(a^2+1)");
+	static Equ divCase = (Equ)createExpr("diff(a/b,x)=(diff(a,x)*b-a*diff(b,x))/(b^2)");
 	
 	public Diff(Expr e,Var v){
 		add(e);
@@ -39,6 +39,7 @@ public class Diff extends Expr{
 			else if(get instanceof Cos) toBeSimplified = toBeSimplified.modifyFromExample(cosCase,settings);
 			else if(get instanceof Tan) toBeSimplified = toBeSimplified.modifyFromExample(tanCase,settings);
 			else if(get instanceof Atan) toBeSimplified = toBeSimplified.modifyFromExample(atanCase,settings);
+			else if(get instanceof Div) toBeSimplified = toBeSimplified.modifyFromExample(divCase,settings);
 			else if(get instanceof Sum) {//derivative of sum becomes sum of derivatives
 				for(int i = 0;i<get.size();i++) get.set(i, diff(get.get(i),(Var)(getVar().copy())));
 				toBeSimplified = get;
@@ -123,17 +124,20 @@ public class Diff extends Expr{
 	}
 
 	@Override
-	public Expr replace(ArrayList<Equ> equs) {
-		for(Equ e:equs) if(equalStruct(e.getLeftSide())) return e.getRightSide().copy();
+	public Expr replace(ExprList equs) {
+		for(int i = 0;i<equs.size();i++) {
+			Equ e = (Equ)equs.get(i);
+			if(equalStruct(e.getLeftSide())) return e.getRightSide().copy();
+		}
 		Expr mainPart = get().replace(equs);
 		Var v = (Var)getVar().replace(equs);
 		return diff(mainPart,v);
 	}
 
 	@Override
-	public double convertToFloat(ExprList varDefs) {
-		double delta = 1.0/(double)Integer.MAX_VALUE;
-		double y0 = get().convertToFloat(varDefs);
+	public ComplexFloat convertToFloat(ExprList varDefs) {
+		ComplexFloat delta = new ComplexFloat(1.0/(double)Integer.MAX_VALUE,1.0/(double)Integer.MAX_VALUE);
+		ComplexFloat y0 = get().convertToFloat(varDefs);
 		
 		ExprList varDefs2 = (ExprList) varDefs.copy();
 		
@@ -141,13 +145,13 @@ public class Diff extends Expr{
 			Equ temp = (Equ)varDefs2.get(i);
 			Var v = (Var)temp.getLeftSide();
 			if(v.equalStruct(getVar())) {
-				((FloatExpr)temp.getRightSide()).value+=delta;
+				((FloatExpr)temp.getRightSide()).value.set(ComplexFloat.add(((FloatExpr)temp.getRightSide()).value, delta));
 				break;
 			}
 		}
-		double y1 = get().convertToFloat(varDefs2);
+		ComplexFloat y1 = get().convertToFloat(varDefs2);
 		
-		return (y1-y0)/delta;
+		return ComplexFloat.div((ComplexFloat.sub(y1, y0)),delta);
 	}
 
 	

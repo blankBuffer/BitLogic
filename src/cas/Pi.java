@@ -1,5 +1,4 @@
 package cas;
-import java.util.ArrayList;
 
 public class Pi extends Expr{
 
@@ -41,14 +40,17 @@ public class Pi extends Expr{
 	}
 
 	@Override
-	public Expr replace(ArrayList<Equ> equs) {
-		for(Equ equ:equs) if(equ.getLeftSide().equalStruct(this)) return equ.getRightSide().copy();
+	public Expr replace(ExprList equs) {
+		for(int i = 0;i<equs.size();i++) {
+			Equ e = (Equ)equs.get(i);
+			if(equalStruct(e.getLeftSide())) return e.getRightSide().copy();
+		}
 		return copy();
 	}
 
 	@Override
-	public double convertToFloat(ExprList varDefs) {
-		return Math.PI;
+	public ComplexFloat convertToFloat(ExprList varDefs) {
+		return new ComplexFloat(Math.PI,0);
 	}
 
 }
