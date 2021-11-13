@@ -4,7 +4,7 @@
 
 *differenciate and integrate equations symbolically and numerically
 
-*simplify distribute and factor
+*simplify distribute and factor (factoring of all integer roots of a polynomial can be found)
 
 *plot equations
 
