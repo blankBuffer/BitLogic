@@ -779,6 +779,31 @@ public class QuickMath {
 		return Sum.unCast(out);
 	}
 	
+	public static long[] toFraction(double num) {//from https://begriffs.com/pdf/dec2frac.pdf
+		if( ((long)num)-num == 0.0) return new long[] {(long)num,1};
+		double z = num;
+		long d_old = 0,d = 1,new_d;
+		long n = Math.round(num);
+		double delta = 0;
+		double zero = 0.000000001;
+		for(int i = 0;i<11;i++) {
+			delta = z-(long)z;
+			if(Math.abs(delta)<zero) return new long[] {n,d};
+			z = 1.0/(delta);
+			new_d = d*((long)z)+d_old;
+			d_old = d;
+			d = new_d;
+			
+			n = Math.round(num*d);
+			if( ((double)n/d)-num == 0.0) {
+				return new long[] {n,d};
+			}
+			
+			
+		}
+		return new long[] {n,d};
+	}
+	
 	static HashMap<String,String> BLToMathMLFunctionNameMap = null;
 	private static void initBLToMathMLFunctionNameMap() {
 		BLToMathMLFunctionNameMap = new HashMap<String,String>();

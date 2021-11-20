@@ -46,7 +46,7 @@ public class Asin extends Expr{
 		unitCircleTable.add((Equ)createExpr("asin(1/2)=pi/6"));
 		unitCircleTable.add((Equ)createExpr("asin(sqrt(3)/2)=pi/3"));
 	}
-	public Expr unitCircle(Asin asin,Settings settings) {
+	static Expr unitCircle(Asin asin,Settings settings) {
 		if(unitCircleTable.size() == 0) initUnitCircleTable();
 		Expr out = asin;
 		for(int i = 0;i<unitCircleTable.size();i++) {

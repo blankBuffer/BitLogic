@@ -336,6 +336,22 @@ public class StackEditor extends cas.QuickMath {
 			return;
 		stack.set(size() - 1, atan(last()));
 	}
+	void asin() {
+		if (last() == null)
+			return;
+		stack.set(size() - 1, asin(last()));
+	}
+	void acos() {
+		if (last() == null)
+			return;
+		stack.set(size() - 1, acos(last()));
+	}
+	
+	void mathML() {
+		if (last() == null)
+			return;
+		stack.set(size() - 1, var("\""+generateMathML(last())+"\"" ) );
+	}
 
 	void approx() {
 		if (sLast() == null)
@@ -438,7 +454,13 @@ public class StackEditor extends cas.QuickMath {
 				tanh();
 			} else if (command.equals("atan")) {
 				atan();
-			} else if (command.equals("quit") || command.equals("exit") || command.equals("close")) {
+			}else if (command.equals("asin")) {
+				asin();
+			}else if (command.equals("acos")) {
+				acos();
+			}else if (command.equals("mathML")) {
+				mathML();
+			}else if (command.equals("quit") || command.equals("exit") || command.equals("close")) {
 				System.exit(0);
 			} else if (command.equals("plot")) {
 				new graphics.Plot(this);

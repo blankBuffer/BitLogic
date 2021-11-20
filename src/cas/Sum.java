@@ -263,7 +263,7 @@ public class Sum extends Expr{
 		}
 	}
 	
-	void addIntegersAndFractions(Sum sum) {
+	static void addIntegersAndFractions(Sum sum) {
 		
 		Num total = Num.ZERO;
 		Expr totalFrac = null;
@@ -297,7 +297,7 @@ public class Sum extends Expr{
 		
 	}
 	
-	Expr alone(Sum sum) {
+	static Expr alone(Sum sum) {
 		if(sum.size() == 1) {//if a sum is only one element 
 			return sum.get(0);
 		}else if(sum.size() == 0) {//if the sum is empty return 0

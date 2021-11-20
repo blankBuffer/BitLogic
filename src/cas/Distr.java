@@ -14,11 +14,11 @@ public class Distr extends Expr{
 		Expr toBeSimplified = copy();
 		if(flags.simple) return toBeSimplified;
 		
-		toBeSimplified.simplifyChildren(settings);
-		
 		toBeSimplified = toBeSimplified.get();
 		
 		toBeSimplified = generalDistr(toBeSimplified,settings);
+		
+		toBeSimplified = toBeSimplified.simplify(settings);//we want to simplify after so that we don't factor while distributing
 		
 		toBeSimplified.flags.simple = true;
 		return toBeSimplified;
@@ -26,25 +26,23 @@ public class Distr extends Expr{
 	
 	Expr generalDistr(Expr expr,Settings settings) {//2*(x+y) -> 2*x+2*y
 		if(expr instanceof Prod) {
-			Expr needsExpand = null;
+			Expr theSum = null;
 			Prod prod = null;
 			for(int i = 0;i<expr.size();i++) {
 				if(expr.get(i) instanceof Sum) {
-					needsExpand = expr.get(i).copy();
+					theSum = expr.get(i).copy();
 					prod = (Prod)expr.copy();
 					prod.remove(i);
 					break;
 				}
 			}
-			if(needsExpand != null) {
-				if(needsExpand instanceof Sum) {
-					for(int i = 0;i<needsExpand.size();i++) {
-						needsExpand.set(i, distr(prod(prod,needsExpand.get(i))));
-					}
-				}else if(needsExpand instanceof Power) {
-					needsExpand = distr(prod(prod,distr(needsExpand) ));
+			if(theSum != null) {
+				
+				for(int i = 0;i<theSum.size();i++) {
+					theSum.set(i, distr(Prod.combine(prod,theSum.get(i))));
 				}
-				return needsExpand.simplify(settings);
+				
+				return theSum.simplify(settings);
 			}
 		}else if(expr instanceof Div) {//(x+y)/3 -> x/3+y/3
 			Div casted = (Div)expr;

@@ -8,6 +8,7 @@ public class Sin extends Expr{
 	
 	static Equ sinOfArctan = (Equ)createExpr("sin(atan(x))=x/sqrt(1+x^2)");
 	static Equ sinOfAsin = (Equ)createExpr("sin(asin(x))=x");
+	static Equ sinOfAcos = (Equ)createExpr("sin(acos(x))=sqrt(1-x^2)");
 
 	public Sin(Expr a) {
 		add(a);
@@ -22,6 +23,7 @@ public class Sin extends Expr{
 		
 		toBeSimplified = toBeSimplified.modifyFromExample(sinOfArctan, settings);
 		toBeSimplified = toBeSimplified.modifyFromExample(sinOfAsin, settings);
+		toBeSimplified = toBeSimplified.modifyFromExample(sinOfAcos, settings);
 		
 		if(toBeSimplified instanceof Sin) {
 			toBeSimplified.set(0,factor(toBeSimplified.get()).simplify(settings));

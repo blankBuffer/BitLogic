@@ -22,7 +22,7 @@ public class UI {
 		}
 	}
 	
-	static void clearTerm() {
+	public static void clearTerm() {
 		System.out.print("\033[H\033[2J");
 		System.out.flush();
 	}

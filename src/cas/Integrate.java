@@ -230,7 +230,8 @@ public class Integrate extends Expr{
 			u = innerProd.get(indexOfHighestComplexity);
 		}else if(integ.get() instanceof Div) {
 			Div casted =  ((Div)integ.get());
-			if(casted.getNumer() instanceof Sum || !casted.getNumer().contains(integ.getVar())) {
+			boolean logCase = !div(casted.getNumer(),diff(casted.getDenom() ,integ.getVar())).simplify(settings).contains(integ.getVar());
+			if(!casted.getNumer().contains(integ.getVar()) || logCase) {
 				u = casted.getDenom();
 			}else {
 				u = casted.getNumer();
@@ -244,6 +245,7 @@ public class Integrate extends Expr{
 				
 				if(!u.equalStruct(integ.getVar())) {
 					Equ eq = equ(u,uSubVar);//im calling it 0u since variables normally can't start with number
+					
 					Expr diffObj = diff(u,(Var)integ.getVar().copy()).simplify(settings);
 					diffObj = diffObj.replace(eq);//it is possible for derivative to contain u
 					Expr before = div(integ.get().replace(eq),diffObj);

@@ -7,6 +7,7 @@ public class Tan extends Expr{
 
 	static Equ containsInverse = (Equ)createExpr("tan(atan(x))=x");
 	static Equ tanOfArcsin = (Equ)createExpr("tan(asin(x))=x/sqrt(1-x^2)");
+	static Equ tanOfArccos = (Equ)createExpr("tan(acos(x))=sqrt(1-x^2)/x");
 	
 	public Tan(Expr a) {
 		add(a);
@@ -21,6 +22,7 @@ public class Tan extends Expr{
 		
 		toBeSimplified = toBeSimplified.modifyFromExample(containsInverse, settings);
 		toBeSimplified = toBeSimplified.modifyFromExample(tanOfArcsin, settings);
+		toBeSimplified = toBeSimplified.modifyFromExample(tanOfArccos, settings);
 		
 		if(toBeSimplified instanceof Tan) {
 			toBeSimplified.set(0,factor(toBeSimplified.get()).simplify(settings));

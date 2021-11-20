@@ -8,6 +8,7 @@ public class Cos extends Expr{
 	
 	static Equ cosOfArctan = (Equ)createExpr("cos(atan(x))=1/sqrt(1+x^2)");
 	static Equ cosOfArcsin = (Equ)createExpr("cos(asin(x))=sqrt(1-x^2)");
+	static Equ cosOfArccos = (Equ)createExpr("cos(acos(x))=x");
 
 	public Cos(Expr a) {
 		add(a);
@@ -22,6 +23,7 @@ public class Cos extends Expr{
 		
 		toBeSimplified = toBeSimplified.modifyFromExample(cosOfArctan, settings);
 		toBeSimplified = toBeSimplified.modifyFromExample(cosOfArcsin, settings);
+		toBeSimplified = toBeSimplified.modifyFromExample(cosOfArccos, settings);
 		
 		if(toBeSimplified instanceof Cos) toBeSimplified.set(0,factor(toBeSimplified.get()).simplify(settings));
 		if(toBeSimplified instanceof Cos) toBeSimplified.set(0, toBeSimplified.get().abs(settings));

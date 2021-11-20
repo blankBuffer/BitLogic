@@ -1,7 +1,5 @@
 package cas;
-import java.math.BigDecimal;
 import java.math.BigInteger;
-import java.math.RoundingMode;
 import java.util.ArrayList;
 
 public class Solve extends Expr{
@@ -297,95 +295,92 @@ public class Solve extends Expr{
 	
 	
 	/////////
-	private static class BigDecimalArr{//i don't like using double indexed arrays
-		BigDecimal[] values;
-		BigDecimalArr(int size){
-			values = new BigDecimal[size];
-		}
-		@SuppressWarnings("unused")
-		void print() {
-			for(int i = 0;i<values.length;i++) {
-				System.out.print(values[i]+",");
-			}
-			System.out.println();
-		}
-	}
-	private static final int DECIMAL_PLACES = 16;
-	private static BigDecimal polyOut(BigDecimalArr poly,BigDecimal x) {
-		BigDecimal out = BigDecimal.ZERO;
-		for(int i = 0;i<poly.values.length;i++) {
-			out = out.add( x.pow(i).multiply( poly.values[i] ) );
+	private static double polyOut(double[] poly,double x) {
+		double out = 0;
+		double pow = 1;
+		for(int i = 0;i<poly.length;i++) {
+			out += pow*poly[i];
+			pow*=x;
 		}
 		return out;
 	}
-	private static BigDecimal secantSolve(BigDecimal leftBound,BigDecimal rightBound,BigDecimalArr poly) {
-		BigDecimal root = null;
-		int requiredItter = rightBound.subtract(leftBound).toBigInteger().bitCount()+DECIMAL_PLACES*4;//about 4 bits per decimal places
-		for(int i = 0;i<requiredItter;i++) {
-			BigDecimal fL = polyOut(poly,leftBound);
-			BigDecimal fR = polyOut(poly,rightBound);
-			if(fL.signum() == fR.signum()) return null;//need opposite sign
-			root = fL.negate().multiply(rightBound.subtract(leftBound)).divide( fR.subtract(fL) ,DECIMAL_PLACES,RoundingMode.DOWN).add(leftBound);
-			BigDecimal fRoot = polyOut(poly,root);
-			if(fL.signum() <= 0) {
-				if(fRoot.signum() <= 0) {
+	static double small = 0.000000000000001;
+	private static double secantSolve(double leftBound,double rightBound,double[] poly) {
+		double root = 0;
+		int count = 0;
+		while(count<128) {
+			double fL = polyOut(poly,leftBound);
+			double fR = polyOut(poly,rightBound);
+			if(Math.signum(fL) == Math.signum(fR)) return Double.NaN;//need opposite sign
+			double newRoot = -fL*(rightBound-leftBound)/( fR-fL)+leftBound;
+			double delta = Math.abs(newRoot-root);
+			if(delta<Math.abs(poly[poly.length-1]*small)) {
+				return newRoot;
+			}
+			root = newRoot;
+			
+			double fRoot = polyOut(poly,root);
+			if(Math.signum(fL) <= 0) {
+				if(Math.signum(fRoot) <= 0) {
 					leftBound = root;
 				}else {
 					rightBound = root;
 				}
 			}else {
-				if(fRoot.signum() <= 0) {
+				if(Math.signum(fRoot) <= 0) {
 					rightBound = root;
 				}else {
 					leftBound = root;
 				}
 			}
+			count++;
 		}
-		
 		return root;
 	}
-	private static BigDecimal newtonSolve(BigDecimalArr poly,BigDecimalArr deriv) {
-		BigDecimal guess = BigDecimal.ZERO;
-		while(true) {
-			
-			BigDecimal newGuess = guess.subtract( polyOut(poly,guess).divide(polyOut(deriv,guess),DECIMAL_PLACES,RoundingMode.DOWN) );
-			if(newGuess.subtract(guess).abs().compareTo(BigDecimal.valueOf(1, DECIMAL_PLACES)) == -1) {
+	private static double newtonSolve(double[] poly,double[] deriv) {
+		double guess = 0;
+		int count = 0;
+		while(count<128) {
+			double newGuess = guess-polyOut(poly,guess)/polyOut(deriv,guess);
+			double delta = Math.abs(newGuess-guess);
+			if(delta<Math.abs(poly[poly.length-1]*small)) {
 				return newGuess;
 			}
 			guess = newGuess;
+			count++;
 		}
+		return guess;
 	}
-	public static ArrayList<BigDecimal> polySolve(ExprList poly) {//an algorithm i came up with to solve all roots of a polynomial
+	public static ArrayList<Double> polySolve(ExprList poly) {//an algorithm i came up with to solve all roots of a polynomial
 		//init polyArray
-		BigDecimalArr base = new BigDecimalArr(poly.size());
+		double[] base = new double[poly.size()];
 		for(int i = 0;i<poly.size();i++) {
-			base.values[i] = new BigDecimal( ((Num)poly.get(i)).realValue );
+			base[i] = ((Num)poly.get(i)).realValue.doubleValue();
 		}
-		BigDecimalArr[] table = new BigDecimalArr[poly.size()-1];
+		double[][] table = new double[poly.size()-1][];
 		
 		table[0] = base;
 		
 		for(int i = 1;i<table.length;i++) {
-			BigDecimalArr derivative = new BigDecimalArr(table[i-1].values.length-1);
-			for(int j = 0;j<derivative.values.length;j++) {
-				derivative.values[j] = table[i-1].values[j+1].multiply(BigDecimal.valueOf(j+1));
+			double[] derivative = new double[table[i-1].length-1];
+			for(int j = 0;j<derivative.length;j++) {
+				derivative[j] = table[i-1][j+1]*(j+1.0);
 			}
 			table[i] = derivative;
 		}
-		ArrayList<BigDecimal> bounds = null;
-		ArrayList<BigDecimal> solutions = new ArrayList<BigDecimal>();
+		ArrayList<Double> bounds = null;
+		ArrayList<Double> solutions = new ArrayList<Double>();
 		//add linear solution
-		
-		BigDecimalArr lin = table[table.length-1];
-		solutions.add( lin.values[0].negate().divide(lin.values[1],DECIMAL_PLACES,RoundingMode.DOWN) );
+		double[] lin = table[table.length-1];
+		solutions.add( (-lin[0])/(lin[1]) );
 		
 		//recursive solving through the table
 		
 		for(int i = table.length-2;i>=0;i--) {
-			BigDecimalArr currentPoly = table[i];
-			int currentDegree = currentPoly.values.length-1;
+			double[] currentPoly = table[i];
+			int currentDegree = currentPoly.length-1;
 			bounds = solutions;
-			solutions = new ArrayList<BigDecimal>();
+			solutions = new ArrayList<Double>();
 			
 			if(bounds.size() == 0 && currentDegree%2==1) {//special case
 				solutions.add( newtonSolve(currentPoly,table[i+1]) );
@@ -395,40 +390,40 @@ public class Solve extends Expr{
 			//determine if there are solutions to the left or right
 			boolean hasLeftSolution = false;
 			boolean hasRightSolution = false;
-			int leftSign = polyOut( currentPoly,bounds.get(0)).signum();
-			int rightSign = polyOut( currentPoly,bounds.get(bounds.size()-1)).signum();
+			int leftSign = (int)Math.signum(polyOut( currentPoly,bounds.get(0)));
+			int rightSign = (int)Math.signum(polyOut( currentPoly,bounds.get(bounds.size()-1)));
 			if(currentDegree%2 == 0) {
-				hasLeftSolution = leftSign != currentPoly.values[currentPoly.values.length-1].signum();
+				hasLeftSolution = leftSign != (int)Math.signum(currentPoly[currentPoly.length-1]);
 			}else {
-				hasLeftSolution = leftSign == currentPoly.values[currentPoly.values.length-1].signum();
+				hasLeftSolution = leftSign == (int)Math.signum(currentPoly[currentPoly.length-1]);
 			}
-			hasRightSolution = rightSign != currentPoly.values[currentPoly.values.length-1].signum();
+			hasRightSolution = rightSign != (int)Math.signum(currentPoly[currentPoly.length-1]);
 			//find the outer bound lines
 			if(hasLeftSolution) {
-				BigDecimal search = bounds.get(0);
-				BigDecimal step = BigDecimal.ONE;
-				while(polyOut( currentPoly,search).signum() == leftSign) {
-					search = search.subtract(step);
-					step = step.multiply(BigDecimal.valueOf(2));
+				double search = bounds.get(0);
+				double step = 1.0;
+				while((int)Math.signum(polyOut( currentPoly,search)) == leftSign) {
+					search -= step;
+					step *=2.0;
 				}
 				bounds.add(0, search);
 			}
 			if(hasRightSolution) {
-				BigDecimal search = bounds.get(bounds.size()-1);
-				BigDecimal step = BigDecimal.ONE;
-				while(polyOut( currentPoly,search).signum() == rightSign) {
-					search = search.add(step);
-					step = step.multiply(BigDecimal.valueOf(2));
+				double search = bounds.get(bounds.size()-1);
+				double step = 1.0;
+				while((int)Math.signum(polyOut( currentPoly,search)) == rightSign) {
+					search += step;
+					step *= 2.0;
 				}
 				bounds.add(search);
 			}
 			//
 			
 			for(int j = 0;j<bounds.size()-1;j++) {
-				BigDecimal leftBound = bounds.get(j);
-				BigDecimal rightBound = bounds.get(j+1);
-				BigDecimal solution = secantSolve(leftBound,rightBound,currentPoly);
-				if(solution!=null) {
+				double leftBound = bounds.get(j);
+				double rightBound = bounds.get(j+1);
+				double solution = secantSolve(leftBound,rightBound,currentPoly);
+				if(!Double.isNaN(solution)) {
 					solutions.add(solution);
 				}
 			}

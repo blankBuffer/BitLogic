@@ -46,7 +46,7 @@ public class Atan extends Expr{
 		unitCircleTable.add((Equ)createExpr("atan(sqrt(3))=pi/3"));
 		unitCircleTable.add((Equ)createExpr("atan(sqrt(3)/3)=pi/6"));
 	}
-	public Expr unitCircle(Atan atan,Settings settings) {
+	static Expr unitCircle(Atan atan,Settings settings) {
 		if(unitCircleTable.size() == 0) initUnitCircleTable();
 		Expr out = atan;
 		for(int i = 0;i<unitCircleTable.size();i++) {

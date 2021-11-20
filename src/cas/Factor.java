@@ -1,8 +1,6 @@
 package cas;
 
-import java.math.BigDecimal;
 import java.math.BigInteger;
-import java.math.RoundingMode;
 import java.util.ArrayList;
 import java.util.Collections;
 
@@ -10,7 +8,6 @@ public class Factor extends Expr{
 	
 	private static final long serialVersionUID = -5448276275686292911L;
 	
-	static Equ differenceOfSquares = (Equ) createExpr("a^2-b^2=(a-b)*(a+b)");
 	static Equ sumOfCubes = (Equ) createExpr("a^3+b^3=(a+b)*(a^2-a*b+b^2)");
 	static Equ differenceOfCubes = (Equ) createExpr("a^3-b^3=(a-b)*(a^2+a*b+b^2)");
 
@@ -26,51 +23,100 @@ public class Factor extends Expr{
 		toBeSimplified.simplifyChildren(settings);
 		toBeSimplified = toBeSimplified.get();
 		
-		ArrayList<VarCount> varcounts = new ArrayList<VarCount>();
-		toBeSimplified.countVars(varcounts);
-		Collections.sort(varcounts);
-			
-		toBeSimplified = toBeSimplified.modifyFromExample(differenceOfSquares,settings);
+		boolean hasVars = toBeSimplified.containsVars();
+		
+		ArrayList<VarCount> varcounts = null;
+		if(hasVars) {
+			varcounts = new ArrayList<VarCount>();
+			toBeSimplified.countVars(varcounts);
+			Collections.sort(varcounts);
+		}
+		
 		toBeSimplified = toBeSimplified.modifyFromExample(sumOfCubes,settings);
 		toBeSimplified = toBeSimplified.modifyFromExample(differenceOfCubes,settings);
-		toBeSimplified = quadraticFactor(toBeSimplified,varcounts,settings);
+		
+		if(hasVars) toBeSimplified = quadraticFactor(toBeSimplified,varcounts,settings);//keeping this for extremely big quadratics that pull out roots cant find
 		toBeSimplified = generalFactor(toBeSimplified,settings);
-		toBeSimplified = pullOutIntegerRoots(toBeSimplified,varcounts,settings);
-		toBeSimplified = reversePascalsTriangle(toBeSimplified,varcounts,settings);
+		if(hasVars) {
+			toBeSimplified = power2Reduction(toBeSimplified,varcounts,settings);//x^16-1 -> (x^8+1)*(x^8-1)
+			toBeSimplified = pullOutRoots(toBeSimplified,varcounts,settings);
+			toBeSimplified = reversePascalsTriangle(toBeSimplified,varcounts,settings);
+		}
 		toBeSimplified = reExpandSubSums(toBeSimplified,settings);//yeah this does slow things down a bit
 		toBeSimplified = pullOutNegatives(toBeSimplified,settings);
 		toBeSimplified.flags.simple = true;
 		return toBeSimplified;
 	}
 	
-	Expr pullOutIntegerRoots(Expr expr,ArrayList<VarCount> varcounts,Settings settings) {
-		if(expr instanceof Sum && varcounts.size()==1 && isPolynomial(expr,varcounts.get(0).v) && degree(expr,varcounts.get(0).v).compareTo(BigInteger.ONE) == 1 ) {
+	Expr power2Reduction(Expr expr,ArrayList<VarCount> varcounts,Settings settings) {
+		if(expr instanceof Sum && varcounts.size() > 0 && expr.size() == 2 && isPolynomial(expr,varcounts.get(0).v)) {
+			Power pow = null;
+			Expr other = null;
+			if(expr.get(0) instanceof Power) {
+				pow = (Power)expr.get(0);
+				other = expr.get(1);
+			}else if(expr.get(1) instanceof Power) {
+				pow = (Power)expr.get(1);
+				other = expr.get(0);
+			}
+			
+			
+			if(pow != null && other != null && other.negative() && isPositiveRealNum(pow.getExpo()) && ((Num)pow.getExpo()).realValue.mod(BigInteger.TWO).equals(BigInteger.ZERO) ) {
+				Expr newPow = sqrt(pow).simplify(settings);
+				Expr newOther = sqrt(neg(other)).simplify(settings);
+				
+				if(!(newOther instanceof Power || newOther instanceof Prod)) {
+					
+					return prod(sum(newPow,newOther),sum(newPow,neg(newOther))).simplify(settings);
+					
+				}
+				
+			}
+		}
+		return expr;
+	}
+	
+	Expr pullOutRoots(Expr expr,ArrayList<VarCount> varcounts,Settings settings) {
+		if(expr instanceof Sum && varcounts.size()==1 && isPolynomial(expr,varcounts.get(0).v) ) {
+			int degree = degree(expr,varcounts.get(0).v).intValue();
+			if(degree < 2) return expr;
 			Var v = varcounts.get(0).v;
 			ExprList poly = polyExtract(expr,v,settings);
+			if(poly == null) return expr;
 			for(int i = 0;i<poly.size();i++) if(!(poly.get(i) instanceof Num)) return expr;//must be all nums
-			ArrayList<BigDecimal> rootsAsDecimal = Solve.polySolve(poly);
-			ArrayList<BigInteger> rootsAsInts = new ArrayList<BigInteger>();
-			for(BigDecimal d:rootsAsDecimal) {//convert to ints
-				BigInteger rounded = d.setScale(0, RoundingMode.HALF_UP).toBigInteger();
-				if(!rootsAsInts.contains(rounded)) rootsAsInts.add(rounded);
-			}
+			ArrayList<Double> rootsAsFloat = Solve.polySolve(poly);
 			Prod out = new Prod();
-			for(BigInteger root:rootsAsInts) {
-				ExprList rootAsPoly = new ExprList();
-				rootAsPoly.add(num(root.negate()));
-				rootAsPoly.add(num(1));
+			//System.out.println(expr);
+			//System.out.println(rootsAsFloat);
+			for(double root:rootsAsFloat) {
+				ExprList rootAsPoly = new ExprList();//the polynomial to be divided
+				long[] frac =  toFraction(root);
+				rootAsPoly.add(num(-frac[0]));
 				
-				ExprList[] divided = polyDiv(poly, rootAsPoly, settings);
+				ExprList[] divided = null;
+				
+				//System.out.println("r "+root+" "+degree);
+				for(int i = 1;i<Math.min(8, degree);i++) {//this checks other factors like x^3-7, still integer root but a quadratic 
+					//System.out.println(frac[0]+"/"+frac[1]);
+					rootAsPoly.add(num(frac[1]));
+					divided = polyDiv(poly, rootAsPoly, settings);//try polynomial division
+					if(divided[1].size() == 0) break;//success
+					rootAsPoly.set(i, num(0));//shifting to next degree
+					double newApprox = Math.pow(root,i+1);
+					//System.out.println(newApprox);
+					frac =  toFraction(newApprox);//shift to  next degree
+					rootAsPoly.set(0, num(-frac[0]));//shift to  next degree
+				}
 				
 				
-				if(divided[1].size() == 0) {
+				if(divided != null && divided[1].size() == 0) {
 					out.add( exprListToPoly(rootAsPoly, v, settings) );
 					poly = divided[0];
+					degree = poly.size()-1;
 				}
 				
 			}
 			out.add( exprListToPoly(poly, v, settings) );
-			
 			if(out.size() > 1) {
 				return out.simplify(settings);
 			}
@@ -84,6 +130,7 @@ public class Factor extends Expr{
 			
 			Var v = varcounts.get(0).v;
 			ExprList coefs = polyExtract(expr,v,settings);
+			if(coefs == null) return expr;
 			BigInteger degree = BigInteger.valueOf(coefs.size()-1);
 			if(degree.compareTo(BigInteger.TWO) == -1) return expr;
 			
@@ -156,13 +203,15 @@ public class Factor extends Expr{
 					
 					if(a.isComplex() || b.isComplex() || c.isComplex()) return expr;
 					
-					Num discrNum = num(b.realValue.pow(2).subtract(BigInteger.valueOf(4).multiply(a.realValue).multiply(c.realValue)));
+					BigInteger discrNum = b.realValue.pow(2).subtract(BigInteger.valueOf(4).multiply(a.realValue).multiply(c.realValue));
 				
+					if(discrNum.signum() == -1) return expr;
 					
+					BigInteger discrNumSqrt = discrNum.sqrt();
 					
-					if(discrNum.realValue.signum() != -1 && discrNum.realValue.sqrt().pow(2).equals(discrNum.realValue)) {
+					if(discrNum.signum() != -1 && discrNumSqrt.pow(2).equals(discrNum)) {
 					
-						Expr discr = sqrt(discrNum);
+						Expr discr = num(discrNumSqrt);
 						
 						
 						Expr out = new Prod();
@@ -291,8 +340,7 @@ public class Factor extends Expr{
 					expr.set(i, div(expr.get(i),factors).simplify(settings));
 				}
 				//
-				factors.add(factor(expr).simplify(settings));
-				expr = Prod.unCast(factors);
+				expr = Prod.combine(factors, factor(expr).simplify(settings));
 			}
 		}
 		

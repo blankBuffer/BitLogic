@@ -9,16 +9,25 @@ public class Main extends QuickMath{
 		String img = ""
 				+ "▛▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▜\n"
 				+ "▌ ▛▀▀▄ ▀▛▘ ▀▛▘   ▌   ▗▛▜▖ ▗▛▜▖ ▀▛▘ ▗▛▜▖ ▐\n"
-				+ "▌ ▌  ▐  ▌   ▌    ▌   ▛  ▜ ▛  ▀  ▌  ▛  ▀ ▐\n"
-				+ "▌ ▌▄▄▀  ▌   ▌ ██ ▌   ▌  ▐ ▌ ▄▄  ▌  ▌    ▐\n"
-				+ "▌ ▌  ▜  ▌   ▌    ▌   ▙  ▟ ▙ ▘▟  ▌  ▙  ▄ ▐\n"
+				+ "▌ ▌  ▟  ▌   ▌    ▌   ▛  ▜ ▛  ▀  ▌  ▛  ▀ ▐\n"
+				+ "▌ ▌▀▀▄  ▌   ▌ ██ ▌   ▌  ▐ ▌ ▄▄  ▌  ▌    ▐\n"
+				+ "▌ ▌  ▐  ▌   ▌    ▌   ▙  ▟ ▙ ▘▟  ▌  ▙  ▄ ▐\n"
 				+ "▌ ▙▄▄▀ ▄▙▖  ▌    ▙▄▄ ▝▙▟▘ ▝▙▟▘ ▄▙▖ ▝▙▟▘ ▐\n"
 				+ "▙▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▟\n";
 		System.out.println(img);
 	}
 	
+	static void testRegion() {
+		long[] frac = toFraction(78.0/29.0);
+		System.out.println(frac[0]+"/"+frac[1]);
+	}
+	
 	public static void main(String[] args) {
+		UI.clearTerm();
 		fancyIntro();
+		
+		//testRegion();
+		
 		System.out.println("Benjamin Currie @2021 v "+VERSION+" , java runtime version: "+System.getProperty("java.version"));
 		
 		int gui = 0;
@@ -36,6 +45,7 @@ public class Main extends QuickMath{
 		
 		if(gui == 1) UI.startGraphicalInterface();
 		else if(gui == 2) UI.startCommandLineInterface();
+		
 		
 	}
 	

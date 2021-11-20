@@ -45,7 +45,7 @@ public class Acos extends Expr{
 		unitCircleTable.add((Equ)createExpr("acos(1/2)=pi/3"));
 		unitCircleTable.add((Equ)createExpr("acos(sqrt(3)/2)=pi/6"));
 	}
-	public Expr unitCircle(Acos acos,Settings settings) {
+	static Expr unitCircle(Acos acos,Settings settings) {
 		if(unitCircleTable.size() == 0) initUnitCircleTable();
 		Expr out = acos;
 		for(int i = 0;i<unitCircleTable.size();i++) {

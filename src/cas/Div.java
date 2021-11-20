@@ -6,6 +6,7 @@ public class Div extends Expr{
 	
 	private static final long serialVersionUID = -1262460519269095855L;
 	public static Equ overOne = (Equ)createExpr("a/1=a");
+	public static Equ zeroInNum = (Equ)createExpr("0/a=0");
 
 	public Div(Expr num,Expr den){
 		add(num);
@@ -45,6 +46,7 @@ public class Div extends Expr{
 		reduceFraction((Div)toBeSimplified);//2/4 -> 1/2
 		
 		toBeSimplified = toBeSimplified.modifyFromExample( overOne , settings);//x/1 -> x
+		toBeSimplified = toBeSimplified.modifyFromExample( zeroInNum , settings);//x/1 -> x
 		
 		toBeSimplified.flags.simple = true;
 		return toBeSimplified;
@@ -327,6 +329,13 @@ public class Div extends Expr{
 	
 	public static Div addFracs(Div a,Div b) {//combines fraction, does not reduce/simplify answer, creates new object
 		// I tried to make it so it's a little efficient and not always just doing (a*d+c*b)/(b*d)
+		
+		
+		if(a.getNumer().equalStruct(Num.ZERO)) {
+			return (Div)b.copy();
+		}else if(b.getNumer().equalStruct(Num.ZERO)) {
+			return (Div)a.copy();
+		}
 		
 		if(a.getDenom().equalStruct(b.getDenom())) {//if they have the same denominator
 			return div(Sum.combine(a.getNumer(), b.getNumer()),a.getDenom().copy());

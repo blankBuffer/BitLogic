@@ -65,16 +65,10 @@ public class Interpreter extends QuickMath{
 		if(tokens == null) throw new Exception("missing tokens");
 		
 		String initToken = tokens.get(0);
-		if(initToken.equals("+") || initToken.equals("*") || initToken.equals("/") || initToken.equals("^") || initToken.equals(",")) throw new Exception("starting with invalid token");;//should not start with any of these
+		if(initToken.equals("+") || initToken.equals("*") || initToken.equals("/") || initToken.equals("^") || initToken.equals(",")) throw new Exception("starting with invalid token");//should not start with any of these
 		
 		String lastToken = tokens.get(tokens.size()-1);
-		if(lastToken.equals("+") || lastToken.equals("-") || lastToken.equals("*") || lastToken.equals("/") || lastToken.equals("^") || lastToken.equals(",")) throw new Exception("ending with invalid token");;//should not end with any of these
-		
-		for(int i = 1;i<tokens.size();i++) {//should not contain two of the same token in a row
-			if(tokens.get(i).equals(tokens.get(i-1))) {
-				throw new Exception("found duplicate token");
-			}
-		}
+		if(lastToken.equals("+") || lastToken.equals("-") || lastToken.equals("*") || lastToken.equals("/") || lastToken.equals("^") || lastToken.equals(",")) throw new Exception("ending with invalid token");//should not end with any of these
 		
 	}
 	
@@ -93,6 +87,8 @@ public class Interpreter extends QuickMath{
 		else if(string.equals("]")) return true;
 		else if(string.equals("=")) return true;
 		else if(string.equals("!")) return true;
+		else if(string.equals(";")) return true;
+		else if(string.equals(":")) return true;
 		
 		return false;
 	}
@@ -113,6 +109,8 @@ public class Interpreter extends QuickMath{
 			else if(c == ']') return true;
 			else if(c == '=') return true;
 			else if(c == '!') return true;
+			else if(c == ';') return true;
+			else if(c == ':') return true;
 		}
 		return false;
 	}
@@ -125,9 +123,22 @@ public class Interpreter extends QuickMath{
 		System.out.println();
 	}
 	
+	static void removeEmptyTokens(ArrayList<String> tokens) {
+		for(int i = 0;i<tokens.size();i++) {
+			if(tokens.get(i).isBlank()) {
+				tokens.remove(i);
+				i--;
+			}
+		}
+	}
+	
 	static Expr createExprFromTokens(ArrayList<String> tokens,Defs defs,Settings settings) throws Exception{
 		
+		removeEmptyTokens(tokens);
+		
 		errors(tokens);
+		
+		//System.out.println(tokens);
 		
 		if(tokens.size() == 1) {
 			String string = tokens.get(0);
@@ -147,18 +158,23 @@ public class Interpreter extends QuickMath{
 				else if(lowered.equals("e")) return e();
 				else if(lowered.equals("true")) return bool(true);
 				else if(lowered.equals("false")) return bool(false);
-				else {//variables
+				else if(!Character.isDigit(string.charAt(0))){//variables
 					return var(string);
+				}else {
+					throw new Exception("invalid variable name");
 				}
 			}else if(string.charAt(0) == '[') {
 				if(string.equals("[]")) return new ExprList();
-				Expr expr = createExprFromToken(string.substring(1, string.length()-1),defs,settings);
-				return ExprList.cast(expr);
+				return ExprList.cast(createExprFromToken(string.substring(1, string.length()-1),defs,settings));
+			}else if(string.charAt(0) == '{') {
+				if(string.equals("{}")) return new Script();
+				Script script = Script.cast(createExprFromToken(string.substring(1, string.length()-1),defs,settings));
+				return script;
 			}else {
 				return createExprFromTokens(generateTokens(tokens.get(0)),defs,settings);
 			}
 		}else if(tokens.size() == 2) {
-			if(tokens.get(0) == "-") {
+			if(tokens.get(0).equals("-")) {
 				Expr expr = createExpr(tokens.get(1));
 				if(expr instanceof Num) return ((Num) expr).negate();
 				return neg(createExpr(tokens.get(1),defs,settings));
@@ -172,9 +188,13 @@ public class Interpreter extends QuickMath{
 				if(op.equals("diff")) {
 					if(params.size() != 2) throw wrongParams;
 					return diff(params.get(0),(Var)params.get(1));
-				}else if(op.equals("integrate") || op.equals("int")) {
-					if(params.size() != 2) throw wrongParams;
-					return integrate(params.get(0),(Var)params.get(1));
+				}else if(op.equals("integrate") || op.equals("int") || op.equals("integral") || op.equals("integrateOver")) {
+					if(params.size() == 2) {
+						return integrate(params.get(0),(Var)params.get(1));
+					}else if(params.size() == 4) {
+						return integrateOver(params.get(0),params.get(1),params.get(2),(Var)params.get(3));
+					}else throw wrongParams;
+
 				}else if(op.equals("sinh")) {
 					if(params.size() != 1) throw wrongParams;
 					return sinh(params.get(0));
@@ -217,9 +237,6 @@ public class Interpreter extends QuickMath{
 				}else if(op.equals("gamma")) {
 					if(params.size() != 1) throw wrongParams;
 					return gamma(params.get(0));
-				}else if(op.equals("integrateOver")) {
-					if(params.size() != 4) throw wrongParams;
-					return integrateOver(params.get(0),params.get(1),params.get(2),(Var)params.get(3));
 				}else if(op.equals("solve")) {
 					if(params.size() != 2) throw wrongParams;
 					if(!(params.get() instanceof Equ)) throw new Exception("the first parameter should be an equation");
@@ -312,7 +329,7 @@ public class Interpreter extends QuickMath{
 				
 			}
 		}
-		boolean isSum = false,isProd = false,isList = false,isFactorial = false;
+		boolean isSum = false,isProd = false,isList = false,isFactorial = false,isScript = false,isAssignment = false;
 		int indexOfPowToken = -1,indexOfEquToken = -1;
 		boolean lastWasOperator = false;
 		for(int i = 0;i<tokens.size();i++) {
@@ -336,13 +353,36 @@ public class Interpreter extends QuickMath{
 			}else if(token.equals("!")) {
 				isFactorial = true;
 				lastWasOperator = true;
+			}else if(token.equals(":")) {
+				isAssignment = true;
+				lastWasOperator = true;
+			}else if(token.equals(";")) {
+				isScript = true;
+				lastWasOperator = true;
 			}else {
 				lastWasOperator = false;
 			}
 		}
-		
-		if(isList) {
-			Expr list = new ExprList();
+		if(isScript) {
+			
+			Script scr = new Script();
+			int indexOfLastComma = 0;
+			
+			for(int i = 0;i<tokens.size();i++) {
+				String token = tokens.get(i);
+				if(token.equals(";")) {
+					
+					ArrayList<String> tokenSet = new ArrayList<String>();
+					for(int j = indexOfLastComma;j<i;j++)  tokenSet.add(tokens.get(j));
+					scr.add(createExprFromTokens(tokenSet,defs,settings));
+					indexOfLastComma = i+1;
+				}
+			}
+			
+			return scr;
+			
+		}else if(isList) {
+			ExprList list = new ExprList();
 			int indexOfLastComma = 0;
 			
 			for(int i = 0;i<tokens.size();i++) {
@@ -373,6 +413,7 @@ public class Interpreter extends QuickMath{
 			}
 			return equ(createExprFromTokens(leftSideTokens,defs,settings),createExprFromTokens(rightSideTokens,defs,settings));
 		}else if(isSum) {
+			tokens.add("+");
 			Expr sum = new Sum();
 			int indexOfLastAdd = 0;
 			boolean nextIsSub = false;
@@ -409,35 +450,23 @@ public class Interpreter extends QuickMath{
 							sum.add(createExprFromTokens(tokenSet,defs,settings));
 						}
 					}
-					indexOfLastAdd = i+1;
-					nextIsSub = token.equals("-");
+					indexOfLastAdd = i;
+					nextIsSub = false;
+					boolean goingThroughOperators = true;
+					for (int j = i;goingThroughOperators&&j<tokens.size();j++) {
+						if(tokens.get(j).equals("-")) {
+							nextIsSub=!nextIsSub;
+						}
+						if(j+1<tokens.size()) {
+							if(!(tokens.get(j+1).equals("-") || tokens.get(j+1).equals("+"))) {
+								goingThroughOperators = false;
+							}
+						}
+						tokens.remove(j);
+						j--;
+					}
 				}
 			}
-			ArrayList<String> tokenSet = new ArrayList<String>();
-			for(int j = indexOfLastAdd;j<tokens.size();j++) {
-				tokenSet.add(tokens.get(j));
-			}
-			if(nextIsSub) {
-				Expr toBeAdded = createExprFromTokens(tokenSet,defs,settings);
-				if(toBeAdded instanceof Prod) {
-					boolean foundNum = false;
-					for(int k = 0;k<toBeAdded.size();k++) {
-						if(toBeAdded.get(k) instanceof Num) {
-							Num casted = (Num)toBeAdded.get(k);
-							casted.realValue = casted.realValue.negate();
-							foundNum = true;
-							break;
-						}
-					}
-					if(!foundNum) {
-						toBeAdded.add(num(-1));
-					}
-					sum.add(toBeAdded);
-				}else if(toBeAdded instanceof Num) {
-					sum.add( ((Num)toBeAdded).negate() );
-				}else sum.add(neg(toBeAdded));
-			}else sum.add(createExprFromTokens(tokenSet,defs,settings));
-			
 			if(sum.size() == 1) return sum.get();
 			return sum;
 		}else if(isProd) {
@@ -488,14 +517,31 @@ public class Interpreter extends QuickMath{
 			
 			return pow(base,expo);
 		}else if(isFactorial) {
-			return gamma(sum(createExpr(tokens.get(0),defs,settings),num(1)));
+			Expr out = createExpr(tokens.get(0),defs,settings);
+			for(int i = tokens.size()-1;i>=1;i--){
+				if(tokens.get(i).equals("!")){
+					out = gamma(sum(out,num(1)));
+				}
+			}
+			return out;
 		}
 		throw new Exception("unrecognized format:"+tokens);
 	}
 	
-	static ArrayList<String> generateTokens(String string) throws Exception{//splits up a string into its relevant subsections and removes parentheses
+	
+	static char[] basicOperators = new char[] {
+		'*','+','-','^','/',',','=','!',':',';'
+	};
+	private static boolean isBasicOperator(char c) {
+		for(char o:basicOperators) {
+			if(o == c) return true;
+		}
+		return false;
+	}
+	
+	
+	static ArrayList<String> generateTokens(String string) throws Exception{//splits up a string into its relevant subsections and removes parentheses	
 		ArrayList<String> tokens = new ArrayList<String>();
-		
 		int count = 0;
 		int lastIndex = 0;
 		for(int i = 0;i < string.length();i++) {
@@ -508,51 +554,13 @@ public class Interpreter extends QuickMath{
 			}
 			
 			if(count == 0) {
-				if(string.charAt(i) == '*') {
+				if(isBasicOperator(string.charAt(i))) {
 					String subString = string.substring(lastIndex, i);
 					if(!subString.isEmpty())tokens.add(subString);
-					tokens.add("*");
-					lastIndex = i+1;
-				}else if(string.charAt(i) == '+') {
-					String subString = string.substring(lastIndex, i);
-					if(!subString.isEmpty())tokens.add(subString);
-					tokens.add("+");
-					lastIndex = i+1;
-				}else if(string.charAt(i) == '-') {
-					String subString = string.substring(lastIndex, i);
-					if(!subString.isEmpty())tokens.add(subString);
-					tokens.add("-");
-					lastIndex = i+1;
-				}else if(string.charAt(i) == '^') {
-					String subString = string.substring(lastIndex, i);
-					if(!subString.isEmpty())tokens.add(subString);
-					tokens.add("^");
-					lastIndex = i+1;
-				}else if(string.charAt(i) == '/') {
-					String subString = string.substring(lastIndex, i);
-					if(!subString.isEmpty())tokens.add(subString);
-					tokens.add("/");
-					lastIndex = i+1;
-				}else if(string.charAt(i) == ',') {
-					String subString = string.substring(lastIndex, i);
-					if(!subString.isEmpty())tokens.add(subString);
-					tokens.add(",");
-					lastIndex = i+1;
-				}else if(string.charAt(i) == '=') {
-					String subString = string.substring(lastIndex, i);
-					if(!subString.isEmpty())tokens.add(subString);
-					tokens.add("=");
-					lastIndex = i+1;
-				}else if(string.charAt(i) == '!') {
-					String subString = string.substring(lastIndex, i);
-					if(!subString.isEmpty())tokens.add(subString);
-					tokens.add("!");
+					tokens.add(String.valueOf(string.charAt(i)));
 					lastIndex = i+1;
 				}else if(string.charAt(i) == ')') {
 					tokens.add(string.substring(lastIndex+1, i));
-					lastIndex = i+1;
-				}else if(string.charAt(i) == '}') {
-					tokens.add(string.substring(lastIndex, i+1));
 					lastIndex = i+1;
 				}
 				
