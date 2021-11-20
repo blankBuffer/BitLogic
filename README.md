@@ -1,8 +1,8 @@
 **Features**
 
-*write your questions in plain english like wolfram alpha.(buggy as heck)
+*write your questions in plain english like wolfram alpha.(buggy as heck and fairly limited)
 
-*differenciate and integrate equations symbolically and numerically
+*differenciate and integrate equations symbolically and numerically (partial fractions is being re written for the time being so it is disabled, also have not implimented trig and weirstrass substitutions)
 
 *simplify distribute and factor (factoring of all integer roots of a polynomial can be found)
 
@@ -12,16 +12,18 @@
 
 *save expressions to disk
 
-*rpn and algebraic interpreter combined
+*rpn, algebraic, english interpreter combined
 
-*perfect power and prime factorization
+*perfect power and prime factorization(not accesable by user
 
 
 Please do not claim for any of the project to be your own. This is designed by Benjamin Robert Currie.
-You may use it for your projects if I am referenced
+You may use it for your projects if I am referenced. This project uses JDA (java discord API for the discord bot).
 
-My progress of this project is available on youtube at https://www.youtube.com/channel/UCZPoceixYFsH3ATvvhuf9og/videos
-(ive stopped making videos for the time being)
+If you want to use discord bot it requires two things, the access token and the id (event.getAuthor().getId()) for the owner of the bot.
+
+My progress of this project was available on youtube at https://www.youtube.com/channel/UCZPoceixYFsH3ATvvhuf9og/videos
+(ive stopped making videos for the time being because very time consuming and Ive changed my mind on alot of the design)
 
 Completely re written with many new techniques.
 
@@ -31,4 +33,4 @@ I will re add boolean algebra at some point.
 
 Both RPN and algebraic input.
 
-The tigonometry is not fully implemented
+The tigonometry is not fully implemented 
