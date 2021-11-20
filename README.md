@@ -34,3 +34,7 @@ I will re add boolean algebra at some point.
 Both RPN and algebraic input.
 
 The tigonometry is not fully implemented 
+
+
+
+Please be kind about my implemntations, I am not a mathmetician by any means. Ive only taken classes up to integral calculus so I may not do things in optimal ways. I also have not read any CAS books so there are most certainly logic problems with my design. That being said I do try my best
