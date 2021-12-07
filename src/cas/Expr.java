@@ -1,7 +1,5 @@
 /*
  * Benjamin R Currie, BitLogic Program
- * do not claim this to be your work!
- * this is free to use and copy without modification, if you modify it it must be for personal use
  * some code/equations is copied from online but I try to remember to site the source
  */
 
