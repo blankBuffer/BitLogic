@@ -3,7 +3,7 @@ import ui.UI;
 
 public class Main extends QuickMath{
 	
-	public static final String VERSION = "1.4.2";
+	public static final String VERSION = "1.4.3";
 	
 	public static void fancyIntro() {
 		String img = ""
@@ -18,17 +18,10 @@ public class Main extends QuickMath{
 	}
 	
 	static void testRegion() {
-		long[] frac = toFraction(78.0/29.0);
-		System.out.println(frac[0]+"/"+frac[1]);
+		//System.out.println(Interpreter.isProbablyExpr("q+3"));
 	}
 	
 	public static void main(String[] args) {
-		UI.clearTerm();
-		fancyIntro();
-		
-		//testRegion();
-		
-		System.out.println("Benjamin Currie @2021 v "+VERSION+" , java runtime version: "+System.getProperty("java.version"));
 		
 		int gui = 0;
 		
@@ -42,12 +35,41 @@ public class Main extends QuickMath{
 				i++;
 			}
 		}
+		System.out.println("Benjamin Currie @2021 v "+VERSION+" , java runtime version: "+System.getProperty("java.version"));
 		
+		if(UI.CLEAR_TERM) UI.clearTerm();
+		fancyIntro();
+		
+		testRegion();
+		
+		//showMemoryUsage.start();
 		if(gui == 1) UI.startGraphicalInterface();
 		else if(gui == 2) UI.startCommandLineInterface();
-		
-		
 	}
 	
+	static Thread showMemoryUsage = new Thread("mem-use-visual"){
+		@Override
+		public void run() {
+			while(true) {
+				try {
+					Thread.sleep(100);
+					long freeMem = Runtime.getRuntime().freeMemory();
+					long mem = Runtime.getRuntime().totalMemory();
+					long percent = Math.round(((double)(mem-freeMem)/mem)*100.0);
+					for(int i = 0;i<50;i++){
+						if(i<percent/2){
+							System.out.print("*");
+						}else{
+							System.out.print("-");
+						}
+					}
+					System.out.println();
+				} catch (Exception e) {
+					System.out.println("stopping memory usage thread");
+					break;
+				}
+			}
+		}
+	};
 
 }

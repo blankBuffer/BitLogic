@@ -20,6 +20,8 @@ public class Prod extends Expr{
 		
 		factorSubSums((Prod)toBeSimplified,settings);//factor sums
 		
+		trigExpandElements((Prod)toBeSimplified, settings);
+		
 		toBeSimplified = combineWithDiv((Prod)toBeSimplified,settings);
 				
 		if(toBeSimplified instanceof Prod) {
@@ -48,7 +50,15 @@ public class Prod extends Expr{
 		return toBeSimplified;
 	}
 	
-	Expr combineWithDiv(Prod prod,Settings settings) {//combines into a div if there is a div in the product
+	static void trigExpandElements(Prod prod,Settings settings){//expands double angle to allow things to cancel out
+		if(prod.containsType(Sin.class)){
+			for(int i = 0;i < prod.size();i++){
+				prod.set(i, trigExpand(prod.get(i),settings));
+			}
+		}
+	}
+	
+	static Expr combineWithDiv(Prod prod,Settings settings) {//combines into a div if there is a div in the product
 		
 		int indexOfDiv = -1;
 		for(int i = 0;i<prod.size();i++) {
@@ -384,6 +394,8 @@ public class Prod extends Expr{
 	@Override
 	boolean similarStruct(Expr other,boolean checked) {
 		if(other instanceof Prod) {
+			sort();
+			other.sort();
 			
 			if(!checked) if(checkForMatches(other) == false) return false;
 			if(size() != other.size()) return false;

@@ -280,7 +280,7 @@ public class Power extends Expr{
 		return pow;
 	}
 	
-	void perfectPowerBase(Power power,Settings settings) {
+	static void perfectPowerBase(Power power,Settings settings) {
 		if(power.getBase() instanceof Num) {
 			Power pp = perfectPower((Num)power.getBase());
 			
@@ -296,7 +296,7 @@ public class Power extends Expr{
 		}
 	}
 	
-	Expr exponentiateIntegers(Power power) {
+	static Expr exponentiateIntegers(Power power) {
 		if(power.getBase() instanceof Num && power.getExpo() instanceof Num) {
 			Num base = (Num)power.getBase();
 			Num expo = (Num)power.getExpo();

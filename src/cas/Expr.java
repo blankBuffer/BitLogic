@@ -1,3 +1,11 @@
+/*
+ * Benjamin R Currie, BitLogic Program
+ * do not claim this to be your work!
+ * this is free to use and copy without modification, if you modify it it must be for personal use
+ * some code/equations is copied from online but I try to remember to site the source
+ */
+
+
 package cas;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
@@ -8,8 +16,32 @@ import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Collections;
 
+/*
+ * The Expr class is a description of what an expression is
+ * 
+ * most expression of child node expressions, only certain types of expressions are the leafs
+ * most of java class files are inheriting the Expr class
+ * Too see the entire tree the print Tree function can be used
+ * 
+ * the simplify call is when the expression is processed to a more useful form, not just algebra rewrites but also operator expansion like the derivative and integrals
+ * the simplify call is not guaranteed to output a less complex equation, just a decision of what makes sense based on my heuristic
+ * The modifyFromExample function can transform many steps into one step by mapping one expression to a result expression with the same meaning
+ * 
+ */
+
 public abstract class Expr extends QuickMath implements Comparable<Expr>, Serializable{
 	
+	/*
+	 * flags attempt to reduce the amount of work needed during simplification
+	 * if an expression finishes a simplify call it is made simple such that it will not simplify again unless
+	 * it is modified
+	 * 
+	 * sorted is weather or not a sum,product or list is sorted or not into a determinate order
+	 * 
+	 * 
+	 * 
+	 * copying an expression keeps the original flags
+	 */
 	static class Flags implements Serializable{
 		private static final long serialVersionUID = -2823404902493132716L;
 		boolean simple = false;
@@ -27,7 +59,10 @@ public abstract class Expr extends QuickMath implements Comparable<Expr>, Serial
 			sorted = false;
 			settingsUsedForSimplify = Settings.normal;
 		}
-		
+		@Override
+		public String toString(){
+			return "sorted: "+sorted+", simple: "+simple;
+		}
 	}
 	
 	public Flags flags = new Flags();
@@ -114,13 +149,14 @@ public abstract class Expr extends QuickMath implements Comparable<Expr>, Serial
 		}
 		return num(1);
 	}
-	
+	//returns if the expression is in this, not full proof for products and sums
 	public boolean contains(Expr expr) {
 		if(this.equalStruct(expr)) return true;
 		for(Expr e:subExpr)if(e.contains(expr)) return true;
 		return false;
 	}
 	
+	//returns if the expression contains any variables
 	public boolean containsVars() {
 		if(this instanceof Var) return true;
 		for(Expr e:subExpr) if(e.containsVars()) return true;
@@ -130,23 +166,58 @@ public abstract class Expr extends QuickMath implements Comparable<Expr>, Serial
 	//the checked variable simply keeps track weather chechForMatches has been checked
 	abstract boolean similarStruct(Expr other,boolean checked);//returns if another expression is similar to this but any comparison with variables is returned true
 	
-	
+	/*
+	 * letting the template expression=this we check if the other expression is similar to the template
+	 * we DONT check for matches which is why its called fast
+	 * 
+	 * similar is defined as having a same tree but the variables might be different or other has expressions where the varibales would be
+	 * 
+	 * this is best understood by example
+	 * 
+	 * this=a^b other=2^3 , fastSimilar = true , strictSimilar = false
+	 * this=a^a other=2^3 , fastSimilar = true , strictSimilar = fasle (because 2 not equal to 3)
+	 * 
+	 * this=sin(x)^b other = a^b , not similar at all, why? because the template was expecting the base to be the sine function
+	 * 
+	 * note that with sums and products the length of sub expressions must be equal. It does its best to sort the expressions in the sum/product in a similar kind of way, but its not perfect
+	 * 
+	 */
 	public boolean fastSimilarStruct(Expr other) {
 		return similarStruct(other,true);
 	}
-	
+	/*
+	 * a full similar comparisons we DO check for matches making it a guarantee
+	 * 
+	 * note that with sums and products the length must be equal
+	 * 
+	 */
 	public boolean strictSimilarStruct(Expr other) {
 		return similarStruct(other,false);
 	}
 	
-	boolean getParts(ExprList vars,ExprList exprs,Expr other) {//other and this is input,vars and exprs are outputs
-		if(this instanceof Var) {
+	/*
+	 * extracts the parts and variables from the template=this, and expr is the parts to be extracted 
+	 * example, let this=diff(x^a,x) and expr=diff(m^(k*l),m)
+	 * these expression break down into lists
+	 * this -> [x,a,x]
+	 * expr -> [m,k*l,m]
+	 * 
+	 * if this lists for some reason are not the same length it returns false saying that they can't be compared
+	 * returning true is saying no problems were encountered
+	 * 
+	 * this is useful because we can later compare the list for matching sets,
+	 * for example in this example the first and last element must be the same [ ->x ,a, ->x ],
+	 * this is what the check for matches function does
+	 * 
+	 */
+	boolean getParts(ExprList vars,ExprList exprs,Expr expr) {//template and this is input,vars and exprs are outputs
+		if(this instanceof Var) {//template encountered a variable, time for extraction into the expr list
 			vars.add(copy());
-			exprs.add(other.copy());
+			exprs.add(expr.copy());
 		}else{
-			if(size()==other.size()) {
+			if(size()==expr.size()) {
 				for(int i = 0;i<size();i++) {
-					if(!get(i).getParts(vars,exprs,other.get(i))) return false;
+					if(!get(i).getParts(vars,exprs,expr.get(i))) return false;
 				}
 			}else {
 				return false;//different size so variables will obviously not match
@@ -154,7 +225,7 @@ public abstract class Expr extends QuickMath implements Comparable<Expr>, Serial
 		}
 		return true;
 	}
-	
+	//counts the variables in an expression into the provided arrayList and sorts them by frequency
 	void countVars(ArrayList<VarCount> varcounts) {
 		if(this instanceof Var) {
 			for(int i = 0;i<varcounts.size();i++) {//search
@@ -169,7 +240,9 @@ public abstract class Expr extends QuickMath implements Comparable<Expr>, Serial
 		Collections.sort(varcounts);
 	}
 	
-	
+	/*
+	 * looks at the template=this and checks if the parts list from this have the same pairs as the other expression
+	 */
 	
 	boolean checkForMatches(ExprList vars,ExprList exprs,Expr other) {//other is input,vars and exprs are outputs
 		
@@ -224,13 +297,32 @@ public abstract class Expr extends QuickMath implements Comparable<Expr>, Serial
 		return true;
 	}
 	
-	int nestDepth() {
-		int max = 0;
+	/*
+	 * a score of how complex the expression is, this counts the number of nodes in the expression
+	 * 
+	 * however products are special and triple the complexity, this is important for sorting (for complexityForSorting only)
+	 * examples
+	 * x^3 -> 3
+	 * sin(x) -> 2
+	 * sqrt(x) -> 5
+	 * sin(x+a) -> 4
+	 * -cos(b) -> 12
+	 * sin(x+a)-cos(b) -> 17 , when this is sorted -cos(b) has a higher complexity than sin(x+a) pushing it to the front even though they have the same number of nodes
+	 */
+	public long complexityForSorting() {
+		int sum = 1;
 		for(Expr e:subExpr) {
-			int current = e.nestDepth();
-			if(current>max) max = current;
+			sum+= e.complexityForSorting();
 		}
-		return max+1;
+		if(this instanceof Prod) sum*=3;
+		return sum;
+	}
+	public long complexity() {
+		int sum = 1;
+		for(Expr e:subExpr) {
+			sum+= e.complexityForSorting();
+		}
+		return sum;
 	}
 	
 	boolean checkForMatches(Expr other) {//shortcut
@@ -253,10 +345,13 @@ public abstract class Expr extends QuickMath implements Comparable<Expr>, Serial
 	}
 	
 	public ModifyFromExampleResult modifyFromExampleSpecific(Equ example,Settings settings) {//returns object describing weather or not it was successful
+		//System.out.println(example.getLeftSide());
 		if(example.getLeftSide().fastSimilarStruct(this)) {//we use fast similar struct here because we don't want to call the getParts function twice and its faster
+			
+			//System.out.println(this+" "+example);
+			
 			ExprList exampleParts = new ExprList();
 			ExprList parts = new ExprList();
-			
 			boolean match = example.getLeftSide().checkForMatches(exampleParts,parts,this);
 			if(!match) {
 				return new ModifyFromExampleResult(this,false);
@@ -322,28 +417,41 @@ public abstract class Expr extends QuickMath implements Comparable<Expr>, Serial
 		flags.reset();
 		subExpr.clear();
 	}
+	/*
+	 * sorted expressions are based on complexity and variable frequency
+	 * 
+	 * more complex parts are put in the front and simpler in the back
+	 * 
+	 * variables which appear more often in the expression are pushed to the fron
+	 * 
+	 * example x+sqrt(y+x) -> sqrt(x+y)+x
+	 *     since the sqrt(y+x) is more complex than x it is moved to the front
+	 *     sqrt(y+x) -> sqrt(x+y) , x is moved to the fron because it appears more often
+	 * 
+	 * sorting allows for the similarStuct comparison to occur allowing for more freedom in what modifyFromExample can do
+	 * 
+	 * the sort output is NOT completely guaranteed to output the same order, this is because the complexity of two or more expressions may be the same
+	 */
 	public void sort(ArrayList<VarCount> varcounts) {
 		if(!flags.sorted) {
 			if(this instanceof Sum || this instanceof Prod || this instanceof ExprList) {
-				
 				if (varcounts == null) {
 					varcounts = new ArrayList<VarCount>();
 					countVars(varcounts);
 				}
-				
 				boolean wasSimple = flags.simple;
 				
 				int moved = 0;
 				for(int i = 0;i<varcounts.size();i++) {//sort based on frequency
 					VarCount varcount = varcounts.get(i);
-					for(int j = moved;j<size();j++) {
+					int subMoved = 0;
+					for(int j = moved;j<size() && subMoved != varcount.count;j++) {
 						if(get(j).contains(varcount.v)) {
-							
 							Expr temp = get(moved);
 							set(moved,get(j));
 							set(j,temp);
 							moved++;
-							break;
+							subMoved++;
 						}
 						
 					}	
@@ -389,15 +497,14 @@ public abstract class Expr extends QuickMath implements Comparable<Expr>, Serial
 		}
 	}
 	
-	Expr getNextInnerFunction(Var v) {
-		if(nestDepth() <= 2) return copy();
-		else if(size()>0 && contains(v)){
+	public Expr getNextInnerFunction(Var v) {
+		if(size()>0 && contains(v)){
 			Expr highest = null;
-			int highestNestDepth = 0;
+			long highestComplexity = 0;
 			for(int i = 0;i<size();i++) {
-				int current = get(i).nestDepth();
-				if(current>highestNestDepth && get(i).contains(v)) {
-					highestNestDepth = current;
+				long current = get(i).complexity();
+				if(current>highestComplexity && get(i).contains(v)) {
+					highestComplexity = current;
 					highest = get(i);
 				}
 			}
@@ -418,13 +525,23 @@ public abstract class Expr extends QuickMath implements Comparable<Expr>, Serial
 	   ObjectInputStream ois = new ObjectInputStream(fin);
 	   Expr expr = (Expr) ois.readObject();
 	   ois.close();
+	   expr.flags.reset();//this is important when retrying something in a new version
 	   return expr;
 	}
-	
+	/*
+	 * shows the entire expression structure without resorting or fancy printing
+	 * used for debugging
+	 */
 	public void printTree(int tab) {
-		if(tab == 0) System.out.println("EXPR-TREE-START-----------:"+this);
+		
+		if(tab == 0){
+			System.out.println("EXPR-TREE-START-----------: "+this+" flags: "+flags);
+		}
 		String tabStr = "";
-		for(int i = 0;i<tab;i++) tabStr+="    ";
+		if(tab>0) tabStr+="|";
+		for(int i = 0;i<tab-1;i++) tabStr+="   |";
+		if(tab>0) tabStr+="--->";
+		else tabStr+=">";
 		System.out.print(tabStr+this.getClass().getSimpleName() );
 		if(this instanceof Num || this instanceof Var) System.out.print(" : "+this);
 		System.out.println();
@@ -433,21 +550,9 @@ public abstract class Expr extends QuickMath implements Comparable<Expr>, Serial
 		}
 		if(tab == 0) System.out.println("EXPR-TREE-END-------------");
 	}
-	
-	public Expr convertNumsToFloatExpr() {
-		if( !(this instanceof ExprList || this instanceof Equ) && !containsVars()) {
-			return floatExpr(convertToFloat(null));
-		}
-		Expr copy = copy();
-		for(int i = 0;i<copy.size();i++) {
-			copy.set(i, copy.get(i).convertNumsToFloatExpr() );
-		}
-		return copy;
-	}
-	
 	@Override
 	public int compareTo(Expr other) {
-		int c = -Integer.compare(nestDepth(), other.nestDepth());
+		int c = -Long.compare(complexityForSorting(), other.complexityForSorting());
 		return c;
 	}
 	

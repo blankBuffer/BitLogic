@@ -4,6 +4,8 @@ import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Scanner;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 public class Interpreter extends QuickMath{
 	
@@ -18,10 +20,15 @@ public class Interpreter extends QuickMath{
 			while(sc.hasNextLine()) {
 				String line = sc.nextLine();
 				if(verbose) System.out.print(line+" -> ");
-				Expr response = Ask.ask(line,Defs.blank,Settings.normal);
-				if(verbose) System.out.print(response+" -> ");
+				Expr response = null;
+				try {
+					response = Ask.ask(line,Defs.blank,Settings.normal);
+				} catch (Exception e) {
+					e.printStackTrace();
+				}
+				if(verbose && response != null) System.out.print(response+" -> ");
 				response = response.replace(Defs.blank.getVars()).simplify(Settings.normal);
-				if(verbose) System.out.println(response);
+				if(verbose && response != null) System.out.println(response);
 			}
 			
 		} catch (FileNotFoundException e) {
@@ -73,46 +80,15 @@ public class Interpreter extends QuickMath{
 	}
 	
 	public static boolean isOperator(String string) {
-		if(string.equals("+")) return true;
-		else if(string.equals("(")) return true;
-		else if(string.equals(")")) return true;
-		else if(string.equals("{")) return true;
-		else if(string.equals("}")) return true;
-		else if(string.equals("-")) return true;
-		else if(string.equals("^")) return true;
-		else if(string.equals("/")) return true;
-		else if(string.equals("*")) return true;
-		else if(string.equals(",")) return true;
-		else if(string.equals("[")) return true;
-		else if(string.equals("]")) return true;
-		else if(string.equals("=")) return true;
-		else if(string.equals("!")) return true;
-		else if(string.equals(";")) return true;
-		else if(string.equals(":")) return true;
-		
-		return false;
+		return string.matches("[+\\-*/^,=!;:\\[\\]\\{\\}\\(\\)]")&&!string.contains(" ");
+	}
+	
+	public static boolean isProbablyExpr(String string) {
+		return string.matches("pi|i|e|.*[(0-9)(+\\-*/^,=!;:\\[\\]\\{\\}\\(\\))].*")&&!string.contains(" ");
 	}
 	
 	public static boolean containsOperators(String string) {
-		for(char c:string.toCharArray()) {
-			if(c == '+') return true;
-			else if(c == '(') return true;
-			else if(c == ')') return true;
-			else if(c == '{') return true;
-			else if(c == '}') return true;
-			else if(c == '-') return true;
-			else if(c == '^') return true;
-			else if(c == '/') return true;
-			else if(c == '*') return true;
-			else if(c == ',') return true;
-			else if(c == '[') return true;
-			else if(c == ']') return true;
-			else if(c == '=') return true;
-			else if(c == '!') return true;
-			else if(c == ';') return true;
-			else if(c == ':') return true;
-		}
-		return false;
+		return string.matches(".*[+\\-*/^,=!;:\\[\\]\\{\\}\\(\\)].*")&&!string.contains(" ");
 	}
 	
 	static void printTokens(ArrayList<String> tokens) {//for debugging
@@ -144,10 +120,12 @@ public class Interpreter extends QuickMath{
 			String string = tokens.get(0);
 			if(string.isEmpty()) return null;
 			Expr num = null;
-			try {
-				if(string.contains(".")) num = floatExpr(string);
-				else num = num(string);
-			}catch(Exception e) {}
+			if(string.matches("[(0-9)(.)]+")){
+				try {
+					if(string.contains(".")) num = floatExpr(string);
+					else num = num(string);
+				}catch(Exception e) {}
+			}
 			
 			if(num != null){
 				return num;
@@ -158,10 +136,8 @@ public class Interpreter extends QuickMath{
 				else if(lowered.equals("e")) return e();
 				else if(lowered.equals("true")) return bool(true);
 				else if(lowered.equals("false")) return bool(false);
-				else if(!Character.isDigit(string.charAt(0))){//variables
+				else{//variables
 					return var(string);
-				}else {
-					throw new Exception("invalid variable name");
 				}
 			}else if(string.charAt(0) == '[') {
 				if(string.equals("[]")) return new ExprList();
@@ -312,6 +288,10 @@ public class Interpreter extends QuickMath{
 					f.example = true;
 					defs.addFunc( name , f);
 					return SUCCESS;
+				}else if(op.equals("conv")){
+					String fromUnit = params.get(1).toString();
+					String toUnit = params.get(2).toString();
+					return approx( Unit.conv(params.get(0), Unit.getUnit(fromUnit), Unit.getUnit(toUnit)) ,new ExprList());
 				}else {
 					Func f = defs.getFunc(op);
 					if(f == null) {
@@ -539,7 +519,6 @@ public class Interpreter extends QuickMath{
 		return false;
 	}
 	
-	
 	static ArrayList<String> generateTokens(String string) throws Exception{//splits up a string into its relevant subsections and removes parentheses	
 		ArrayList<String> tokens = new ArrayList<String>();
 		int count = 0;
@@ -563,8 +542,6 @@ public class Interpreter extends QuickMath{
 					tokens.add(string.substring(lastIndex+1, i));
 					lastIndex = i+1;
 				}
-				
-				
 			}else if(count == 1 && ((string.charAt(i) == '(') || string.charAt(i) == '{')) {//this is important for detecting sin(x) into [sin,x]
 				String subString = string.substring(lastIndex, i);
 				if(!subString.isEmpty())tokens.add(subString);
@@ -576,6 +553,11 @@ public class Interpreter extends QuickMath{
 			String subString = string.substring(lastIndex, string.length());
 			if(!subString.isEmpty())tokens.add(subString);
 		}
+		//strange case of 6x meaning 6*x
+		
+		
+		
+		
 		return tokens;
 	}
 }

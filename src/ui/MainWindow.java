@@ -14,10 +14,16 @@ class MainWindow extends JFrame{
 	JFrame saveWindow,openWindow;
 	StackEditor currentStackEditor;
 	
+	static void setButtonTheme(JButton b){
+		b.setOpaque(true);
+		b.setBorderPainted(false);
+		b.setBackground(new Color(100,100,100));
+		b.setForeground(Color.white);
+	}
 	
 	JPanel createTopMenu() {
 		JPanel topMenu = new JPanel();
-		topMenu.setBackground(Color.LIGHT_GRAY);
+		topMenu.setBackground(Color.DARK_GRAY);
 		
 		//save stack Button
 		JButton saveStackButton = new JButton("save stack");
@@ -27,6 +33,8 @@ class MainWindow extends JFrame{
 				saveWindow.setVisible(true);
 			}
 		});
+		setButtonTheme(saveStackButton);
+
 		//open stack button
 		JButton openStackButton = new JButton("open stack");
 		openStackButton.addActionListener(new ActionListener() {
@@ -37,6 +45,7 @@ class MainWindow extends JFrame{
 			}
 			
 		});
+		setButtonTheme(openStackButton);
 		//open help menu
 		JButton helpButton = new JButton("help");
 		helpButton.addActionListener(new ActionListener() {
@@ -47,6 +56,7 @@ class MainWindow extends JFrame{
 			}
 			
 		});
+		setButtonTheme(helpButton);
 		
 		JButton plotButton = new JButton("plot/graph");
 		plotButton.addActionListener(new ActionListener() {
@@ -57,6 +67,7 @@ class MainWindow extends JFrame{
 			}
 			
 		});
+		setButtonTheme(plotButton);
 		
 		topMenu.setLayout(new FlowLayout());
 		topMenu.add(saveStackButton);
@@ -71,48 +82,45 @@ class MainWindow extends JFrame{
 	JPanel createStackEditor() {
 		JPanel stackEditorPanel = new JPanel();
 		Font font = new Font(null,Font.PLAIN,20);
-		JTextField entryArea = new JTextField(30);
+		JTextField entryArea = new JTextField("enter expression here",30);
 		stackEditorPanel.setBackground(Color.LIGHT_GRAY);
 		//stack view
-		JComponent stackView =  new JComponent() {
-			private static final long serialVersionUID = 1L;
-			{//contructor
-				currentStackEditor.stack.addListDataListener(new ListDataListener(){
-					@Override
-					public void intervalAdded(ListDataEvent e) {
-						repaint();
-					}
-					@Override
-					public void intervalRemoved(ListDataEvent e) {
-						repaint();
-					}
-					@Override
-					public void contentsChanged(ListDataEvent e) {
-						repaint();
-					}
-				});
-			}
-			public void renderBackground(Graphics g) {
-				g.setColor(Color.DARK_GRAY);
-				g.fillRect(0, 0, getWidth(), getHeight());
+		JPanel stackView = new JPanel();
+		stackView.setLayout(null);
+		JList<Expr> stackViewList = new JList<Expr>(currentStackEditor.stack);
+		stackViewList.setFont(font);
+		stackViewList.setBackground(Color.DARK_GRAY);
+		stackViewList.setForeground(Color.LIGHT_GRAY);
+		stackViewList.setSelectionBackground(Color.DARK_GRAY);
+		stackViewList.setSelectionForeground(Color.LIGHT_GRAY);
+		
+		stackView.setBackground(new Color(100,100,100));
+		JScrollPane scrollPane = new JScrollPane(stackViewList);
+		
+		int cellHeight = font.getSize()*2;
+		stackViewList.setFixedCellHeight(cellHeight);
+		currentStackEditor.stack.addListDataListener(new ListDataListener(){
+			void reset(){
+				scrollPane.setLocation(0,0);
+				int stackSize = currentStackEditor.size();
+				scrollPane.setSize(stackView.getWidth(),Math.max(Math.min(cellHeight*stackSize,stackView.getHeight()),cellHeight*2));
+				scrollPane.setLocation(0,stackView.getHeight()-scrollPane.getHeight());
 			}
 			@Override
-			public void paint(Graphics g) {
-				renderBackground(g);
-				g.setFont(font);
-				g.setColor(Color.LIGHT_GRAY);
-				int stackSize = currentStackEditor.stack.size();
-				int elementHeight = font.getSize()*2;
-				for(int i = 0;i<stackSize;i++) {
-					int y = getHeight()-(stackSize-i)*elementHeight;
-					g.drawString(currentStackEditor.stack.get(i).toString(), 0, y+elementHeight/2);
-					g.drawLine(0, y, getWidth(),y);
-				}
+			public void intervalAdded(ListDataEvent e) {
+				reset();
 			}
-		};
-		stackView.setBackground(Color.DARK_GRAY);
-		stackView.setForeground(Color.LIGHT_GRAY);
+			@Override
+			public void intervalRemoved(ListDataEvent e) {
+				reset();
+			}
+			@Override
+			public void contentsChanged(ListDataEvent e) {
+				reset();
+			}
+		});
 		
+		stackView.add(scrollPane);
 		//entry area
 		entryArea.setBackground(Color.DARK_GRAY);
 		entryArea.setForeground(Color.LIGHT_GRAY);
@@ -152,7 +160,7 @@ class MainWindow extends JFrame{
 		functionsLabel.setForeground(Color.white);
 		defsPanel.add(functionsLabel);
 		defsPanel.add(new JScrollPane(funcDefsList));
-		JLabel variablesLabel = new JLabel("functions");
+		JLabel variablesLabel = new JLabel("variables");
 		variablesLabel.setForeground(Color.white);
 		defsPanel.add(variablesLabel);
 		defsPanel.add(new JScrollPane(varsDefsList));
@@ -169,7 +177,7 @@ class MainWindow extends JFrame{
 		panel.add(createDefsView(),BorderLayout.WEST);
 		panel.setBackground(Color.DARK_GRAY);
 		add(panel);
-		setSize(600,600);
+		setSize(1024,768);
 		setLocationRelativeTo(null);
 		//
 		setVisible(true);

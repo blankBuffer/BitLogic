@@ -10,15 +10,62 @@ public class Solve extends Expr{
 	static Equ expoCase = equ( createExpr("m^n=a")   ,createExpr("n=ln(a)/ln(m)")  );//m^n=a -> n=ln(a)/ln(m)
 	static Equ divCase1 = equ(createExpr("a/b=y"),createExpr("a=y*b"));
 	static Equ divCase2 = equ(createExpr("a/b=y"),createExpr("b=a/y"));
+	static Equ divCase3 = equ(createExpr("a/b=y"),createExpr("a-y*b=0"));
 	
-	static Equ tanCase = equ(createExpr("tan(x)=y"),createExpr("x=atan(y)"));
-	static Equ sinCase = equ(createExpr("sin(x)=y"),createExpr("x=asin(y)"));
-	
-	//Special case with variants involving roots
-	static Expr rareCase1Ans = createExpr("x=(a+k^2)^2*k^-2/4-a");
-	static Equ rareCase11 = equ( createExpr("sqrt(x)-sqrt(x+a)=k") , rareCase1Ans );
-	static Equ rareCase12 = equ( createExpr("sqrt(x+a)-sqrt(x)=k") , rareCase1Ans );
-	static Equ rareCase13 = equ( createExpr("sqrt(x+a)+sqrt(x)=k") , rareCase1Ans );
+	static ArrayList<Equ> caseTable = new ArrayList<Equ>();
+	static{//make rare case table
+		//root problems
+		Expr rareCase1Ans = createExpr("x=(k^2-a)^2/(4*k^2)");
+		caseTable.add(equ( createExpr("sqrt(x)-sqrt(x+a)=k") , rareCase1Ans ));
+		caseTable.add(equ( createExpr("sqrt(x+a)-sqrt(x)=k") , rareCase1Ans ));
+		caseTable.add(equ( createExpr("sqrt(x+a)+sqrt(x)=k") , rareCase1Ans ));
+		
+		Expr rareCase2Ans = createExpr("[x=(sqrt(4*a+4*y+1)+2*y+1)/2,x=(-sqrt(4*a+4*y+1)+2*y+1)/2]");
+		caseTable.add(equ( createExpr("x+sqrt(x+a)=y") , rareCase2Ans ));
+		caseTable.add(equ( createExpr("x-sqrt(x+a)=y") , rareCase2Ans ));
+		Expr rareCase2Ans2 = createExpr("[x=(sqrt(4*a-4*y+1)-2*y+1)/2,x=(-sqrt(4*a-4*y+1)-2*y+1)/2]");
+		caseTable.add(equ( createExpr("sqrt(x+a)-x=y") , rareCase2Ans2 ));
+		
+		Expr rareCase3Ans = createExpr("[x=(sqrt(-4*a*b+4*a*y^2+4*b*z^2+m^2+4*m*y*z)+m+2*y*z)/(2*(y^2-b)),x=(-sqrt(-4*a*b+4*a*y^2+4*b*z^2+m^2+4*m*y*z)+m+2*y*z)/(2*(y^2-b))]");
+		caseTable.add(equ( createExpr("y*x+sqrt(a+m*x+b*x^2)=z") , rareCase3Ans ));
+		caseTable.add(equ( createExpr("y*x-sqrt(a+m*x+b*x^2)=z") , rareCase3Ans ));
+		Expr rareCase3Ans2 = createExpr("[x=(sqrt(-4*a*b+4*a*y^2+4*b*z^2+m^2+4*m*y*z)+m+2*y*z)/(2*(b-y^2)),x=(-sqrt(-4*a*b+4*a*y^2+4*b*z^2+m^2+4*m*y*z)+m+2*y*z)/(2*(b-y^2))]");
+		caseTable.add(equ( createExpr("-y*x+sqrt(a+m*x+b*x^2)=z") , rareCase3Ans2 ));
+		
+		Expr rareCase4Ans = createExpr("[x=(-sqrt(-4*a*b*k^4+4*a*k^2*y^2+4*b*k^2*z^2+k^4*m^2+4*k^2*m*y*z)-k^2*m-2*y*z)/(2*(b*k^2-y^2)),x=(sqrt(-4*a*b*k^4+4*a*k^2*y^2+4*b*k^2*z^2+k^4*m^2+4*k^2*m*y*z)-k^2*m-2*y*z)/(2*(b*k^2-y^2))]");
+		caseTable.add(equ( createExpr("y*x+k*sqrt(a+m*x+b*x^2)=z") , rareCase4Ans ));
+		caseTable.add(equ( createExpr("y*x-k*sqrt(a+m*x+b*x^2)=z") , rareCase4Ans ));
+		Expr rareCase4Ans2 = createExpr("[x=(-sqrt(-4*a*b*k^4+4*a*k^2*y^2+4*b*k^2*z^2+k^4*m^2+4*k^2*m*y*z)-k^2*m-2*y*z)/(-2*(b*k^2-y^2)),x=(sqrt(-4*a*b*k^4+4*a*k^2*y^2+4*b*k^2*z^2+k^4*m^2+4*k^2*m*y*z)-k^2*m-2*y*z)/(-2*(b*k^2-y^2))]");
+		caseTable.add(equ( createExpr("-y*x+k*sqrt(a+m*x+b*x^2)=z") , rareCase4Ans2 ));
+		//special
+		caseTable.add(equ( createExpr("a^b=1") , createExpr("[b=0,a=1]") ));
+		caseTable.add(equ( createExpr("sin(x)-cos(x)=0") , createExpr("x=pi/4") ));
+		caseTable.add(equ( createExpr("-sin(x)+cos(x)=0") , createExpr("x=pi/4") ));
+		caseTable.add(equ( createExpr("a*sin(x)+b*cos(x)=y") , createExpr("x=acos(y/sqrt(a^2+b^2))+atan(a/b)") ));
+		caseTable.add(equ( createExpr("sin(x)+b*cos(x)=y") , createExpr("x=acos(y/sqrt(1+b^2))+atan(1/b)") ));
+		caseTable.add(equ( createExpr("a*sin(x)+cos(x)=y") , createExpr("x=acos(y/sqrt(a^2+1))+atan(a)") ));
+		caseTable.add(equ( createExpr("sin(x)+cos(x)=y") , createExpr("x=acos(y/sqrt(2))+pi/4") ));
+		//subtract same type of function
+		{
+			caseTable.add(equ( createExpr("sin(a)-sin(y)=0") , createExpr("a-y=0") ));
+			caseTable.add(equ( createExpr("cos(a)-cos(y)=0") , createExpr("a-y=0") ));
+			caseTable.add(equ( createExpr("tan(a)-tan(y)=0") , createExpr("a-y=0") ));
+			caseTable.add(equ( createExpr("asin(a)-asin(y)=0") , createExpr("a-y=0") ));
+			caseTable.add(equ( createExpr("acos(a)-acos(y)=0") , createExpr("a-y=0") ));
+			caseTable.add(equ( createExpr("atan(a)-atan(y)=0") , createExpr("a-y=0") ));
+			caseTable.add(equ( createExpr("ln(a)-ln(y)=0") , createExpr("a-y=0") ));
+			caseTable.add(equ( createExpr("a^m-a^y=0") , createExpr("m-y=0") ));
+			caseTable.add(equ( createExpr("m^a-y^a=0") , createExpr("m-y=0") ));
+			//negative versions
+		}
+		//solving inverses
+		caseTable.add(equ( createExpr("sin(x)=y") , createExpr("x=asin(y)") ));
+		caseTable.add(equ( createExpr("cos(x)=y") , createExpr("x=acos(y)") ));
+		caseTable.add(equ( createExpr("tan(x)=y") , createExpr("x=atan(y)") ));
+		caseTable.add(equ( createExpr("asin(x)=y") , createExpr("x=sin(y)") ));
+		caseTable.add(equ( createExpr("acos(x)=y") , createExpr("x=cos(y)") ));
+		caseTable.add(equ( createExpr("atan(x)=y") , createExpr("x=tan(y)") ));
+	}
 	
 	public Solve(Equ e,Var v){
 		add(e);
@@ -48,27 +95,27 @@ public class Solve extends Expr{
 		
 		toBeSimplified.simplifyChildren(settings);//simplify sub expressions
 		
-		Solve casted = (Solve)toBeSimplified;
+		Solve castedSolve = (Solve)toBeSimplified;
 		
 		Equ oldEqu = null;
 		
-		while(!casted.getEqu().equalStruct(oldEqu)) {
-			oldEqu = (Equ)casted.getEqu().copy();
+		outer:while(!castedSolve.getEqu().equalStruct(oldEqu)) {
+			oldEqu = (Equ)castedSolve.getEqu().copy();
 				
-			if( !casted.getEqu().getRightSide().equalStruct(ZERO)) casted.getEqu().setLeftSide( distr(casted.getEqu().getLeftSide()).simplify(settings));//distribute, we don't do it if right side is zero because we can use technique
+			if( !castedSolve.getEqu().getRightSide().equalStruct(ZERO)) castedSolve.getEqu().setLeftSide( distr(castedSolve.getEqu().getLeftSide()).simplify(settings));//distribute, we don't do it if right side is zero because we can use technique
 				
-			sumMoveNonImportantToRightSide(casted,settings);//x+a+b=c -> x=c-a-b
+			sumMoveNonImportantToRightSide(castedSolve,settings);//x+a+b=c -> x=c-a-b
 			
-			casted.getEqu().setLeftSide( factor(casted.getEqu().getLeftSide()).simplify(settings) );//factor
+			castedSolve.getEqu().setLeftSide( factor(castedSolve.getEqu().getLeftSide()).simplify(settings) );//factor
 			
-			if(casted.getEqu().getRightSide().equalStruct(ZERO) && casted.getEqu().getLeftSide() instanceof Prod) {//if left side is a product and right side is 0 each part of the product is an equation
+			if(castedSolve.getEqu().getRightSide().equalStruct(ZERO) && castedSolve.getEqu().getLeftSide() instanceof Prod) {//if left side is a product and right side is 0 each part of the product is an equation
 				ExprList repl = new ExprList();
 				
-				Prod leftProd = (Prod)casted.getEqu().getLeftSide();
+				Prod leftProd = (Prod)castedSolve.getEqu().getLeftSide();
 				
 				for(int i = 0;i<leftProd.size();i++) {
-					if(leftProd.get(i).contains(casted.getVar())) {
-						repl.add(solve(equ(leftProd.get(i),num(0)),casted.getVar()));
+					if(leftProd.get(i).contains(castedSolve.getVar())) {
+						repl.add(solve(equ(leftProd.get(i),num(0)),castedSolve.getVar()));
 					}
 				}
 				
@@ -76,40 +123,42 @@ public class Solve extends Expr{
 				break;
 			}
 			
-			if(casted.nestDepth() >= rareCase13.getLeftSide().nestDepth()) {//for faster computation
-				
-				Expr.ModifyFromExampleResult result = casted.getEqu().modifyFromExampleSpecific(rareCase11,settings);
-				casted.setEqu( (Equ) result.expr  );//sqrt(x)-sqrt(x+a)
-				if(!result.success) {
-					result = casted.getEqu().modifyFromExampleSpecific(rareCase12,settings);
-					casted.setEqu( (Equ) result.expr  );//sqrt(x+a)-sqrt(x)
-				}
-				if(!result.success) {
-					result = casted.getEqu().modifyFromExampleSpecific(rareCase13,settings);
-					casted.setEqu( (Equ) result.expr  );//sqrt(x)+sqrt(x+a)
-				}
-				
-			}
-				
-			prodMoveNonImportantToRightSide(casted,settings);//x*a*b=c -> x=c*inv(a)*inv(b)
 			
-			if(casted.getEqu().getLeftSide() instanceof Div){
-				Div castedDiv = (Div)casted.getEqu().getLeftSide();
-				boolean numerHasVar = castedDiv.getNumer().contains(casted.getVar());
-				boolean denomHasVar = castedDiv.getDenom().contains(casted.getVar());
+			//special cases ///////
+			Expr.ModifyFromExampleResult result = null;
+			for(Equ rareCase:caseTable){
+				result = castedSolve.getEqu().modifyFromExampleSpecific(rareCase,settings);
+				if(result.expr instanceof ExprList){
+					for(int i = 0;i<result.expr.size();i++){
+						result.expr.set(i, solve((Equ)result.expr.get(i),castedSolve.getVar()) );
+					}
+					toBeSimplified = result.expr.simplify(settings);
+					break outer;
+				}
+				castedSolve.setEqu((Equ)result.expr);
+				if(result.success) break;
+			}
+			
+			//////	
+				
+			prodMoveNonImportantToRightSide(castedSolve,settings);//x*a*b=c -> x=c*inv(a)*inv(b)
+			
+			if(castedSolve.getEqu().getLeftSide() instanceof Div){
+				Div castedDiv = (Div)castedSolve.getEqu().getLeftSide();
+				boolean numerHasVar = castedDiv.getNumer().contains(castedSolve.getVar());
+				boolean denomHasVar = castedDiv.getDenom().contains(castedSolve.getVar());
 				
 				if(numerHasVar && !denomHasVar) {
-					casted.setEqu((Equ) casted.getEqu().modifyFromExample(divCase1, settings));
+					castedSolve.setEqu((Equ) castedSolve.getEqu().modifyFromExample(divCase1, settings));
 				}else if(!numerHasVar && denomHasVar){
-					casted.setEqu((Equ) casted.getEqu().modifyFromExample(divCase2, settings));
+					castedSolve.setEqu((Equ) castedSolve.getEqu().modifyFromExample(divCase2, settings));
+				}else if(numerHasVar && denomHasVar){
+					castedSolve.setEqu((Equ) castedSolve.getEqu().modifyFromExample(divCase3, settings));
 				}
 			}
 			
-			casted.setEqu((Equ) casted.getEqu().modifyFromExample(tanCase, settings));
-			casted.setEqu((Equ) casted.getEqu().modifyFromExample(sinCase, settings));
-			
 			{//quadratic solve
-				Equ eq = casted.getEqu();
+				Equ eq = castedSolve.getEqu();
 				if(eq.getLeftSide() instanceof Prod) {
 					Prod pr = (Prod)eq.getLeftSide();
 					if(pr.size() == 2) {
@@ -142,12 +191,12 @@ public class Solve extends Expr{
 									}
 								}
 							}
-							if(!a.contains(casted.getVar()) && !b.contains(casted.getVar())) {
+							if(!a.contains(castedSolve.getVar()) && !b.contains(castedSolve.getVar())) {
 								Expr c = eq.getRightSide();
 								
 								ExprList out = new ExprList();
-								out.add(     solve(equ(varPart,prod(sub(sqrt(  sum(pow(b,num(2)),prod(num(4),a,c))) , b ),inv(num(2)),inv(a))),casted.getVar())     );
-								out.add(     solve(equ(varPart,prod(sum(sqrt(  sum(pow(b,num(2)),prod(num(4),a,c))) , b ),inv(num(-2)),inv(a))),casted.getVar())    );
+								out.add(     solve(equ(varPart,prod(sub(sqrt(  sum(pow(b,num(2)),prod(num(4),a,c))) , b ),inv(num(2)),inv(a))),castedSolve.getVar())     );
+								out.add(     solve(equ(varPart,prod(sum(sqrt(  sum(pow(b,num(2)),prod(num(4),a,c))) , b ),inv(num(-2)),inv(a))),castedSolve.getVar())    );
 								
 								toBeSimplified = out.simplify(settings);
 								
@@ -160,31 +209,31 @@ public class Solve extends Expr{
 				
 			}
 				
-			casted.setEqu( (Equ)casted.getEqu().modifyFromExample(logCase,settings)  );//ln(x)=b -> x=e^b
+			castedSolve.setEqu( (Equ)castedSolve.getEqu().modifyFromExample(logCase,settings)  );//ln(x)=b -> x=e^b
 				
 			
 			//rules involving powers
-			if(casted.getEqu().getLeftSide() instanceof Power) {
-				Power castedPower = (Power)casted.getEqu().getLeftSide();
-				if(!castedPower.getExpo().contains( casted.getVar() )) {//case 1, only base has x
-					casted.setEqu( (Equ)casted.getEqu().modifyFromExample(rootCase,settings)  );
+			if(castedSolve.getEqu().getLeftSide() instanceof Power) {
+				Power castedPower = (Power)castedSolve.getEqu().getLeftSide();
+				if(!castedPower.getExpo().contains( castedSolve.getVar() )) {//case 1, only base has x
+					castedSolve.setEqu( (Equ)castedSolve.getEqu().modifyFromExample(rootCase,settings)  );
 					if(castedPower.getExpo() instanceof Num) {
 						Num num = (Num)castedPower.getExpo();
 						if(num.realValue.mod(BigInteger.TWO).equals(BigInteger.ZERO) && !num.isComplex()) {//if exponent is divisible by two then there are two solutions
 							ExprList repl = new ExprList();//result has more than one solution so stored in a list
-							repl.add(casted.copy());
-							casted.getEqu().setRightSide(neg(casted.getEqu().getRightSide()));
-							repl.add(casted);
+							repl.add(castedSolve.copy());
+							castedSolve.getEqu().setRightSide(neg(castedSolve.getEqu().getRightSide()));
+							repl.add(castedSolve);
 							toBeSimplified = repl.simplify(settings);
 							break;
 						}
 					}
-				}else if(!castedPower.getBase().contains( casted.getVar() )) {//expo case variable only in exponent
-					casted.setEqu( (Equ)casted.getEqu().modifyFromExample(expoCase,settings));
+				}else if(!castedPower.getBase().contains( castedSolve.getVar() )) {//expo case variable only in exponent
+					castedSolve.setEqu( (Equ)castedSolve.getEqu().modifyFromExample(expoCase,settings));
 				}
 			}
 			if(toBeSimplified instanceof Solve) {//solved !!!
-				if(casted.getEqu().getLeftSide().equalStruct(casted.getVar())) toBeSimplified = casted.getEqu();
+				if(castedSolve.getEqu().getLeftSide().equalStruct(castedSolve.getVar())) toBeSimplified = castedSolve.getEqu();
 			}
 		}
 		
@@ -192,14 +241,14 @@ public class Solve extends Expr{
 		return toBeSimplified;
 	}
 	
-	void moveToLeftSide(Solve solve) {
+	static void moveToLeftSide(Solve solve) {
 		if(!solve.getEqu().getRightSide().equalStruct(ZERO)) {
 			solve.getEqu().setLeftSide( sub(solve.getEqu().getLeftSide(),solve.getEqu().getRightSide()) );
 			solve.getEqu().setRightSide(num(0));
 		}
 	}
 	
-	void sumMoveNonImportantToRightSide(Solve solve,Settings settings) {
+	static void sumMoveNonImportantToRightSide(Solve solve,Settings settings) {
 		if(solve.getEqu().getLeftSide() instanceof Sum) {
 			Sum leftSideSum = (Sum)solve.getEqu().getLeftSide();
 			Sum newRightSide = new Sum();
@@ -215,7 +264,7 @@ public class Solve extends Expr{
 			solve.getEqu().setLeftSide(leftSideSum.simplify(settings));
 		}
 	}
-	void prodMoveNonImportantToRightSide(Solve solve,Settings settings) {
+	static void prodMoveNonImportantToRightSide(Solve solve,Settings settings) {
 		if(solve.getEqu().getLeftSide() instanceof Prod) {
 			Prod leftSideProd = (Prod)solve.getEqu().getLeftSide();
 			Prod newRightSide = new Prod();

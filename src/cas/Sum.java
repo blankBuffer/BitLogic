@@ -25,9 +25,11 @@ public class Sum extends Expr{
 		
 		distrSubProds((Sum)toBeSimplified,settings);
 		
-		pythagIden((Sum)toBeSimplified,settings);
+		pythagIden((Sum)toBeSimplified,settings);//Variants of sin(x)^2+cos(x)^2
 		
 		sumContainsSum((Sum)toBeSimplified);//sums contains a sum
+		
+		trigExpandElements((Sum)toBeSimplified,settings);//expands double angle to allow things to cancel out
 		
 		addLogs((Sum)toBeSimplified,settings);
 		
@@ -50,9 +52,17 @@ public class Sum extends Expr{
 		return toBeSimplified;
 	}
 	
+	static void trigExpandElements(Sum sum,Settings settings){//expands double angle to allow things to cancel out
+		if(sum.containsType(Sin.class)){
+			for(int i = 0;i < sum.size();i++){
+				sum.set(i, trigExpand(sum.get(i),settings));
+			}
+		}
+	}
+	
 	static Expr sinsqr = createExpr("sin(x)^2"),cossqr = createExpr("cos(x)^2");
 	
-	void pythagIden(Sum sum,Settings settings) {//sin(x)^2+cos(x)^2 = 1 and a*sin(x)^2+a*cos(x)^2=a
+	static void pythagIden(Sum sum,Settings settings) {//sin(x)^2+cos(x)^2 = 1 and a*sin(x)^2+a*cos(x)^2=a
 		if(!sum.containsType(Sin.class)) return;
 		
 		outer:for(int i = 0;i<sum.size();i++) {
@@ -377,6 +387,8 @@ public class Sum extends Expr{
 	@Override
 	boolean similarStruct(Expr other,boolean checked) {
 		if(other instanceof Sum) {
+			sort();
+			other.sort();
 			
 			if(!checked) if(checkForMatches(other) == false) return false;
 			if(size() != other.size()) return false;

@@ -39,6 +39,9 @@ public class Div extends Expr{
 		((Div)toBeSimplified).setNumer(factor(((Div)toBeSimplified).getNumer()).simplify(settings));//factor numerator
 		((Div)toBeSimplified).setDenom(factor(((Div)toBeSimplified).getDenom()).simplify(settings));//factor denominator
 		
+		((Div)toBeSimplified).setNumer(trigExpand(((Div)toBeSimplified).getNumer(),settings));//trig expand numerator
+		((Div)toBeSimplified).setDenom(trigExpand(((Div)toBeSimplified).getDenom(),settings));//trig expand denominator
+		
 		divContainsDiv((Div)toBeSimplified,settings);//(a/b)/(c/d) -> (a*d)/(b*c)
 		
 		cancelOutTerms((Div)toBeSimplified,settings);
@@ -52,7 +55,7 @@ public class Div extends Expr{
 		return toBeSimplified;
 	}
 	
-	void cancelOutTerms(Div div,Settings settings) {
+	static void cancelOutTerms(Div div,Settings settings) {
 		
 		Prod numerProd = Prod.cast(div.getNumer()), denomProd = Prod.cast(div.getDenom());
 		

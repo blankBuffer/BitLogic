@@ -217,13 +217,13 @@ public class Integrate extends Expr{
 		Expr u = null;
 		if(integ.get() instanceof Prod) {
 			Prod innerProd = (Prod)integ.get();
-			int highestNestDepth = 0;
+			long highestComplexity = 0;
 			int indexOfHighestComplexity = 0;
 			for(int i = 0;i<innerProd.size();i++) {
 				if(innerProd.get(i) instanceof Sum) continue;//skip sums because thats usually du
-				int current = innerProd.get(i).nestDepth();
-				if(current > highestNestDepth) {
-					highestNestDepth = current;
+				long current = innerProd.get(i).complexity();
+				if(current > highestComplexity) {
+					highestComplexity = current;
 					indexOfHighestComplexity = i;
 				}
 			}

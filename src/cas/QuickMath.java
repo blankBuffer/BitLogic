@@ -9,6 +9,8 @@ public class QuickMath {
 	 * this file is for shortcuts and general algorithms used everywhere
 	 */
 	
+	public static final Expr nullExpr = null;
+	
 	public static Expr createExpr(String expr) {
 		return Interpreter.createExpr(expr);
 	}
@@ -38,6 +40,11 @@ public class QuickMath {
 			print();
 			System.out.println();
 		}
+		@Override
+		public String toString(){
+			return v.toString()+": "+count;
+		}
+		
 		@Override
 		public int compareTo(VarCount other) {
 			return -Integer.compare(count, other.count);
@@ -377,7 +384,7 @@ public class QuickMath {
 		return num(1);
 	}
 	
-	public static ExprList seperateByVar(Expr e,Expr v) {
+	public static ExprList seperateByVar(Expr e,Expr v) {//returns [coef,var parts]
 		ExprList out = new ExprList();
 		if(!e.contains(v)) {
 			out.add(e.copy());
@@ -753,18 +760,53 @@ public class QuickMath {
 		return outNumer.divide(outDenom);
 	}
 	
-	static Equ isSin2x = (Equ)createExpr("2*sin(x)*cos(x)=sin(2*x)");
+	static Equ isSin2x = (Equ)createExpr("sin(x)*cos(x)=sin(2*x)/2");
+	static Equ isSin2x_2 = (Equ)createExpr("a*sin(x)*cos(x)=a*sin(2*x)/2");
 	static Equ isCos2x = (Equ)createExpr("2*cos(x)^2-1=cos(2*x)");
-	static Equ isCos2x_2 = (Equ)createExpr("r(cos(x)^2-sin(x)^2)=cos(2*x)");
-	static Equ isCos2x_2_neg = (Equ)createExpr("r(sin(x)^2-cos(x)^2)=-cos(2*x)");
 	static Equ isTan2x = (Equ)createExpr("2*tan(x)/(1-tan(x)^2)=tan(2*x)");
 	
-	public Expr trigCompress(Expr e,Settings settings) {
+	public static Expr trigCompress(Expr e,Settings settings) {
 		e = e.modifyFromExample(isSin2x, settings);
+		e = e.modifyFromExample(isSin2x_2, settings);
 		e = e.modifyFromExample(isCos2x, settings);
-		e = e.modifyFromExample(isCos2x_2, settings);
-		e = e.modifyFromExample(isCos2x_2_neg, settings);
 		e = e.modifyFromExample(isTan2x, settings);
+		return e;
+	}
+	
+	public static Expr trigExpand(Expr e,Settings settings){
+		if(e.containsType(Sin.class)){
+			Expr trigPart = null;
+			Prod coef = new Prod();
+			if(e instanceof Prod){
+				for(int j = 0;j<e.size();j++){
+					if(e.get(j) instanceof Sin){
+						if(trigPart == null){
+							trigPart = e.get(j);
+						}else{
+							return e;
+						}
+					}else{
+						coef.add(e.get(j));
+					}
+				}
+			}else if(e instanceof Sin){
+				trigPart = e;
+			}
+			
+			if(trigPart != null){
+				Expr innerPart = trigPart.get();
+				Expr halfInner = div(innerPart,num(2)).simplify(settings);
+				
+				if(!(halfInner instanceof Div)){
+					coef.add(sin(halfInner));
+					coef.add(cos(halfInner));
+					coef.add(num(2));
+					return coef.simplify(settings);
+				}
+				return e;
+			}
+			
+		}
 		return e;
 	}
 	

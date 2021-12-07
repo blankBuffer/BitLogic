@@ -57,6 +57,10 @@ public class ComplexFloat {
 	}
 	public static ComplexFloat pow(ComplexFloat base,ComplexFloat expo) {
 		if(base.real == 0.0 && base.imag == 0.0) return ZERO;
+		if(base.imag == 0.0 && expo.imag == 0.0 && base.real < 0 && 1.0/expo.real==Math.round(1.0/expo.real) && Math.round(1.0/expo.real)%2 == 1 ){
+			System.out.println("ok");
+			return new ComplexFloat(-Math.pow(-base.real, expo.real),0);
+		}
 		return exp(mult(ln(base),expo));
 	}
 	public static ComplexFloat atan(ComplexFloat in) {

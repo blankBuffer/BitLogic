@@ -180,6 +180,12 @@ public class StackEditor extends cas.QuickMath {
 			return;
 		stack.addElement(bool(sLast().strictSimilarStruct(last())));
 	}
+	
+	void fastSimilar() {
+		if (sLast() == null)
+			return;
+		stack.addElement(bool(sLast().fastSimilarStruct(last())));
+	}
 
 	void divide() {
 		if (sLast() == null)
@@ -393,6 +399,8 @@ public class StackEditor extends cas.QuickMath {
 				sqrt();
 			} else if (command.equals("similar")) {
 				similar();
+			}	else if (command.equals("fastSimilar")) {
+				fastSimilar();
 			} else if (command.equals("swap")) {
 				swap();
 			} else if (command.equals("inv")) {
@@ -431,7 +439,13 @@ public class StackEditor extends cas.QuickMath {
 			} else if (command.equals("sort")) {
 				last().sort();
 				stack.set(size() - 1, last());// update visuals
-			} else if (command.equals("dup")) {
+			}else if (command.equals("tree")) {
+				last().printTree(0);
+			} else if (command.equals("inner")) {
+				stack.addElement(last().getNextInnerFunction(var("x")));
+			}else if (command.equals("complexity")) {
+				stack.addElement(num(last().complexity()));
+			}else if (command.equals("dup")) {
 				duplicate();
 			} else if (command.equals("undo")) {
 				stack.clear();
