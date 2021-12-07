@@ -1,0 +1,48 @@
+<html>
+	<body style="background-color:D0D0FF ;max-width: 800px;">
+		<h1 style="color:000088;background-color:8888FF"><center>BitLogic Computer Algebra System</center></h1>
+		<h2>Getting Started</h2>
+		<h3>Starting the program</h3>
+		<p>BitLogic.jar is the java executable which can be launched with either the "startJarGui" or "startJarNoGui" scripts. The jar will NOT launch if double clicked. You can also start the program from the terminal using either of the following commands<br><br>
+		<span style="color: blue;">java -jar BitLogic.jar no-gui<br>java -jar BitLogic.jar gui</span><br><br>
+		You may need the latest version of the java JRE</p>
+		
+		<h3 style="color:000088;background-color:8888FF">Using BitLogic with the terminal</h3>
+		<p>once launched you should get an intro of BitLogic with <br><br>
+			<span style="color: blue">></span><br><br>
+			To quit type "quit" and hit <b>ENTER</b>
+			<br><br>
+			Lets solve a simple linear equation: x+3=2x-5 in terms of x<br>
+			The first thing to know is that 2x must be written as 2*x so that the interpreter knows when to multiply.<br><br>
+			<b>Option 1, plain English</b><br><br>
+			<span style="color: blue;">> what is solution to x+3=2*x-5 in terms of x</span><br><br>
+			hit <b>ENTER</b> to add it to the stack<br><br>
+			<span style="color: blue;">
+			**********************<br>
+			1: solve(x+3=2*x-5,x)<br>
+			**********************<br>
+			></span><br><br>
+			
+			<b>Option 2, BitLogic language</b><br><br>
+			<span style="color: blue;">> solve(x+3=2*x-5,x)</span><br><br>
+			hit <b>ENTER</b> to add it to the stack
+			<br><br>
+			The English analyzer or BitLogic interpreter created a valid BitLogic expression and added it to whats known as the stack. The stack keeps a list of items which can be
+			manipulated, removed, added, duplicated etc. For the time being just know that this is a view of all the expressions in memory. To get the result of this BitLogic expression type...<br><br>
+			
+			<span style="color: blue;">
+			result
+			</span><br>
+			or<br>
+			<span style="color: blue;">
+			r
+			</span><br><br>
+			hit <b>ENTER</b><br> This will compute the last item on the stack and generate the result and replace the old expression. You should get "x=8".<br>
+			
+			There are many other commands which exist and is under the commands with examples section.
+			
+		</p>
+		
+		
+	</body>
+</html>
