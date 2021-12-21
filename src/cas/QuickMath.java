@@ -193,6 +193,9 @@ public class QuickMath {
 	public static Gamma gamma(Expr expr) {
 		return new Gamma(expr);
 	}
+	public static LambertW lambertW(Expr expr){
+		return new LambertW(expr);
+	}
 	public static Func func(String name,ExprList vars,Expr expr) {
 		return new Func(name,vars,expr);
 	}

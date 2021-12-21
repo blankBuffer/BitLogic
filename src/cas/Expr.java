@@ -1,5 +1,7 @@
 /*
  * Benjamin R Currie, BitLogic Program
+ * do not claim this to be your work!
+ * this is free to use and copy without modification, if you modify it it must be for personal use
  * some code/equations is copied from online but I try to remember to site the source
  */
 
@@ -336,6 +338,32 @@ public abstract class Expr extends QuickMath implements Comparable<Expr>, Serial
 			this.expr = expr;
 			this.success = success;
 		}
+	}
+	
+	public ExprList getEqusFromTemplate(Expr example) {
+		if(example.fastSimilarStruct(this)) {//we use fast similar struct here because we don't want to call the getParts function twice and its faster
+			ExprList exampleParts = new ExprList();
+			ExprList parts = new ExprList();
+			boolean match = example.checkForMatches(exampleParts,parts,this);
+			if(!match) {
+				return null;
+			}
+			ExprList equs = new ExprList();
+			for(int i = 0;i<parts.size();i++) equs.add(new Equ(exampleParts.get(i),parts.get(i)));
+			
+			return equs;
+			
+		}
+		return null;
+	}
+	public static Expr getExprByName(ExprList equs,String name){
+		for (int i = 0;i<equs.size();i++){
+			Equ currentEqu = (Equ) equs.get(i);
+			if(currentEqu.getLeftSide().toString().equals(name)){
+				return currentEqu.getRightSide();
+			}
+		}
+		return null;
 	}
 	
 	public Expr modifyFromExample(Equ example,Settings settings) {

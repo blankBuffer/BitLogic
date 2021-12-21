@@ -28,10 +28,12 @@ public class Sin extends Expr{
 		if(toBeSimplified instanceof Sin) {
 			toBeSimplified.set(0,factor(toBeSimplified.get()).simplify(settings));
 			if(toBeSimplified.get().negative()) {
-				toBeSimplified = prod(num(-1),sin(toBeSimplified.get().abs(settings)).simplify(settings) );
+				toBeSimplified = neg(sin(neg(toBeSimplified.get())).simplify(settings) );
 			}
 		}
 		if(toBeSimplified instanceof Sin) toBeSimplified.set(0,distr(toBeSimplified.get()).simplify(settings));
+		
+		System.out.println("2:"+toBeSimplified+" "+this);
 		
 		if(toBeSimplified instanceof Sin) toBeSimplified = unitCircle((Sin)toBeSimplified);
 		
@@ -53,18 +55,18 @@ public class Sin extends Expr{
 			Div frac = ((Div)innerExpr).ratioOfUnitCircle();
 			
 			if(frac != null) {
-				BigInteger numer = ((Num)frac.getNumer()).realValue,denom = ((Num)frac.getDenom()).realValue;
+				BigInteger numer = ((Num)frac.getNumer()).realValue,denom = ((Num)frac.getDenom()).realValue;//getting numerator and denominator
 				
-				numer = numer.mod(denom.multiply(BigInteger.TWO));
+				numer = numer.mod(denom.multiply(BigInteger.TWO));//restrict to the main circle
 				int negate = 1;
 				
-				if(numer.compareTo(denom) == 1) {
-					negate = -1;
-					numer = numer.mod(denom);
+				if(numer.compareTo(denom) == 1) {//if the numerator is greater than the denominator
+					negate = -negate;
+					numer = numer.mod(denom);//if we go past the top part of the circle we can flip it back to the top and keep track of the negative
 				}
 				
-				if(numer.compareTo(denom.divide(BigInteger.TWO)) == 1) {
-					numer = denom.subtract(numer);
+				if(numer.compareTo(denom.divide(BigInteger.TWO)) == 1) {//if we are past the first part of the quarter circle, we can restrict it further
+					numer = denom.subtract(numer);//basically reflecting across the y axis
 				}
 				
 				if(numer.equals(BigInteger.ONE) && denom.equals(BigInteger.TWO)) return num(negate);
@@ -90,6 +92,11 @@ public class Sin extends Expr{
 					
 					if(frac!=null) {
 						BigInteger numer = ((Num)frac.getNumer()).realValue,denom = ((Num)frac.getDenom()).realValue;
+						
+						if(denom.signum() == -1){
+							denom = denom.negate();
+							numer = numer.negate();
+						}
 						
 						numer = numer.mod(denom.multiply(BigInteger.TWO));//to do this we take the mod
 						

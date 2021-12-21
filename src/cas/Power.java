@@ -12,6 +12,8 @@ public class Power extends Expr{
 	static Equ oneToExpo = (Equ) createExpr("1^x=1");
 	static Equ zeroToExpo = (Equ) createExpr("0^x=0");
 	static Equ baseToLn = (Equ) createExpr("a^ln(b)=e^(ln(a)*ln(b))");
+	static Equ expOfLambertW = (Equ) createExpr("e^(w(x))=x/w(x)");
+	static Equ expOfLambertWProd = (Equ) createExpr("e^(w(x)*n)=x^n/w(x)^n");
 	
 	void setBase(Expr base) {
 		set(0, base);
@@ -48,6 +50,10 @@ public class Power extends Expr{
 		if(toBeSimplified instanceof Power) toBeSimplified = toBeSimplified.modifyFromExample(oneToExpo,settings);//1^x -> x
 		
 		if(toBeSimplified instanceof Power) toBeSimplified = logToBase((Power)toBeSimplified,settings);//e^(ln(x)*b)->x^b
+		
+		if(toBeSimplified instanceof Power) toBeSimplified = toBeSimplified.modifyFromExample(expOfLambertW,settings);
+		
+		if(toBeSimplified instanceof Power) toBeSimplified = toBeSimplified.modifyFromExample(expOfLambertWProd,settings);
 		
 		if(toBeSimplified instanceof Power) toBeSimplified = rootExpand((Power)toBeSimplified);//12^(x/2) find divisible squares in this case to -> (4*2)^x/2, also works with cubes and stuff
 		
@@ -303,8 +309,8 @@ public class Power extends Expr{
 			
 			if(base.equals(Num.NEG_ONE) && expo.equals(Num.NEG_ONE)) {
 				return num(-1);
-			}else if(!expo.isComplex()) {
-				if(expo.signum()!=-1) {
+			}else if(!expo.isComplex() && expo.realValue.compareTo(BigInteger.valueOf(10000))==-1) {
+				if(expo.signum()!=-1 ) {
 					return base.pow(expo.realValue);
 				}
 				return inv(base.pow(expo.realValue.negate()));

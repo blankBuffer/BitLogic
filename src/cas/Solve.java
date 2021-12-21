@@ -8,6 +8,7 @@ public class Solve extends Expr{
 	static Equ logCase = equ( createExpr("ln(a)=b") , createExpr("a=e^b") );//ln(a)=b -> a=e^b
 	static Equ rootCase = equ( createExpr("m^n=a") , createExpr("m=a^inv(n)")  );//m^n=a -> m=a^(1/n)
 	static Equ expoCase = equ( createExpr("m^n=a")   ,createExpr("n=ln(a)/ln(m)")  );//m^n=a -> n=ln(a)/ln(m)
+	static Equ baseAndExpoHaveVar = equ( createExpr("m^n=a")   ,createExpr("n*ln(m)=ln(a)")  );
 	static Equ divCase1 = equ(createExpr("a/b=y"),createExpr("a=y*b"));
 	static Equ divCase2 = equ(createExpr("a/b=y"),createExpr("b=a/y"));
 	static Equ divCase3 = equ(createExpr("a/b=y"),createExpr("a-y*b=0"));
@@ -40,11 +41,19 @@ public class Solve extends Expr{
 		//special
 		caseTable.add(equ( createExpr("a^b=1") , createExpr("[b=0,a=1]") ));
 		caseTable.add(equ( createExpr("sin(x)-cos(x)=0") , createExpr("x=pi/4") ));
-		caseTable.add(equ( createExpr("-sin(x)+cos(x)=0") , createExpr("x=pi/4") ));
 		caseTable.add(equ( createExpr("a*sin(x)+b*cos(x)=y") , createExpr("x=acos(y/sqrt(a^2+b^2))+atan(a/b)") ));
 		caseTable.add(equ( createExpr("sin(x)+b*cos(x)=y") , createExpr("x=acos(y/sqrt(1+b^2))+atan(1/b)") ));
 		caseTable.add(equ( createExpr("a*sin(x)+cos(x)=y") , createExpr("x=acos(y/sqrt(a^2+1))+atan(a)") ));
 		caseTable.add(equ( createExpr("sin(x)+cos(x)=y") , createExpr("x=acos(y/sqrt(2))+pi/4") ));
+		//lambert w function
+		caseTable.add(equ( createExpr("x*ln(x)=y") , createExpr("x=e^w(y)") ));
+		caseTable.add(equ( createExpr("x*a^x=y") , createExpr("x=w(y*ln(a))/ln(a)") ));
+		caseTable.add(equ( createExpr("x*a^(b*x)=y") , createExpr("x=w(y*b*ln(a))/(b*ln(a))") ));
+		caseTable.add(equ( createExpr("x^n*a^x=y") , createExpr("x=n*w(y^(1/n)*ln(a)/n)/ln(a)") ));
+		caseTable.add(equ( createExpr("x^n*a^(b*x)=y") , createExpr("x=n*w(y^(1/n)*ln(a)*b/n)/(b*ln(a))") ));
+		caseTable.add(equ( createExpr("x+a^x=y") , createExpr("x=y-w(ln(a)*a^y)/ln(a)") ));
+		caseTable.add(equ( createExpr("b*x+a^x=y") , createExpr("x=(ln(a)*y-b*w((ln(a)*a^(y/b))/b))/(b*ln(a))") ));
+		
 		//subtract same type of function
 		{
 			caseTable.add(equ( createExpr("sin(a)-sin(y)=0") , createExpr("a-y=0") ));
@@ -65,6 +74,7 @@ public class Solve extends Expr{
 		caseTable.add(equ( createExpr("asin(x)=y") , createExpr("x=sin(y)") ));
 		caseTable.add(equ( createExpr("acos(x)=y") , createExpr("x=cos(y)") ));
 		caseTable.add(equ( createExpr("atan(x)=y") , createExpr("x=tan(y)") ));
+		caseTable.add(equ( createExpr("w(x)=y") , createExpr("x=y*e^y") ));
 	}
 	
 	public Solve(Equ e,Var v){
@@ -96,6 +106,8 @@ public class Solve extends Expr{
 		toBeSimplified.simplifyChildren(settings);//simplify sub expressions
 		
 		Solve castedSolve = (Solve)toBeSimplified;
+		
+		Expr originalProblem = castedSolve.getEqu().getLeftSide().copy();
 		
 		Equ oldEqu = null;
 		
@@ -230,10 +242,42 @@ public class Solve extends Expr{
 					}
 				}else if(!castedPower.getBase().contains( castedSolve.getVar() )) {//expo case variable only in exponent
 					castedSolve.setEqu( (Equ)castedSolve.getEqu().modifyFromExample(expoCase,settings));
+				}else{//generic problem:  x^(b*x)=a -> ln(x^(b*x))=ln(a) -> x*ln(x)=ln(a)/b -> ln(x)*e^ln(x)=ln(a)/b -> ln(x)=w(ln(a)/b)
+					castedSolve.setEqu( (Equ)castedSolve.getEqu().modifyFromExample(baseAndExpoHaveVar,settings));
 				}
 			}
-			if(toBeSimplified instanceof Solve) {//solved !!!
-				if(castedSolve.getEqu().getLeftSide().equalStruct(castedSolve.getVar())) toBeSimplified = castedSolve.getEqu();
+			if(toBeSimplified instanceof Solve) {
+				if(castedSolve.getEqu().getLeftSide().equalStruct(castedSolve.getVar())) toBeSimplified = castedSolve.getEqu();//solved !!!
+			}
+		}
+		
+		if(toBeSimplified instanceof Solve){//last resort
+			{//integer tests
+				ExprList sol = new ExprList();
+				BigInteger mag = BigInteger.valueOf(128);
+				Expr[] nums = new Expr[257+3];
+				int index = 0;
+				for(BigInteger i = mag.negate();i.compareTo(mag)!=1;i=i.add(BigInteger.ONE)){
+					Num iV = num(i);
+					nums[index]=iV;
+					index++;
+				}
+				nums[257+0] = Num.I;
+				nums[257+1] = pi();
+				nums[257+2] = e();
+				
+				for(Expr testValue:nums){
+					ComplexFloat test = originalProblem.replace(equ(castedSolve.getVar(),testValue)).convertToFloat(new ExprList());
+					if(Math.abs(test.real)<1){
+						Expr testZero = originalProblem.replace(equ(castedSolve.getVar(),testValue)).simplify(settings);
+						if(testZero.equalStruct(num(0))){//double check
+							sol.add(equ(castedSolve.getVar().copy(),testValue));
+						}
+					}
+				}
+				if(sol.size()>0){
+					toBeSimplified = sol.simplify(settings);
+				}
 			}
 		}
 		
@@ -326,11 +370,12 @@ public class Solve extends Expr{
 		}
 		return false;
 	}
-
+	
+	public double INITIAL_GUESS = 1;
 	@Override
 	public ComplexFloat convertToFloat(ExprList varDefs) {//newton's method
 		
-		FloatExpr guess = floatExpr(1);
+		FloatExpr guess = floatExpr(INITIAL_GUESS);
 		Expr expr = sub(getEqu().getLeftSide(),getEqu().getRightSide());
 		expr = sub(getVar(),div(expr,diff(expr,getVar())));
 		ExprList varDefs2 = (ExprList) varDefs.copy();

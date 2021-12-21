@@ -29,14 +29,14 @@ public class Cos extends Expr{
 		if(toBeSimplified instanceof Cos) toBeSimplified.set(0, toBeSimplified.get().abs(settings));
 		if(toBeSimplified instanceof Cos) toBeSimplified.set(0,distr(toBeSimplified.get()).simplify(settings));
 		
-		if(toBeSimplified instanceof Cos) toBeSimplified = unitCircle((Cos)toBeSimplified);
+		if(toBeSimplified instanceof Cos) toBeSimplified = unitCircle((Cos)toBeSimplified,settings);
 		
 		toBeSimplified.flags.simple = true;
 		
 		return toBeSimplified;
 	}
 	
-	public Expr unitCircle(Cos cos) {
+	public static Expr unitCircle(Cos cos,Settings settings) {
 		Pi pi = new Pi();
 		BigInteger three = BigInteger.valueOf(3),six = BigInteger.valueOf(6),four = BigInteger.valueOf(4);
 		Expr innerExpr = cos.get();
@@ -51,16 +51,16 @@ public class Cos extends Expr{
 				
 				BigInteger numer = ((Num)frac.getNumer()).realValue,denom = ((Num)frac.getDenom()).realValue;
 				
-				numer = numer.mod(denom.multiply(BigInteger.TWO));
+				numer = numer.mod(denom.multiply(BigInteger.TWO));//restrict to whole circle
 				int negate = 1;
 				
-				if(numer.compareTo(denom) == 1) {
-					numer = numer.mod(denom);
+				if(numer.compareTo(denom) == 1) {//if we are past the top half flip over x axis
+					numer = BigInteger.TWO.multiply(denom).subtract(numer);
 				}
 				
-				if(numer.compareTo(denom.divide(BigInteger.TWO)) == 1) {
-					negate = -1;
+				if(numer.compareTo(denom.divide(BigInteger.TWO)) == 1) {//if we are past quarter circle, reflect over y axis and flip sign
 					numer = denom.subtract(numer);
+					negate = -negate;
 				}
 				
 				if(numer.equals(BigInteger.ONE) && denom.equals(BigInteger.TWO)) return num(0);
@@ -69,36 +69,24 @@ public class Cos extends Expr{
 				else if(numer.equals(BigInteger.ONE) && denom.equals(four)) return div(sqrt(num(2)),num(2*negate));
 				else if(numer.equals(BigInteger.ZERO)) return num(negate);
 				else {
-					if(negate == -1) {
-						return neg(sin(div(prod(pi(),num(numer)),inv(num(denom))).simplify(Settings.normal)));
-					}
-					return sin(div(prod(pi(),num(numer)),inv(num(denom))).simplify(Settings.normal));
+					//make it into the sin version for canonical form
+					return prod(  num(negate),   sin(sum( div(prod(pi(),num(numer)),num(denom)) ,div(pi(),num(2))))   ).simplify(settings);
+					//
+					
 				}
 				
 				
 			}
 			
-		}else if(innerExpr instanceof Sum) {//sin(x-pi/4) can be turned into sin(x+7*pi/4) because sin has symmetry
+		}else if(innerExpr instanceof Sum) {//cos(x-pi/4) can be turned into sin(x+7*pi/4) because sin has symmetry
 			for(int i = 0;i<innerExpr.size();i++) {
 				if(innerExpr.get(i) instanceof Div && !innerExpr.get(i).containsVars() && innerExpr.get(i).contains(pi)) {
 					Div frac = ((Div)innerExpr.get(i)).ratioOfUnitCircle();
 					
 					if(frac!=null) {
-						BigInteger numer = ((Num)frac.getNumer()).realValue,denom = ((Num)frac.getDenom()).realValue;
-						
-						numer = numer.mod(denom.multiply(BigInteger.TWO));//to do this we take the mod
-						
-						if(numer.equals(BigInteger.ONE) && denom.equals(BigInteger.TWO)) {//cos(x+pi/2) = -sin(x)
-							innerExpr.remove(i);
-							return neg(sin(innerExpr.simplify(Settings.normal)));
-						}else if(numer.equals(three) && denom.equals(BigInteger.TWO)) {
-							innerExpr.remove(i);
-							return sin(innerExpr.simplify(Settings.normal));
-						}
-						
-						innerExpr.set(i,  div(prod(num(numer),pi()),num(denom)) );
-						cos.set(0, innerExpr.simplify(Settings.normal));
-						
+						//make it into the sin version for canonical form
+						return sin(sum( innerExpr ,div(pi(),num(2)))).simplify(settings);
+						//
 					}
 					
 				}

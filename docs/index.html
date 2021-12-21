@@ -1,40 +1,81 @@
-<html>
-	<body style="background-color:D0D0FF ;max-width: 800px;">
-		<h1 style="color:000088;background-color:8888FF"><center>BitLogic Computer Algebra System</center></h1>
+<html style="background-image: linear-gradient(#5555FF, #FFDDFF);">
+	<style>
+		body{
+			background-color:D0D0FF;
+			width: 80vw;
+			max-width: 1000px
+			border-radius: 15px;
+			margin: auto;
+			padding: 20px;
+		}
+		h1{
+			color:#000088;
+			background-color:#8888FF;
+			border-radius: 15px;
+			padding: 10px;
+			display: inline;
+		}
+		.background-shade{
+			background-color:#6666EE;
+			border-radius: 15px;
+			padding: 20px;
+		}
+		h2{
+			color:#000088;
+			background-color:#8888FF;
+			padding: 15px;
+			border-radius: 15px;
+		}
+		h3{
+			color:#000088;
+			background-color:#8888FF;
+			padding: 5px;
+			border-radius: 15px;
+		}
+		.highlighted{
+			color: blue;
+		}
+	</style>
+	<body>
+		<div class="background-shade">
+			<center><h1>BitLogic Computer Algebra System</h1></center>
+		</div>
+		<center><h4>By Benjamin Currie</h4></center>
+		
 		<h2>Getting Started</h2>
 		<h3>Starting the program</h3>
 		<p>BitLogic.jar is the java executable which can be launched with either the "startJarGui" or "startJarNoGui" scripts. The jar will NOT launch if double clicked. You can also start the program from the terminal using either of the following commands<br><br>
-		<span style="color: blue;">java -jar BitLogic.jar no-gui<br>java -jar BitLogic.jar gui</span><br><br>
+		<span class="highlighted">java -jar BitLogic.jar no-gui<br>java -jar BitLogic.jar gui</span><br><br>
 		You may need the latest version of the java JRE</p>
 		
-		<h3 style="color:000088;background-color:8888FF">Using BitLogic with the terminal</h3>
+		<h3>Using BitLogic with the terminal</h3>
 		<p>once launched you should get an intro of BitLogic with <br><br>
-			<span style="color: blue">></span><br><br>
+			<span class="highlighted">></span><br><br>
 			To quit type "quit" and hit <b>ENTER</b>
 			<br><br>
 			Lets solve a simple linear equation: x+3=2x-5 in terms of x<br>
 			The first thing to know is that 2x must be written as 2*x so that the interpreter knows when to multiply.<br><br>
 			<b>Option 1, plain English</b><br><br>
-			<span style="color: blue;">> what is solution to x+3=2*x-5 in terms of x</span><br><br>
+			<span class="highlighted">> what is solution to x+3=2*x-5 in terms of x</span><br><br>
 			hit <b>ENTER</b> to add it to the stack<br><br>
-			<span style="color: blue;">
+			<span class="highlighted">
 			**********************<br>
 			1: solve(x+3=2*x-5,x)<br>
 			**********************<br>
 			></span><br><br>
 			
 			<b>Option 2, BitLogic language</b><br><br>
-			<span style="color: blue;">> solve(x+3=2*x-5,x)</span><br><br>
+			<span class="highlighted">> solve(x+3=2*x-5,x)</span><br><br>
 			hit <b>ENTER</b> to add it to the stack
 			<br><br>
 			The English analyzer or BitLogic interpreter created a valid BitLogic expression and added it to whats known as the stack. The stack keeps a list of items which can be
 			manipulated, removed, added, duplicated etc. For the time being just know that this is a view of all the expressions in memory. To get the result of this BitLogic expression type...<br><br>
 			
-			<span style="color: blue;">
+			<span sclass="highlighted">
 			result
 			</span><br>
 			or<br>
-			<span style="color: blue;">
+			<span class="highlighted">
 			r
 			</span><br><br>
 			hit <b>ENTER</b><br> This will compute the last item on the stack and generate the result and replace the old expression. You should get "x=8".<br>
@@ -43,6 +84,48 @@
 			
 		</p>
 		
+		<h2>RPN (reverse polish notation)</h2>
+		<h4>Simple Example</h4>
+		<p>Reverse polish notation is a way to enter and manipulate expressions on the stack. The best way to explain this is by example. Lets say you want to enter <span class="highlighted">x^2/2</span>. The first step is to create the x^2 expression. Type <span class="highlighted">x</span> then hit <b>ENTER</b>. This added x to the stack. Then type <span class="highlighted">2</span> and hit <b>ENTER</b>. This adds two to the stack. Now we want to combine them with the exponent operator so type <span class="highlighted">^</span> and hit <b>ENTER</b>. Notice how this created a new expression combining the two stack elements. Finally lets make it over two. So type <span class="highlighted">2</span> and hit <b>ENTER</b>. Then the division operator so type <span class="highlighted">/</span> and hit <b>ENTER</b>. You know have the proper expression. This might seem slow and complicated but it's actually very handy to combine things together.</p>
+		<h3>Moving elements around</h3>
+		
+		<ul>
+			<li>'undo' -- this changes the stack to the previous state. The undo size is only 1</li>
+			<li>'dup' -- this duplicates the last item on the stack</li>
+			<li>'dup:(element number)' -- duplicates a specific element</li>
+			<li>'roll' -- this moves the last element to the first element and shifts everything downwards</li>
+			<li>'swap' -- the swaps the last two elements of the stack</li>
+			<li>'swap:(element number)' -- swaps the last element and a specific element</li>
+			<li>'pop/r' -- removes the last element from the stack</li>
+			<li>'remove:(element number):' -- removes a specific element from the stack</li>
+			<li>'result/r' -- computes the result of the last element on the stack</li>
+			<li>'break' -- breaks apart the last element into its components</li>
+		</ul>
+		
+		<h3>Operator commands</h3>
+		
+		<ul>
+			<li>'+' -- add last two elements </li>
+			<li>'--' -- negate the last element on the stack</li>
+			<li>'-' -- subtract last element from second to last element</li>
+			<li>'*' -- multiply last two elements on the stack</li>
+			<li>'^' -- second to last element to the power of the last element</li>
+			<li>'/' -- second to last element divided by the last element</li>
+			<li>'=' -- sets the last two elements equal to each other</li>
+			<li>'[' -- add a empty list to the stack</li>
+			<li>']' -- add last element to the list. The list should be in the second to last position</li>
+			<li>'inv' -- take the inverse of the last element</li>
+		</ul>
+		
+		<h3>Functions</h3>
+		
+		<ul>
+			<li>sin</li>
+			<li>cos</li>
+			<li>tan</li>
+		</ul>
+		
+		<p></p>
 		
 	</body>
 </html>

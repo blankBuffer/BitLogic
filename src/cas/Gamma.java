@@ -24,7 +24,7 @@ public class Gamma extends Expr{
 		return toBeSimplified;
 	}
 	
-	Expr integerCase(Gamma gamma) {
+	static Expr integerCase(Gamma gamma) {
 		if(gamma.get() instanceof Num && !((Num)gamma.get()).isComplex() && ((Num)gamma.get()).realValue.compareTo(BigInteger.ZERO) == 1) {
 			return num(factorial(((Num)gamma.get()).realValue.subtract(BigInteger.ONE)));
 		}
@@ -32,7 +32,7 @@ public class Gamma extends Expr{
 	}
 	
 	static Equ gammaOfOneHalf = (Equ)createExpr("gamma(1/2)=sqrt(pi)");
-	Expr fracCase(Gamma gamma,Settings settings) {//gamma(5/2) -> 3*sqrt(pi)/4
+	static Expr fracCase(Gamma gamma,Settings settings) {//gamma(5/2) -> 3*sqrt(pi)/4
 		if(gamma.get() instanceof Div && ((Div)gamma.get()).isNumericalAndReal() ) {
 			
 			Expr test = gamma.modifyFromExample(gammaOfOneHalf, settings);
@@ -44,6 +44,7 @@ public class Gamma extends Expr{
 				
 				BigInteger n = ((Num)sum.get(0)).realValue;
 				
+				if(n.signum() == -1) return gamma;
 				
 				BigInteger numer = factorial(n.shiftLeft(1));
 				BigInteger denom = BigInteger.valueOf(4).pow(n.intValue()).multiply(factorial(n));

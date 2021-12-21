@@ -14,13 +14,19 @@ public class ComplexFloat {
 		this.real = other.real;
 		this.imag = other.imag;
 	}
+	private static boolean closeToZero(double a){
+		return Math.abs(a)<1.0E-12;
+	}
+	public boolean closeToZero(){
+		return closeToZero(real) && closeToZero(imag);
+	}
 	@Override
 	public String toString(){
-		if(real != 0.0 && imag != 0.0) {
+		if(!closeToZero(real) && !closeToZero(imag)) {
 			return Double.toString(real)+"+"+Double.toString(imag)+"*i";
-		}else if(imag == 0.0) {
+		}else if(closeToZero(imag)) {
 			return Double.toString(real);
-		}else if(real == 0.0){
+		}else if(closeToZero(real)){
 			return Double.toString(imag)+"*i";
 		}
 		return Double.toString(real);

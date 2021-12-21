@@ -353,6 +353,12 @@ public class StackEditor extends cas.QuickMath {
 		stack.set(size() - 1, acos(last()));
 	}
 	
+	void lambertW(){
+		if (last() == null)
+			return;
+		stack.set(size() - 1, lambertW(last()));
+	}
+	
 	void mathML() {
 		if (last() == null)
 			return;
@@ -472,6 +478,8 @@ public class StackEditor extends cas.QuickMath {
 				asin();
 			}else if (command.equals("acos")) {
 				acos();
+			}else if (command.equals("lambertW")) {
+				lambertW();
 			}else if (command.equals("mathML")) {
 				mathML();
 			}else if (command.equals("quit") || command.equals("exit") || command.equals("close")) {

@@ -204,6 +204,9 @@ public class Interpreter extends QuickMath{
 				}else if(op.equals("acos") || op.equals("arccos")) {
 					if(params.size() != 1) throw wrongParams;
 					return acos(params.get(0));
+				}else if(op.equals("w") || op.equals("lambertW")) {
+					if(params.size() != 1) throw wrongParams;
+					return lambertW(params.get(0));
 				}else if(op.equals("ln") || op.equals("log")) {
 					if(params.size() != 1) throw wrongParams;
 					return ln(params.get(0));

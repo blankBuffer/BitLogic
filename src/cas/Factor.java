@@ -37,13 +37,14 @@ public class Factor extends Expr{
 		
 		if(hasVars) toBeSimplified = quadraticFactor(toBeSimplified,varcounts,settings);//keeping this for extremely big quadratics that pull out roots cant find
 		toBeSimplified = generalFactor(toBeSimplified,settings);
+		
 		if(hasVars) {
 			toBeSimplified = power2Reduction(toBeSimplified,varcounts,settings);//x^16-1 -> (x^8+1)*(x^8-1)
 			toBeSimplified = pullOutRoots(toBeSimplified,varcounts,settings);
 			toBeSimplified = reversePascalsTriangle(toBeSimplified,varcounts,settings);
 		}
+		
 		toBeSimplified = reExpandSubSums(toBeSimplified,settings);//yeah this does slow things down a bit
-		toBeSimplified = pullOutNegatives(toBeSimplified,settings);
 		toBeSimplified.flags.simple = true;
 		return toBeSimplified;
 	}
@@ -150,20 +151,6 @@ public class Factor extends Expr{
 		return expr;
 	}
 	
-	Expr pullOutNegatives(Expr expr,Settings settings) {
-		if(expr instanceof Sum && expr.negative()) {
-			
-			{//negate all sub elements
-				for (int i = 0;i<expr.size();i++) {
-					expr.set(i, neg(expr.get(i)));
-				}
-			}
-			return neg(expr.simplify(settings));
-			
-		}
-		return expr;
-	}
-	
 	Expr reExpandSubSums(Expr expr,Settings settings) {
 		if(expr instanceof Prod) {
 
@@ -264,15 +251,17 @@ public class Factor extends Expr{
 					Div current = Div.cast(expr.get(i));
 					sum = Div.addFracs(sum, current);
 				}
-				return factor(sum).simplify(settings);
+				return sum.simplify(settings);
 			}
 			Prod leadingTerm = Prod.cast(expr.get(0));
-			BigInteger gcd = ((Num)leadingTerm.getCoefficient()).gcd();
+			Num leadingTermCoef = (Num)leadingTerm.getCoefficient();
+			BigInteger gcd = leadingTermCoef.gcd();
 			Expr factors = new Prod();
 			//calculate gcd
 			for(int i = 1;i<expr.size();i++) {
 				gcd = ((Num)expr.get(i).getCoefficient()).gcd().gcd(gcd);
 			}
+			if(expr.negative()) gcd = gcd.negate();
 			//add to factors product
 			if(!gcd.equals(BigInteger.ONE)) factors.add(num(gcd));
 			//common term
