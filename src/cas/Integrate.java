@@ -86,7 +86,7 @@ public class Integrate extends Expr{
 		return toBeSimplified;
 	}
 	
-	Expr inverseQuadratic(Integrate integ,Settings settings) {
+	static Expr inverseQuadratic(Integrate integ,Settings settings) {
 		if(integ.get() instanceof Div && !((Div)integ.get()).getNumer().contains(integ.getVar())) {
 			Expr denom = ((Div)integ.get()).getDenom();
 			ExprList poly = polyExtract(denom, integ.getVar(), settings);
@@ -107,7 +107,7 @@ public class Integrate extends Expr{
 		return integ;
 	}
 	
-	Expr arctanCase(Integrate integ,Settings settings) {
+	static Expr arctanCase(Integrate integ,Settings settings) {
 		if(integ.get() instanceof Div) {
 			Expr denom = ((Div)integ.get()).getDenom();
 			ExprList poly = polyExtract(denom, integ.getVar(), settings);
@@ -124,7 +124,7 @@ public class Integrate extends Expr{
 		return integ;
 	}
 	
-	Expr partialFraction(Integrate integ,Settings settings) {
+	static Expr partialFraction(Integrate integ,Settings settings) {
 		integ.set(0, partialFrac(integ.get(), integ.getVar(), settings) );
 		if(integ.get() instanceof Sum) {
 			return integralSum(integ,settings);
@@ -132,7 +132,7 @@ public class Integrate extends Expr{
 		return integ;
 	}
 	
-	Expr polyDiv(Integrate integ,Settings settings) {//polynomial division
+	static Expr polyDiv(Integrate integ,Settings settings) {//polynomial division
 		integ.set(0, polyDiv(integ.get(), integ.getVar(), settings) );
 		if(integ.get() instanceof Sum) {
 			return integralSum(integ,settings);
@@ -140,7 +140,7 @@ public class Integrate extends Expr{
 		return integ;
 	}
 
-	Expr ibpSpecial(Integrate integ,Settings settings) {
+	static Expr ibpSpecial(Integrate integ,Settings settings) {
 		if(integ.get() instanceof Div && !integ.get().containsType(Integrate.class)) {
 			Div innerDiv = (Div)integ.get().copy();
 			if(innerDiv.getDenom() instanceof Power) {
@@ -159,7 +159,7 @@ public class Integrate extends Expr{
 		return integ;
 	}
 	
-	Expr ibp(Integrate integ,Settings settings) {
+	static Expr ibp(Integrate integ,Settings settings) {
 		if(integ.get() instanceof Prod && !integ.get().containsType(Integrate.class)) {
 			Prod innerProd = (Prod)integ.get().copy();
 			int bestIndex = -1;
@@ -212,7 +212,7 @@ public class Integrate extends Expr{
 	
 	private static Var uSubVar = var("0u");
 	
-	Expr normalUSub(Integrate integ,Settings settings) {
+	static Expr normalUSub(Integrate integ,Settings settings) {
 		if(integ.contains(uSubVar) || integ.get().containsType(Integrate.class)) return integ;
 		Expr u = null;
 		if(integ.get() instanceof Prod) {
@@ -287,7 +287,7 @@ public class Integrate extends Expr{
 		return integ;
 	}
 	
-	Expr specialUSub(Integrate integ,Settings settings) {
+	static Expr specialUSub(Integrate integ,Settings settings) {
 		if(integ.get() instanceof Prod) {
 			Prod innerProd = (Prod)integ.get();
 			
@@ -316,7 +316,7 @@ public class Integrate extends Expr{
 		return integ;
 	}
 	
-	Expr integralSum(Integrate integ,Settings settings) {
+	static Expr integralSum(Integrate integ,Settings settings) {
 		if(integ.get() instanceof Sum) {
 			if(showSteps) {
 				System.out.println(integ+":seperation");
@@ -328,14 +328,14 @@ public class Integrate extends Expr{
 		return integ;
 	}
 	
-	Expr noVarCase(Integrate integ,Settings settings) {
+	static Expr noVarCase(Integrate integ,Settings settings) {
 		if(!integ.get().contains(integ.getVar())) {
 			return prod(integ.get(),integ.getVar()).simplify(settings);
 		}
 		return integ;
 	}
 	
-	Expr pullOutConstants(Integrate integ,Settings settings) {
+	static Expr pullOutConstants(Integrate integ,Settings settings) {
 		Expr res = seperateByVar(integ.get(),integ.getVar());
 		if(!res.get(0).equalStruct(Num.ONE)) {
 			return prod(res.get(0),integrate(res.get(1),integ.getVar())).simplify(settings);

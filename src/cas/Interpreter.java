@@ -4,8 +4,6 @@ import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Scanner;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 
 public class Interpreter extends QuickMath{
 	
@@ -312,7 +310,7 @@ public class Interpreter extends QuickMath{
 				
 			}
 		}
-		boolean isSum = false,isProd = false,isList = false,isFactorial = false,isScript = false,isAssignment = false;
+		boolean isSum = false,isProd = false,isList = false,isFactorial = false,isScript = false;
 		int indexOfPowToken = -1,indexOfEquToken = -1;
 		boolean lastWasOperator = false;
 		for(int i = 0;i<tokens.size();i++) {
@@ -337,7 +335,7 @@ public class Interpreter extends QuickMath{
 				isFactorial = true;
 				lastWasOperator = true;
 			}else if(token.equals(":")) {
-				isAssignment = true;
+				//isAssignment = true;
 				lastWasOperator = true;
 			}else if(token.equals(";")) {
 				isScript = true;

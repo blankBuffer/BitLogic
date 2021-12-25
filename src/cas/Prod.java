@@ -108,12 +108,12 @@ public class Prod extends Expr{
 		return false;
 	}
 	
-	void factorSubSums(Prod prod,Settings settings) {
+	static void factorSubSums(Prod prod,Settings settings) {
 		for(int i = 0;i<prod.size();i++) if(prod.get(i) instanceof Sum) prod.set(i,  factor(prod.get(i)).simplify(settings));
 	}
 	
 	
-	void simplifyIntBasePowers(Prod prod,Settings settings) {
+	static void simplifyIntBasePowers(Prod prod,Settings settings) {
 		for(int i = 0;i<prod.size();i++) {
 			Expr current = prod.get(i);
 			if(current instanceof Power) {
@@ -127,7 +127,7 @@ public class Prod extends Expr{
 		}
 	}
 	
-	void prodContainsProd(Prod prod) {
+	static void prodContainsProd(Prod prod) {
 		for(int i = 0;i<prod.size();i++) {
 			Expr current = prod.get(i);
 			if(current instanceof Prod) {
@@ -138,7 +138,7 @@ public class Prod extends Expr{
 		}
 	}
 	
-	void expoIntoBase(Prod prod,Settings settings) {//10^(2*x)*a -> 100^x*a
+	static void expoIntoBase(Prod prod,Settings settings) {//10^(2*x)*a -> 100^x*a
 		for(int i = 0;i<prod.size();i++) {
 			Expr current = prod.get(i);
 			if(current instanceof Power) {
@@ -165,7 +165,7 @@ public class Prod extends Expr{
 		}
 	}
 	
-	void multiplyIntBases(Prod prod) {
+	static void multiplyIntBases(Prod prod) {
 		for(int i = 0;i<prod.size();i++) {
 			Expr current = prod.get(i);
 			
@@ -199,7 +199,7 @@ public class Prod extends Expr{
 		}
 	}
 	
-	void expandIntBases(Prod prod,Settings settings) {
+	static void expandIntBases(Prod prod,Settings settings) {
 		
 		for(int i = 0;i<prod.size();i++) {
 			Expr current = prod.get(i);
@@ -240,7 +240,7 @@ public class Prod extends Expr{
 		
 	}
 	
-	void multiplyLikeTerms(Prod prod,Settings settings) {//x*x -> x^2
+	static void multiplyLikeTerms(Prod prod,Settings settings) {//x*x -> x^2
 		for(int i = 0;i < prod.size();i++) {
 			
 			Expr current = prod.get(i);//get the current object in the array check
@@ -277,7 +277,7 @@ public class Prod extends Expr{
 		}
 	}
 	
-	void checkForZero(Prod prod) {//x*0 -> 0
+	static void checkForZero(Prod prod) {//x*0 -> 0
 		boolean foundZero = false;
 		for(int i = 0;i < prod.size();i++) {
 			if(prod.get(i) instanceof Num) {
@@ -294,7 +294,7 @@ public class Prod extends Expr{
 		}
 	}
 	
-	void multiplyIntegersAndInverses(Prod prod) {//incomplete
+	static void multiplyIntegersAndInverses(Prod prod) {//incomplete
 		
 		Num total = Num.ONE;
 		

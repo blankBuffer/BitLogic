@@ -49,7 +49,7 @@ public class Factor extends Expr{
 		return toBeSimplified;
 	}
 	
-	Expr power2Reduction(Expr expr,ArrayList<VarCount> varcounts,Settings settings) {
+	static Expr power2Reduction(Expr expr,ArrayList<VarCount> varcounts,Settings settings) {
 		if(expr instanceof Sum && varcounts.size() > 0 && expr.size() == 2 && isPolynomial(expr,varcounts.get(0).v)) {
 			Power pow = null;
 			Expr other = null;
@@ -77,7 +77,7 @@ public class Factor extends Expr{
 		return expr;
 	}
 	
-	Expr pullOutRoots(Expr expr,ArrayList<VarCount> varcounts,Settings settings) {
+	static Expr pullOutRoots(Expr expr,ArrayList<VarCount> varcounts,Settings settings) {
 		if(expr instanceof Sum && varcounts.size()==1 && isPolynomial(expr,varcounts.get(0).v) ) {
 			int degree = degree(expr,varcounts.get(0).v).intValue();
 			if(degree < 2) return expr;
@@ -126,7 +126,7 @@ public class Factor extends Expr{
 		return expr;
 	}
 	
-	Expr reversePascalsTriangle(Expr expr,ArrayList<VarCount> varcounts,Settings settings) {
+	static Expr reversePascalsTriangle(Expr expr,ArrayList<VarCount> varcounts,Settings settings) {
 		if(expr instanceof Sum && varcounts.size() > 0 && isPolynomial(expr,varcounts.get(0).v )) {
 			
 			Var v = varcounts.get(0).v;
@@ -151,7 +151,7 @@ public class Factor extends Expr{
 		return expr;
 	}
 	
-	Expr reExpandSubSums(Expr expr,Settings settings) {
+	static Expr reExpandSubSums(Expr expr,Settings settings) {
 		if(expr instanceof Prod) {
 
 			for(int i = 0;i<expr.size();i++) {
@@ -168,7 +168,7 @@ public class Factor extends Expr{
 	
 	
 	
-	Expr quadraticFactor(Expr expr,ArrayList<VarCount> varcounts,Settings settings) {
+	static Expr quadraticFactor(Expr expr,ArrayList<VarCount> varcounts,Settings settings) {
 		
 		if(expr instanceof Sum) {
 			ExprList coef = null;
@@ -236,7 +236,7 @@ public class Factor extends Expr{
 		}
 		return num(1);
 	}
-	Expr generalFactor(Expr expr, Settings settings) {
+	static Expr generalFactor(Expr expr, Settings settings) {
 		if(expr instanceof Sum) {
 			boolean sumHasDiv = false;
 			for(int i = 0;i<expr.size();i++) {

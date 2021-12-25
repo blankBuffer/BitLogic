@@ -143,7 +143,7 @@ public class Sum extends Expr{
 		}
 	}
 	
-	void addLogs(Sum sum, Settings settings) {
+	static void addLogs(Sum sum, Settings settings) {
 		IndexSet indexSet = new IndexSet();
 		IndexSet indexOfProdWithLog = new IndexSet();
 		
@@ -198,7 +198,7 @@ public class Sum extends Expr{
 		
 	}
 	
-	void distrSubProds(Sum sum,Settings settings) {//x+y*(z+w) -> x+y*z+y*w
+	static void distrSubProds(Sum sum,Settings settings) {//x+y*(z+w) -> x+y*z+y*w
 		for(int i = 0;i<sum.size();i++) {
 			if(sum.get(i) instanceof Prod) {
 				sum.set(i,  distr(sum.get(i)).simplify(settings));
@@ -206,7 +206,7 @@ public class Sum extends Expr{
 		}
 	}
 	
-	void sumContainsSum(Sum sum) {
+	static void sumContainsSum(Sum sum) {
 		for(int i = 0;i<sum.size();i++) {
 			Expr current = sum.get(i);
 			if(current instanceof Sum) {
@@ -217,7 +217,7 @@ public class Sum extends Expr{
 		}
 	}
 	
-	void addLikeTerms(Sum sum,Settings settings) {//x+x -> 2*x
+	static void addLikeTerms(Sum sum,Settings settings) {//x+x -> 2*x
 		for(int i = 0;i<sum.size();i++) {
 			Expr current = sum.get(i).copy();//make sure its copy as we don't want to modify the real object
 			Num coef = num(1);//coefficient

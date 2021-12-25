@@ -3,7 +3,7 @@ import ui.UI;
 
 public class Main extends QuickMath{
 	
-	public static final String VERSION = "1.4.3";
+	public static final String VERSION = "1.4.5";
 	
 	public static void fancyIntro() {
 		String img = ""

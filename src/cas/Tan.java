@@ -39,7 +39,7 @@ public class Tan extends Expr{
 		return toBeSimplified;
 	}
 	
-	public Expr unitCircle(Tan tan) {
+	public static Expr unitCircle(Tan tan) {
 		Pi pi = new Pi();
 		BigInteger three = BigInteger.valueOf(3),six = BigInteger.valueOf(6),four = BigInteger.valueOf(4),five = BigInteger.valueOf(5);
 		

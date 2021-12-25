@@ -1,7 +1,5 @@
 package cas;
 
-import java.math.BigDecimal;
-
 public class LambertW extends Expr {
 
 	private static final long serialVersionUID = 1242113729865756736L;

@@ -42,7 +42,7 @@ public class Sin extends Expr{
 		return toBeSimplified;
 	}
 	
-	public Expr unitCircle(Sin sin) {
+	public static Expr unitCircle(Sin sin) {
 		Pi pi = new Pi();
 		BigInteger three = BigInteger.valueOf(3),six = BigInteger.valueOf(6),four = BigInteger.valueOf(4);
 		

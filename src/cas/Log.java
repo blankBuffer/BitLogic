@@ -151,7 +151,7 @@ public class Log extends Expr{
 	}
 	*/
 	
-	void logOfPerfectPower(Log log) {
+	static void logOfPerfectPower(Log log) {
 		if(log.get() instanceof Num) {// example log(25) -> 2*ln(5)
 			Num casted = (Num)log.get();
 			Power perfectPower = perfectPower(casted);

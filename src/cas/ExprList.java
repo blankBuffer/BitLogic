@@ -17,7 +17,7 @@ public class ExprList extends Expr{
 		return toBeSimplified;
 	}
 	
-	void removeRepeats(ExprList list) {
+	static void removeRepeats(ExprList list) {
 		for(int i = 0;i<list.size();i++) {
 			for(int j = i+1;j<list.size();j++) {
 				if(list.get(i).equalStruct(list.get(j))) {
@@ -28,7 +28,7 @@ public class ExprList extends Expr{
 		}
 	}
 	
-	Expr alone(ExprList list) {
+	static Expr alone(ExprList list) {
 		if(list.size() == 1) {//if its only one element 
 			return list.get(0);
 		}else if(list.size() == 0) {//if its empty return 0

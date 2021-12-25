@@ -24,7 +24,7 @@ public class Distr extends Expr{
 		return toBeSimplified;
 	}
 	
-	Expr generalDistr(Expr expr,Settings settings) {//2*(x+y) -> 2*x+2*y
+	static Expr generalDistr(Expr expr,Settings settings) {//2*(x+y) -> 2*x+2*y
 		if(expr instanceof Prod) {
 			Expr theSum = null;
 			Prod prod = null;

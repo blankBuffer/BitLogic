@@ -58,7 +58,7 @@ public class Diff extends Expr{
 		return toBeSimplified;
 	}
 	
-	Expr extractOutConstants(Diff d,Settings settings) {
+	static Expr extractOutConstants(Diff d,Settings settings) {
 		Expr res = seperateByVar(d.get(),d.getVar());
 		if(!res.get(0).equalStruct(Num.ONE)) {
 			return prod(res.get(0),diff(res.get(1),d.getVar())).simplify(settings);

@@ -123,7 +123,7 @@ public class Div extends Expr{
 		div.setDenom(Prod.unCast(denomProd));
 	}
 	
-	void divContainsDiv(Div div,Settings settings) {//all 3 cases (a/b)/(c/d) or (a/b)/c or a/(b/c)
+	static void divContainsDiv(Div div,Settings settings) {//all 3 cases (a/b)/(c/d) or (a/b)/c or a/(b/c)
 		boolean numerIsDiv = div.getNumer() instanceof Div;
 		boolean denomIsDiv = div.getDenom() instanceof Div;
 		
@@ -157,7 +157,7 @@ public class Div extends Expr{
 		}
 	}
 	
-	void reduceFraction(Div div) {//rationalizes complex fraction and reduces it
+	static void reduceFraction(Div div) {//rationalizes complex fraction and reduces it
 		//get numerator
 		Num numer = num(1);
 		int indexOfNumer = -1;//index if the numerator is a product

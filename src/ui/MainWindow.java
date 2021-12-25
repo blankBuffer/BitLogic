@@ -46,17 +46,6 @@ class MainWindow extends JFrame{
 			
 		});
 		setButtonTheme(openStackButton);
-		//open help menu
-		JButton helpButton = new JButton("help");
-		helpButton.addActionListener(new ActionListener() {
-
-			@Override
-			public void actionPerformed(ActionEvent e) {
-				new Help();
-			}
-			
-		});
-		setButtonTheme(helpButton);
 		
 		JButton plotButton = new JButton("plot/graph");
 		plotButton.addActionListener(new ActionListener() {
@@ -72,7 +61,6 @@ class MainWindow extends JFrame{
 		topMenu.setLayout(new FlowLayout());
 		topMenu.add(saveStackButton);
 		topMenu.add(openStackButton);
-		topMenu.add(helpButton);
 		topMenu.add(plotButton);
 		
 		return topMenu;

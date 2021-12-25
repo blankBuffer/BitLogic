@@ -504,7 +504,7 @@ public class StackEditor extends cas.QuickMath {
 				String name = ((Var) stack.get(size() - 3)).name;
 				currentDefs.addFunc(name, func(name, (ExprList) sLast(), last()));
 				stack.removeRange(size() - 3, size() - 1);
-			} else if (command.contains(":")) {
+			} else if (command.contains(":") && !command.contains(" ")) {
 				String[] parts = command.split(":");
 				command = parts[0];
 

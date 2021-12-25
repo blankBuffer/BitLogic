@@ -1,16 +1,22 @@
 package cas;
 import java.awt.Dimension;
-import java.text.SimpleDateFormat;
+import java.text.DecimalFormat;
+import java.time.Instant;
+import java.time.ZoneOffset;
+import java.time.ZonedDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
-import java.util.Calendar;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.Set;
+import java.util.TimeZone;
 
 import graphics.Plot;
 
 public class Ask extends QuickMath{
 	
-	static final boolean DEBUG = false;
+	static final boolean DEBUG = true;
+	static DateTimeFormatter timeFormat = DateTimeFormatter.ofPattern("hh:mm:ss a MM/dd/yyyy");
 	
 	static ArrayList<Question> questions = new ArrayList<Question>();
 	static class Question{
@@ -190,8 +196,36 @@ public class Ask extends QuickMath{
 		questions.add(new Question(new String[] {"time"},nullExpr,7){
 			@Override
 			Expr getResponse(ArrayList<String> tokens) {
-				String timeStamp = new SimpleDateFormat("hh:mm:ss a dd/MM/yyyy").format(Calendar.getInstance().getTime());
-				return var(timeStamp);
+				int offset = TimeZone.getDefault().getRawOffset()/(1000);
+				for(String token:tokens){
+					int offsetHours = 0,offsetMinutes = 0;
+					boolean set = false;
+					
+					if(token.matches("GMT[+-][0-9]{2}:[0-9]{2}")){
+						offsetHours = Integer.valueOf(token.substring(3,6));
+						offsetMinutes = Integer.valueOf(token.substring(7,9));
+						set = true;
+					}else if(token.matches("GMT[+-][0-9]{1}:[0-9]{2}")){
+						offsetHours = Integer.valueOf(token.substring(3,5));
+						offsetMinutes = Integer.valueOf(token.substring(6,8));
+						set = true;
+					}else if(token.matches("GMT[+-][0-9]+")){
+						offsetHours = Integer.valueOf(token.substring(3));
+						set = true;
+					}
+					if(set){
+						int negative = offsetHours < 0 ? -1 : 1;
+						offset = (Math.abs(offsetHours)*60*60+offsetMinutes*60)*negative;
+						break;
+					}
+				}
+				Date date = new Date(); //; java.util.Date object
+				Instant instant = date.toInstant();
+				ZonedDateTime zonedDateTime = instant.atZone(ZoneOffset.ofTotalSeconds(offset));
+				
+				DecimalFormat df = new DecimalFormat("00");
+				String offsetStr = (offset>=0 ? "+":"")+ df.format(offset/(60*60))+":"+df.format(Math.abs((offset/60)%60));
+				return var(timeFormat.format(zonedDateTime)+" GMT"+offsetStr);
 			}
 		});
 		//randomness
@@ -542,6 +576,8 @@ public class Ask extends QuickMath{
 		
 		reformulate(tokens);
 		
+		if(DEBUG) System.out.println(tokens);
+		
 		Expr maybeResponse = goThroughProgrammedResponses(tokens);
 		if(maybeResponse != null){
 			return maybeResponse;
@@ -550,8 +586,6 @@ public class Ask extends QuickMath{
 		if(tokens.get(tokens.size()-1).equals("test")) {
 			return var("working!");
 		}
-		
-		if(DEBUG) System.out.println(tokens);
 		
 		ArrayList<Integer> indexes = indexOfExpressions(tokens);
 		

@@ -59,24 +59,18 @@ public class QuickMath {
 	public static Power pow(Expr a,Expr b) {
 		return new Power(a,b);
 	}
-	public static Sum sum(Expr a,Expr b) {
-		return new Sum(a,b);
-	}
-	public static Sum sum(Expr a,Expr b,Expr c) {
+	public static Sum sum(Expr... exprs) {
 		Sum out = new Sum();
-		out.add(a);
-		out.add(b);
-		out.add(c);
+		for(Expr e:exprs){
+			out.add(e);
+		}
 		return out;
 	}
-	public static Prod prod(Expr a,Expr b) {
-		return new Prod(a,b);
-	}
-	public static Prod prod(Expr a,Expr b,Expr c) {
+	public static Prod prod(Expr... exprs) {
 		Prod out = new Prod();
-		out.add(a);
-		out.add(b);
-		out.add(c);
+		for(Expr e:exprs){
+			out.add(e);
+		}
 		return out;
 	}
 	public static Var var(String s) {
@@ -498,7 +492,7 @@ public class QuickMath {
 		return pow(n.copy(),num(1));
 	}
 	
-	BigInteger gcm(BigInteger a,BigInteger b) {
+	static BigInteger gcm(BigInteger a,BigInteger b) {
 		return a.multiply(b).divide(a.gcd(b));
 	}
 	

@@ -1,7 +1,5 @@
 /*
  * Benjamin R Currie, BitLogic Program
- * do not claim this to be your work!
- * this is free to use and copy without modification, if you modify it it must be for personal use
  * some code/equations is copied from online but I try to remember to site the source
  */
 
@@ -83,6 +81,8 @@ public abstract class Expr extends QuickMath implements Comparable<Expr>, Serial
 	public abstract long generateHash();
 	
 	public abstract ComplexFloat convertToFloat(ExprList varDefs);
+	
+	boolean commutative = false;
 	
 	public boolean negative() {//Assumes its already simplified
 		if(this instanceof Num) return ((Num)this).signum() == -1;
