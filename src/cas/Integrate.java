@@ -21,6 +21,7 @@ public class Integrate extends Expr{
 	static Equ eToXTimesSinX = (Equ)createExpr("integrate(e^x*sin(x),x)=e^x*(sin(x)-cos(x))/2");
 	static Equ eToXTimesCosX = (Equ)createExpr("integrate(e^x*cos(x),x)=e^x*(sin(x)+cos(x))/2");
 	
+	Integrate(){}//
 	public Integrate(Expr e,Var v){
 		add(e);
 		add(v);
@@ -344,13 +345,6 @@ public class Integrate extends Expr{
 	}
 
 	@Override
-	public Expr copy() {
-		Integrate out = new Integrate(get().copy(),(Var)getVar().copy());
-		out.flags.set(flags);
-		return out;
-	}
-
-	@Override
 	public String toString() {
 		String out = "";
 		out+="integrate(";
@@ -359,27 +353,6 @@ public class Integrate extends Expr{
 		out+=getVar().toString();
 		out+=')';
 		return out;
-	}
-
-	@Override
-	public boolean equalStruct(Expr other) {
-		if(other instanceof Integrate) return get().equalStruct(other.get()) && getVar().equalStruct( ((Integrate)other).getVar() );
-		return false;
-	}
-
-	@Override
-	public long generateHash() {
-		return (get().generateHash()+92617*getVar().generateHash())-1730361936502638193L;
-	}
-
-	@Override
-	boolean similarStruct(Expr other, boolean checked) {
-		if(!checked) if(checkForMatches(other) == false) return false;
-		
-		if(other instanceof Integrate) {
-			return get().fastSimilarStruct(other.get()) && getVar().fastSimilarStruct( ((Integrate)other).getVar());
-		}
-		return false;
 	}
 
 	@Override

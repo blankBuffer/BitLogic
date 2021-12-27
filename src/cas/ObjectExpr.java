@@ -33,8 +33,8 @@ public class ObjectExpr extends Expr{//behaves like variables
 	}
 
 	@Override
-	public long generateHash() {
-		return object.hashCode()+8760341908762341234L;
+	public int hashCode() {
+		return object.hashCode()+876041978;
 	}
 
 	@Override
@@ -44,7 +44,8 @@ public class ObjectExpr extends Expr{//behaves like variables
 
 	@Override
 	boolean similarStruct(Expr other, boolean checked) {
-		return true;
+		if(other instanceof ObjectExpr) return equalStruct(other);
+		return false;
 	}
 	
 }

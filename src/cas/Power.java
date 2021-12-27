@@ -19,6 +19,8 @@ public class Power extends Expr{
 		return get(1);
 	}
 	
+	Power(){}//
+	
 	public Power(Expr base,Expr expo) {
 		add(base);
 		add(expo);
@@ -265,8 +267,6 @@ public class Power extends Expr{
 				
 				pow.setExpo(distr(pow.getExpo()).simplify(settings));//distribute exponent
 				
-				System.out.println(pow);
-				
 				//if expo is a frac turn it into a mixed fraction sum
 				
 				Sum fracSum = null;
@@ -485,8 +485,9 @@ public class Power extends Expr{
 			expOfLambertWProd,
 			rootExpand,
 			perfectPowerInBase,
-			factorBase,
 			productInBase,
+			factorBase,
+			productInBase,//second time
 			expoHasIntegerInSum,
 			expoSumHasLog,
 			exponentiateIntegers,
@@ -511,13 +512,6 @@ public class Power extends Expr{
 		
 		toBeSimplified.flags.simple = true;
 		return toBeSimplified;
-	}
-
-	@Override
-	public Expr copy() {
-		Power out = new Power(getBase().copy(),getExpo().copy());
-		out.flags.set(flags);
-		return out;
 	}
 
 	@Override
@@ -553,29 +547,6 @@ public class Power extends Expr{
 		}
 		return out;
 	}
-
-	@Override
-	public boolean equalStruct(Expr other) {
-		if(other instanceof Power) {
-			Power otherCasted = (Power)other;
-			return getBase().equalStruct(otherCasted.getBase()) && getExpo().equalStruct(otherCasted.getExpo());
-		}
-		return false;
-	}
-	@Override
-	boolean similarStruct(Expr other,boolean checked) {
-		if(other instanceof Power) {
-			if(!checked) if(checkForMatches(other) == false) return false;
-			Power otherCasted = (Power)other;
-			boolean similarBase = false,similarExpo = false;
-			if(getBase().fastSimilarStruct(otherCasted.getBase())) similarBase = true;
-			if(getExpo().fastSimilarStruct(otherCasted.getExpo())) similarExpo = true;
-			
-			
-			if(similarBase && similarExpo) return true;
-		}
-		return false;
-	}
 	
 	public static Power cast(Expr e) {
 		if(e instanceof Power) {
@@ -586,10 +557,6 @@ public class Power extends Expr{
 	
 	public static Expr unCast(Expr e) {
 		return powerOfOne.applyRuleToExpression(e, Settings.normal);
-	}
-	@Override
-	public long generateHash() {
-		return (getBase().generateHash()+87234*getExpo().generateHash())-8176428751232101230L;
 	}
 	@Override
 	public ComplexFloat convertToFloat(ExprList varDefs) {

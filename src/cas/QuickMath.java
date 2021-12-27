@@ -73,6 +73,23 @@ public class QuickMath {
 		}
 		return out;
 	}
+	public static And and(Expr... exprs) {
+		And out = new And();
+		for(Expr e:exprs){
+			out.add(e);
+		}
+		return out;
+	}
+	public static Or or(Expr... exprs) {
+		Or out = new Or();
+		for(Expr e:exprs){
+			out.add(e);
+		}
+		return out;
+	}
+	public static Not not(Expr a) {
+		return new Not(a);
+	}
 	public static Var var(String s) {
 		return new Var(s);
 	}

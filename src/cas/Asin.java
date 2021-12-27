@@ -9,6 +9,7 @@ public class Asin extends Expr{
 	static Equ asinSinCase = (Equ)createExpr("asin(sin(x))=x");
 	static Equ asinCosCase = (Equ)createExpr("asin(cos(x))=-x+pi/2");
 
+	Asin(){}//
 	public Asin(Expr expr) {
 		add(expr);
 	}
@@ -57,42 +58,13 @@ public class Asin extends Expr{
 	}
 
 	@Override
-	public Expr copy() {
-		Expr out = new Asin(get().copy());
-		out.flags.set(flags);
-		return out;
-	}
-
-	@Override
 	public String toString() {
 		return "asin("+get()+")";
 	}
 
 	@Override
-	public boolean equalStruct(Expr other) {
-		if(other instanceof Asin) {
-			return other.get().equalStruct(get());
-		}
-		return false;
-	}
-
-	@Override
-	public long generateHash() {
-		return get().generateHash()+serialVersionUID;
-	}
-
-	@Override
 	public ComplexFloat convertToFloat(ExprList varDefs) {
 		return ComplexFloat.asin(get().convertToFloat(varDefs));
-	}
-
-	@Override
-	boolean similarStruct(Expr other, boolean checked) {
-		if(other instanceof Asin) {
-			if(!checked) if(checkForMatches(other) == false) return false;
-			if(get().fastSimilarStruct(other.get())) return true;
-		}
-		return false;
 	}
 
 }

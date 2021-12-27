@@ -42,9 +42,9 @@ public class BoolState extends Expr{
 	}
 
 	@Override
-	public long generateHash() {
-		if(state) return 2;
-		return 1;
+	public int hashCode() {
+		if(state) return -926360784;
+		return 971308753;
 	}
 
 	@Override

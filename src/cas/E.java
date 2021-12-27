@@ -15,28 +15,8 @@ public class E extends Expr{
 	}
 
 	@Override
-	public Expr copy() {
-		return new E();
-	}
-
-	@Override
 	public String toString() {
 		return "e";
-	}
-
-	@Override
-	public boolean equalStruct(Expr other) {
-		return other instanceof E;
-	}
-
-	@Override
-	boolean similarStruct(Expr other,boolean cheched) {
-		return other instanceof E;
-	}
-
-	@Override
-	public long generateHash() {
-		return 2387620836382320210L;
 	}
 
 	@Override

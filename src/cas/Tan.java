@@ -9,6 +9,7 @@ public class Tan extends Expr{
 	static Equ tanOfArcsin = (Equ)createExpr("tan(asin(x))=x/sqrt(1-x^2)");
 	static Equ tanOfArccos = (Equ)createExpr("tan(acos(x))=sqrt(1-x^2)/x");
 	
+	Tan(){}//
 	public Tan(Expr a) {
 		add(a);
 	}
@@ -99,14 +100,7 @@ public class Tan extends Expr{
 		
 		return tan;
 	}
-
-	@Override
-	public Expr copy() {
-		Tan out = new Tan(get().copy());
-		out.flags.set(flags);
-		return out;
-	}
-
+	
 	@Override
 	public String toString() {
 		String out = "";
@@ -115,27 +109,7 @@ public class Tan extends Expr{
 		out+=")";
 		return out;
 	}
-
-	@Override
-	public boolean equalStruct(Expr other) {
-		if(other instanceof Tan) {
-			if(other.get().equalStruct(get())) return true;
-		}
-		return false;
-	}
-
-	@Override
-	public long generateHash() {
-		return get().generateHash()+927142837462378103L;
-	}
-	@Override
-	boolean similarStruct(Expr other, boolean checked) {
-		if(other instanceof Tan) {
-			if(!checked) if(checkForMatches(other) == false) return false;
-			if(get().fastSimilarStruct(other.get())) return true;
-		}
-		return false;
-	}
+	
 	@Override
 	public ComplexFloat convertToFloat(ExprList varDefs) {
 		return ComplexFloat.tan(get().convertToFloat(varDefs));

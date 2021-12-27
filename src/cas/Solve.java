@@ -77,6 +77,7 @@ public class Solve extends Expr{
 		caseTable.add(equ( createExpr("w(x)=y") , createExpr("x=y*e^y") ));
 	}
 	
+	Solve(){}//
 	public Solve(Equ e,Var v){
 		add(e);
 		add(v);
@@ -324,14 +325,7 @@ public class Solve extends Expr{
 			solve.getEqu().setLeftSide(leftSideProd.simplify(settings));
 		}
 	}
-
-	@Override
-	public Expr copy() {
-		Solve out = new Solve((Equ)getEqu().copy(),(Var)getVar().copy());
-		out.flags.set(flags);
-		return out;
-	}
-
+	
 	@Override
 	public String toString() {
 		String out = "";
@@ -341,34 +335,6 @@ public class Solve extends Expr{
 		out+=getVar().toString();
 		out+=')';
 		return out;
-	}
-
-	@Override
-	public boolean equalStruct(Expr other) {
-		if(other instanceof Solve) {
-			Solve otherCasted = (Solve)other;
-			return otherCasted.getEqu().equalStruct(getEqu()) && otherCasted.getVar().equalStruct(getVar());
-		}
-		return false;
-	}
-
-	@Override
-	public long generateHash() {
-		return (getEqu().generateHash()+91634*getVar().generateHash())-2834826016327861232L;
-	}
-
-	@Override
-	boolean similarStruct(Expr other, boolean checked) {
-		if(other instanceof Solve) {
-			if(!checked) if(checkForMatches(other) == false) return false;
-			Solve otherCasted = (Solve)other;
-			boolean similarEqu = false,similarVar = false;
-			if(getEqu().fastSimilarStruct(otherCasted.getEqu())) similarEqu = true;
-			if(getVar().fastSimilarStruct(otherCasted.getVar())) similarVar = true;
-			
-			if(similarEqu && similarVar) return true;
-		}
-		return false;
 	}
 	
 	public double INITIAL_GUESS = 1;

@@ -35,19 +35,19 @@ public class Var extends Expr{
 	}
 
 	@Override
-	boolean similarStruct(Expr other,boolean checked) {
+	boolean similarStruct(Expr other,boolean checked) {//all variables are similar
 		return true;
 	}
 
 	@Override
-	public long generateHash() {
-		long ex = 1;
-		long sum = 0;
+	public int hashCode() {
+		int ex = 913478934;
+		int sum = 0;
 		for(int i = 0;i<name.length();i++) {
-			sum+= (name.charAt(i)-'0')*ex;
-			ex*=63;//think of letters as numbers, i'm aware that it is not perfect but does the job
+			sum+= (name.charAt(i))*ex;
+			ex*=1508572583;
 		}
-		return sum;
+		return sum+891267084;
 	}
 
 	@Override

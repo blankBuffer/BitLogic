@@ -50,8 +50,8 @@ public class FloatExpr extends Expr{
 	}
 
 	@Override
-	public long generateHash() {
-		return Double.doubleToLongBits(value.real)+120987234*Double.doubleToLongBits(value.imag);//lol
+	public int hashCode() {
+		return Double.hashCode(value.real)+120987234*Double.hashCode(value.imag);
 	}
 
 	@Override

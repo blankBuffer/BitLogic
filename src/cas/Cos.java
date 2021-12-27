@@ -10,6 +10,7 @@ public class Cos extends Expr{
 	static Equ cosOfArcsin = (Equ)createExpr("cos(asin(x))=sqrt(1-x^2)");
 	static Equ cosOfArccos = (Equ)createExpr("cos(acos(x))=x");
 
+	Cos(){}//
 	public Cos(Expr a) {
 		add(a);
 	}
@@ -96,41 +97,12 @@ public class Cos extends Expr{
 	}
 
 	@Override
-	public Expr copy() {
-		Cos out = new Cos(get().copy());
-		out.flags.set(flags);
-		return out;
-	}
-
-	@Override
 	public String toString() {
 		String out = "";
 		out+="cos(";
 		out+=get().toString();
 		out+=")";
 		return out;
-	}
-
-	@Override
-	public boolean equalStruct(Expr other) {
-		if(other instanceof Cos) {
-			if(other.get().equalStruct(get())) return true;
-		}
-		return false;
-	}
-
-	@Override
-	public long generateHash() {
-		return get().generateHash()+8236910273651944021L;
-	}
-
-	@Override
-	boolean similarStruct(Expr other, boolean checked) {
-		if(other instanceof Cos) {
-			if(!checked) if(checkForMatches(other) == false) return false;
-			if(get().fastSimilarStruct(other.get())) return true;
-		}
-		return false;
 	}
 	@Override
 	public ComplexFloat convertToFloat(ExprList varDefs) {

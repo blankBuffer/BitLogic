@@ -9,6 +9,7 @@ public class LambertW extends Expr {
 	static Equ isNegOne = (Equ)createExpr("w((-1)/e)=-1");
 	static Equ ratioLog = (Equ)createExpr("w((-ln(x))/x)=-ln(x)");
 
+	LambertW(){}//
 	public LambertW(Expr e){
 		add(e);
 	}
@@ -86,14 +87,7 @@ public class LambertW extends Expr {
 		
 		return lam;
 	}
-
-	@Override
-	public Expr copy() {
-		LambertW out = new LambertW(get().copy());
-		out.flags.set(flags);
-		return out;
-	}
-
+	
 	@Override
 	public String toString() {
 		String out = "lambertW(";
@@ -103,34 +97,12 @@ public class LambertW extends Expr {
 	}
 
 	@Override
-	public boolean equalStruct(Expr other) {
-		if(other instanceof LambertW) {
-			if(other.get().equalStruct(get())) return true;
-		}
-		return false;
-	}
-
-	@Override
-	public long generateHash() {
-		return get().generateHash()+serialVersionUID;
-	}
-
-	@Override
 	public ComplexFloat convertToFloat(ExprList varDefs) {
 		FloatExpr x = floatExpr(get().convertToFloat(varDefs));
 		if(x.value.real<-1.0/Math.E) return ComplexFloat.ZERO;
 		Solve expr = solve(equ(x,prod(var("y"),exp(var("y")))),var("y"));
 		expr.INITIAL_GUESS = Math.log( x.value.real+1);
 		return expr.convertToFloat(varDefs);
-	}
-
-	@Override
-	boolean similarStruct(Expr other, boolean checked) {
-		if(other instanceof LambertW) {
-			if(!checked) if(checkForMatches(other) == false) return false;
-			if(get().fastSimilarStruct(other.get())) return true;
-		}
-		return false;
 	}
 
 }

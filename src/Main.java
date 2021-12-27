@@ -3,7 +3,7 @@ import ui.UI;
 
 public class Main extends QuickMath{
 	
-	public static final String VERSION = "1.4.5";
+	public static final String VERSION = "1.4.6";
 	
 	public static void fancyIntro() {
 		String img = ""
@@ -35,9 +35,9 @@ public class Main extends QuickMath{
 				i++;
 			}
 		}
-		System.out.println("Benjamin Currie @2021 v "+VERSION+" , java runtime version: "+System.getProperty("java.version"));
 		
 		if(UI.CLEAR_TERM) UI.clearTerm();
+		System.out.println("Benjamin Currie @2021 v "+VERSION+" , java runtime version: "+System.getProperty("java.version"));
 		fancyIntro();
 		
 		testRegion();
@@ -45,6 +45,7 @@ public class Main extends QuickMath{
 		//showMemoryUsage.start();
 		if(gui == 1) UI.startGraphicalInterface();
 		else if(gui == 2) UI.startCommandLineInterface();
+		
 	}
 	
 	static Thread showMemoryUsage = new Thread("mem-use-visual"){

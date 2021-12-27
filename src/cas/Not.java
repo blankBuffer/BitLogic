@@ -1,13 +1,12 @@
 package cas;
 
-public class If extends Expr{
+public class Not extends Expr{
 	
-	private static final long serialVersionUID = -7181628821034162659L;
+	private static final long serialVersionUID = 775872869042676796L;
 
-	If(){}//
-	public If(Equ eq,Script s) {
-		add(eq);
-		add(s);
+	Not(){}//
+	public Not(Expr e){
+		add(e);
 	}
 
 	@Override
@@ -15,13 +14,15 @@ public class If extends Expr{
 		// TODO Auto-generated method stub
 		return null;
 	}
-
+	
 	@Override
 	public String toString() {
-		// TODO Auto-generated method stub
-		return null;
+		String out = "";
+		out+="~";
+		out+=get();
+		return out;
 	}
-
+	
 	@Override
 	public ComplexFloat convertToFloat(ExprList varDefs) {
 		// TODO Auto-generated method stub

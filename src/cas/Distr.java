@@ -5,6 +5,7 @@ public class Distr extends Expr{
 	
 	private static final long serialVersionUID = -1352926948237577310L;
 
+	Distr(){}//
 	public Distr(Expr expr) {
 		add(expr);
 	}
@@ -58,13 +59,6 @@ public class Distr extends Expr{
 		}
 		return expr;
 	}
-	
-	@Override
-	public Expr copy() {
-		Expr out = new Distr(get().copy());
-		out.flags.set(flags);
-		return out;
-	}
 
 	@Override
 	public String toString() {
@@ -74,29 +68,10 @@ public class Distr extends Expr{
 		out+=")";
 		return out;
 	}
-
-	@Override
-	public boolean equalStruct(Expr other) {
-		if(other instanceof Distr) return get().equalStruct(other.get());
-		return false;
-	}
-
-	@Override
-	public long generateHash() {
-		return get().generateHash()+8152371823985037265L;
-	}
-
+	
 	@Override
 	public ComplexFloat convertToFloat(ExprList varDefs) {
 		return get().convertToFloat(varDefs);
 	}
 
-	@Override
-	boolean similarStruct(Expr other, boolean checked) {
-		if(other instanceof Distr) {
-			if(!checked) if(checkForMatches(other) == false) return false;
-			if(get().fastSimilarStruct(other.get())) return true;
-		}
-		return false;
-	}
 }

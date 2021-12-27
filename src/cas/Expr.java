@@ -13,6 +13,7 @@ import java.io.ObjectOutputStream;
 import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.Random;
 
 /*
  * The Expr class is a description of what an expression is
@@ -63,6 +64,10 @@ public abstract class Expr extends QuickMath implements Comparable<Expr>, Serial
 		}
 	}
 	
+	static Random random = new Random(827746169);
+	
+	public int ID = random.nextInt();
+	
 	public Flags flags = new Flags();
 	
 	private static final long serialVersionUID = -8297916729116741273L;
@@ -71,18 +76,91 @@ public abstract class Expr extends QuickMath implements Comparable<Expr>, Serial
 	
 	public abstract Expr simplify(Settings settings);//all expressions will have a simplify call, this is the most important function 
 	
-	public abstract Expr copy();//copying this expression object
+	public Expr copy(){//copying this expression object
+		Expr out = null;
+		try {
+			out = this.getClass().getDeclaredConstructor().newInstance();
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+		for(int i = 0;i<size();i++) {
+			out.add(get(i).copy());
+		}
+		out.flags.set(flags);
+		return out;
+		
+	}
 	
 	@Override
 	public abstract String toString();//print the expression into console
 	
-	public abstract boolean equalStruct(Expr other);//compares if two expression have the same tree
+	@Override
+	public boolean equals(Object other){
+		if(other instanceof Expr){
+			Expr casted = (Expr)other;
+			if(casted.equalStruct(this)) return true;
+			return factor(sub(this,casted)).simplify(Settings.normal).equalStruct(num(0));		
+		}
+		return false;
+	}
 	
-	public abstract long generateHash();
+	public boolean equalStruct(Expr other){//compares if two expression have the same tree
+		if(other == null) return false;
+		if(other.getClass().equals(this.getClass())) {//make sure same type
+			
+			if(other.size() == size()) {//make sure they are the same size
+				
+				if(this.commutative){
+					boolean usedIndex[] = new boolean[size()];//keep track of what indices have been used
+					int length = other.size();//length of the lists
+					
+					outer:for(int i = 0;i < length;i++) {
+						for(int j = 0;j < length;j++) {
+							if(usedIndex[j]) continue;
+							if(get(i).equalStruct(other.get(j))) {
+								usedIndex[j] = true;
+								continue outer;
+							}
+						}
+						return false;//the subExpr was never found 
+					}
+					
+					return true;//they are the same as everything was found
+				}
+				for(int i = 0;i<size();i++){//not commutative
+					if(!get(i).equalStruct(other.get(i))) return false;
+				}
+				return true;
+			}
+		}
+		return false;
+	}
+	
+	@Override
+	public int hashCode(){
+		int sum = this.getClass().hashCode();
+		if(commutative){
+			for(int i = 0;i<size();i++){
+				sum+=get(i).hashCode()*1092571862;
+			}
+		}else{
+			int randomNum = -623630115;
+			for(int i = 0;i<size();i++){
+				sum+=get(i).hashCode()*randomNum;
+				randomNum = randomNum*randomNum+939083489;
+			}
+		}
+		return sum;
+	}
+	
+	@Override
+	public Object clone(){//deep copy of expression
+		return copy();
+	}
 	
 	public abstract ComplexFloat convertToFloat(ExprList varDefs);
 	
-	boolean commutative = false;
+	public boolean commutative = false;
 	
 	public boolean negative() {//Assumes its already simplified
 		if(this instanceof Num) return ((Num)this).signum() == -1;
@@ -98,10 +176,10 @@ public abstract class Expr extends QuickMath implements Comparable<Expr>, Serial
 		}else if(this instanceof Sum) {
 			Sum casted = (Sum)this;
 			
-			long highest  = Long.MIN_VALUE;
+			int highest  = Integer.MIN_VALUE;
 			int index = 0;
 			for(int i = 0;i<casted.size();i++) {
-				long current = casted.get(i).abs(Settings.normal).generateHash();//its very important to use the absolute value
+				int current = casted.get(i).abs(Settings.normal).hashCode();//its very important to use the absolute value
 				if(current>highest) {
 					highest = current;
 					index = i;
@@ -164,7 +242,42 @@ public abstract class Expr extends QuickMath implements Comparable<Expr>, Serial
 	}
 	
 	//the checked variable simply keeps track weather chechForMatches has been checked
-	abstract boolean similarStruct(Expr other,boolean checked);//returns if another expression is similar to this but any comparison with variables is returned true
+	boolean similarStruct(Expr other,boolean checked){//returns if another expression is similar to this but any comparison with variables is returned true
+		if(other == null) return false;
+		if(other.getClass().equals(this.getClass())) {
+			if(this.commutative){
+				if(size() != other.size()) return false;
+				
+				sort();
+				other.sort();
+				
+				if(!checked) if(checkForMatches(other) == false) return false;
+				
+				boolean[] usedIndicies = new boolean[other.size()];
+				for(int i = 0;i<size();i++) {
+					if(get(i) instanceof Var) continue;//skip because they return true on anything
+					boolean found = false;
+					for(int j = 0;j<other.size();j++) {
+						if(usedIndicies[j]) continue;
+						else if(get(i).fastSimilarStruct(other.get(j))) {
+							found = true;
+							usedIndicies[j] = true;
+							break;
+						}
+					}
+					if(!found) return false;
+				}
+				return true;
+			}//else not commutative
+			if(!checked) if(checkForMatches(other) == false) return false;
+			
+			for(int i = 0;i<size();i++) {
+				if(!get(i).fastSimilarStruct(other.get(i))) return false;
+			}
+			return true;
+		}
+		return false;
+	}
 	
 	/*
 	 * letting the template expression=this we check if the other expression is similar to the template
@@ -386,7 +499,6 @@ public abstract class Expr extends QuickMath implements Comparable<Expr>, Serial
 			for(int i = 0;i<parts.size();i++) equs.add(new Equ(exampleParts.get(i),parts.get(i)));
 			
 			Expr out = example.getRightSide().replace(equs);
-			
 			if(example.getLeftSide().getClass() == example.getRightSide().getClass()) {
 				out.simplifyChildren(settings);
 			}else {
@@ -568,8 +680,8 @@ public abstract class Expr extends QuickMath implements Comparable<Expr>, Serial
 		for(int i = 0;i<tab-1;i++) tabStr+="   |";
 		if(tab>0) tabStr+="--->";
 		else tabStr+=">";
-		System.out.print(tabStr+this.getClass().getSimpleName() );
-		if(this instanceof Num || this instanceof Var) System.out.print(" : "+this);
+		System.out.print(tabStr+this.getClass().getSimpleName() +" hash: "+hashCode()+" id: "+ID);
+		if(this instanceof Num || this instanceof Var) System.out.print(" name: "+this);
 		System.out.println();
 		for(int i = 0;i<size();i++) {
 			get(i).printTree(tab+1);

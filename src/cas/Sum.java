@@ -9,10 +9,7 @@ public class Sum extends Expr{
 	static Equ pythagOnePlusTanSqr = (Equ)createExpr("1+tan(x)^2=cos(x)^-2");
 	
 	public Sum() {
-	}
-	public Sum(Expr first,Expr second) {
-		add(first);
-		add(second);
+		commutative = true;
 	}
 	
 	@Override
@@ -349,68 +346,6 @@ public class Sum extends Expr{
 		}
 		return out;
 	}
-	@Override
-	public Expr copy() {
-		Expr sumCopy = new Sum();
-		for(int i = 0;i<size();i++) {
-			sumCopy.add(get(i).copy());
-		}
-		sumCopy.flags.set(flags);
-		return sumCopy;
-	}
-	@Override
-	public boolean equalStruct(Expr other) {//x+y = y+x
-		if(other instanceof Sum) {//make sure same type
-			
-			if(other.size() == size()) {//make sure they are the same size
-				
-				boolean usedIndex[] = new boolean[size()];//keep track of what indices have been used
-				int length = other.size();//length of the lists
-				
-				outer:for(int i = 0;i < length;i++) {
-					for(int j = 0;j < length;j++) {
-						if(usedIndex[j]) continue;
-						if(get(i).equalStruct(other.get(j))) {
-							usedIndex[j] = true;
-							continue outer;
-						}
-					}
-					return false;//the subExpr was never found 
-				}
-				
-				return true;//they are the same as everything was found
-				 
-			}
-		}
-		return false;
-	}
-	@Override
-	boolean similarStruct(Expr other,boolean checked) {
-		if(other instanceof Sum) {
-			sort();
-			other.sort();
-			
-			if(!checked) if(checkForMatches(other) == false) return false;
-			if(size() != other.size()) return false;
-			
-			boolean[] usedIndicies = new boolean[other.size()];
-			for(int i = 0;i<size();i++) {
-				if(get(i) instanceof Var) continue;//skip because they return true on anything
-				boolean found = false;
-				for(int j = 0;j<other.size();j++) {
-					if(usedIndicies[j]) continue;
-					else if(get(i).fastSimilarStruct(other.get(j))) {
-						found = true;
-						usedIndicies[j] = true;
-						break;
-					}
-				}
-				if(!found) return false;
-			}
-			return true;
-		}
-		return false;
-	}
 	
 	public static Sum cast(Expr e) {
 		if(e instanceof Sum) {
@@ -449,14 +384,6 @@ public class Sum extends Expr{
 	public static Sum combine(Expr a,Expr b) {//like the sum(a,b) function but handles it better, avoids sums in sums
 		Sum aCasted = Sum.cast(a),bCasted = Sum.cast(b);
 		return Sum.combineSums(aCasted, bCasted);
-	}
-
-	@Override
-	public long generateHash() {
-		long sum = 1;
-		for(int i = 0;i<size();i++) sum+=get(i).generateHash();//add all sub expressions hashes
-		
-		return sum-926481637408623462L;//again arbitrary digits
 	}
 	@Override
 	public ComplexFloat convertToFloat(ExprList varDefs) {

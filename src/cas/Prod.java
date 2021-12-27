@@ -4,11 +4,9 @@ import java.math.BigInteger;
 public class Prod extends Expr{
 
 	private static final long serialVersionUID = -6256457097575815230L;
+	
 	public Prod() {
-	}
-	public Prod(Expr first,Expr second) {
-		add(first);
-		add(second);
+		commutative = true;
 	}
 	
 	@Override
@@ -20,7 +18,7 @@ public class Prod extends Expr{
 		
 		factorSubSums((Prod)toBeSimplified,settings);//factor sums
 		
-		trigExpandElements((Prod)toBeSimplified, settings);
+		toBeSimplified = trigExpandElements.applyRuleToExpression(toBeSimplified, settings);
 		
 		toBeSimplified = combineWithDiv((Prod)toBeSimplified,settings);
 				
@@ -50,13 +48,55 @@ public class Prod extends Expr{
 		return toBeSimplified;
 	}
 	
-	static void trigExpandElements(Prod prod,Settings settings){//expands double angle to allow things to cancel out
+	static boolean foundProdInTrigInProd(Prod prod){
 		if(prod.containsType(Sin.class)){
 			for(int i = 0;i < prod.size();i++){
-				prod.set(i, trigExpand(prod.get(i),settings));
+				if(prod.get(i) instanceof Sin || prod.get(i) instanceof Cos || prod.get(i) instanceof Tan){
+					if(prod.get(i).get() instanceof Prod){
+						return true;
+					}
+				}
 			}
 		}
+		return false;
 	}
+	static boolean foundNonProdInTrigInProd(Prod prod){
+		if(prod.containsType(Sin.class)){
+			for(int i = 0;i < prod.size();i++){
+				if(prod.get(i) instanceof Sin || prod.get(i) instanceof Cos || prod.get(i) instanceof Tan){
+					if(!(prod.get(i).get() instanceof Prod)){
+						return true;
+					}
+				}
+			}
+		}
+		return false;
+	}
+	
+	static Rule trigExpandElements = new Rule("trig expand elements Prod",Rule.TRICKY){
+		@Override
+		public void init(){
+			example = "sin(2*x)*sin(x)=2*sin(x)*cos(x)*sin(x)";
+		}
+		@Override
+		public Expr applyRuleToExpression(Expr e,Settings settings){
+			Prod prod = null;
+			if(e instanceof Prod){
+				prod = (Prod)e;
+			}else{
+				return e;
+			}
+			if(foundProdInTrigInProd(prod) && foundNonProdInTrigInProd(prod)){
+				Expr original = e.copy();
+				
+				for(int i = 0;i < prod.size();i++){
+					prod.set(i, trigExpand(prod.get(i),settings));
+				}
+				verboseMessage(original,prod);
+			}
+			return prod;
+		}
+	};
 	
 	static Expr combineWithDiv(Prod prod,Settings settings) {//combines into a div if there is a div in the product
 		
@@ -355,75 +395,6 @@ public class Prod extends Expr{
 			
 		}
 		return out;
-	}
-	@Override
-	public Expr copy() {
-		Expr prodCopy = new Prod();
-		for(int i = 0;i<size();i++) {
-			prodCopy.add(get(i).copy());
-		}
-		prodCopy.flags.set(flags);
-		return prodCopy;
-	}
-	@Override
-	public boolean equalStruct(Expr other) {//remember that x*y is the same as y*x
-		if(other instanceof Prod) {//make sure same type
-			
-			if(other.size() == size()) {//make sure they are the same size
-				
-				boolean usedIndex[] = new boolean[size()];//keep track of what indices have been used
-				int length = other.size();//length of the lists
-				
-				outer:for(int i = 0;i < length;i++) {
-					for(int j = 0;j < length;j++) {
-						if(usedIndex[j]) continue;
-						if(get(i).equalStruct(other.get(j))) {
-							usedIndex[j] = true;
-							continue outer;
-						}
-					}
-					return false;//the subExpr was never found 
-				}
-				
-				return true;//they are the same as everything was found
-				 
-			}
-		}
-		return false;
-	}
-	@Override
-	boolean similarStruct(Expr other,boolean checked) {
-		if(other instanceof Prod) {
-			sort();
-			other.sort();
-			
-			if(!checked) if(checkForMatches(other) == false) return false;
-			if(size() != other.size()) return false;
-			
-			boolean[] usedIndicies = new boolean[other.size()];
-			for(int i = 0;i<size();i++) {
-				if(get(i) instanceof Var) continue;//skip because they return true on anything
-				boolean found = false;
-				for(int j = 0;j<other.size();j++) {
-					if(usedIndicies[j]) continue;
-					else if(get(i).fastSimilarStruct(other.get(j))) {
-						found = true;
-						usedIndicies[j] = true;
-						break;
-					}
-				}
-				if(!found) return false;
-			}
-			return true;
-		}
-		return false;
-	}
-	@Override
-	public long generateHash() {
-		long sum = 1;
-		for(int i = 0;i<size();i++) sum+=get(i).generateHash();//add all the sub expressions hashes
-		
-		return sum+2894621942862801234L;//random shift
 	}
 	
 	public static Prod cast(Expr e) {//converts it to a prod

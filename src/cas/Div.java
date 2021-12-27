@@ -8,6 +8,7 @@ public class Div extends Expr{
 	public static Equ overOne = (Equ)createExpr("a/1=a");
 	public static Equ zeroInNum = (Equ)createExpr("0/a=0");
 
+	Div(){}//
 	public Div(Expr num,Expr den){
 		add(num);
 		add(den);
@@ -39,8 +40,7 @@ public class Div extends Expr{
 		((Div)toBeSimplified).setNumer(factor(((Div)toBeSimplified).getNumer()).simplify(settings));//factor numerator
 		((Div)toBeSimplified).setDenom(factor(((Div)toBeSimplified).getDenom()).simplify(settings));//factor denominator
 		
-		((Div)toBeSimplified).setNumer(trigExpand(((Div)toBeSimplified).getNumer(),settings));//trig expand numerator
-		((Div)toBeSimplified).setDenom(trigExpand(((Div)toBeSimplified).getDenom(),settings));//trig expand denominator
+		toBeSimplified = trigExpandElements.applyRuleToExpression(toBeSimplified, settings);
 		
 		divContainsDiv((Div)toBeSimplified,settings);//(a/b)/(c/d) -> (a*d)/(b*c)
 		
@@ -54,6 +54,57 @@ public class Div extends Expr{
 		toBeSimplified.flags.simple = true;
 		return toBeSimplified;
 	}
+	
+	static Rule trigExpandElements = new Rule("trig expand elements div",Rule.TRICKY){
+		@Override
+		public void init(){
+			example = "sin(2*x)/sin(x)=(2*sin(x)*cos(x))/sin(x)";
+		}
+		@Override
+		public Expr applyRuleToExpression(Expr e,Settings settings){
+			Div div = null;
+			if(e instanceof Div){
+				div = (Div)e;
+			}else{
+				return e;
+			}
+			
+			boolean prodInTrig = false;
+			boolean nonProdInTrig = false;
+			
+			if(div.getNumer() instanceof Prod){
+				prodInTrig |= Prod.foundProdInTrigInProd((Prod)div.getNumer());
+				nonProdInTrig |= Prod.foundNonProdInTrigInProd((Prod)div.getNumer());
+			}else if(div.getDenom() instanceof Sin || div.getDenom() instanceof Cos || div.getDenom() instanceof Tan){
+				if(div.getNumer().get() instanceof Prod){
+					prodInTrig = true;
+				}else{
+					nonProdInTrig = true;
+				}
+			}
+			if(div.getDenom() instanceof Prod){
+				prodInTrig |= Prod.foundProdInTrigInProd((Prod)div.getDenom());
+				nonProdInTrig |= Prod.foundNonProdInTrigInProd((Prod)div.getDenom());
+			}else if(div.getDenom() instanceof Sin || div.getDenom() instanceof Cos || div.getDenom() instanceof Tan){
+				if(div.getDenom().get() instanceof Prod){
+					prodInTrig = true;
+				}else{
+					nonProdInTrig = true;
+				}
+			}
+			
+			if(prodInTrig && nonProdInTrig){
+				Expr original = div.copy();
+				
+				div.setNumer(trigExpand(div.getNumer(),settings));
+				div.setDenom(trigExpand(div.getDenom(),settings));
+				
+				verboseMessage(original,div);
+			}
+			
+			return div;
+		}
+	};
 	
 	static void cancelOutTerms(Div div,Settings settings) {
 		
@@ -298,11 +349,6 @@ public class Div extends Expr{
 	}
 
 	@Override
-	public Expr copy() {
-		return new Div(getNumer().copy(),getDenom().copy());
-	}
-
-	@Override
 	public String toString() {
 		String out = "";
 		boolean numerNeedsParen = getNumer() instanceof Prod || getNumer() instanceof Sum || getNumer() instanceof Div;
@@ -319,15 +365,6 @@ public class Div extends Expr{
 		if(denomNeedsParen) out += ")";
 		
 		return out;
-	}
-
-	@Override
-	public boolean equalStruct(Expr other) {
-		if(other instanceof Div) {
-			Div casted = (Div)other;
-			return casted.getNumer().equalStruct(getNumer()) && casted.getDenom().equalStruct(getDenom());
-		}
-		return false;
 	}
 	
 	public static Div addFracs(Div a,Div b) {//combines fraction, does not reduce/simplify answer, creates new object
@@ -391,28 +428,8 @@ public class Div extends Expr{
 	}
 
 	@Override
-	public long generateHash() {
-		return (getNumer().generateHash()+428062*getDenom().generateHash())-916023985170723987L;
-	}
-
-	@Override
 	public ComplexFloat convertToFloat(ExprList varDefs) {
 		return ComplexFloat.div(getNumer().convertToFloat(varDefs), getDenom().convertToFloat(varDefs));
-	}
-
-	@Override
-	boolean similarStruct(Expr other, boolean checked) {
-		if(other instanceof Div) {
-			if(!checked) if(checkForMatches(other) == false) return false;
-			Div otherCasted = (Div)other;
-			boolean similarNumer = false,similarDenom = false;
-			if(getNumer().fastSimilarStruct(otherCasted.getNumer())) similarNumer = true;
-			if(getDenom().fastSimilarStruct(otherCasted.getDenom())) similarDenom = true;
-			
-			
-			if(similarNumer && similarDenom) return true;
-		}
-		return false;
 	}
 
 }

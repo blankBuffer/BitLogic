@@ -8,6 +8,7 @@ public class Acos extends Expr{
 	static Equ acosCosCase = (Equ)createExpr("acos(cos(x))=x");
 	static Equ acosSinCase = (Equ)createExpr("acos(sin(x))=-x+pi/2");
 
+	Acos(){}
 	public Acos(Expr expr) {
 		add(expr);
 	}
@@ -54,43 +55,14 @@ public class Acos extends Expr{
 		}
 		return out;
 	}
-
-	@Override
-	public Expr copy() {
-		Expr out = new Acos(get().copy());
-		out.flags.set(flags);
-		return out;
-	}
-
+	
 	@Override
 	public String toString() {
 		return "acos("+get()+")";
 	}
 
 	@Override
-	public boolean equalStruct(Expr other) {
-		if(other instanceof Acos) {
-			return other.get().equalStruct(get());
-		}
-		return false;
-	}
-
-	@Override
-	public long generateHash() {
-		return get().generateHash()+serialVersionUID;
-	}
-
-	@Override
 	public ComplexFloat convertToFloat(ExprList varDefs) {
 		return ComplexFloat.acos(get().convertToFloat(varDefs));
-	}
-
-	@Override
-	boolean similarStruct(Expr other, boolean checked) {
-		if(other instanceof Acos) {
-			if(!checked) if(checkForMatches(other) == false) return false;
-			if(get().fastSimilarStruct(other.get())) return true;
-		}
-		return false;
 	}
 }

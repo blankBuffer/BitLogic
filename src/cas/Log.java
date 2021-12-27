@@ -10,6 +10,7 @@ public class Log extends Expr{
 	static Equ logETo1 = (Equ)createExpr("ln(e)=1");
 	static Equ powToProd = (Equ)createExpr("ln(a^b)=b*ln(a)");
 	
+	Log(){}//
 	public Log(Expr e){
 		add(e);
 	}
@@ -173,14 +174,7 @@ public class Log extends Expr{
 			
 		}
 	}
-
-	@Override
-	public Expr copy() {
-		Log out = new Log(get().copy());
-		out.flags.set(flags);
-		return out;
-	}
-
+	
 	@Override
 	public String toString() {
 		String out = "";
@@ -188,30 +182,6 @@ public class Log extends Expr{
 		out+=get().toString();
 		out+=")";
 		return out;
-	}
-
-	@Override
-	public boolean equalStruct(Expr other) {
-		if(other instanceof Log) {
-			if(other.get().equalStruct(get())) return true;
-		}
-		return false;
-	}
-
-	@Override
-	boolean similarStruct(Expr other,boolean checked) {
-		
-		if(other instanceof Log) {
-			if(!checked) if(checkForMatches(other) == false) return false;
-			if(get().fastSimilarStruct(other.get())) return true;
-		}
-		return false;
-	}
-
-	@Override
-	public long generateHash() {
-		long childHash = get().generateHash();
-		return childHash+2873468283392719732L;//just a random numbers
 	}
 
 	@Override

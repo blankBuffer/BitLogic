@@ -8,6 +8,7 @@ public class Atan extends Expr{
 	
 	static Equ containsInverse = (Equ)createExpr("atan(tan(x))=x");
 
+	Atan(){}//
 	public Atan(Expr expr) {
 		add(expr);
 	}
@@ -57,13 +58,6 @@ public class Atan extends Expr{
 	}
 
 	@Override
-	public Expr copy() {
-		Atan out = new Atan(get().copy());
-		out.flags.set(flags);
-		return out;
-	}
-
-	@Override
 	public String toString() {
 		String out = "";
 		out+="atan(";
@@ -73,30 +67,8 @@ public class Atan extends Expr{
 	}
 
 	@Override
-	public boolean equalStruct(Expr other) {
-		if(other instanceof Atan) {
-			if(other.get().equalStruct(get())) return true;
-		}
-		return false;
-	}
-
-	@Override
-	public long generateHash() {
-		return get().generateHash()+9163701745123051623L;
-	}
-
-	@Override
 	public ComplexFloat convertToFloat(ExprList varDefs) {
 		return ComplexFloat.atan(get().convertToFloat(varDefs));
-	}
-
-	@Override
-	boolean similarStruct(Expr other, boolean checked) {
-		if(other instanceof Atan) {
-			if(!checked) if(checkForMatches(other) == false) return false;
-			if(get().fastSimilarStruct(other.get())) return true;
-		}
-		return false;
 	}
 
 }

@@ -78,15 +78,15 @@ public class Interpreter extends QuickMath{
 	}
 	
 	public static boolean isOperator(String string) {
-		return string.matches("[+\\-*/^,=!;:\\[\\]\\{\\}\\(\\)]")&&!string.contains(" ");
+		return string.matches("[+\\-*/^,=!;:\\~\\&\\|\\[\\]\\{\\}\\(\\)]")&&!string.contains(" ");
 	}
 	
 	public static boolean isProbablyExpr(String string) {
-		return string.matches("pi|i|e|.*[(0-9)(+\\-*/^,=!;:\\[\\]\\{\\}\\(\\))].*")&&!string.contains(" ");
+		return string.matches("pi|i|e|.*[(0-9)(+\\-*/^,=!;:\\~\\&\\|\\[\\]\\{\\}\\(\\))].*")&&!string.contains(" ");
 	}
 	
 	public static boolean containsOperators(String string) {
-		return string.matches(".*[+\\-*/^,=!;:\\[\\]\\{\\}\\(\\)].*")&&!string.contains(" ");
+		return string.matches(".*[+\\-*/^,=!;:\\~\\&\\|\\[\\]\\{\\}\\(\\)].*")&&!string.contains(" ");
 	}
 	
 	static void printTokens(ArrayList<String> tokens) {//for debugging
@@ -293,7 +293,7 @@ public class Interpreter extends QuickMath{
 					String fromUnit = params.get(1).toString();
 					String toUnit = params.get(2).toString();
 					return approx( Unit.conv(params.get(0), Unit.getUnit(fromUnit), Unit.getUnit(toUnit)) ,new ExprList());
-				}else {
+				}else if(!op.equals("~")){
 					Func f = defs.getFunc(op);
 					if(f == null) {
 						throw new Exception("function: \""+op+"\" is not defined");
@@ -310,7 +310,7 @@ public class Interpreter extends QuickMath{
 				
 			}
 		}
-		boolean isSum = false,isProd = false,isList = false,isFactorial = false,isScript = false;
+		boolean isSum = false,isProd = false,isList = false,isFactorial = false,isScript = false,isAnd = false,isOr = false,isNot = false;
 		int indexOfPowToken = -1,indexOfEquToken = -1;
 		boolean lastWasOperator = false;
 		for(int i = 0;i<tokens.size();i++) {
@@ -340,6 +340,15 @@ public class Interpreter extends QuickMath{
 			}else if(token.equals(";")) {
 				isScript = true;
 				lastWasOperator = true;
+			}else if(token.equals("&")){
+				isAnd = true;
+				lastWasOperator = true;
+			}else if(token.equals("|")){
+				isOr = true;
+				lastWasOperator = true;
+			}else if(token.equals("~")){
+				isNot = true;
+				lastWasOperator = true;
 			}else {
 				lastWasOperator = false;
 			}
@@ -363,6 +372,7 @@ public class Interpreter extends QuickMath{
 			return scr;
 			
 		}else if(isList) {
+			tokens.add(",");
 			ExprList list = new ExprList();
 			int indexOfLastComma = 0;
 			
@@ -377,13 +387,48 @@ public class Interpreter extends QuickMath{
 				}
 			}
 			
-			ArrayList<String> tokenSet = new ArrayList<String>();
-			for(int j = indexOfLastComma;j<tokens.size();j++)  tokenSet.add(tokens.get(j));
-			list.add(createExprFromTokens(tokenSet,defs,settings));
-			
 			return list;
 			
-		}else if(indexOfEquToken != -1) {
+		}else if(isOr){
+			tokens.add("|");
+			Or or = new Or();
+			int indexOfLastOr = 0;
+			
+			for(int i = 0;i<tokens.size();i++) {
+				String token = tokens.get(i);
+				if(token.equals("|")) {
+					
+					ArrayList<String> tokenSet = new ArrayList<String>();
+					for(int j = indexOfLastOr;j<i;j++)  tokenSet.add(tokens.get(j));
+					or.add(createExprFromTokens(tokenSet,defs,settings));
+					indexOfLastOr = i+1;
+				}
+			}
+			
+			return or;
+			
+		}else if(isAnd){
+			tokens.add("&");
+			And and = new And();
+			int indexOfLastAnd = 0;
+			
+			for(int i = 0;i<tokens.size();i++) {
+				String token = tokens.get(i);
+				if(token.equals("&")) {
+					
+					ArrayList<String> tokenSet = new ArrayList<String>();
+					for(int j = indexOfLastAnd;j<i;j++)  tokenSet.add(tokens.get(j));
+					and.add(createExprFromTokens(tokenSet,defs,settings));
+					indexOfLastAnd = i+1;
+				}
+			}
+			
+			return and;
+			
+		}else if(isNot){
+			tokens.remove(0);
+			return not(createExprFromTokens(tokens,defs,settings));
+		} else if(indexOfEquToken != -1) {//is equation
 			ArrayList<String> leftSideTokens = new ArrayList<String>();
 			for(int i = 0;i<indexOfEquToken;i++) {
 				leftSideTokens.add(tokens.get(i));
@@ -451,6 +496,7 @@ public class Interpreter extends QuickMath{
 			if(sum.size() == 1) return sum.get();
 			return sum;
 		}else if(isProd) {
+			tokens.add("*");
 			Expr numerProd = new Prod();
 			Expr denomProd = new Prod();
 			int indexOfLastProd = 0;
@@ -471,15 +517,7 @@ public class Interpreter extends QuickMath{
 				}
 			}
 			
-			ArrayList<String> tokenSet = new ArrayList<String>();
-			for(int j = indexOfLastProd;j<tokens.size();j++) {
-				tokenSet.add(tokens.get(j));
-			}
-			if(nextDiv) denomProd.add(createExprFromTokens(tokenSet,defs,settings));
-			else {
-				Expr test = createExprFromTokens(tokenSet,defs,settings);
-				numerProd.add(test);
-			}
+			
 			if(numerProd.size() == 1) numerProd = numerProd.get();
 			if(denomProd.size() == 1) denomProd = denomProd.get();
 			
@@ -511,7 +549,7 @@ public class Interpreter extends QuickMath{
 	
 	
 	static char[] basicOperators = new char[] {
-		'*','+','-','^','/',',','=','!',':',';'
+		'*','+','-','^','/',',','=','!',':',';','&','|','~'
 	};
 	private static boolean isBasicOperator(char c) {
 		for(char o:basicOperators) {

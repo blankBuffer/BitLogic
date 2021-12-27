@@ -6,6 +6,7 @@ public class Gamma extends Expr{
 	
 	private static final long serialVersionUID = 8145392107245407249L;
 
+	Gamma(){}//
 	public Gamma(Expr e) {
 		add(e);
 	}
@@ -63,28 +64,8 @@ public class Gamma extends Expr{
 	}
 
 	@Override
-	public Expr copy() {
-		Expr out = new Gamma(get().copy());
-		out.flags.set(flags);
-		return out;
-	}
-
-	@Override
 	public String toString() {
 		return "gamma("+get()+")";
-	}
-
-	@Override
-	public boolean equalStruct(Expr other) {
-		if(other instanceof Gamma) {
-			return other.get().equalStruct(get());
-		}
-		return false;
-	}
-
-	@Override
-	public long generateHash() {
-		return get().generateHash()+serialVersionUID;
 	}
 
 	@Override
@@ -92,15 +73,6 @@ public class Gamma extends Expr{
 		ComplexFloat inner = ComplexFloat.sub(get().convertToFloat(varDefs),new ComplexFloat(1.0,0));
 		
 		return new ComplexFloat(factorial(inner.real),0);
-	}
-
-	@Override
-	boolean similarStruct(Expr other, boolean checked) {
-		if(other instanceof Gamma) {
-			if(!checked) if(checkForMatches(other) == false) return false;
-			if(get().fastSimilarStruct(other.get())) return true;
-		}
-		return false;
 	}
 
 }

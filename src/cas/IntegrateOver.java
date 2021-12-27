@@ -17,6 +17,7 @@ public class IntegrateOver extends Expr {
 		return (Var)get(3);
 	}
 	
+	IntegrateOver(){}//
 	public IntegrateOver(Expr min,Expr max,Expr e,Var v){
 		add(min);
 		add(max);
@@ -38,14 +39,7 @@ public class IntegrateOver extends Expr {
 		toBeSimplified.flags.simple = true;
 		return toBeSimplified;
 	}
-
-	@Override
-	public Expr copy() {
-		IntegrateOver out = new IntegrateOver(getMin().copy(),getMax().copy(),getExpr().copy(),(Var)getVar().copy());
-		out.flags.set(flags);
-		return out;
-	}
-
+	
 	@Override
 	public String toString() {
 		String out = "";
@@ -59,22 +53,6 @@ public class IntegrateOver extends Expr {
 		out+=getVar().toString();
 		out+=')';
 		return out;
-	}
-
-	@Override
-	public boolean equalStruct(Expr other) {
-		if(other instanceof IntegrateOver) {
-			for(int i = 0;i<size();i++) {
-				if(!get(i).equalStruct(other.get(i))) return false;
-			}
-			return true;
-		}
-		return false;
-	}
-
-	@Override
-	public long generateHash() {
-		return getMin().generateHash()*2837+getMax().generateHash()*57123+getExpr().generateHash()*27651+getVar().generateHash()*2763;
 	}
 
 	@Override
@@ -109,19 +87,6 @@ public class IntegrateOver extends Expr {
 		
 		return ComplexFloat.mult(sum,ComplexFloat.mult(step, new ComplexFloat(1.0/3.0,0)));
 		
-	}
-
-	@Override
-	boolean similarStruct(Expr other, boolean checked) {
-		if(!checked) if(checkForMatches(other) == false) return false;
-		
-		if(other instanceof IntegrateOver) {
-			for(int i = 0;i<size();i++) {
-				if(!get(i).fastSimilarStruct(other.get(i))) return false;
-			}
-			return true;
-		}
-		return false;
 	}
 
 }

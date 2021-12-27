@@ -11,6 +11,7 @@ public class Factor extends Expr{
 	static Equ sumOfCubes = (Equ) createExpr("a^3+b^3=(a+b)*(a^2-a*b+b^2)");
 	static Equ differenceOfCubes = (Equ) createExpr("a^3-b^3=(a-b)*(a^2+a*b+b^2)");
 
+	Factor(){}//
 	public Factor(Expr expr) {
 		add(expr);
 	}
@@ -335,13 +336,6 @@ public class Factor extends Expr{
 		
 		return expr;
 	}
-	
-	@Override
-	public Expr copy() {
-		Factor out = new Factor(get().copy());
-		out.flags.set(flags);
-		return out;
-	}
 
 	@Override
 	public String toString() {
@@ -351,30 +345,10 @@ public class Factor extends Expr{
 		out+=")";
 		return out;
 	}
-
-	@Override
-	public boolean equalStruct(Expr other) {
-		if(other instanceof Factor) return get().equalStruct(other.get());
-		return false;
-	}
-
-	@Override
-	public long generateHash() {
-		return get().generateHash()+serialVersionUID;
-	}
-
+	
 	@Override
 	public ComplexFloat convertToFloat(ExprList varDefs) {
 		return get().convertToFloat(varDefs);
-	}
-
-	@Override
-	boolean similarStruct(Expr other, boolean checked) {
-		if(other instanceof Factor) {
-			if(!checked) if(checkForMatches(other) == false) return false;
-			if(get().fastSimilarStruct(other.get())) return true;
-		}
-		return false;
 	}
 
 }

@@ -15,7 +15,7 @@ import graphics.Plot;
 
 public class Ask extends QuickMath{
 	
-	static final boolean DEBUG = true;
+	static final boolean DEBUG = false;
 	static DateTimeFormatter timeFormat = DateTimeFormatter.ofPattern("hh:mm:ss a MM/dd/yyyy");
 	
 	static ArrayList<Question> questions = new ArrayList<Question>();

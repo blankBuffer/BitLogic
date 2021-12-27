@@ -55,7 +55,7 @@ public class Plot extends QuickMath{
 		return (int)((internal-plotWindowParams.xMin)/(plotWindowParams.xMax-plotWindowParams.xMin)*windowSize.getWidth());
 	}
 	
-	static Color randomColor(long seed) {
+	static Color randomColor(int seed) {
 		Random random = new Random(seed);
 		int strongest = (int)(random.nextDouble()*3);//makes it more colorful hopefully
 		int[] component = new int[3];
@@ -74,7 +74,7 @@ public class Plot extends QuickMath{
 			ExprList varDefs = new ExprList();
 			varDefs.add(varDef);
 			
-			g.setColor(randomColor(expr.generateHash()));
+			g.setColor(randomColor(expr.hashCode()));
 			for(int i = 0;i<windowSize.getWidth();i+=2) {
 				double x = convertToInternalPositionX(i,plotWindowParams,windowSize);
 				((FloatExpr)varDef.getRightSide()).value.set(new ComplexFloat(x,0));
@@ -87,7 +87,7 @@ public class Plot extends QuickMath{
 			Equ varDef = equ(var("y"),floatExpr(0));
 			ExprList varDefs = new ExprList();
 			varDefs.add(varDef);
-			g.setColor(randomColor(expr.generateHash()));
+			g.setColor(randomColor(expr.hashCode()));
 			for(int i = 0;i<windowSize.getHeight();i+=2) {
 				double y = convertToInternalPositionY(i,plotWindowParams,windowSize);
 				((FloatExpr)varDef.getRightSide()).value.set(new ComplexFloat(y,0));
@@ -104,7 +104,7 @@ public class Plot extends QuickMath{
 		varDefs.add(xDef);
 		varDefs.add(yDef);
 		
-		g.setColor(randomColor(equ.generateHash()));
+		g.setColor(randomColor(equ.hashCode()));
 		
 		for(int i = 0;i<windowSize.getWidth();i+=detail) {
 			for(int j = 0;j<windowSize.getHeight();j+=detail) {

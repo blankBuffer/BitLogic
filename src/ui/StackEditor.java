@@ -130,6 +130,36 @@ public class StackEditor extends cas.QuickMath {
 			stack.set(size() - 1, prod);
 		}
 	}
+	
+	void and(){
+		if (sLast() == null)
+			return;
+		if (sLast() instanceof And) {
+			sLast().add(last());
+			stack.remove(size() - 1);
+		} else {
+			Expr and = and(sLast(), last());
+			stack.remove(size() - 1);
+			stack.set(size() - 1, and);
+		}
+	}
+	void or(){
+		if (sLast() == null)
+			return;
+		if (sLast() instanceof Or) {
+			sLast().add(last());
+			stack.remove(size() - 1);
+		} else {
+			Expr or = or(sLast(), last());
+			stack.remove(size() - 1);
+			stack.set(size() - 1, or);
+		}
+	}
+	void not(){
+		if (last() == null)
+			return;
+		stack.set(size() - 1, not(last()));
+	}
 
 	void exponent() {
 		if (sLast() == null)
@@ -389,6 +419,12 @@ public class StackEditor extends cas.QuickMath {
 				add();
 			} else if (command.equals("--")) {
 				negate();
+			} else if (command.equals("and") || command.equals("&")) {
+				and();
+			} else if (command.equals("or") || command.equals("|")) {
+				or();
+			} else if (command.equals("not") || command.equals("~")) {
+				not();
 			} else if (command.equals("-")) {
 				subtract();
 			} else if (command.equals("*")) {
@@ -494,10 +530,14 @@ public class StackEditor extends cas.QuickMath {
 				Var v = var("x");
 				partialFrac(last(), v, currentSettings);
 			} else if (command.equals("hash")) {
-				System.out.println(last().generateHash());
-			} else if (command.equals("equal-struct")) {
+				stack.addElement(num(last().hashCode()));
+			}else if (command.equals("id")) {
+				stack.addElement(num( last().ID ));
+			} else if (command.equals("equalStruct")) {
 				stack.addElement(new BoolState(last().equalStruct(sLast())));
-			} else if (command.equals("define")) {
+			} else if(command.equals("equal")){
+				stack.addElement(new BoolState(last().equals(sLast())));
+			}else if (command.equals("define")) {
 				currentDefs.addVar(((Var) sLast()).name, last());
 				stack.removeRange(size() - 2, size() - 1);
 			} else if (command.equals("defineFunc")) {

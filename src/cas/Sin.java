@@ -10,6 +10,7 @@ public class Sin extends Expr{
 	static Equ sinOfAsin = (Equ)createExpr("sin(asin(x))=x");
 	static Equ sinOfAcos = (Equ)createExpr("sin(acos(x))=sqrt(1-x^2)");
 
+	Sin(){}//
 	public Sin(Expr a) {
 		add(a);
 	}
@@ -32,8 +33,6 @@ public class Sin extends Expr{
 			}
 		}
 		if(toBeSimplified instanceof Sin) toBeSimplified.set(0,distr(toBeSimplified.get()).simplify(settings));
-		
-		System.out.println("2:"+toBeSimplified+" "+this);
 		
 		if(toBeSimplified instanceof Sin) toBeSimplified = unitCircle((Sin)toBeSimplified);
 		
@@ -120,41 +119,12 @@ public class Sin extends Expr{
 	}
 
 	@Override
-	public Expr copy() {
-		Sin out = new Sin(get().copy());
-		out.flags.set(flags);
-		return out;
-	}
-
-	@Override
 	public String toString() {
 		String out = "";
 		out+="sin(";
 		out+=get().toString();
 		out+=")";
 		return out;
-	}
-
-	@Override
-	public boolean equalStruct(Expr other) {
-		if(other instanceof Sin) {
-			if(other.get().equalStruct(get())) return true;
-		}
-		return false;
-	}
-
-	@Override
-	public long generateHash() {
-		return get().generateHash()+9127304624184602649L;
-	}
-
-	@Override
-	boolean similarStruct(Expr other, boolean checked) {
-		if(other instanceof Sin) {
-			if(!checked) if(checkForMatches(other) == false) return false;
-			if(get().fastSimilarStruct(other.get())) return true;
-		}
-		return false;
 	}
 
 	@Override

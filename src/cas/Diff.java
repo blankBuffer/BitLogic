@@ -13,6 +13,7 @@ public class Diff extends Expr{
 	static Equ atanCase = (Equ)createExpr("diff(atan(a),x)=diff(a,x)/(a^2+1)");
 	static Equ divCase = (Equ)createExpr("diff(a/b,x)=(diff(a,x)*b-a*diff(b,x))/(b^2)");
 	
+	Diff(){}//
 	public Diff(Expr e,Var v){
 		add(e);
 		add(v);
@@ -67,13 +68,6 @@ public class Diff extends Expr{
 	}
 
 	@Override
-	public Expr copy() {
-		Diff out = new Diff(get().copy(),(Var)getVar().copy());
-		out.flags.set(flags);
-		return out;
-	}
-
-	@Override
 	public String toString() {
 		String out = "";
 		out+="diff(";
@@ -82,28 +76,6 @@ public class Diff extends Expr{
 		out+=getVar().toString();
 		out+=")";
 		return out;
-	}
-
-	@Override
-	public boolean equalStruct(Expr other) {
-		if(other instanceof Diff) return get().equalStruct(other.get()) && getVar().equalStruct( ((Diff)other).getVar() );
-		return false;
-	}
-
-	@Override
-	boolean similarStruct(Expr other,boolean checked) {
-		
-		if(!checked) if(checkForMatches(other) == false) return false;
-		
-		if(other instanceof Diff) {
-			return get().fastSimilarStruct(other.get()) && getVar().fastSimilarStruct( ((Diff)other).getVar());
-		}
-		return false;
-	}
-
-	@Override
-	public long generateHash() {
-		return (get().generateHash()+71938*getVar().generateHash())-2971540562596037251L;
 	}
 
 	@Override

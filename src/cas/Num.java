@@ -157,8 +157,8 @@ public class Num extends Expr{
 		return false;
 	}
 	@Override
-	public long generateHash() {
-		return realValue.longValue()+2762923428917024652L;
+	public int hashCode() {
+		return realValue.intValue()+230487349;
 	}
 	@Override
 	public ComplexFloat convertToFloat(ExprList varDefs) {

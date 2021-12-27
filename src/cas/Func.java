@@ -13,6 +13,8 @@ public class Func extends Expr{
 		return get(1);
 	}
 	
+	Func(){}//
+	
 	public Func(String name,ExprList vars,Expr expr) {
 		this.name = name;
 		add(vars);
@@ -30,13 +32,6 @@ public class Func extends Expr{
 	@Override
 	public Expr simplify(Settings settings) {
 		return getExpr().replace(getVars()).simplify(settings);
-	}
-
-	@Override
-	public Expr copy() {
-	Func out = new Func(name,(ExprList)getVars().copy(),getExpr().copy());
-		out.flags.set(flags);
-		return out;
 	}
 	
 	public static int printMode = 0;
@@ -57,37 +52,17 @@ public class Func extends Expr{
 		}else out+=")";
 		return out;
 	}
-
+	
 	@Override
-	public boolean equalStruct(Expr other) {
-		if(other instanceof Func) {
-			Func otherCasted = (Func)other;
-			return otherCasted.getVars().equalStruct(getVars()) && otherCasted.getExpr().equalStruct(getExpr());
-		}
-		return false;
-	}
-
-	@Override
-	public long generateHash() {
-		return getVars().generateHash()*18643+getExpr().generateHash()*1982+923468723L;
+	public Expr copy() {
+		Func out = new Func(name,(ExprList)getVars().copy(),getExpr().copy());
+		out.flags.set(flags);
+		return out;
 	}
 
 	@Override
 	public ComplexFloat convertToFloat(ExprList varDefs) {
 		return getExpr().replace(getVars()).convertToFloat(varDefs);
-	}
-
-	@Override
-	boolean similarStruct(Expr other, boolean checked) {
-		if(!checked) if(checkForMatches(other) == false) return false;
-		
-		if(other instanceof Func) {
-			for(int i = 0;i<size();i++) {
-				if(!get(i).fastSimilarStruct(other.get(i))) return false;
-			}
-			return true;
-		}
-		return false;
 	}
 	
 }
