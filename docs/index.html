@@ -120,9 +120,27 @@
 		<h3>Functions</h3>
 		
 		<ul>
-			<li>sin</li>
-			<li>cos</li>
-			<li>tan</li>
+			<li>sin(angle) -- takes the sine</li>
+			<li>cos(angle) -- takes the cosine</li>
+			<li>tan(angle) -- takes the tangent</li>
+			<li>asin(ratio) -- takes the inverse sine</li>
+			<li>acos(ratio) -- takes the inverse cosine</li>
+			<li>atan(slope) -- takes the inverse tangent</li>
+			<li>ln(expr) -- takes the natural log</li>
+			<li>sqrt(expr) -- takes the square root</li>
+			<li>cbrt(expr) -- takes the cube root</li>
+			<li>inv(expr) -- takes the reciprical</li>
+			<li>diff(expr,variable) -- takes the derivative with respect to a variable</li>
+			<li>integrate(expr,variable) -- takes the integral with respect to a variable (indefinite without +C)</li>
+			<li>integrateOver(min,max,expr,variable) -- takes the integral over some domain (definite)</li>
+			<li>factor(expr) -- factors the expression</li>
+			<li>distr(expr) -- distributes the expression</li>
+			<h3>extra simple functions</h3>
+			<p>These functions work slightly differently internally but they appear like the other functions at the surface. You wont find java classes for these following functions.</p>
+			<li>choose(n,k) -- given n elements choose k elements and returns number of configurations</li>
+			<li>expand(expr) -- like distr except also expands powers entirly</li>
+			<li>get(expr,index) -- gets a sub expression</li>
+			<li>size(expr) -- gets the number of sub expressions</li>
 		</ul>
 		
 		<p></p>

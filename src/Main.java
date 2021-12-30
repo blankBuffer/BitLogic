@@ -16,9 +16,11 @@ public class Main extends QuickMath{
 				+ "▙▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▟\n";
 		System.out.println(img);
 	}
-	
+	static void mod(Integer a){
+		a++;
+	}
 	static void testRegion() {
-		//System.out.println(Interpreter.isProbablyExpr("q+3"));
+		//
 	}
 	
 	public static void main(String[] args) {

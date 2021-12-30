@@ -33,7 +33,8 @@ public class Defs extends QuickMath implements Serializable{
 		varDef.setRightSide(def);
 	}
 	
-	public void addFunc(String name,Func f) {
+	public void addFunc(Func f) {
+		String name = f.name;
 		removeFunc(name);
 		functions.put(name, f);
 		functionsArrayList.addElement(f);

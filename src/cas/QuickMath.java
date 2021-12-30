@@ -748,30 +748,38 @@ public class QuickMath {
 	
 	public static BigInteger factorial(BigInteger x) {
 		BigInteger prod = BigInteger.ONE;
-		
 		if(x.compareTo(BigInteger.ONE) == 1) {
 			for(BigInteger i = x;i.compareTo(BigInteger.ONE) == 1;i = i.subtract(BigInteger.ONE)) {
 				prod = prod.multiply(i);
 			}
 		}
-		
 		return prod;
 	}
 	
 	public static BigInteger choose(BigInteger n,BigInteger k) {
 		BigInteger outNumer = BigInteger.ONE;
-		BigInteger outDenom = BigInteger.ONE;
-		
-		for(BigInteger i = BigInteger.ZERO; i.compareTo(k) == -1;i = i.add(BigInteger.ONE)) {
-			outNumer = outNumer.multiply( n.subtract(i) );
-			outDenom = outDenom.multiply(i.add(BigInteger.ONE));
-			
-			BigInteger gcd = outNumer.gcd(outDenom);
-			outNumer = outNumer.divide(gcd);
-			outDenom = outDenom.divide(gcd);
-			
+		BigInteger outDenom = factorial(k);
+		for (BigInteger i = n;i.compareTo(n.subtract(k))==1;i = i.subtract(BigInteger.ONE)){
+			outNumer = outNumer.multiply(i);
 		}
 		return outNumer.divide(outDenom);
+	}
+	
+	public static ArrayList<BigInteger[]> possiblePartitions(BigInteger size,BigInteger groups,BigInteger[] l_current,int currentIndex, ArrayList<BigInteger[]> out){
+		if(out == null) out = new ArrayList<BigInteger[]>();
+		if(l_current == null) l_current = new BigInteger[groups.intValue()];
+		if(groups.equals(BigInteger.ONE)){
+			BigInteger[] l_new = l_current.clone();
+			l_new[currentIndex] = size;
+			out.add(l_new);
+			return out;
+		}
+		for (BigInteger i = BigInteger.ZERO;i.compareTo(size) != 1;i = i.add(BigInteger.ONE)){
+			BigInteger[] l_new = l_current.clone();
+			l_new[currentIndex] = i;
+			possiblePartitions(size.subtract(i),groups.subtract(BigInteger.ONE),l_new,currentIndex+1,out);
+		}
+		return out;
 	}
 	
 	static Equ isSin2x = (Equ)createExpr("sin(x)*cos(x)=sin(2*x)/2");
@@ -824,15 +832,26 @@ public class QuickMath {
 		return e;
 	}
 	
-	public static Expr binomial(Expr left,Expr right,BigInteger expo,Settings settings) {//returns the binomial expansion
-		Sum out = new Sum();
-		BigInteger expoPlusOne = expo.add(BigInteger.ONE);
-		for(BigInteger i = BigInteger.ZERO;i.compareTo(expoPlusOne)==-1 ;i = i.add(BigInteger.ONE)) {
-			Num coef = num(choose(expo,i));
-			out.add( prod(coef,pow(left,num(i)),pow(right,num( expo.subtract(i) ))  ).simplify(settings) );
+	public static Expr multinomial(Expr baseSum,Num expo,Settings settings) {//returns the binomial expansion
+		Sum terms = new Sum();
+		ArrayList<BigInteger[]> exponentSets = possiblePartitions(expo.realValue,BigInteger.valueOf(baseSum.size()),null,0,null);
+		
+		for(BigInteger[] set : exponentSets){
+			Prod term = new Prod();
+			BigInteger coef = BigInteger.ONE;
+			BigInteger rem = expo.realValue;
+			
+			for(int i = 0;i<baseSum.size();i++){
+				coef = coef.multiply(choose(rem,set[i]));
+				rem = rem.subtract(set[i]);
+				term.add(pow(baseSum.get(i),num(set[i])));
+			}
+			
+			term.add(num(coef));
+			terms.add(term.simplify(settings));
 		}
-				
-		return Sum.unCast(out);
+		
+		return terms;
 	}
 	
 	public static long[] toFraction(double num) {//from https://begriffs.com/pdf/dec2frac.pdf

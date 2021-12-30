@@ -97,18 +97,7 @@ public class Interpreter extends QuickMath{
 		System.out.println();
 	}
 	
-	static void removeEmptyTokens(ArrayList<String> tokens) {
-		for(int i = 0;i<tokens.size();i++) {
-			if(tokens.get(i).isBlank()) {
-				tokens.remove(i);
-				i--;
-			}
-		}
-	}
-	
 	static Expr createExprFromTokens(ArrayList<String> tokens,Defs defs,Settings settings) throws Exception{
-		
-		removeEmptyTokens(tokens);
 		
 		errors(tokens);
 		
@@ -287,24 +276,25 @@ public class Interpreter extends QuickMath{
 					}
 					Func f = func(name ,functionParams ,params.get(2).simplify(Settings.normal ));
 					f.example = true;
-					defs.addFunc( name , f);
+					defs.addFunc(f);
 					return SUCCESS;
 				}else if(op.equals("conv")){
 					String fromUnit = params.get(1).toString();
 					String toUnit = params.get(2).toString();
 					return approx( Unit.conv(params.get(0), Unit.getUnit(fromUnit), Unit.getUnit(toUnit)) ,new ExprList());
 				}else if(!op.equals("~")){
-					Func f = defs.getFunc(op);
+					Func f = null;
+					if(f == null) f = SimpleFuncs.funcs.get(op);
+					if(f == null) f = defs.getFunc(op);
+					
 					if(f == null) {
 						throw new Exception("function: \""+op+"\" is not defined");
 					}
 					ExprList vars = f.getVars();
-					
 					for(int i = 0;i<vars.size();i++) {
 						Equ equ = (Equ)vars.get(i);
 						equ.setRightSide(params.get(i));
 					}
-					
 					return f;
 				}
 				

@@ -133,19 +133,19 @@ public class Factor extends Expr{
 			Var v = varcounts.get(0).v;
 			ExprList coefs = polyExtract(expr,v,settings);
 			if(coefs == null) return expr;
-			BigInteger degree = BigInteger.valueOf(coefs.size()-1);
-			if(degree.compareTo(BigInteger.TWO) == -1) return expr;
+			Num degree = num(coefs.size()-1);
+			if(degree.realValue.compareTo(BigInteger.TWO) == -1) return expr;
 			
 			Expr highestDegreeCoef = coefs.get(coefs.size()-1);
 			Expr lowestDegreeCoef = coefs.get(0);
 			
-			Expr m = pow(highestDegreeCoef ,inv(num(degree))).simplify(settings);
-			Expr b = pow(lowestDegreeCoef ,inv(num(degree))).simplify(settings);
+			Expr m = pow(highestDegreeCoef ,inv(degree)).simplify(settings);
+			Expr b = pow(lowestDegreeCoef ,inv(degree)).simplify(settings);
 			
-			if(binomial(prod(m,v),b,degree,settings).equalStruct(expr) ) {
-				return pow(sum(prod(m,v),b).simplify(settings),num(degree));
-			}else if(binomial(prod(m,v),neg(b),degree,settings).equalStruct(expr)) {//try the negative variant
-				return pow(sub(prod(m,v),b).simplify(settings),num(degree));
+			if(multinomial(sum(prod(m,v),b),degree,settings).equalStruct(expr) ) {
+				return pow(sum(prod(m,v),b).simplify(settings),degree);
+			}else if(multinomial(sum(prod(m,v),neg(b)),degree,settings).equalStruct(expr)) {//try the negative variant
+				return pow(sub(prod(m,v),b).simplify(settings),degree);
 			}
 			
 		}
