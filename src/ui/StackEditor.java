@@ -482,7 +482,7 @@ public class StackEditor extends cas.QuickMath {
 				last().sort();
 				stack.set(size() - 1, last());// update visuals
 			}else if (command.equals("tree")) {
-				last().printTree(0);
+				stack.addElement(var(last().printTree(0)));
 			} else if (command.equals("inner")) {
 				stack.addElement(last().getNextInnerFunction(var("x")));
 			}else if (command.equals("complexity")) {

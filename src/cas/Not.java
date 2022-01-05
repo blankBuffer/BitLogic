@@ -8,25 +8,75 @@ public class Not extends Expr{
 	public Not(Expr e){
 		add(e);
 	}
+	
+	static Rule isTrue = new Rule("~true=false","true case",Rule.VERY_EASY);
+	static Rule isFalse = new Rule("~false=true","false case",Rule.VERY_EASY);
+	static Rule containsNot = new Rule("~~x=x","contains not",Rule.VERY_EASY);
+	static Rule demorgan = new Rule("demorgan",Rule.EASY){
+		@Override
+		public void init(){
+			example = "~(a|b)=~a&~b";
+		}
+		@Override
+		public Expr applyRuleToExpr(Expr e,Settings settings){
+			Not not = null;
+			if(e instanceof Not){
+				not = (Not)e;
+			}else{
+				return e;
+			}
+			Expr result = (not.get() instanceof Or ? new And() :(not.get() instanceof And ? new Or() :null));
+			if(result != null){
+				
+				for(int i = 0;i<not.get().size();i++){
+					result.add(not(not.get().get(i)));
+				}
+				result = result.simplify(settings);
+				verboseMessage(e,result);
+				return result;
+			}
+			return not;
+		}
+	};
+	
+	static Rule[] ruleSequence = {
+			isTrue,
+			isFalse,
+			containsNot,
+			demorgan,
+	};
 
 	@Override
 	public Expr simplify(Settings settings) {
-		// TODO Auto-generated method stub
-		return null;
+		Expr toBeSimplified = copy();
+		if(flags.simple) return toBeSimplified;
+		
+		toBeSimplified.simplifyChildren(settings);//simplify sub expressions
+		
+		for (Rule r:ruleSequence){
+			toBeSimplified = r.applyRuleToExpr(toBeSimplified, settings);
+		}
+		
+		toBeSimplified.flags.simple = true;//result is simplified and should not be simplified again
+		return toBeSimplified;
 	}
 	
 	@Override
 	public String toString() {
 		String out = "";
 		out+="~";
+		boolean paren = get() instanceof Or || get() instanceof And;
+		if(paren) out+="(";
 		out+=get();
+		if(paren) out+=")";
 		return out;
 	}
 	
 	@Override
 	public ComplexFloat convertToFloat(ExprList varDefs) {
-		// TODO Auto-generated method stub
-		return null;
+		boolean state = Math.abs(get().convertToFloat(varDefs).real) < 0.5;
+		double res = state ? 1.0 : 0.0;
+		return new ComplexFloat(res,0);
 	}
 
 }

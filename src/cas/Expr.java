@@ -670,23 +670,26 @@ public abstract class Expr extends QuickMath implements Comparable<Expr>, Serial
 	 * shows the entire expression structure without resorting or fancy printing
 	 * used for debugging
 	 */
-	public void printTree(int tab) {
+	public String printTree(int tab) {
+		String out = "";
 		
 		if(tab == 0){
-			System.out.println("EXPR-TREE-START-----------: "+this+" flags: "+flags);
+			out+=("EXPR-TREE-START-----------: "+this+" flags: "+flags)+"\n";
 		}
 		String tabStr = "";
 		if(tab>0) tabStr+="|";
 		for(int i = 0;i<tab-1;i++) tabStr+="   |";
 		if(tab>0) tabStr+="--->";
 		else tabStr+=">";
-		System.out.print(tabStr+this.getClass().getSimpleName() +" hash: "+hashCode()+" id: "+ID);
-		if(this instanceof Num || this instanceof Var) System.out.print(" name: "+this);
-		System.out.println();
+		out+=(tabStr+this.getClass() +" hash: "+hashCode()+" id: "+ID);
+		if(this instanceof Num || this instanceof Var) out+=(" name: "+this);
+		out+="\n";
 		for(int i = 0;i<size();i++) {
-			get(i).printTree(tab+1);
+			out+=get(i).printTree(tab+1);
 		}
-		if(tab == 0) System.out.println("EXPR-TREE-END-------------");
+		if(tab == 0) out+=("EXPR-TREE-END-------------")+"\n";
+		
+		return out;
 	}
 	@Override
 	public int compareTo(Expr other) {

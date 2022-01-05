@@ -3,6 +3,7 @@ package cas;
 public class BoolState extends Expr{
 
 	private static final long serialVersionUID = 4155968576732862760L;
+	public static final Expr FALSE = bool(false),TRUE = bool(true);
 	boolean state = false;
 	
 	public BoolState(boolean state){

@@ -45,7 +45,7 @@ public class Power extends Expr{
 		}
 		
 		@Override
-		Expr applyRuleToExpression(Expr e,Settings settings){
+		Expr applyRuleToExpr(Expr e,Settings settings){
 			Power power = null;
 			if(e instanceof Power){
 				power = (Power)e;
@@ -75,7 +75,7 @@ public class Power extends Expr{
 		}
 		
 		@Override
-		Expr applyRuleToExpression(Expr e,Settings settings){
+		Expr applyRuleToExpr(Expr e,Settings settings){
 			Power pow = null;
 			if(e instanceof Power){
 				pow = (Power)e;
@@ -100,7 +100,7 @@ public class Power extends Expr{
 			example = "a^(2*b+2*c)=a^(2*(b+c))";
 		}
 		@Override
-		Expr applyRuleToExpression(Expr e,Settings settings){
+		Expr applyRuleToExpr(Expr e,Settings settings){
 			Power power = null;
 			if(e instanceof Power){
 				power = (Power)e;
@@ -125,7 +125,7 @@ public class Power extends Expr{
 			example = "(a+a*b)^x=((1+b)*a)^x";
 		}
 		@Override
-		Expr applyRuleToExpression(Expr e,Settings settings){
+		Expr applyRuleToExpr(Expr e,Settings settings){
 			Power power = null;
 			if(e instanceof Power){
 				power = (Power)e;
@@ -154,7 +154,7 @@ public class Power extends Expr{
 		}
 		
 		@Override
-		Expr applyRuleToExpression(Expr e,Settings settings){
+		Expr applyRuleToExpr(Expr e,Settings settings){
 			Power pow = null;
 			if(e instanceof Power){
 				pow = (Power)e;
@@ -215,7 +215,7 @@ public class Power extends Expr{
 		}
 		
 		@Override
-		Expr applyRuleToExpression(Expr e,Settings settings){
+		Expr applyRuleToExpr(Expr e,Settings settings){
 			Power pow = null;
 			if(e instanceof Power){
 				pow = (Power)e;
@@ -254,7 +254,7 @@ public class Power extends Expr{
 		}
 		
 		@Override
-		Expr applyRuleToExpression(Expr e,Settings settings){
+		Expr applyRuleToExpr(Expr e,Settings settings){
 			Power pow = null;
 			if(e instanceof Power){
 				pow = (Power)e;
@@ -312,7 +312,7 @@ public class Power extends Expr{
 		String negativeBase = "(-16)^(x/3)=(-1)^x*2^((4*x)/3)";
 		
 		@Override
-		Expr applyRuleToExpression(Expr e,Settings settings){
+		Expr applyRuleToExpr(Expr e,Settings settings){
 			Power pow = null;
 			if(e instanceof Power){
 				pow = (Power)e;
@@ -402,7 +402,7 @@ public class Power extends Expr{
 		}
 		
 		@Override
-		Expr applyRuleToExpression(Expr e,Settings settings){
+		Expr applyRuleToExpr(Expr e,Settings settings){
 			Power power = null;
 			if(e instanceof Power){
 				power = (Power)e;
@@ -437,7 +437,7 @@ public class Power extends Expr{
 		}
 		
 		@Override
-		Expr applyRuleToExpression(Expr e,Settings settings){
+		Expr applyRuleToExpr(Expr e,Settings settings){
 			Power pow = null;
 			if(e instanceof Power){
 				pow = (Power)e;
@@ -474,7 +474,7 @@ public class Power extends Expr{
 		
 	};
 	
-	Rule[] ruleSequence = {
+	static Rule[] ruleSequence = {
 			factorExponent,
 			baseHasPower,
 			negativeExpoToInv,
@@ -497,7 +497,7 @@ public class Power extends Expr{
 			eToLn,
 			eToFracLn,
 			baseToLn,
-			};
+	};
 
 	@Override
 	public Expr simplify(Settings settings) {
@@ -507,7 +507,7 @@ public class Power extends Expr{
 		toBeSimplified.simplifyChildren(settings);//simplify sub expressions
 		
 		for (Rule r:ruleSequence){
-			toBeSimplified = r.applyRuleToExpression(toBeSimplified, settings);
+			toBeSimplified = r.applyRuleToExpr(toBeSimplified, settings);
 		}
 		
 		toBeSimplified.flags.simple = true;
@@ -556,7 +556,7 @@ public class Power extends Expr{
 	}
 	
 	public static Expr unCast(Expr e) {
-		return powerOfOne.applyRuleToExpression(e, Settings.normal);
+		return powerOfOne.applyRuleToExpr(e, Settings.normal);
 	}
 	@Override
 	public ComplexFloat convertToFloat(ExprList varDefs) {

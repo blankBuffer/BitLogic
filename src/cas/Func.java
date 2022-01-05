@@ -39,7 +39,17 @@ public class Func extends Expr{
 		add(vars);
 		init();
 	}
-	
+	public Func(String name,int numberOfParams){
+		this.name = name;
+		ExprList vars = new ExprList();
+		for(int i = 0;i<numberOfParams;i++){
+			String varName = "p"+i;//honestly pointless but whatever
+			vars.add(equ(var(varName),var(varName)));
+			
+		}
+		add(vars);
+		init();
+	}
 	public Func(String name,ExprList vars,Expr expr) {
 		this.name = name;
 		add(vars);
@@ -76,7 +86,7 @@ public class Func extends Expr{
 			}
 		}
 		for(Rule r:rules){
-			toBeSimplified = r.applyRuleToExpression(toBeSimplified, settings);
+			toBeSimplified = r.applyRuleToExpr(toBeSimplified, settings);
 		}
 		
 		toBeSimplified.flags.simple = true;

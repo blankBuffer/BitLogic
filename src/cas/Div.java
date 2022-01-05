@@ -40,7 +40,7 @@ public class Div extends Expr{
 		((Div)toBeSimplified).setNumer(factor(((Div)toBeSimplified).getNumer()).simplify(settings));//factor numerator
 		((Div)toBeSimplified).setDenom(factor(((Div)toBeSimplified).getDenom()).simplify(settings));//factor denominator
 		
-		toBeSimplified = trigExpandElements.applyRuleToExpression(toBeSimplified, settings);
+		toBeSimplified = trigExpandElements.applyRuleToExpr(toBeSimplified, settings);
 		
 		divContainsDiv((Div)toBeSimplified,settings);//(a/b)/(c/d) -> (a*d)/(b*c)
 		
@@ -61,7 +61,7 @@ public class Div extends Expr{
 			example = "sin(2*x)/sin(x)=(2*sin(x)*cos(x))/sin(x)";
 		}
 		@Override
-		public Expr applyRuleToExpression(Expr e,Settings settings){
+		public Expr applyRuleToExpr(Expr e,Settings settings){
 			Div div = null;
 			if(e instanceof Div){
 				div = (Div)e;

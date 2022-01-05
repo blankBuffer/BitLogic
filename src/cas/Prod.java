@@ -18,7 +18,7 @@ public class Prod extends Expr{
 		
 		factorSubSums((Prod)toBeSimplified,settings);//factor sums
 		
-		toBeSimplified = trigExpandElements.applyRuleToExpression(toBeSimplified, settings);
+		toBeSimplified = trigExpandElements.applyRuleToExpr(toBeSimplified, settings);
 		
 		toBeSimplified = combineWithDiv((Prod)toBeSimplified,settings);
 				
@@ -79,7 +79,7 @@ public class Prod extends Expr{
 			example = "sin(2*x)*sin(x)=2*sin(x)*cos(x)*sin(x)";
 		}
 		@Override
-		public Expr applyRuleToExpression(Expr e,Settings settings){
+		public Expr applyRuleToExpr(Expr e,Settings settings){
 			Prod prod = null;
 			if(e instanceof Prod){
 				prod = (Prod)e;

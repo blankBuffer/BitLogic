@@ -5,7 +5,7 @@ import java.util.HashMap;
 public class SimpleFuncs extends QuickMath{
 	public static HashMap<String,Func> funcs = new HashMap<String,Func>();
 	
-	static Func choose = new Func("choose",(ExprList)createExpr("[n=n,k=k]")){
+	static Func choose = new Func("choose",2){
 		private static final long serialVersionUID = 1L;
 		@Override
 		void init(){
@@ -16,7 +16,7 @@ public class SimpleFuncs extends QuickMath{
 				}
 				
 				@Override
-				Expr applyRuleToExpression(Expr e,Settings settings){
+				Expr applyRuleToExpr(Expr e,Settings settings){
 					Func choose = null;
 					if(e instanceof Func && ((Func) e).name == "choose"){
 						choose = (Func)e;
@@ -35,7 +35,7 @@ public class SimpleFuncs extends QuickMath{
 			});
 		}
 	};
-	static Func expand = new Func("expand",(ExprList)createExpr("[x=x]")){
+	static Func expand = new Func("expand",1){
 		private static final long serialVersionUID = 1L;
 		@Override
 		void init(){
@@ -46,7 +46,7 @@ public class SimpleFuncs extends QuickMath{
 				}
 				
 				@Override
-				Expr applyRuleToExpression(Expr e,Settings settings){
+				Expr applyRuleToExpr(Expr e,Settings settings){
 					Func expand = null;
 					if(e instanceof Func && ((Func) e).name == "expand"){
 						expand = (Func)e;
@@ -88,7 +88,7 @@ public class SimpleFuncs extends QuickMath{
 		}
 	};
 	
-	static Func get = new Func("get",(ExprList)createExpr("[x=x,n=n]")){
+	static Func get = new Func("get",2){
 		private static final long serialVersionUID = 1L;
 		@Override
 		void init(){
@@ -99,7 +99,7 @@ public class SimpleFuncs extends QuickMath{
 				}
 				
 				@Override
-				Expr applyRuleToExpression(Expr e,Settings settings){
+				Expr applyRuleToExpr(Expr e,Settings settings){
 					Func get = null;
 					if(e instanceof Func && ((Func) e).name == "get"){
 						get = (Func)e;
@@ -115,7 +115,7 @@ public class SimpleFuncs extends QuickMath{
 		}
 	};
 	
-	static Func size = new Func("size",(ExprList)createExpr("[x=x]")){
+	static Func size = new Func("size",1){
 		private static final long serialVersionUID = 1L;
 		@Override
 		void init(){
@@ -126,7 +126,7 @@ public class SimpleFuncs extends QuickMath{
 				}
 				
 				@Override
-				Expr applyRuleToExpression(Expr e,Settings settings){
+				Expr applyRuleToExpr(Expr e,Settings settings){
 					Func size = null;
 					if(e instanceof Func && ((Func) e).name == "size"){
 						size = (Func)e;
@@ -141,10 +141,37 @@ public class SimpleFuncs extends QuickMath{
 		}
 	};
 	
+	static Func tree = new Func("tree",1){
+		private static final long serialVersionUID = 1L;
+		@Override
+		void init(){
+			rules.add(new Rule("show the tree of the expression",Rule.VERY_EASY){
+				@Override
+				Expr applyRuleToExpr(Expr e,Settings settings){
+					Func tree = null;
+					if(e instanceof Func && ((Func) e).name == "tree"){
+						tree = (Func)e;
+					}else{
+						return e;
+					}
+					Expr inner = tree.getParameter(0);
+					
+					return var(inner.printTree(0));
+				}
+			});
+		}
+	};
+	
 	static{
-		funcs.put("choose",choose);
-		funcs.put("expand",expand);
-		funcs.put("get",get);
-		funcs.put("size",size);
+		addFunc(choose);
+		addFunc(expand);
+		addFunc(get);
+		addFunc(size);
+		addFunc(tree);
+	}
+	
+	public static void addFunc(Func f){
+		funcs.put(f.name,f);
+		
 	}
 }

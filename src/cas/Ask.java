@@ -75,6 +75,11 @@ public class Ask extends QuickMath{
 	static ArrayList<String> functionNames = new ArrayList<String>();
 	
 	static {
+		replacement.put("not", "~");
+		replacement.put("negate", "~");
+		replacement.put("or", "|");
+		replacement.put("and", "&");
+		
 		replacement.put("plus", "+");
 		replacement.put("gives", "+");
 		replacement.put("gave", "+");
@@ -331,9 +336,14 @@ public class Ask extends QuickMath{
 			}
 		}
 	}
-	
+	static ArrayList<String> acceptableDupToken = new ArrayList<String>();
+	static {
+		acceptableDupToken.add("~");
+		acceptableDupToken.add("-");
+	}
 	static void removeDuplicateOperators(ArrayList<String> tokens){
 		for(int i = 1;i<tokens.size();i++) {
+			if(acceptableDupToken.contains(tokens.get(i))) continue;
 			if(tokens.get(i).equals(tokens.get(i-1))) {
 				tokens.remove(i);
 				i--;
@@ -348,7 +358,7 @@ public class Ask extends QuickMath{
 			char leftEndChar = s.charAt(s.length()-1);
 			boolean leftHasOperator = leftEndChar != ')' && Interpreter.isOperator(String.valueOf(leftEndChar));
 			char rightStartChar = tokens.get(i+1).charAt(0);
-			boolean rightHasOperator = Interpreter.isOperator(String.valueOf(rightStartChar)) && rightStartChar != '[';
+			boolean rightHasOperator = Interpreter.isOperator(String.valueOf(rightStartChar)) && rightStartChar != '[' && rightStartChar != '~';
 			
 			if( (leftHasOperator || rightHasOperator)&&!functionalForm || functionalForm&&functionNames.contains(s) ) {
 				tokens.set(i,tokens.get(i)+tokens.get(i+1));
@@ -386,7 +396,7 @@ public class Ask extends QuickMath{
 		
 		for(int i = 0;i<tokens.size()-1;i++) {
 			if(Character.isDigit(tokens.get(i).charAt(0))) {
-				if(!Interpreter.isOperator(tokens.get(i+1)) && !bannedNumberNounPairs.contains(tokens.get(i+1))) {
+				if(!Interpreter.containsOperators(tokens.get(i+1)) && !bannedNumberNounPairs.contains(tokens.get(i+1))) {
 					String stripped = tokens.get(i+1);
 					if(!Interpreter.isProbablyExpr(tokens.get(i+1)) && stripped.length() > 1 && stripped.charAt(stripped.length()-1) == 's') {
 						stripped = stripped.substring(0, stripped.length()-1);//strips the 's' apples -> apple
@@ -525,6 +535,10 @@ public class Ask extends QuickMath{
 	}
 	
 	static void reformulate(ArrayList<String> tokens) {
+		if(DEBUG){
+			System.out.println("before reformulate");
+			System.out.println(tokens);
+		}
 		
 		applyWordReplacement(tokens);
 		removeDuplicateOperators(tokens);
@@ -536,7 +550,10 @@ public class Ask extends QuickMath{
 		
 		unitReading(tokens);
 		
-		//System.out.println(tokens);
+		if(DEBUG){
+			System.out.println("after reformulate");
+			System.out.println(tokens);
+		}
 		
 	}
 	

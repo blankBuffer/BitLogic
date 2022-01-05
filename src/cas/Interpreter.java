@@ -379,6 +379,16 @@ public class Interpreter extends QuickMath{
 			
 			return list;
 			
+		}else if(indexOfEquToken != -1) {//is equation
+			ArrayList<String> leftSideTokens = new ArrayList<String>();
+			for(int i = 0;i<indexOfEquToken;i++) {
+				leftSideTokens.add(tokens.get(i));
+			}
+			ArrayList<String> rightSideTokens = new ArrayList<String>();
+			for(int i = indexOfEquToken+1;i<tokens.size();i++) {
+				rightSideTokens.add(tokens.get(i));
+			}
+			return equ(createExprFromTokens(leftSideTokens,defs,settings),createExprFromTokens(rightSideTokens,defs,settings));
 		}else if(isOr){
 			tokens.add("|");
 			Or or = new Or();
@@ -418,16 +428,6 @@ public class Interpreter extends QuickMath{
 		}else if(isNot){
 			tokens.remove(0);
 			return not(createExprFromTokens(tokens,defs,settings));
-		} else if(indexOfEquToken != -1) {//is equation
-			ArrayList<String> leftSideTokens = new ArrayList<String>();
-			for(int i = 0;i<indexOfEquToken;i++) {
-				leftSideTokens.add(tokens.get(i));
-			}
-			ArrayList<String> rightSideTokens = new ArrayList<String>();
-			for(int i = indexOfEquToken+1;i<tokens.size();i++) {
-				rightSideTokens.add(tokens.get(i));
-			}
-			return equ(createExprFromTokens(leftSideTokens,defs,settings),createExprFromTokens(rightSideTokens,defs,settings));
 		}else if(isSum) {
 			tokens.add("+");
 			Expr sum = new Sum();

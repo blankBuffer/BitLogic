@@ -1,14 +1,14 @@
 package cas;
 
 public class Rule {
-	static final int VERY_EASY = 0,EASY = 1,UNCOMMON = 2,TRICKY = 3,CHALLENGING = 4,DIFFICULT = 5,VERY_DIFFICULT = 6;
+	static final int VERY_EASY = 0,EASY = 1,UNCOMMON = 2,TRICKY = 3,CHALLENGING = 4,DIFFICULT = 5,VERY_DIFFICULT = 6;//this is opinion based
 	static final boolean VERBOSE_DEFAULT = false;
 	static final int VERBOSE_DIFFICULTY = VERY_EASY;
 			
 	public Equ rule = null;
 	String name = null;
 	public boolean verbose = VERBOSE_DEFAULT;
-	String example = null;
+	String example = "no example";
 	int difficulty = 0;
 	
 	public Rule(String rule,String name,int difficulty){
@@ -40,7 +40,7 @@ public class Rule {
 	public void init(){
 		
 	}
-	Expr applyRuleToExpression(Expr e,Settings settings){//note this may modify the original expression. The return is there so that if it changes expression type
+	Expr applyRuleToExpr(Expr e,Settings settings){//note this may modify the original expression. The return is there so that if it changes expression type
 		Expr.ModifyFromExampleResult result = e.modifyFromExampleSpecific(rule, settings);
 		if(result.success){
 			verboseMessage(e,result.expr);
