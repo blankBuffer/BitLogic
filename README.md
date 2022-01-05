@@ -29,7 +29,7 @@ Completely re written with many new techniques.
 
 simple GUI (not polished but functional), I preder to use non gui mode myself.
 
-I will re add boolean algebra at some point.
+Boolean algebra implemented
 
 Both RPN and algebraic input.
 
