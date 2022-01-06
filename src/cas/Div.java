@@ -71,11 +71,10 @@ public class Div extends Expr{
 			
 			boolean prodInTrig = false;
 			boolean nonProdInTrig = false;
-			
 			if(div.getNumer() instanceof Prod){
 				prodInTrig |= Prod.foundProdInTrigInProd((Prod)div.getNumer());
 				nonProdInTrig |= Prod.foundNonProdInTrigInProd((Prod)div.getNumer());
-			}else if(div.getDenom() instanceof Sin || div.getDenom() instanceof Cos || div.getDenom() instanceof Tan){
+			}else if(div.getNumer() instanceof Sin || div.getNumer() instanceof Cos || div.getNumer() instanceof Tan){
 				if(div.getNumer().get() instanceof Prod){
 					prodInTrig = true;
 				}else{

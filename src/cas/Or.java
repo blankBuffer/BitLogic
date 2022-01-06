@@ -267,18 +267,18 @@ public class Or extends Expr{
 		}
 	};
 	
+	private static int fastContains(Expr e,Expr a){//e is what your finding in a
+		for(int i = 0;i<a.size();i++){
+			if(a.get(i).equalStruct(e)){
+				return i;
+			}
+		}
+		return -1;
+	}
 	static Rule redundance = new Rule("redundant factors",Rule.TRICKY){
 		@Override
 		public void init(){
 			example = "x&y|~x&z|~y&z|~x&q|~y&q=x&y|z|q";
-		}
-		int fastContains(Expr e,Expr a){//e is what your finding in a
-			for(int i = 0;i<a.size();i++){
-				if(a.get(i).equalStruct(e)){
-					return i;
-				}
-			}
-			return -1;
 		}
 		class BucketInfo{
 			ArrayList<Integer> indexes = new ArrayList<Integer>();
@@ -376,14 +376,153 @@ public class Or extends Expr{
 		}
 	};
 	
+	static Rule consensus = new Rule("consensus rule",Rule.CHALLENGING){
+		
+		@Override
+		public void init(){
+			example = "x&y|~x&z|y&z=x&y|~x&z";
+		}
+		
+		@Override
+		public Expr applyRuleToExpr(Expr e,Settings settings){
+			Or or = null;
+			if(e instanceof Or){
+				or = (Or)e;
+			}else{
+				return e;
+			}
+			if(or.size()>=3){
+				Expr original = e.copy();
+				
+				outer:for(int i = 0;i<or.size();i++){
+					if(!(or.get(i) instanceof And && or.get(i).size()==2)) continue;
+					
+					And current = (And)or.get(i);
+					Expr a = current.get(0),b = current.get(1);
+					Expr notA = a instanceof Not ? a.get() : not(a),notB = b instanceof Not ? b.get() : not(b);
+					
+					for(int j = i+1;j < or.size();j++){
+						if(!(or.get(j) instanceof And && or.get(j).size()==2)) continue;
+						And other = (And)or.get(j);
+						int test = 1-fastContains(notA,other);
+						if(test != 2){
+							Expr redundant = and(b,other.get(test));
+							for(int k = 0;k<or.size();k++){
+								if(i == k | j==k) continue;
+								if(or.get(k).equalStruct(redundant)){
+									or.remove(k);
+									i--;
+									continue outer;
+								}
+							}
+						}
+						test = 1-fastContains(notB,other);
+						if(test != 2){
+							Expr redundant = and(a,other.get(test));
+							for(int k = 0;k<or.size();k++){
+								if(i == k | j==k) continue;
+								if(or.get(k).equalStruct(redundant)){
+									or.remove(k);
+									i--;
+									continue outer;
+								}
+							}
+						}
+						
+					}
+					
+					
+				}
+				
+				if(!original.equalStruct(or)){
+					verboseMessage(original,or);
+				}
+			}
+			return or;
+		}
+	};
+	
+	static Rule ruleCombination = new Rule("rule set",Rule.CHALLENGING){
+		
+		ExprList allFactorableVars(Or or){
+			ArrayList<VarCount> varcounts = new ArrayList<VarCount>();
+			or.countVars(varcounts);
+			ExprList allFactorableVars = new ExprList();
+			for(int i = 0;i<varcounts.size();i++){
+				VarCount vc = varcounts.get(i);
+				if(vc.count>=2){
+					allFactorableVars.add(vc.v);
+					allFactorableVars.add(not(vc.v));
+				}
+			}
+			return allFactorableVars;
+		}
+		
+		@Override
+		public Expr applyRuleToExpr(Expr e,Settings settings){
+			//now try with factored components
+			
+			if(e instanceof Or){
+				Or or = (Or)e;
+				ExprList allFactorableVars = allFactorableVars(or);
+				ExprList used = new ExprList();
+				for(int i = 0;i<allFactorableVars.size();i++){
+					Expr var = allFactorableVars.get(i);
+					if(used.contains(var)) continue;
+					used.add(var);
+					
+					Or factoredOutOr = new Or();
+					for(int j = 0;j<or.size();j++){
+						if(!(or.get(j) instanceof And)) continue;
+						And currentAnd = (And)or.get(j);
+						
+						
+						int index = fastContains(var,currentAnd);
+						
+						if(index != -1){
+							And currentAndFactoredOut = (And)currentAnd.copy();
+							currentAndFactoredOut.remove(index);
+							
+							or.remove(j);
+							j--;
+							
+							factoredOutOr.add(currentAndFactoredOut.simplify(settings));
+							
+						}
+						
+					}
+					Or factoredOutOrNew = Or.cast(this.applyRuleToExpr(factoredOutOr.copy(), settings) );
+					if(!factoredOutOrNew.equalStruct(factoredOutOr)){//re calculate to waste lest time
+						i=-1;
+						allFactorableVars = allFactorableVars(or);
+					}
+					for(int j = 0;j<factoredOutOrNew.size();j++){
+						And current = And.cast(factoredOutOrNew.get(j));
+						current.add(var);
+						or.add(current);
+					}
+				}
+				
+			}
+			
+			{//apply plain
+				e = complement.applyRuleToExpr(e, settings);
+				e = redundance.applyRuleToExpr(e, settings);
+				e = consensus.applyRuleToExpr(e, settings);
+				
+			}
+			
+			return e;
+		}
+	};
+	
 	static Rule[] ruleSequence = {
 			orContainsOr,
 			removeDuplicates,
 			nullRule,
 			removeFalses,
-			complement,
 			absorb,
-			redundance,
+			ruleCombination,
 			aloneOr,
 	};
 
@@ -424,5 +563,12 @@ public class Or extends Expr{
 		}
 		double res = state ? 1.0 : 0.0;
 		return new ComplexFloat(res,0);
+	}
+	
+	public static Or cast(Expr e){
+		if(e instanceof Or){
+			return (Or)e;
+		}
+		return or(e);
 	}
 }

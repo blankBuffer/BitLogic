@@ -2,7 +2,7 @@ package cas;
 
 public class Rule {
 	static final int VERY_EASY = 0,EASY = 1,UNCOMMON = 2,TRICKY = 3,CHALLENGING = 4,DIFFICULT = 5,VERY_DIFFICULT = 6;//this is opinion based
-	static final boolean VERBOSE_DEFAULT = false;
+	static final boolean VERBOSE_DEFAULT = true;
 	static final int VERBOSE_DIFFICULTY = VERY_EASY;
 			
 	public Equ rule = null;
