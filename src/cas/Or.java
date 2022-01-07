@@ -202,7 +202,7 @@ public class Or extends Expr{
 			}else{
 				return e;
 			}
-			
+			Expr original = null;
 			for(int i = 0;i<or.size();i++){
 				And current = And.cast(or.get(i));
 				for(int j = 0;j<or.size();j++){
@@ -228,14 +228,18 @@ public class Or extends Expr{
 						}
 						
 						if(hasAll){
+							if(original == null) original = e.copy();
 							or.remove(j);
+							if(j<i) i--;
 							j--;
 						}
 						
 					}
 				}
 			}
-			
+			if(original != null){
+				verboseMessage(original,e);
+			}
 			return or;
 		}
 	};
@@ -499,7 +503,7 @@ public class Or extends Expr{
 					for(int j = 0;j<factoredOutOrNew.size();j++){
 						And current = And.cast(factoredOutOrNew.get(j));
 						current.add(var);
-						or.add(current);
+						or.add(current.simplify(settings));
 					}
 				}
 				
@@ -509,7 +513,6 @@ public class Or extends Expr{
 				e = complement.applyRuleToExpr(e, settings);
 				e = redundance.applyRuleToExpr(e, settings);
 				e = consensus.applyRuleToExpr(e, settings);
-				
 			}
 			
 			return e;

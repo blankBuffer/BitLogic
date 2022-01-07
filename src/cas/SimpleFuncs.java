@@ -162,12 +162,100 @@ public class SimpleFuncs extends QuickMath{
 		}
 	};
 	
+	static Func primeFactor = new Func("primeFactor",1){
+		private static final long serialVersionUID = 1L;
+		@Override
+		void init(){
+			rules.add(new Rule("prime factor an integer",Rule.VERY_EASY){
+				@Override
+				Expr applyRuleToExpr(Expr e,Settings settings){
+					Func pf = null;
+					if(e instanceof Func && ((Func) e).name == "primeFactor"){
+						pf = (Func)e;
+					}else{
+						return e;
+					}
+					Expr inner = pf.getParameter(0);
+					if(inner instanceof Num) return primeFactor((Num)inner);
+					return inner;
+				}
+			});
+		}
+	};
+	
+	static Func polyCoef = new Func("polyCoef",2){
+		private static final long serialVersionUID = 1L;
+		@Override
+		void init(){
+			rules.add(new Rule("get the coefficients of a polynomial as a list",Rule.VERY_EASY){
+				@Override
+				Expr applyRuleToExpr(Expr e,Settings settings){
+					Func pc = null;
+					if(e instanceof Func && ((Func) e).name == "polyCoef"){
+						pc = (Func)e;
+					}else{
+						return e;
+					}
+					Expr inner = pc.getParameter(0);
+					Var var = (Var)pc.getParameter(1);
+					return polyExtract(inner,var,settings);
+				}
+			});
+		}
+	};
+	
+	static Func degree = new Func("degree",2){
+		private static final long serialVersionUID = 1L;
+		@Override
+		void init(){
+			rules.add(new Rule("get the degree of a polynomial",Rule.VERY_EASY){
+				@Override
+				Expr applyRuleToExpr(Expr e,Settings settings){
+					Func dg = null;
+					if(e instanceof Func && ((Func) e).name == "degree"){
+						dg = (Func)e;
+					}else{
+						return e;
+					}
+					Expr inner = dg.getParameter(0);
+					Var var = (Var)dg.getParameter(1);
+					return num(degree(inner,var));
+				}
+			});
+		}
+	};
+	
+	static Func partialFrac = new Func("partialFrac",2){
+		private static final long serialVersionUID = 1L;
+		@Override
+		void init(){
+			rules.add(new Rule("break apart polynomial ratio into a sum of inverse linear terms",Rule.VERY_EASY){
+				@Override
+				Expr applyRuleToExpr(Expr e,Settings settings){
+					Func pf = null;
+					if(e instanceof Func && ((Func) e).name == "partialFrac"){
+						pf = (Func)e;
+					}else{
+						return e;
+					}
+					Expr inner = pf.getParameter(0);
+					Var var = (Var)pf.getParameter(1);
+					return partialFrac(inner,var,settings);
+				}
+			});
+		}
+	};
+	
 	static{
 		addFunc(choose);
 		addFunc(expand);
 		addFunc(get);
 		addFunc(size);
 		addFunc(tree);
+		addFunc(primeFactor);
+		addFunc(polyCoef);
+		addFunc(degree);
+		addFunc(partialFrac);
 	}
 	
 	public static void addFunc(Func f){

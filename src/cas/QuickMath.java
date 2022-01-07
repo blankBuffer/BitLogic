@@ -214,15 +214,16 @@ public class QuickMath {
 		return new Func(name,v,expr);
 	}
 	//
-	/*
-	public static boolean allLinearTerms(Expr e) {
+	
+	public static boolean allLinearTerms(Expr e,Var v) {
 		if(e instanceof Prod) {
 			
-		}else {
-			
+		}else if(e instanceof Sum){
+			if(degree(e,v).equals(BigInteger.ONE)) return true;
 		}
+		return false;
 	}
-	*/
+	
 	public static Expr partialFrac(Expr expr,Var v,Settings settings) {//being re written, currently disabled
 		if(expr instanceof Div) {
 			BigInteger negOne = BigInteger.valueOf(-1);
@@ -233,8 +234,7 @@ public class QuickMath {
 			if(numerDegree.equals(negOne) || denomDegree.equals(negOne)) return expr;//not polynomials
 			if(denomDegree.compareTo(numerDegree) != 1) return expr;//denominator needs a greater degree
 			Prod denomFactored = Prod.cast(factor(frac.getDenom()).simplify(settings));
-			//if(!allLinearTerms( stripNonVarPartsFromProd(denomFactored,v) )) return expr;
-			//all checks done
+			
 			System.out.println(denomFactored);
 			
 		}
