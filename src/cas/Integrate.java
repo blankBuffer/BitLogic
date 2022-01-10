@@ -64,7 +64,7 @@ public class Integrate extends Expr{
 		if(toBeSimplified instanceof Integrate) toBeSimplified = toBeSimplified.modifyFromExample(eToXTimesCosX,settings);
 		if(toBeSimplified instanceof Integrate) toBeSimplified = inverseQuadratic((Integrate)toBeSimplified,settings);//integration of inverse quadratic
 		if(toBeSimplified instanceof Integrate) toBeSimplified = polyDiv((Integrate)toBeSimplified,settings);
-		//if(toBeSimplified instanceof Integrate) toBeSimplified = partialFraction((Integrate)toBeSimplified,settings);
+		if(toBeSimplified instanceof Integrate) toBeSimplified = partialFraction((Integrate)toBeSimplified,settings);
 		if(toBeSimplified instanceof Integrate) toBeSimplified = specialUSub((Integrate)toBeSimplified,settings);
 		if(toBeSimplified instanceof Integrate) toBeSimplified = normalUSub((Integrate)toBeSimplified,settings);
 		if(toBeSimplified instanceof Integrate) toBeSimplified.set(0, distr(((Integrate)toBeSimplified).get()).simplify(settings));

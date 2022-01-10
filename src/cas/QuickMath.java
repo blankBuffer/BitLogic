@@ -216,12 +216,14 @@ public class QuickMath {
 	//
 	
 	public static boolean allLinearTerms(Expr e,Var v) {
-		if(e instanceof Prod) {
-			
-		}else if(e instanceof Sum){
-			if(degree(e,v).equals(BigInteger.ONE)) return true;
+		Prod prodCast = (Prod)e;
+		for(int i = 0;i<prodCast.size();i++){
+			Power current = Power.cast(prodCast.get(i));
+			if(!(isPositiveRealNum(current.getExpo()) && (current.getBase() instanceof Sum || current.getBase() instanceof Var) && degree(current.getBase(),v) == BigInteger.ONE)){
+				return false;
+			}
 		}
-		return false;
+		return true;
 	}
 	
 	public static Expr partialFrac(Expr expr,Var v,Settings settings) {//being re written, currently disabled
@@ -233,10 +235,49 @@ public class QuickMath {
 			
 			if(numerDegree.equals(negOne) || denomDegree.equals(negOne)) return expr;//not polynomials
 			if(denomDegree.compareTo(numerDegree) != 1) return expr;//denominator needs a greater degree
-			Prod denomFactored = Prod.cast(factor(frac.getDenom()).simplify(settings));
+			Expr denomFactored = factor(frac.getDenom()).simplify(settings);
 			
-			System.out.println(denomFactored);
+			ExprList parts = seperateByVar(denomFactored,v);
 			
+			Expr denomCoef = parts.get(0);
+			denomFactored = Prod.cast(parts.get(1));
+			
+			if(!allLinearTerms(denomFactored,v)) return expr;
+			frac.setDenom(denomFactored);
+			
+			Sum out = new Sum();
+			
+			for(int i = 0;i<denomFactored.size();i++){
+				Expr currentFunction = frac.copy();
+				((Div)currentFunction).getDenom().remove(i);
+				
+				Power currentTerm = Power.cast(denomFactored.get(i));
+				
+				ExprList poly = polyExtract(currentTerm.getBase(),v,settings);
+				Expr linearTermCoef = poly.get(1);
+				Equ solution = (Equ)ExprList.cast(solve(equ(currentTerm,Num.ZERO),v).simplify(settings)).get();
+				
+				
+				BigInteger expo = ((Num)currentTerm.getExpo()).realValue;
+				BigInteger expoMinusOne = expo.subtract(BigInteger.ONE);
+				
+				for(BigInteger j = BigInteger.ZERO;j.compareTo( expo ) == -1;j = j.add(BigInteger.ONE)){
+					BigInteger currentExpo = expo.subtract(j);
+					
+					Expr functionOut = currentFunction.replace(solution);
+					
+					Expr newTerm = div(functionOut, prod(denomCoef,pow(linearTermCoef,num(j)), num(factorial(j)),pow(currentTerm.getBase(),num(currentExpo))  ) ).simplify(settings);
+					
+					out.add(newTerm);
+					
+					if(!j.equals(expoMinusOne)){
+						currentFunction = diff(currentFunction,v).simplify(settings);
+					}
+					
+				}
+				
+			}
+			return out.simplify(settings);
 		}
 		return expr;
 	}

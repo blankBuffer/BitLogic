@@ -3,6 +3,7 @@ package cas;
 import java.util.HashMap;
 
 public class SimpleFuncs extends QuickMath{
+
 	public static HashMap<String,Func> funcs = new HashMap<String,Func>();
 	
 	static Func choose = new Func("choose",2){
@@ -226,7 +227,8 @@ public class SimpleFuncs extends QuickMath{
 	};
 	
 	static Func partialFrac = new Func("partialFrac",2){
-		private static final long serialVersionUID = 1L;
+		private static final long serialVersionUID = -7797150002058225696L;
+
 		@Override
 		void init(){
 			rules.add(new Rule("break apart polynomial ratio into a sum of inverse linear terms",Rule.VERY_EASY){
