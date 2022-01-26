@@ -4,8 +4,24 @@ public class Var extends Expr{
 	
 	private static final long serialVersionUID = -3581525014075161068L;
 	public String name;
+	public ComplexFloat valuef = new ComplexFloat(0,0);
 	
+	boolean generic = true;//if it is easily similar
+	
+	Var(){}//
 	public Var(String name){
+		if(name.equals("pi")){
+			generic = false;
+			valuef.real = Math.PI;
+		}else if(name.equals("e")){
+			generic = false;
+			valuef.real = Math.E;
+		}else if(name.equals("inf")){
+			generic = false;
+			valuef.real = Double.POSITIVE_INFINITY;
+		}else if(name.equals("epsilon")){
+			generic = false;
+		}
 		this.name = name;
 		flags.simple = true;//variable is as simple as it gets
 		flags.sorted = true;
@@ -18,7 +34,13 @@ public class Var extends Expr{
 
 	@Override
 	public Expr copy() {
-		return new Var(name);
+		Var out = new Var();
+		out.name = name;
+		out.valuef = valuef;
+		out.generic = generic;
+		flags.simple = true;
+		flags.sorted = true;
+		return out;
 	}
 
 	@Override
@@ -27,7 +49,7 @@ public class Var extends Expr{
 	}
 
 	@Override
-	public boolean equalStruct(Expr other) {
+	public boolean equals(Object other) {
 		if(other instanceof Var) {
 			return ((Var)other).name.equals(name);//check if strings are equal
 		}
@@ -36,7 +58,9 @@ public class Var extends Expr{
 
 	@Override
 	boolean similarStruct(Expr other,boolean checked) {//all variables are similar
-		return true;
+		if(generic) return true;
+		
+		return equals(other);
 	}
 
 	@Override
@@ -55,14 +79,18 @@ public class Var extends Expr{
 		for(int i = 0;i<varDefs.size();i++) {
 			Equ temp = (Equ)varDefs.get(i);
 			Var otherVar = (Var)temp.getLeftSide();
-			if(equalStruct(otherVar)) {
+			if(equals(otherVar)) {
 				if(temp.getRightSide() instanceof FloatExpr) {
 					return ((FloatExpr)temp.getRightSide()).value;
 				}
 				return temp.getRightSide().convertToFloat(new ExprList());
 			}
 		}
-		return new ComplexFloat(0,0);
+		return valuef;
+	}
+	@Override
+	ExprList getRuleSequence() {
+		return null;
 	}
 
 }

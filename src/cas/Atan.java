@@ -1,74 +1,60 @@
 package cas;
 
-import java.util.ArrayList;
-
 public class Atan extends Expr{
 	
 	private static final long serialVersionUID = -8122799157835574716L;
 	
-	static Equ containsInverse = (Equ)createExpr("atan(tan(x))=x");
+	static Rule containsInverse = new Rule("atan(tan(x))=x","arctan of tan",Rule.VERY_EASY);
 
 	Atan(){}//
 	public Atan(Expr expr) {
 		add(expr);
 	}
-
-	@Override
-	public Expr simplify(Settings settings) {
-		Expr toBeSimplified = copy();
-		if(flags.simple) return toBeSimplified;
+	
+	static Rule inverseUnitCircle = new Rule("asin unit circle",Rule.EASY){
+		private static final long serialVersionUID = 1L;
 		
-		toBeSimplified.simplifyChildren(settings);
+		Rule[] cases;
+		@Override
+		public void init(){
+			cases = new Rule[]{
+				new Rule("atan(0)=0","arctan of zero",Rule.VERY_EASY),
+				new Rule("atan(1)=pi/4","arctan of one",Rule.VERY_EASY),
+				new Rule("atan(sqrt(3))=pi/3","arctan of root 3",Rule.VERY_EASY),
+				new Rule("atan(sqrt(3)/3)=pi/6","arctan of root 3 over 3",Rule.VERY_EASY),
+				new Rule("atan(inf)=pi/2-epsilon","arctan of infinity",Rule.VERY_EASY),
+			};
+		}
 		
-		toBeSimplified.set(0, trigCompress(toBeSimplified.get(),settings) );
-		
-		if(toBeSimplified instanceof Atan) {
-			toBeSimplified.set(0,factor(toBeSimplified.get()).simplify(settings));
-			if(toBeSimplified.get().negative()) {
-				toBeSimplified =neg(atan(toBeSimplified.get().abs(settings))).simplify(settings);
+		@Override
+		public Expr applyRuleToExpr(Expr e,Settings settings){
+			for(Rule r:cases){
+				e = r.applyRuleToExpr(e, settings);
 			}
+			return e;
 		}
-		if(toBeSimplified instanceof Atan) toBeSimplified.set(0,distr(toBeSimplified.get()).simplify(settings));
 		
-		if(toBeSimplified instanceof Atan) toBeSimplified = toBeSimplified.modifyFromExample(containsInverse, settings);
-		
-		if(toBeSimplified instanceof Atan) toBeSimplified = unitCircle((Atan)toBeSimplified,settings);
-		
-		toBeSimplified.flags.simple = true;
-		
-		return toBeSimplified;
+	};
+	
+	static ExprList ruleSequence = null;
+	
+	public static void loadRules(){
+		ruleSequence = exprList(
+				StandardRules.trigCompressInner,
+				StandardRules.oddFunction,
+				containsInverse,
+				inverseUnitCircle
+		);
 	}
 	
-	
-	static ArrayList<Equ> unitCircleTable = new ArrayList<Equ>();
-	static void initUnitCircleTable() {
-		unitCircleTable.add((Equ)createExpr("atan(0)=0"));
-		unitCircleTable.add((Equ)createExpr("atan(1)=pi/4"));
-		unitCircleTable.add((Equ)createExpr("atan(sqrt(3))=pi/3"));
-		unitCircleTable.add((Equ)createExpr("atan(sqrt(3)/3)=pi/6"));
-	}
-	static Expr unitCircle(Atan atan,Settings settings) {
-		if(unitCircleTable.size() == 0) initUnitCircleTable();
-		Expr out = atan;
-		for(int i = 0;i<unitCircleTable.size();i++) {
-			out = atan.modifyFromExample(unitCircleTable.get(i), settings);
-			if(!(out instanceof Atan)) break;
-		}
-		return out;
+	@Override
+	ExprList getRuleSequence() {
+		return ruleSequence;
 	}
 
-	@Override
-	public String toString() {
-		String out = "";
-		out+="atan(";
-		out+=get();
-		out+=")";
-		return out;
-	}
 
 	@Override
 	public ComplexFloat convertToFloat(ExprList varDefs) {
 		return ComplexFloat.atan(get().convertToFloat(varDefs));
 	}
-
 }

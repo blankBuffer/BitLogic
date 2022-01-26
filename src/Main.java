@@ -1,9 +1,13 @@
+import java.io.File;
+import java.io.FileNotFoundException;
+import java.util.Scanner;
+
 import cas.*;
 import ui.UI;
 
 public class Main extends QuickMath{
 	
-	public static final String VERSION = "1.4.6";
+	public static final String VERSION = "1.5.0";
 	
 	public static void fancyIntro() {
 		String img = ""
@@ -19,8 +23,40 @@ public class Main extends QuickMath{
 	static void mod(Integer a){
 		a++;
 	}
+	
+	public static void runScript(String fileName,boolean verbose) {
+		long startingInstructionCount = Expr.ruleCallCount;
+		long oldTime = System.nanoTime();
+		Scanner sc;
+		try {
+			sc = new Scanner(new File(fileName));
+			System.out.println("running "+fileName+" test script...");
+			while(sc.hasNextLine()) {
+				String line = sc.nextLine();
+				if(line.startsWith("#")) continue;
+				if(verbose) System.out.print(line+" -> ");
+				Expr response = null;
+				try {
+					response = Ask.ask(line,Defs.blank,Settings.normal);
+				} catch (Exception e) {
+					e.printStackTrace();
+				}
+				if(verbose && response != null) System.out.print(response+" -> ");
+				response = response.replace(Defs.blank.getVars()).simplify(Settings.normal);
+				if(verbose && response != null) System.out.println(response);
+			}
+			
+		} catch (FileNotFoundException e) {
+			if(verbose) e.printStackTrace();
+			return;
+		}
+		long delta = System.nanoTime() - oldTime;
+		System.out.println("took " + delta / 1000000.0 + " ms to finish script!");
+		System.out.println((Expr.ruleCallCount-startingInstructionCount)+" - instructions called");
+	}
+	
 	static void testRegion() {
-		//
+		runScript("bitLogicTest.bl",false);
 	}
 	
 	public static void main(String[] args) {
@@ -33,7 +69,7 @@ public class Main extends QuickMath{
 			else if(arg.equals("no-gui")) gui = 2;
 			else if(arg.equals("clear-term")) UI.CLEAR_TERM = true;
 			else if(arg.equals("-s")) {
-				Interpreter.runScript(args[i+1], true);
+				runScript(args[i+1], true);
 				i++;
 			}
 		}
@@ -41,6 +77,8 @@ public class Main extends QuickMath{
 		if(UI.CLEAR_TERM) UI.clearTerm();
 		System.out.println("Benjamin Currie @2021 v "+VERSION+" , java runtime version: "+System.getProperty("java.version"));
 		fancyIntro();
+		
+		Rule.loadRules();
 		
 		testRegion();
 		

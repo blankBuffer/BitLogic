@@ -4,22 +4,402 @@ public class Integrate extends Expr{
 
 	private static final long serialVersionUID = 5071855237530369367L;
 	
-	static boolean showSteps = false;
+	static Rule zeroCase = new Rule("integrate(0,x)=0","integral of zero",Rule.EASY);
+	static Rule oneCase = new Rule("integrate(1,x)=x","integral of one",Rule.EASY);
+	static Rule varCase = new Rule("integrate(x,x)=x^2/2","integral of variable",Rule.EASY);
+	static Rule invRule = new Rule("integrate(inv(x),x)=ln(x)","integral of the inverse",Rule.EASY);
+	static Rule logCase = new Rule("integrate(ln(x),x)=ln(x)*x-x","integral of the log",Rule.UNCOMMON);
+	static Rule cosCase = new Rule("integrate(cos(x),x)=sin(x)","integral of the cosine",Rule.EASY);
+	static Rule sinCase = new Rule("integrate(sin(x),x)=-cos(x)","integral of the sin",Rule.EASY);
+	static Rule tanCase = new Rule("integrate(tan(x),x)=-ln(cos(x))","integral of tan",Rule.UNCOMMON);
+	static Rule secSqr = new Rule("integrate(cos(x)^-2,x)=tan(x)","integral of 1 over cosine squared",Rule.UNCOMMON);
+	static Rule atanCase = new Rule("integrate(atan(x),x)=x*atan(x)+ln(x^2+1)/-2","integral of arctan",Rule.UNCOMMON);
+	static Rule eToXTimesSinX = new Rule("integrate(e^x*sin(x),x)=e^x*(sin(x)-cos(x))/2","integral of looping sine",Rule.UNCOMMON);
+	static Rule eToXTimesCosX = new Rule("integrate(e^x*cos(x),x)=e^x*(sin(x)+cos(x))/2","integral of looping cosine",Rule.UNCOMMON);
 	
-	static Equ zeroCase =  (Equ)createExpr("integrate(0,x)=0");
-	static Equ varCase = (Equ)createExpr("integrate(x,x)=x^2/2");
-	static Equ invRule = (Equ)createExpr("integrate(inv(x),x)=ln(x)");
-	static Equ powerRule = (Equ)createExpr("integrate(x^n,x)=x^(n+1)/(n+1)");
-	static Equ inversePowerRule = (Equ)createExpr("integrate(1/x^n,x)=-1/(x^(n-1)*(n-1))");
-	static Equ exponentRule = (Equ)createExpr("integrate(n^x,x)=n^x/ln(n)");
-	static Equ logCase = (Equ)createExpr("integrate(ln(x),x)=ln(x)*x-x");
-	static Equ cosCase = (Equ)createExpr("integrate(cos(x),x)=sin(x)");
-	static Equ sinCase = (Equ)createExpr("integrate(sin(x),x)=-cos(x)");
-	static Equ tanCase = (Equ)createExpr("integrate(tan(x),x)=-ln(cos(x))");
-	static Equ secSqr = (Equ)createExpr("integrate(cos(x)^-2,x)=tan(x)");
-	static Equ atanCase = (Equ)createExpr("integrate(atan(x),x)=x*atan(x)+ln(x^2+1)/-2");
-	static Equ eToXTimesSinX = (Equ)createExpr("integrate(e^x*sin(x),x)=e^x*(sin(x)-cos(x))/2");
-	static Equ eToXTimesCosX = (Equ)createExpr("integrate(e^x*cos(x),x)=e^x*(sin(x)+cos(x))/2");
+	
+	static Rule integralsWithPowers = new Rule("integral with powers",Rule.EASY){
+		private static final long serialVersionUID = 1L;
+		
+		Rule powerRule;
+		Rule inversePowerRule;
+		Rule exponentRule;
+		
+		@Override
+		public void init(){
+			powerRule = new Rule("integrate(x^n,x)=x^(n+1)/(n+1)","integral of polynomial",Rule.EASY);
+			inversePowerRule = new Rule("integrate(1/x^n,x)=-1/(x^(n-1)*(n-1))","integral of 1 over a polynomial",Rule.EASY);
+			exponentRule = new Rule("integrate(n^x,x)=n^x/ln(n)","integral of exponential",Rule.UNCOMMON);
+			
+		}
+		
+		@Override
+		public Expr applyRuleToExpr(Expr e,Settings settings){
+			
+			Integrate integ = (Integrate)e;
+			Var v = integ.getVar();
+			
+			if(integ.get() instanceof Power){
+				Power inner = (Power)integ.get();
+				
+				boolean baseHasVar = inner.getBase().contains(v),expoHasVar = inner.getExpo().contains(v);
+				
+				if(baseHasVar && !expoHasVar){
+					return powerRule.applyRuleToExpr(integ, settings);
+				}else if(!baseHasVar && expoHasVar){
+					return exponentRule.applyRuleToExpr(integ, settings);
+				}
+				
+			}
+			if(integ.get() instanceof Div){
+				Div innerDiv = (Div)integ.get();
+				
+				if(innerDiv.getDenom() instanceof Power){
+					
+					Power inner = (Power)innerDiv.getDenom();
+					
+					boolean baseHasVar = inner.getBase().contains(v),expoHasVar = inner.getExpo().contains(v);
+					
+					if(baseHasVar && !expoHasVar){
+						return inversePowerRule.applyRuleToExpr(integ, settings);
+					}
+					
+				}
+				
+			}
+			
+			return integ;
+		}
+	};
+	
+	static Rule inverseQuadratic = new Rule("inverse quadratic",Rule.TRICKY){
+		private static final long serialVersionUID = 1L;
+		
+		Expr arctanCase;
+		Expr check;
+		Expr logCase;
+		
+		@Override
+		public void init(){
+			check = createExpr("4*0a*0c-0b^2");
+			arctanCase = createExpr("(2*atan((2*0a*x+0b)/sqrt(0k)))/sqrt(0k)");//0k is defined as 4*0a*0c-0b^2
+			logCase = createExpr("ln(sqrt(0b^2-4*0a*0c)*(0b+2*0a*x)-0b^2+4*0a*0c)/sqrt(0b^2-4*0a*0c)-ln(sqrt(0b^2-4*0a*0c)*(0b+2*0a*x)+0b^2-4*0a*0c)/sqrt(0b^2-4*0a*0c)");
+		}
+
+		@Override
+		public Expr applyRuleToExpr(Expr e,Settings settings){
+			
+			Integrate integ = (Integrate)e;
+			
+			if(integ.get() instanceof Div && !((Div)integ.get()).getNumer().contains(integ.getVar())) {
+				Expr denom = ((Div)integ.get()).getDenom();
+				ExprList poly = polyExtract(denom, integ.getVar(), settings);
+				if(poly != null && poly.size() == 3) {
+					Expr c = poly.get(0),b = poly.get(1),a = poly.get(2);
+					ExprList subTable = exprList(equ(var("0a"),a),equ(var("0b"),b),equ(var("0c"),c));
+					
+					Expr check = this.check.replace(subTable).simplify(settings);
+					
+					subTable.add(equ(var("0k"),check));
+					if(!check.negative()) {//check is negative if the quadratic contains no roots thus using arctan
+						return this.arctanCase.replace(subTable).simplify(settings);
+					}
+					//otherwise use logarithms
+					return this.logCase.replace(subTable).simplify(settings);
+				}
+			}
+			return integ;
+			
+		}
+		
+	};
+	
+	static Rule integrationByParts = new Rule("integration by parts",Rule.CHALLENGING){
+		private static final long serialVersionUID = 1L;
+		final int OKAY = 0,GOOD = 1,GREAT = 2,BEST = 3;
+
+		@Override
+		public Expr applyRuleToExpr(Expr e,Settings settings){
+			Integrate integ = (Integrate)e;
+			
+			if(integ.get() instanceof Prod && !integ.get().containsType(Integrate.class)) {
+				Prod innerProd = (Prod)integ.get().copy();
+				int bestIndex = -1;
+				int confidence = -1;
+				for(int i = 0;i < innerProd.size();i++) {
+					int currentConfidence = -1;
+					
+					if(innerProd.get(i) instanceof Ln){
+						currentConfidence = BEST;
+					}else if(innerProd.get(i) instanceof Atan){
+						currentConfidence = GREAT;
+					}else{
+						Power pow = Power.cast(innerProd.get(i));
+						if(isPolynomial(pow.getBase(),integ.getVar())) {
+							if(isPositiveRealNum(pow.getExpo())){
+								currentConfidence = GOOD;
+							}else{
+								Div frac = Div.cast(pow.getExpo());
+								if(frac!=null && frac.isNumericalAndReal()) {
+									if(((Num)frac.getNumer()).realValue.signum() == 1) {
+										confidence = OKAY;
+									}
+								}
+								
+							}
+						}
+					}
+					
+					if(currentConfidence>confidence){
+						confidence = currentConfidence;
+						bestIndex = i;
+						continue;
+					}
+				}
+				if(bestIndex != -1) {
+					Expr best = innerProd.get(bestIndex);
+					
+					innerProd.remove(bestIndex);
+					Expr newIntegral = integrate(innerProd,integ.getVar()).simplify(settings);
+					if(!newIntegral.containsType(Integrate.class)) {
+						Expr out = sub(prod(newIntegral,best),integrate(prod(newIntegral.copy(),diff(best.copy(),integ.getVar())),integ.getVar()));
+						return out.simplify(settings);
+					}
+				}
+				
+			}
+			return integ;
+		}
+	};
+	
+	static Rule integrationByPartsSpecial = new Rule("special integration by parts",Rule.CHALLENGING){
+		private static final long serialVersionUID = 1L;
+
+		@Override
+		public Expr applyRuleToExpr(Expr e,Settings settings){
+			Integrate integ = (Integrate)e;
+			
+			if(integ.get() instanceof Div && !integ.get().containsType(Integrate.class)) {
+				Div innerDiv = (Div)integ.get().copy();
+				if(innerDiv.getDenom() instanceof Power) {
+					Power denomPower = (Power)innerDiv.getDenom();
+					Div expo = Div.cast(denomPower.getExpo());
+					if(expo.isNumericalAndReal()) {
+						if( ((Num)expo.getNumer()).realValue.compareTo( ((Num)expo.getDenom()).realValue )  == 1) {//make sure the fraction is greater than 1
+							Expr integralOfDenom = integrate(inv(denomPower),integ.getVar()).simplify(settings);
+							Expr derivativeOfNumer = diff(innerDiv.getNumer(),integ.getVar()).simplify(settings);
+							Expr out = sub(prod(innerDiv.getNumer(),integralOfDenom),integrate( prod(derivativeOfNumer,integralOfDenom.copy()) ,integ.getVar()));
+							return out.simplify(settings);
+						}
+					}
+				}
+			}
+			return integ;
+		}
+	};
+	
+	static Rule specialUSub = new Rule("special u sub, f(x)*diff(f(x),x)",Rule.TRICKY){
+		private static final long serialVersionUID = 1L;
+		
+		@Override
+		public Expr applyRuleToExpr(Expr e,Settings settings){
+			Integrate integ = (Integrate)e;
+			
+			if(integ.get() instanceof Prod) {
+				Prod innerProd = (Prod)integ.get();
+				
+				for(int i = 0;i<innerProd.size();i++) {
+					Prod prodCopy = (Prod)innerProd.copy();
+					
+					Expr testExpr = prodCopy.get(i);
+					prodCopy.remove(i);
+					Expr resToCheck = div(prodCopy,diff(testExpr,(Var)integ.getVar().copy()));
+					resToCheck = resToCheck.simplify(settings);
+					if(!resToCheck.contains(integ.getVar())) {
+						Prod res = new Prod();
+						res.add(pow(testExpr,num(2)));
+						res.add(resToCheck);
+						res.add(inv(num(2)));
+						return res.simplify(settings);
+					}
+					
+				}
+				
+			}
+			
+			return integ;
+		}
+	};
+	
+	static Rule normalUSub = new Rule("normal u sub",Rule.TRICKY){
+		private static final long serialVersionUID = 1L;
+		
+		public Expr getNextInnerFunction(Expr e,Var v) {
+			if(e.size()>0 && e.contains(v)){
+				Expr highest = null;
+				long highestComplexity = 0;
+				for(int i = 0;i<e.size();i++) {
+					long current = e.get(i).complexity();
+					if(current>highestComplexity && e.get(i).contains(v)) {
+						highestComplexity = current;
+						highest = e.get(i);
+					}
+				}
+				return highest;
+			}
+			return e;
+		}
+		
+		Var uSubVar;
+		
+		@Override
+		public void init(){
+			uSubVar = var("0u");
+		}
+		
+		@Override
+		public Expr applyRuleToExpr(Expr e,Settings settings){
+			Integrate integ = (Integrate)e;
+			
+			if(integ.contains(uSubVar) || integ.get().containsType(Integrate.class)) return integ;
+			Expr u = null;
+			if(integ.get() instanceof Prod) {
+				Prod innerProd = (Prod)integ.get();
+				long highestComplexity = 0;
+				int indexOfHighestComplexity = 0;
+				for(int i = 0;i<innerProd.size();i++) {
+					if(innerProd.get(i) instanceof Sum) continue;//skip sums because thats usually du
+					long current = innerProd.get(i).complexity();
+					if(current > highestComplexity) {
+						highestComplexity = current;
+						indexOfHighestComplexity = i;
+					}
+				}
+				u = innerProd.get(indexOfHighestComplexity);
+			}else if(integ.get() instanceof Div) {
+				Div casted =  ((Div)integ.get());
+				boolean logCase = !div(casted.getNumer(),diff(casted.getDenom() ,integ.getVar())).simplify(settings).contains(integ.getVar());
+				if(!casted.getNumer().contains(integ.getVar()) || logCase) {
+					u = casted.getDenom();
+				}else {
+					u = casted.getNumer();
+				}
+			}else {
+				u = integ.get();
+			}
+			
+			if(u != null) {
+				while(true) {//try normal u and innermost u sub
+					
+					if(!u.equals(integ.getVar())) {
+						Equ eq = equ(u,uSubVar);//im calling it 0u since variables normally can't start with number
+						
+						Expr diffObj = diff(u,(Var)integ.getVar().copy()).simplify(settings);
+						diffObj = diffObj.replace(eq);//it is possible for derivative to contain u
+						Expr before = div(integ.get().replace(eq),diffObj);
+						Expr newExpr = before.simplify(settings);
+						if(!newExpr.contains(integ.getVar())) {//no solve needed
+							newExpr = integrate(newExpr,uSubVar).simplify(settings);
+							if(!newExpr.containsType(Integrate.class)) {
+								Expr out = newExpr.replace(equ(uSubVar,u));
+								return out.simplify(settings);
+							}
+						}else {//oof we need to solve for x
+							Expr solved = solve(equ(uSubVar,u),integ.getVar()).simplify(settings);
+							if(solved instanceof ExprList) solved = solved.get();
+							if(!(solved instanceof Solve)) {
+								solved = ((Equ)solved).getRightSide();
+								newExpr = integrate(newExpr.replace(equ(integ.getVar(),solved)),uSubVar);
+								newExpr = newExpr.simplify(settings);
+								if(!newExpr.containsType(Integrate.class)) {
+									Expr out = newExpr.replace(equ(uSubVar,u)).simplify(settings);
+									return out;
+								}
+								
+							}
+						}
+						
+					}
+					Expr newU = getNextInnerFunction(u,integ.getVar());//we slowly work are way in
+					if(newU.equals(u)) break;
+					u = newU;
+				}
+			}
+			
+			return integ;
+		}
+		
+	};
+	static Rule partialFraction = new Rule("partial fractions",Rule.DIFFICULT){
+		
+		private static final long serialVersionUID = 1L;
+		
+		@Override
+		public Expr applyRuleToExpr(Expr e,Settings settings){
+			Integrate integ = (Integrate)e;
+			
+			integ.set(0, partialFrac(integ.get(), integ.getVar(), settings) );
+			if(integ.get() instanceof Sum){
+				Expr out = StandardRules.linearOperator.applyRuleToExpr(integ, settings);
+				return out;
+			}
+			return integ;
+		}
+	
+	};
+	
+	static Rule polyDiv = new Rule("polynomial division",Rule.CHALLENGING){
+		
+		private static final long serialVersionUID = 1L;
+		
+		@Override
+		public Expr applyRuleToExpr(Expr e,Settings settings){
+			Integrate integ = (Integrate)e;
+			
+			integ.set(0, polyDiv(integ.get(), integ.getVar(), settings) );
+			if(integ.get() instanceof Sum){
+				return StandardRules.linearOperator.applyRuleToExpr(integ, settings);
+			}
+			
+			return integ;
+		}
+	
+	};
+	
+	static ExprList ruleSequence = null;
+	
+	public static void loadRules(){
+		ruleSequence = exprList(
+				zeroCase,
+				oneCase,
+				StandardRules.pullOutConstants,
+				varCase,
+				invRule,
+				integralsWithPowers,
+				inverseQuadratic,
+				logCase,
+				cosCase,
+				sinCase,
+				tanCase,
+				secSqr,
+				atanCase,
+				eToXTimesSinX,
+				eToXTimesCosX,
+				partialFraction,
+				polyDiv,
+				StandardRules.distrInner,
+				specialUSub,
+				integrationByParts,
+				normalUSub,
+				integrationByPartsSpecial,
+				StandardRules.linearOperator
+		);
+	}
+	
+	@Override
+	public ExprList getRuleSequence(){
+		return ruleSequence;
+	}
 	
 	Integrate(){}//
 	public Integrate(Expr e,Var v){
@@ -27,334 +407,12 @@ public class Integrate extends Expr{
 		add(v);
 	}
 	
-	Var getVar() {
+	@Override
+	public Var getVar() {
 		return (Var)get(1);
 	}
-
-	@Override
-	public Expr simplify(Settings settings) {
-		
-		Expr toBeSimplified = copy();
-		if(flags.simple) return toBeSimplified;
-		toBeSimplified.simplifyChildren(settings);
-		
-		toBeSimplified = toBeSimplified.modifyFromExample(zeroCase,settings);
-		if(toBeSimplified instanceof Integrate) toBeSimplified = noVarCase((Integrate)toBeSimplified,settings);
-		if(toBeSimplified instanceof Integrate) toBeSimplified = pullOutConstants((Integrate)toBeSimplified,settings);
-		if(toBeSimplified instanceof Integrate) toBeSimplified = toBeSimplified.modifyFromExample(varCase,settings);
-		if(toBeSimplified instanceof Integrate) toBeSimplified = toBeSimplified.modifyFromExample(invRule,settings);
-		toBeSimplified = toBeSimplified.modifyFromExample(inversePowerRule,settings);
-		if(toBeSimplified instanceof Integrate) {
-			Integrate casted = (Integrate)toBeSimplified;
-			if(casted.get() instanceof Power) {
-				Power p = (Power)casted.get();
-				if(p.getExpo().contains(casted.getVar()) ^ p.getBase().contains(casted.getVar())) {//either but not both
-					toBeSimplified = toBeSimplified.modifyFromExample(powerRule,settings);
-					toBeSimplified = toBeSimplified.modifyFromExample(exponentRule,settings);
-				}
-			}
-		}
-		if(toBeSimplified instanceof Integrate) toBeSimplified = toBeSimplified.modifyFromExample(logCase,settings);
-		if(toBeSimplified instanceof Integrate) toBeSimplified = toBeSimplified.modifyFromExample(cosCase,settings);
-		if(toBeSimplified instanceof Integrate) toBeSimplified = toBeSimplified.modifyFromExample(sinCase,settings);
-		if(toBeSimplified instanceof Integrate) toBeSimplified = toBeSimplified.modifyFromExample(tanCase,settings);
-		if(toBeSimplified instanceof Integrate) toBeSimplified = toBeSimplified.modifyFromExample(secSqr,settings);
-		if(toBeSimplified instanceof Integrate) toBeSimplified = toBeSimplified.modifyFromExample(atanCase,settings);
-		if(toBeSimplified instanceof Integrate) toBeSimplified = toBeSimplified.modifyFromExample(eToXTimesSinX,settings);
-		if(toBeSimplified instanceof Integrate) toBeSimplified = toBeSimplified.modifyFromExample(eToXTimesCosX,settings);
-		if(toBeSimplified instanceof Integrate) toBeSimplified = inverseQuadratic((Integrate)toBeSimplified,settings);//integration of inverse quadratic
-		if(toBeSimplified instanceof Integrate) toBeSimplified = polyDiv((Integrate)toBeSimplified,settings);
-		if(toBeSimplified instanceof Integrate) toBeSimplified = partialFraction((Integrate)toBeSimplified,settings);
-		if(toBeSimplified instanceof Integrate) toBeSimplified = specialUSub((Integrate)toBeSimplified,settings);
-		if(toBeSimplified instanceof Integrate) toBeSimplified = normalUSub((Integrate)toBeSimplified,settings);
-		if(toBeSimplified instanceof Integrate) toBeSimplified.set(0, distr(((Integrate)toBeSimplified).get()).simplify(settings));
-		if(toBeSimplified instanceof Integrate) toBeSimplified = ibp((Integrate)toBeSimplified,settings);
-		if(toBeSimplified instanceof Integrate) toBeSimplified = ibpSpecial((Integrate)toBeSimplified,settings);
-		if(toBeSimplified instanceof Integrate) toBeSimplified = integralSum((Integrate)toBeSimplified,settings);
-		
-		//if(toBeSimplified instanceof Prod) toBeSimplified = distr(toBeSimplified).simplify(settings);
-		if(toBeSimplified instanceof Sum) {//remove constants
-			Sum casted = (Sum)toBeSimplified;
-			for(int i = 0;i<casted.size();i++) {
-				if(!casted.get(i).contains( getVar() )) {
-					casted.remove(i);
-					i--;
-				}
-			}
-		}
-		
-		toBeSimplified.flags.simple = true;
-		return toBeSimplified;
-	}
 	
-	static Expr inverseQuadratic(Integrate integ,Settings settings) {
-		if(integ.get() instanceof Div && !((Div)integ.get()).getNumer().contains(integ.getVar())) {
-			Expr denom = ((Div)integ.get()).getDenom();
-			ExprList poly = polyExtract(denom, integ.getVar(), settings);
-			if(poly != null && poly.size() == 3) {
-				Expr c = poly.get(0),b = poly.get(1),a = poly.get(2);
-				
-				Expr check = sub(prod(num(4),a,c),pow(b,num(2))).simplify(settings);
-				if(!check.negative()) {
-					check = pow(check,inv(num(-2)));
-					return prod(num(2),check,atan(prod(check, sum(prod(num(2),a,integ.getVar()),b) )) ).simplify(settings);
-				}
-				Expr bsquare4ac = sqrt(sub(pow(b,num(2)),prod(num(4),a,c)));
-				Expr twoaxpb = sum(prod(num(2),a,integ.getVar()),b);
-				
-				return div(ln( div( sub(twoaxpb,bsquare4ac) , sum(twoaxpb,bsquare4ac)  ) ),bsquare4ac).simplify(settings);
-			}
-		}
-		return integ;
-	}
 	
-	static Expr arctanCase(Integrate integ,Settings settings) {
-		if(integ.get() instanceof Div) {
-			Expr denom = ((Div)integ.get()).getDenom();
-			ExprList poly = polyExtract(denom, integ.getVar(), settings);
-			if(poly != null && poly.size() == 3) {
-				Expr c = poly.get(0),b = poly.get(1),a = poly.get(2);
-				
-				Expr check = sub(prod(num(4),a,c),pow(b,num(2))).simplify(settings);
-				if(!check.negative()) {
-					check = pow(check,inv(num(-2)));
-					return prod(num(2),check,atan(prod(check, sum(prod(num(2),a,integ.getVar()),b) )) ).simplify(settings);
-				}
-			}
-		}
-		return integ;
-	}
-	
-	static Expr partialFraction(Integrate integ,Settings settings) {
-		integ.set(0, partialFrac(integ.get(), integ.getVar(), settings) );
-		if(integ.get() instanceof Sum) {
-			return integralSum(integ,settings);
-		}
-		return integ;
-	}
-	
-	static Expr polyDiv(Integrate integ,Settings settings) {//polynomial division
-		integ.set(0, polyDiv(integ.get(), integ.getVar(), settings) );
-		if(integ.get() instanceof Sum) {
-			return integralSum(integ,settings);
-		}
-		return integ;
-	}
-
-	static Expr ibpSpecial(Integrate integ,Settings settings) {
-		if(integ.get() instanceof Div && !integ.get().containsType(Integrate.class)) {
-			Div innerDiv = (Div)integ.get().copy();
-			if(innerDiv.getDenom() instanceof Power) {
-				Power denomPower = (Power)innerDiv.getDenom();
-				Div expo = Div.cast(denomPower.getExpo());
-				if(expo.isNumericalAndReal()) {
-					if( ((Num)expo.getNumer()).realValue.compareTo( ((Num)expo.getDenom()).realValue )  == 1) {//make sure the fraction is greater than 1
-						Expr integralOfDenom = integrate(inv(denomPower),integ.getVar()).simplify(settings);
-						Expr derivativeOfNumer = diff(innerDiv.getNumer(),integ.getVar()).simplify(settings);
-						Expr out = sub(prod(innerDiv.getNumer(),integralOfDenom),integrate( prod(derivativeOfNumer,integralOfDenom.copy()) ,integ.getVar()));
-						return out.simplify(settings);
-					}
-				}
-			}
-		}
-		return integ;
-	}
-	
-	static Expr ibp(Integrate integ,Settings settings) {
-		if(integ.get() instanceof Prod && !integ.get().containsType(Integrate.class)) {
-			Prod innerProd = (Prod)integ.get().copy();
-			int bestIndex = -1;
-			for(int i = 0;i < innerProd.size();i++) {
-				if(innerProd.get(i) instanceof Power) {
-					Power pow = (Power)innerProd.get(i);
-					if(pow.getBase().contains(integ.getVar())) {
-						if(pow.getExpo() instanceof Div) {
-							
-							Div frac = (Div)pow.getExpo();
-							if(frac!=null && frac.isNumericalAndReal()) {
-								if(((Num)frac.getNumer()).realValue.signum() == 1) {
-									bestIndex = i;
-									break;
-								}
-							}
-							
-						}else if(pow.getExpo() instanceof Num && !pow.getExpo().negative() && !((Num)pow.getExpo()).isComplex() ) {
-							bestIndex = i;
-							break;
-						}
-					}
-				}else if(innerProd.get(i).equalStruct(integ.getVar())) {
-					bestIndex = i;
-					break;
-				}
-			}
-			for(int i = 0;i < innerProd.size();i++) {
-				if(innerProd.get(i) instanceof Log || innerProd.get(i) instanceof Atan) {//log and inverse trigonometric
-					bestIndex = i;
-					break;
-				}
-			}
-			if(bestIndex != -1) {
-				Expr best = innerProd.get(bestIndex);
-				innerProd.remove(bestIndex);
-				Expr newIntegral = integrate(innerProd,integ.getVar()).simplify(settings);
-				if(!newIntegral.containsType(Integrate.class)) {
-					Expr out = sub(prod(newIntegral,best),integrate(prod(newIntegral.copy(),diff(best.copy(),integ.getVar())),integ.getVar()));
-					if(showSteps) {
-						System.out.println(integ+":integration by parts, diff:"+best+":result:"+out);
-					}
-					return out.simplify(settings);
-				}
-			}
-			
-		}
-		return integ;
-	}
-	
-	private static Var uSubVar = var("0u");
-	
-	static Expr normalUSub(Integrate integ,Settings settings) {
-		if(integ.contains(uSubVar) || integ.get().containsType(Integrate.class)) return integ;
-		Expr u = null;
-		if(integ.get() instanceof Prod) {
-			Prod innerProd = (Prod)integ.get();
-			long highestComplexity = 0;
-			int indexOfHighestComplexity = 0;
-			for(int i = 0;i<innerProd.size();i++) {
-				if(innerProd.get(i) instanceof Sum) continue;//skip sums because thats usually du
-				long current = innerProd.get(i).complexity();
-				if(current > highestComplexity) {
-					highestComplexity = current;
-					indexOfHighestComplexity = i;
-				}
-			}
-			u = innerProd.get(indexOfHighestComplexity);
-		}else if(integ.get() instanceof Div) {
-			Div casted =  ((Div)integ.get());
-			boolean logCase = !div(casted.getNumer(),diff(casted.getDenom() ,integ.getVar())).simplify(settings).contains(integ.getVar());
-			if(!casted.getNumer().contains(integ.getVar()) || logCase) {
-				u = casted.getDenom();
-			}else {
-				u = casted.getNumer();
-			}
-		}else {
-			u = integ.get();
-		}
-		
-		if(u != null) {
-			while(true) {//try normal u and innermost u sub
-				
-				if(!u.equalStruct(integ.getVar())) {
-					Equ eq = equ(u,uSubVar);//im calling it 0u since variables normally can't start with number
-					
-					Expr diffObj = diff(u,(Var)integ.getVar().copy()).simplify(settings);
-					diffObj = diffObj.replace(eq);//it is possible for derivative to contain u
-					Expr before = div(integ.get().replace(eq),diffObj);
-					Expr newExpr = before.simplify(settings);
-					if(!newExpr.contains(integ.getVar())) {//no solve needed
-						newExpr = integrate(newExpr,uSubVar).simplify(settings);
-						if(!newExpr.containsType(Integrate.class)) {
-							Expr out = newExpr.replace(equ(uSubVar,u));
-							if(showSteps) {
-								System.out.println(integ+":u sub:"+eq+":result:"+out);
-							}
-							return out.simplify(settings);
-						}
-					}else {//oof we need to solve for x
-						Expr solved = solve(equ(uSubVar,u),integ.getVar()).simplify(settings);
-						if(solved instanceof ExprList) solved = solved.get();
-						if(!(solved instanceof Solve)) {
-							solved = ((Equ)solved).getRightSide();
-							newExpr = integrate(newExpr.replace(equ(integ.getVar(),solved)),uSubVar);
-							newExpr = newExpr.simplify(settings);
-							if(!newExpr.containsType(Integrate.class)) {
-								Expr out = newExpr.replace(equ(uSubVar,u)).simplify(settings);
-								if(showSteps) {
-									System.out.println(integ+":u sub with solve:"+eq+":result:"+out);
-								}
-								return out;
-							}
-							
-						}
-					}
-					
-				}
-				Expr newU = u.getNextInnerFunction(integ.getVar());//we slowly work are way in
-				if(newU.equalStruct(u)) break;
-				u = newU;
-			}
-		}
-		
-		return integ;
-	}
-	
-	static Expr specialUSub(Integrate integ,Settings settings) {
-		if(integ.get() instanceof Prod) {
-			Prod innerProd = (Prod)integ.get();
-			
-			for(int i = 0;i<innerProd.size();i++) {
-				Prod prodCopy = (Prod)innerProd.copy();
-				
-				Expr testExpr = prodCopy.get(i);
-				prodCopy.remove(i);
-				Expr resToCheck = div(prodCopy,diff(testExpr,(Var)integ.getVar().copy()));
-				resToCheck = resToCheck.simplify(settings);
-				if(!resToCheck.contains(integ.getVar())) {
-					Prod res = new Prod();
-					res.add(pow(testExpr,num(2)));
-					res.add(resToCheck);
-					res.add(inv(num(2)));
-					if(showSteps) {
-						System.out.println(integ+":special u sub, let u be:"+testExpr+":result:"+res);
-					}
-					return res.simplify(settings);
-				}
-				
-			}
-			
-		}
-		
-		return integ;
-	}
-	
-	static Expr integralSum(Integrate integ,Settings settings) {
-		if(integ.get() instanceof Sum) {
-			if(showSteps) {
-				System.out.println(integ+":seperation");
-			}
-			Expr innerSum = integ.get();
-			for(int i = 0;i<innerSum.size();i++) innerSum.set(i, integrate(innerSum.get(i),integ.getVar()));
-			return innerSum.simplify(settings);
-		}
-		return integ;
-	}
-	
-	static Expr noVarCase(Integrate integ,Settings settings) {
-		if(!integ.get().contains(integ.getVar())) {
-			return prod(integ.get(),integ.getVar()).simplify(settings);
-		}
-		return integ;
-	}
-	
-	static Expr pullOutConstants(Integrate integ,Settings settings) {
-		Expr res = seperateByVar(integ.get(),integ.getVar());
-		if(!res.get(0).equalStruct(Num.ONE)) {
-			return prod(res.get(0),integrate(res.get(1),integ.getVar())).simplify(settings);
-		}
-		return integ;
-	}
-
-	@Override
-	public String toString() {
-		String out = "";
-		out+="integrate(";
-		out+=get().toString();
-		out+=',';
-		out+=getVar().toString();
-		out+=')';
-		return out;
-	}
-
 	@Override
 	public ComplexFloat convertToFloat(ExprList varDefs) {
 		return integrateOver(num(0),getVar(),get(),getVar()).convertToFloat(varDefs);

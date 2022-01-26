@@ -136,9 +136,9 @@ public class Plot extends QuickMath{
 			if(expr instanceof Equ) {
 				Equ casted = (Equ)expr;
 				
-				if(casted.getLeftSide().equalStruct(y)) {
+				if(casted.getLeftSide().equals(y)) {
 					basicPlot(g,casted.getRightSide(),IN_TERMS_OF_X,plotWindowParams,windowSize);
-				}else if(casted.getLeftSide().equalStruct(x)) {
+				}else if(casted.getLeftSide().equals(x)) {
 					basicPlot(g,casted.getRightSide(),IN_TERMS_OF_Y,plotWindowParams,windowSize);
 				}else {
 					equPlot(g,casted,4,plotWindowParams,windowSize);

@@ -5,6 +5,8 @@ public class Power extends Expr{
 	
 	private static final long serialVersionUID = 3916987907762535821L;
 	
+	
+	
 	void setBase(Expr base) {
 		set(0, base);
 	}
@@ -30,7 +32,6 @@ public class Power extends Expr{
 	private static Rule expoOfZero = new Rule("a^0=1","exponent is zero",Rule.VERY_EASY);
 	private static Rule eToLn = new Rule("e^ln(a)=a","e to ln",Rule.EASY);
 	private static Rule eToFracLn = new Rule("e^(ln(a)/b)=a^(1/b)","e to fraction with ln",Rule.UNCOMMON);
-	private static Rule oneToExpo = new Rule("1^x=1","base is one",Rule.VERY_EASY);
 	private static Rule zeroToExpo = new Rule("0^x=0","base is zero",Rule.VERY_EASY);
 	private static Rule baseToLn = new Rule("a^ln(b)=e^(ln(a)*ln(b))","base not e and expo has log",Rule.UNCOMMON);
 	private static Rule expOfLambertW = new Rule("e^(w(x))=x/w(x)","e to lambert w",Rule.UNCOMMON);
@@ -38,20 +39,33 @@ public class Power extends Expr{
 	private static Rule powerOfOne = new Rule("a^1=a","exponent is one",Rule.VERY_EASY);
 	private static Rule fracInBase = new Rule("(a/b)^n=a^n/b^n","base is a fraction",Rule.EASY);
 	
-	private static Rule exponentiateIntegers = new Rule("exponentiate integers",Rule.VERY_EASY){
-		@Override
-		public void init(){
-			example = "2^3=8";
-		}
-		
+	private static Rule oneToExpo = new Rule("base is one",Rule.VERY_EASY){
+		private static final long serialVersionUID = 1L;
+
 		@Override
 		Expr applyRuleToExpr(Expr e,Settings settings){
-			Power power = null;
-			if(e instanceof Power){
-				power = (Power)e;
-			}else{
-				return e;
+			Power power = (Power)e;
+			
+			if(Limit.stripDirection(power.getBase()).equals(Num.ONE) && !power.getExpo().equals(inf())){
+				short direction = Limit.getDirection(power.getBase());
+				
+				direction = power.getExpo().negative() ? Limit.flipDirection(direction) : direction;
+				
+				Expr out = Limit.applyDirection( num(1),direction);
+				return out;
 			}
+			
+			return power;
+		}
+		
+	};
+	
+	private static Rule exponentiateIntegers = new Rule("exponentiate integers",Rule.VERY_EASY){
+		private static final long serialVersionUID = 1L;
+
+		@Override
+		Expr applyRuleToExpr(Expr e,Settings settings){
+			Power power = (Power)e;
 			if(power.getBase() instanceof Num && power.getExpo() instanceof Num) {
 				Num base = (Num)power.getBase();
 				Num expo = (Num)power.getExpo();
@@ -59,7 +73,6 @@ public class Power extends Expr{
 				if(!expo.isComplex() && expo.realValue.compareTo(BigInteger.valueOf(10000))==-1) {
 					if(expo.signum()!=-1 ) {
 						Expr result = base.pow(expo.realValue);
-						verboseMessage(e,result);
 						return result;
 					}
 				}
@@ -69,25 +82,15 @@ public class Power extends Expr{
 		}
 	};
 	private static Rule negativeExpoToInv = new Rule("negative expoonent to inverse",Rule.EASY){
-		@Override
-		public void init(){
-			example = "a^(-x)=1/a^x";
-		}
-		
+		private static final long serialVersionUID = 1L;
+
 		@Override
 		Expr applyRuleToExpr(Expr e,Settings settings){
-			Power pow = null;
-			if(e instanceof Power){
-				pow = (Power)e;
-			}else{
-				return e;
-			}
-			Expr original = e.copy();
+			Power pow = (Power)e;
 			if(pow.getExpo().negative()) {
 				pow.setExpo(neg(pow.getExpo()));
 				
 				Expr result = inv( pow ).simplify(settings);
-				verboseMessage(original,result);
 				return result;
 			}
 			return pow;
@@ -95,24 +98,16 @@ public class Power extends Expr{
 		}
 	};
 	private static Rule factorExponent = new Rule("factoring the exponent",Rule.TRICKY){
-		@Override
-		public void init(){
-			example = "a^(2*b+2*c)=a^(2*(b+c))";
-		}
+		private static final long serialVersionUID = 1L;
+
 		@Override
 		Expr applyRuleToExpr(Expr e,Settings settings){
-			Power power = null;
-			if(e instanceof Power){
-				power = (Power)e;
-			}else{
-				return e;
-			}
+			Power power = (Power)e;
 			
 			Expr factoredExpo = factor(power.getExpo()).simplify(settings);
 			
-			if(!factoredExpo.equalStruct(power.getExpo())){
+			if(!factoredExpo.equals(power.getExpo())){
 				Expr result = pow(power.getBase().copy(),factoredExpo);
-				verboseMessage(e,result);
 				return result;
 			}
 			
@@ -120,24 +115,16 @@ public class Power extends Expr{
 		}
 	};
 	private static Rule factorBase = new Rule("factoring the base",Rule.TRICKY){
-		@Override
-		public void init(){
-			example = "(a+a*b)^x=((1+b)*a)^x";
-		}
+		private static final long serialVersionUID = 1L;
+
 		@Override
 		Expr applyRuleToExpr(Expr e,Settings settings){
-			Power power = null;
-			if(e instanceof Power){
-				power = (Power)e;
-			}else{
-				return e;
-			}
+			Power power = (Power)e;
 			
 			Expr factoredBase = factor(power.getBase()).simplify(settings);
 			
-			if(!factoredBase.equalStruct(power.getBase())){
+			if(!factoredBase.equals(power.getBase())){
 				Expr result = pow(factoredBase,power.getExpo().copy());
-				verboseMessage(e,result);
 				return result;
 			}
 			
@@ -145,24 +132,14 @@ public class Power extends Expr{
 		}
 	};
 	private static Rule logInExpoProdToBase = new Rule("e to exponent product with single ln",Rule.UNCOMMON){
-		String standardExample = "e^(ln(x)*b)=x^b";
-		String divExample = "e^((ln(x)*b)/c)=x^(b/c)";
-		
-		@Override
-		public void init(){
-			example = "e^(ln(x)*b)=x^b";
-		}
+		private static final long serialVersionUID = 1L;
+
 		
 		@Override
 		Expr applyRuleToExpr(Expr e,Settings settings){
-			Power pow = null;
-			if(e instanceof Power){
-				pow = (Power)e;
-			}else{
-				return e;
-			}
+			Power pow = (Power)e;
 			
-			if(pow.getBase() instanceof E) {
+			if(pow.getBase().equals(e())) {
 				Prod expoProd = null;
 				Div expoDiv = null;
 				if(pow.getExpo() instanceof Div && ((Div)pow.getExpo()).getNumer() instanceof Prod ) {
@@ -177,7 +154,7 @@ public class Power extends Expr{
 					int index = -1;
 					
 					for(int i = 0;i<expoProd.size();i++) {
-						if(expoProd.get(i) instanceof Log) {
+						if(expoProd.get(i) instanceof Ln) {
 							if(logCount != 0) return pow;
 							logCount++;
 							index = i;
@@ -186,19 +163,14 @@ public class Power extends Expr{
 					
 					if(index == -1) return pow;
 					
-					Expr original = e.copy();
 					
 					pow.setBase(expoProd.get(index).get());
 					expoProd.remove(index);
 					
 					if(expoDiv!=null) {
-						example = divExample;
 						pow.setExpo(div(expoProd,expoDiv.getDenom()).simplify(settings));
-						verboseMessage(original,pow);
 					}else {
-						example = standardExample;
 						pow.setExpo(expoProd.simplify(settings));
-						verboseMessage(original,pow);
 					}
 				}
 				
@@ -208,26 +180,16 @@ public class Power extends Expr{
 		}
 	};
 	private static Rule expoSumHasLog = new Rule("base is e and expo has sum with logs",Rule.TRICKY){
-		
-		@Override
-		public void init(){
-			example = "e^(ln(x)+y)=x*e^y";
-		}
-		
+		private static final long serialVersionUID = 1L;
+
 		@Override
 		Expr applyRuleToExpr(Expr e,Settings settings){
-			Power pow = null;
-			if(e instanceof Power){
-				pow = (Power)e;
-			}else{
-				return e;
-			}
-			if(pow.getExpo() instanceof Sum && pow.getBase().equalStruct(e())) {
+			Power pow = (Power)e;
+			if(pow.getExpo() instanceof Sum && pow.getBase().equals(e())) {
 				Sum expoSum = (Sum)pow.getExpo();
 				Prod outerProd = new Prod();
-				Expr original = e.copy();
 				for(int i = 0;i<expoSum.size();i++) {
-					if(expoSum.get(i) instanceof Log) {
+					if(expoSum.get(i) instanceof Ln) {
 						outerProd.add(expoSum.get(i).get());
 						expoSum.remove(i);
 						i--;
@@ -237,7 +199,6 @@ public class Power extends Expr{
 				if(outerProd.size()>0) {
 					outerProd.add(pow);
 					Expr result = outerProd.simplify(settings);
-					verboseMessage(original,result);
 					return result;
 				}
 			}
@@ -247,23 +208,12 @@ public class Power extends Expr{
 		
 	};
 	private static Rule expoHasIntegerInSum = new Rule("exponent has integer in sum and base is integer",Rule.TRICKY){
-		
-		@Override
-		public void init(){
-			example = "2^(x+5/2)=4*2^(1/2+x)";
-		}
-		
+		private static final long serialVersionUID = 1L;
+
 		@Override
 		Expr applyRuleToExpr(Expr e,Settings settings){
-			Power pow = null;
-			if(e instanceof Power){
-				pow = (Power)e;
-			}else{
-				return e;
-			}
+			Power pow = (Power)e;
 			if(pow.getBase() instanceof Num && !(pow.getExpo() instanceof Num)) {
-				
-				Expr original = e.copy();
 				
 				pow.setExpo(distr(pow.getExpo()).simplify(settings));//distribute exponent
 				
@@ -285,7 +235,6 @@ public class Power extends Expr{
 							expo.remove(i);
 							pow.setExpo(pow.getExpo().simplify(settings));
 							Expr repl = prod(pow,pow(pow.getBase().copy(),num)).simplify(settings);
-							verboseMessage(original,repl);
 							return repl;
 							
 						}
@@ -306,19 +255,11 @@ public class Power extends Expr{
 	};
 	
 	private static Rule rootExpand = new Rule("break apart the base into rootable parts",Rule.TRICKY){
-		
-		String typicalCase = "54^(x/3)=3^x*2^(x/3)";
-		String baseNegativeOne = "(-1)^(x/3)=(-1)^x";
-		String negativeBase = "(-16)^(x/3)=(-1)^x*2^((4*x)/3)";
-		
+		private static final long serialVersionUID = 1L;
+
 		@Override
 		Expr applyRuleToExpr(Expr e,Settings settings){
-			Power pow = null;
-			if(e instanceof Power){
-				pow = (Power)e;
-			}else{
-				return e;
-			}
+			Power pow = (Power)e;
 			
 			if(pow.getBase() instanceof Num) {
 				Num numBase = (Num)pow.getBase();
@@ -331,18 +272,14 @@ public class Power extends Expr{
 					
 					Num denNum = (Num)denomOfFrac.getCoefficient();
 					
-					if(!denNum.isComplex() && !denNum.equalStruct(Num.ONE)) den = denNum.realValue;//denominator captured
+					if(!denNum.isComplex() && !denNum.equals(Num.ONE)) den = denNum.realValue;//denominator captured
 					
 				}
 				
 				BigInteger negOne = BigInteger.valueOf(-1);
 				
-				Expr original = e.copy();
-				
 				if(numBase.realValue.signum() == -1 && !numBase.realValue.equals(negOne)) {//if the base is negative and not negative one
 					pow.setBase(prod(num(-1),num(numBase.realValue.abs())));//split and let let the rule "productInBase" handle this
-					example = negativeBase;
-					verboseMessage(original,pow);
 					return pow;
 				}
 				if(den!=null) {
@@ -350,8 +287,6 @@ public class Power extends Expr{
 					if(numBase.realValue.equals(negOne)) {//handle odd denominators with base negative one. Example (-1)^(x/3) -> (-1)^x
 						if(!den.mod(BigInteger.TWO).equals(BigInteger.ZERO)) {
 							Expr result = pow(num(-1),numerOfFrac);
-							example = baseNegativeOne;
-							verboseMessage(original,result);
 							return result;
 						}
 					}
@@ -382,9 +317,7 @@ public class Power extends Expr{
 					
 					if(!product.equals(BigInteger.ONE) && !leftOver.equals(BigInteger.ONE)) {
 						Prod newProd = prod(num(product),num(leftOver));
-						example = typicalCase;
 						pow.setBase(newProd);//split the base with the root-able component and let let the rule "productInBase" handle this
-						verboseMessage(original,pow);
 					}
 					
 				}
@@ -395,20 +328,11 @@ public class Power extends Expr{
 	};
 	
 	private static Rule perfectPowerInBase = new Rule("the base is a perfect power",Rule.UNCOMMON){
-		
-		@Override
-		public void init(){
-			example = "25^x=5^(2*x)";
-		}
-		
+		private static final long serialVersionUID = 1L;
+
 		@Override
 		Expr applyRuleToExpr(Expr e,Settings settings){
-			Power power = null;
-			if(e instanceof Power){
-				power = (Power)e;
-			}else{
-				return e;
-			}
+			Power power = (Power)e;
 			
 			if(power.getBase() instanceof Num && !(power.getExpo() instanceof Num)) {
 				Power pp = perfectPower((Num)power.getBase());
@@ -430,20 +354,11 @@ public class Power extends Expr{
 	};
 	
 	private static Rule productInBase = new Rule("the base is a product",Rule.UNCOMMON){
-		
-		@Override
-		public void init(){
-			example = "(a*b)^x=a^x*b^x";
-		}
-		
+		private static final long serialVersionUID = 1L;
+
 		@Override
 		Expr applyRuleToExpr(Expr e,Settings settings){
-			Power pow = null;
-			if(e instanceof Power){
-				pow = (Power)e;
-			}else{
-				return e;
-			}
+			Power pow = (Power)e;
 			
 			if(pow.getBase() instanceof Prod) {
 				Prod casted = (Prod)pow.getBase().copy();
@@ -474,46 +389,71 @@ public class Power extends Expr{
 		
 	};
 	
-	static Rule[] ruleSequence = {
-			factorExponent,
-			baseHasPower,
-			negativeExpoToInv,
-			oneToExpo,
-			fracInBase,
-			logInExpoProdToBase,
-			expOfLambertW,
-			expOfLambertWProd,
-			rootExpand,
-			perfectPowerInBase,
-			productInBase,
-			factorBase,
-			productInBase,//second time
-			expoHasIntegerInSum,
-			expoSumHasLog,
-			exponentiateIntegers,
-			expoOfZero,
-			zeroToExpo,
-			powerOfOne,
-			eToLn,
-			eToFracLn,
-			baseToLn,
-	};
+	static Rule powersWithEpsilonOrInf = new Rule("power with epsilon or infinity",Rule.UNCOMMON){
+		private static final long serialVersionUID = 1L;
 
-	@Override
-	public Expr simplify(Settings settings) {
-		Expr toBeSimplified = copy();
-		if(flags.simple) return toBeSimplified;
-		
-		toBeSimplified.simplifyChildren(settings);//simplify sub expressions
-		
-		for (Rule r:ruleSequence){
-			toBeSimplified = r.applyRuleToExpr(toBeSimplified, settings);
+		@Override
+		Expr applyRuleToExpr(Expr e,Settings settings){
+			Power pow = (Power)e;
+			
+			if(pow.getBase().equals(epsilon()) && !pow.getExpo().negative() && !Limit.zeroOrEpsilon(pow.getExpo())){
+				Expr out = epsilon();
+				
+				return out;
+			}else if(pow.getBase().equals(inf()) && !pow.getExpo().negative() && !Limit.zeroOrEpsilon(pow.getExpo())){
+				Expr out = inf();
+				
+				return out;
+			}else if(pow.getExpo().equals(inf())){
+				Expr baseMinusOne = factor(sub(pow.getBase(),Num.ONE)).simplify(settings);
+				
+				if(!baseMinusOne.negative() && !Limit.zeroOrEpsilon(baseMinusOne) || pow.getBase().equals(e()) || pow.getBase().equals(pi())){
+					Expr out = inf();
+					
+					return out;
+				}
+				
+			}
+			
+			return pow;
 		}
-		
-		toBeSimplified.flags.simple = true;
-		return toBeSimplified;
+	};
+	
+	static ExprList ruleSequence = null;
+	
+	public static void loadRules(){
+		ruleSequence = exprList(
+				powersWithEpsilonOrInf,
+				factorExponent,
+				baseHasPower,
+				negativeExpoToInv,
+				oneToExpo,
+				fracInBase,
+				logInExpoProdToBase,
+				expOfLambertW,
+				expOfLambertWProd,
+				rootExpand,
+				perfectPowerInBase,
+				productInBase,
+				factorBase,
+				productInBase,//second time
+				expoHasIntegerInSum,
+				expoSumHasLog,
+				exponentiateIntegers,
+				expoOfZero,
+				zeroToExpo,
+				powerOfOne,
+				eToLn,
+				eToFracLn,
+				baseToLn
+			);
 	}
-
+	
+	@Override
+	ExprList getRuleSequence() {
+		return ruleSequence;
+	}
+	
 	@Override
 	public String toString() {
 		String out = "";

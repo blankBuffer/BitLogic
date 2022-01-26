@@ -7,12 +7,6 @@ public class Script extends Expr{
 	Script(){}//
 
 	@Override
-	public Expr simplify(Settings settings) {
-		// TODO Auto-generated method stub
-		return null;
-	}
-
-	@Override
 	public String toString() {
 		String out = "";
 		if(size() == 0) return "{emptyScript;}";
@@ -38,6 +32,11 @@ public class Script extends Expr{
 	@Override
 	public ComplexFloat convertToFloat(ExprList varDefs) {
 		// TODO Auto-generated method stub
+		return null;
+	}
+
+	@Override
+	ExprList getRuleSequence() {
 		return null;
 	}
 }

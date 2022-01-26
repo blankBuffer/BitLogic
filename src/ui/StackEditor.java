@@ -16,10 +16,11 @@ public class StackEditor extends cas.QuickMath {
 			@Override
 			public void run() {
 				long oldTime = System.nanoTime();
+				long startingInstructionCount = Expr.ruleCallCount;
 				expr = expr.replace(currentDefs.getVars()).simplify(currentSettings);// Substitutes the variables and}
 				
 				long delta = System.nanoTime() - oldTime;
-				System.out.println("took " + delta / 1000000.0 + " ms to compute");
+				System.out.println("took " + delta / 1000000.0 + " ms to compute, "+(Expr.ruleCallCount-startingInstructionCount)+" intructions called");
 			}
 		};
 		compute.start();
@@ -160,6 +161,16 @@ public class StackEditor extends cas.QuickMath {
 			return;
 		stack.set(size() - 1, not(last()));
 	}
+	
+	void limit(){
+		if (size() < 3)
+			return;
+		Limit out = new Limit(stack.get(size()-4),(Var)sLast(),last());
+		for(int i = 0;i<3;i++){
+			stack.remove(size()-1);
+		}
+		stack.addElement( out);
+	}
 
 	void exponent() {
 		if (sLast() == null)
@@ -184,7 +195,13 @@ public class StackEditor extends cas.QuickMath {
 	void log() {
 		if (sLast() == null)
 			return;
-		stack.set(size() - 1, div(ln(sLast()), ln(last())));
+		if(last().equals(e())){
+			stack.set(size() - 1, ln(sLast()));
+			stack.remove(size()-2);
+		}else{
+			stack.set(size() - 1, div(ln(sLast()), ln(last())));
+			stack.remove(size()-2);
+		}
 	}
 
 	void factor() {
@@ -402,11 +419,11 @@ public class StackEditor extends cas.QuickMath {
 		stack.remove(stack.size() - 1);
 	}
 
-	public void command(String command) {
+	public int command(String command) {
 
 		if (command.isEmpty()) {
 			UI.createMessege("you typed nothing");
-			return;
+			return 0;
 		}
 		try {
 			if (!command.equals("undo")) {
@@ -427,7 +444,9 @@ public class StackEditor extends cas.QuickMath {
 				not();
 			} else if (command.equals("-")) {
 				subtract();
-			} else if (command.equals("*")) {
+			} else if (command.equals("limit")) {
+				limit();
+			}else if (command.equals("*")) {
 				multiply();
 			} else if (command.equals("^")) {
 				exponent();
@@ -483,8 +502,6 @@ public class StackEditor extends cas.QuickMath {
 				stack.set(size() - 1, last());// update visuals
 			}else if (command.equals("tree")) {
 				stack.addElement(var(last().printTree(0)));
-			} else if (command.equals("inner")) {
-				stack.addElement(last().getNextInnerFunction(var("x")));
 			}else if (command.equals("complexity")) {
 				stack.addElement(num(last().complexity()));
 			}else if (command.equals("dup")) {
@@ -519,7 +536,7 @@ public class StackEditor extends cas.QuickMath {
 			}else if (command.equals("mathML")) {
 				mathML();
 			}else if (command.equals("quit") || command.equals("exit") || command.equals("close")) {
-				System.exit(0);
+				return -1;
 			} else if (command.equals("plot")) {
 				new graphics.Plot(this);
 			} else if (command.equals("approx")) {
@@ -533,10 +550,10 @@ public class StackEditor extends cas.QuickMath {
 				stack.addElement(num(last().hashCode()));
 			}else if (command.equals("id")) {
 				stack.addElement(num( last().ID ));
-			} else if (command.equals("equalStruct")) {
-				stack.addElement(new BoolState(last().equalStruct(sLast())));
-			} else if(command.equals("equal")){
+			} else if (command.equals("equal")) {
 				stack.addElement(new BoolState(last().equals(sLast())));
+			} else if(command.equals("exactlyEqual")){
+				stack.addElement(new BoolState(last().exactlyEquals(sLast())));
 			}else if (command.equals("define")) {
 				currentDefs.addVar(((Var) sLast()).name, last());
 				stack.removeRange(size() - 2, size() - 1);
@@ -586,6 +603,6 @@ public class StackEditor extends cas.QuickMath {
 			UI.createMessege("An error has occured\nreason: " + e.getMessage());
 			e.printStackTrace();
 		}
-
+		return 0;
 	}
 }

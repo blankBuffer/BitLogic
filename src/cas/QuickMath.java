@@ -1,6 +1,7 @@
 package cas;
 import java.math.BigInteger;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashMap;
 
 
@@ -87,6 +88,22 @@ public class QuickMath {
 		}
 		return out;
 	}
+	public static ExprList exprList(Expr... exprs) {
+		ExprList out = new ExprList();
+		for(Expr e:exprs){
+			out.add(e);
+		}
+		return out;
+	}
+	public static Var inf(){
+		return var("inf");
+	}
+	public static Var epsilon(){
+		return var("epsilon");
+	}
+	public static Limit limit(Expr e,Var v,Expr value){
+		return new Limit(e,v,value);
+	}
 	public static Not not(Expr a) {
 		return new Not(a);
 	}
@@ -123,8 +140,8 @@ public class QuickMath {
 	public static BoolState bool(boolean b) {
 		return new BoolState(b);
 	}
-	public static Log ln(Expr a) {
-		return new Log(a);
+	public static Ln ln(Expr a) {
+		return new Ln(a);
 	}
 	public static Sum sub(Expr a,Expr b) {
 		return sum(a,prod(num(-1),b));
@@ -144,11 +161,11 @@ public class QuickMath {
 	public static Div div(Expr a,Expr b) {
 		return new Div(a,b);
 	}
-	public static E e() {
-		return new E();
+	public static Var e() {
+		return var("e");
 	}
-	public static Pi pi() {
-		return new Pi();
+	public static Var pi() {
+		return var("pi");
 	}
 	public static Diff diff(Expr e,Var v) {
 		return new Diff(e,v);
@@ -304,7 +321,7 @@ public class QuickMath {
 		ExprList out = new ExprList();
 		
 		while(remain.size() >= den.size()) {
-			if(den.get(den.size()-1).equalStruct(zero)) {//avoid divide by zero situation
+			if(den.get(den.size()-1).equals(zero)) {//avoid divide by zero situation
 				out.add(0, zero.copy());
 				remain.remove(remain.size()-1);//pop last element
 				continue;
@@ -323,7 +340,7 @@ public class QuickMath {
 			
 			
 		}
-		while(remain.size()>0 && remain.get(remain.size()-1).equalStruct(zero)) {//clean zeros off end
+		while(remain.size()>0 && remain.get(remain.size()-1).equals(zero)) {//clean zeros off end
 			remain.remove(remain.size()-1);
 		}
 		
@@ -337,11 +354,11 @@ public class QuickMath {
 		for(int i = 0;i<exprSum.size();i++) {
 			Expr term = exprSum.get(i);
 			Expr stripped = stripNonVarPartsFromProd(term,v);
-			if(stripped.equalStruct(v)) maxDegree = maxDegree.max(BigInteger.ONE);
+			if(stripped.equals(v)) maxDegree = maxDegree.max(BigInteger.ONE);
 			else if(stripped instanceof Power) {
 				Power casted = (Power)stripped;
 				if(isPositiveRealNum(casted.getExpo())) {
-					if(casted.getBase().equalStruct(v)) {
+					if(casted.getBase().equals(v)) {
 						maxDegree = maxDegree.max(((Num)casted.getExpo()).realValue);
 					}else if(isPolynomial(casted.getBase(),v)) {
 						maxDegree = maxDegree.max( degree(casted.getBase(),v).multiply(((Num)casted.getExpo()).realValue) );
@@ -365,15 +382,29 @@ public class QuickMath {
 		return maxDegree;
 	}
 	
+	public static boolean isPolynomialUnstrict(Expr expr,Var v){
+		if(!expr.contains(v) || expr.equals(v)) return true;
+		if(expr instanceof Sum || expr instanceof Prod){
+			for(int i = 0;i<expr.size();i++){
+				if(!isPolynomialUnstrict(expr.get(i),v)) return false;
+			}
+			return true;
+		}else if(expr instanceof Power){
+			Power casted = (Power)expr;
+			return isPositiveRealNum(casted.getExpo()) && isPolynomialUnstrict(casted.getBase(),v);
+		}
+		return false;
+	}
+	
 	public static boolean isPolynomial(Expr expr,Var v) {
 		Sum exprSum = Sum.cast(expr);
 		for(int i = 0;i<exprSum.size();i++) {
 			Expr term = exprSum.get(i);
 			Expr stripped = stripNonVarPartsFromProd(term,v);
-			if(stripped.equalStruct(v)) continue;
+			if(stripped.equals(v)) continue;
 			else if(stripped instanceof Power) {
 				Power casted = (Power)stripped;
-				if(casted.getBase().equalStruct(v) && isPositiveRealNum(casted.getExpo())) continue;
+				if(casted.getBase().equals(v) && isPositiveRealNum(casted.getExpo())) continue;
 				return false;
 			}else if(stripped instanceof Num) continue;
 			else return false;
@@ -397,12 +428,12 @@ public class QuickMath {
 			Expr contents = null;
 			if(e.contains(v)) {
 				ExprList parts = seperateByVar(e,v);
-				if(parts.get(1).equalStruct(v)) {
+				if(parts.get(1).equals(v)) {
 					contents = parts.get(0);
 					degree = BigInteger.ONE;
 				}else if(parts.get(1) instanceof Power) {
 					Power casted = (Power)parts.get(1);
-					if(casted.getBase().equalStruct(v) && isPositiveRealNum(casted.getExpo())) {
+					if(casted.getBase().equals(v) && isPositiveRealNum(casted.getExpo())) {
 						degree = ((Num)casted.getExpo()).realValue;
 					}else return null;
 					contents = parts.get(0);
@@ -806,6 +837,16 @@ public class QuickMath {
 		return outNumer.divide(outDenom);
 	}
 	
+	public static Var mostCommonVar(Expr e){
+		if(e.containsVars()){
+			ArrayList<VarCount> varcounts = null;
+			varcounts = new ArrayList<VarCount>();
+			e.countVars(varcounts);
+			return Collections.max(varcounts).v;
+		}
+		return null;
+	}
+	
 	public static ArrayList<BigInteger[]> possiblePartitions(BigInteger size,BigInteger groups,BigInteger[] l_current,int currentIndex, ArrayList<BigInteger[]> out){
 		if(out == null) out = new ArrayList<BigInteger[]>();
 		if(l_current == null) l_current = new BigInteger[groups.intValue()];
@@ -934,9 +975,9 @@ public class QuickMath {
 		String out = "";
 		String leftParen = "\\left( ";
 		String rightParen = "\\right) ";
-		if(e instanceof Pi) {
+		if(e.equals(pi())) {
 			out+="\\pi ";
-		}else if(e instanceof Var || e instanceof Num || e instanceof E) {
+		}else if(e instanceof Var || e instanceof Num || e.equals(e())) {
 			out += e.toString();
 		}else if(e instanceof Prod) {
 			for(int i = 0;i<e.size();i++) {

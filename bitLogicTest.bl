@@ -1,6 +1,8 @@
+#basics
 x+y+x+y+y
+x+2*x
 x/-1
--1/x
+(-1)/x
 x*x*y*x*y
 2+3+6
 x-x+y
@@ -19,48 +21,61 @@ x^2/x^5
 (5/2)!
 x/sqrt(x)
 sqrt(x)/x
+sqrt(32*x)
+sqrt(2/3)
+ln(25)+ln(2)
+ln(8*x^3)
+#equations
 solve(3*x+1=7*x-2,x)
 solve(x^2-4=0,x)
 solve(y=sqrt(x),x)
 solve(5/x^2=7,x)
-what is two plus two minus 5
 solve(a^2+b^2=c^2,c)
-sqrt(32*x)
+solve(2*x+3^x=5,x)
+solve(x^3+sqrt(x^3+a)=y,x)
+#integrals
+integrate((3*x+2)/(7*x-2)^3/(x-3),x)
 integrate(sin(2*x),x)
-what is the derivative of square root of x
-define(x,2)
-x+2*x
-delete(x)
-defineFunc(f,[x,y],x*y)
-f(2,3)
-deleteFunc(f)
-showDefs()
 integrate((-cos(1/x))/x^2,x)
-int(x^2*e^(x/2),x)
+integrate(x^2*e^(x/2),x)
 integrate(x*sqrt(x+1),x)
 integrate(x^2*sqrt(x+1),x)
-int(sin(x)*cos(x),x)
-int(atan(x)/(x^2+1),x)
+integrate(sin(x)*cos(x),x)
+integrate(atan(x)/(x^2+1),x)
+integrateOver(1,3,x^3,x)
+#trig
 acos(2*sin(x)*cos(x))
-distr((x-3)*(x+4)*(x^7-87624)*(x^3+8724))
+sin(pi/3)
+sin(pi/6)
+tan(pi/3)
+cos(-x)
+#factoring
 factor(x^12+x^11-12*x^10+8724*x^9+8724*x^8-104688*x^7-87624*x^5-87624*x^4+1051488*x^3-764431776*x^2-764431776*x+9173181312)
 factor(x^16-1)
 factor(4294967296*a*b^7+1879048192*a^2*b^6+469762048*a^3*b^5+73400320*a^4*b^4+7340032*a^5*b^3+458752*a^6*b^2+16384*a^7*b+256*a^8+4294967296*b^8)
 factor(x^3+x+2)
+#distribution
+distr((x-3)*(x+4)*(x^7-87624)*(x^3+8724))
+#lists
 [x,x,y]
 [x]
 []
-integrateOver(1,3,x^3,x)
-ln(25)+ln(2)
-approx(ln(2)+1)
-ln(8*x^3)
+#approximations
+approx(ln(4)+1)
 approx(2.1+3.7)
+approx(gamma(3.7))
+#limits
+limit((1+1/x)^x,x,inf)
+#prime factor
+primeFactor(98769876234523498761234)
+#language conversion
 mathML(integrateOver(0,x,t*sin(t),t)+x-e^2/5+diff(ln(x),x))
-solve(x^3+sqrt(x^3+a)=y,x)
+#text questions
+what is the derivative of square root of x
 13 feet to inches
 2 pounds to kilograms
 2 degrees f to c
 roll a 12 sided dice
 flip a coin
-pick a random number from 200 and 300
-solve(2*x+3^x=5,x)
+pick a random number from 200 to 300
+what is two plus two minus 5

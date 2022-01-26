@@ -83,7 +83,8 @@ public class Solve extends Expr{
 		add(v);
 	}
 	
-	Var getVar() {
+	@Override
+	public Var getVar() {
 		return (Var)get(1);
 	}
 	
@@ -94,7 +95,7 @@ public class Solve extends Expr{
 	void setEqu(Equ e) {
 		set(0,e);
 	}
-	private static Num ZERO = num(0);//just for comparisons
+	
 	@Override
 	public Expr simplify(Settings settings) {
 		Expr toBeSimplified = copy();
@@ -112,16 +113,16 @@ public class Solve extends Expr{
 		
 		Equ oldEqu = null;
 		
-		outer:while(!castedSolve.getEqu().equalStruct(oldEqu)) {
+		outer:while(!castedSolve.getEqu().equals(oldEqu)) {
 			oldEqu = (Equ)castedSolve.getEqu().copy();
 				
-			if( !castedSolve.getEqu().getRightSide().equalStruct(ZERO)) castedSolve.getEqu().setLeftSide( distr(castedSolve.getEqu().getLeftSide()).simplify(settings));//distribute, we don't do it if right side is zero because we can use technique
+			if( !castedSolve.getEqu().getRightSide().equals(Num.ZERO)) castedSolve.getEqu().setLeftSide( distr(castedSolve.getEqu().getLeftSide()).simplify(settings));//distribute, we don't do it if right side is zero because we can use technique
 				
 			sumMoveNonImportantToRightSide(castedSolve,settings);//x+a+b=c -> x=c-a-b
 			
 			castedSolve.getEqu().setLeftSide( factor(castedSolve.getEqu().getLeftSide()).simplify(settings) );//factor
 			
-			if(castedSolve.getEqu().getRightSide().equalStruct(ZERO) && castedSolve.getEqu().getLeftSide() instanceof Prod) {//if left side is a product and right side is 0 each part of the product is an equation
+			if(castedSolve.getEqu().getRightSide().equals(Num.ZERO) && castedSolve.getEqu().getLeftSide() instanceof Prod) {//if left side is a product and right side is 0 each part of the product is an equation
 				ExprList repl = new ExprList();
 				
 				Prod leftProd = (Prod)castedSolve.getEqu().getLeftSide();
@@ -191,12 +192,12 @@ public class Solve extends Expr{
 								if(!sumPart.get(i).contains(varPart)) {
 									b.add(sumPart.get(i));
 								}else {
-									if(sumPart.get(i).equalStruct(varPart)) a.add(num(1));
+									if(sumPart.get(i).equals(varPart)) a.add(num(1));
 									else if(sumPart.get(i) instanceof Prod) {
 										Prod subProd = (Prod)sumPart.get(i);
 										Prod p = new Prod();
 										for(int j = 0;j<subProd.size();j++) {
-											if(!subProd.get(j).equalStruct(varPart)) {
+											if(!subProd.get(j).equals(varPart)) {
 												p.add(subProd.get(j));
 											}
 										}
@@ -248,7 +249,7 @@ public class Solve extends Expr{
 				}
 			}
 			if(toBeSimplified instanceof Solve) {
-				if(castedSolve.getEqu().getLeftSide().equalStruct(castedSolve.getVar())) toBeSimplified = castedSolve.getEqu();//solved !!!
+				if(castedSolve.getEqu().getLeftSide().equals(castedSolve.getVar())) toBeSimplified = castedSolve.getEqu();//solved !!!
 			}
 		}
 		
@@ -271,7 +272,7 @@ public class Solve extends Expr{
 					ComplexFloat test = originalProblem.replace(equ(castedSolve.getVar(),testValue)).convertToFloat(new ExprList());
 					if(Math.abs(test.real)<1){
 						Expr testZero = originalProblem.replace(equ(castedSolve.getVar(),testValue)).simplify(settings);
-						if(testZero.equalStruct(num(0))){//double check
+						if(testZero.equals(num(0))){//double check
 							sol.add(equ(castedSolve.getVar().copy(),testValue));
 						}
 					}
@@ -283,11 +284,12 @@ public class Solve extends Expr{
 		}
 		
 		toBeSimplified.flags.simple = true;
+		
 		return toBeSimplified;
 	}
 	
 	static void moveToLeftSide(Solve solve) {
-		if(!solve.getEqu().getRightSide().equalStruct(ZERO)) {
+		if(!solve.getEqu().getRightSide().equals(Num.ZERO)) {
 			solve.getEqu().setLeftSide( sub(solve.getEqu().getLeftSide(),solve.getEqu().getRightSide()) );
 			solve.getEqu().setRightSide(num(0));
 		}
@@ -490,6 +492,11 @@ public class Solve extends Expr{
 		}
 		
 		return solutions;
+	}
+	@Override
+	ExprList getRuleSequence() {
+		// TODO Auto-generated method stub
+		return null;
 	}
 
 }

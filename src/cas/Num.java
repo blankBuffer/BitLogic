@@ -74,7 +74,7 @@ public class Num extends Expr{
 			return -1;
 		}else if(realValue.equals(BigInteger.ZERO) && imagValue.signum() == -1) {
 			return -1;
-		}else if(this.equalStruct(ZERO)) {
+		}else if(this.equals(ZERO)) {
 			return 0;
 		}else {
 			return 1;
@@ -144,7 +144,7 @@ public class Num extends Expr{
 		return new Num(realValue,imagValue);
 	}
 	@Override
-	public boolean equalStruct(Expr other) {
+	public boolean equals(Object other) {
 		if(other instanceof Num) {
 			Num otherCasted = (Num)other;
 			return otherCasted.realValue.equals(realValue) && otherCasted.imagValue.equals(imagValue);
@@ -153,7 +153,7 @@ public class Num extends Expr{
 	}
 	@Override
 	boolean similarStruct(Expr other,boolean checked) {
-		if(other instanceof Num) return equalStruct(other);
+		if(other instanceof Num) return equals(other);
 		return false;
 	}
 	@Override
@@ -163,6 +163,11 @@ public class Num extends Expr{
 	@Override
 	public ComplexFloat convertToFloat(ExprList varDefs) {
 		return new ComplexFloat(realValue.doubleValue(),imagValue.doubleValue());
+	}
+
+	@Override
+	ExprList getRuleSequence() {
+		return null;
 	}
 
 }

@@ -13,6 +13,7 @@ import java.io.ObjectOutputStream;
 import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.Random;
 
 /*
@@ -29,6 +30,23 @@ import java.util.Random;
  */
 
 public abstract class Expr extends QuickMath implements Comparable<Expr>, Serializable{
+	
+	
+	public boolean commutative = false;
+	boolean simplifyChildren = true;
+	public Flags flags = new Flags();
+	static Random random = new Random(827746169);
+	static boolean USE_CACHE = true;
+	static int CACHE_SIZE = 2048;
+	public int ID = random.nextInt();
+	private static final long serialVersionUID = -8297916729116741273L;
+	private ArrayList<Expr> subExpr = new ArrayList<Expr>();//many expression types have sub expressions like sums
+	
+	abstract ExprList getRuleSequence();
+	public abstract ComplexFloat convertToFloat(ExprList varDefs);
+	
+	public static HashMap<Expr,Expr> cached = new HashMap<Expr,Expr>();
+	public static ArrayList<Expr> cachedKeys = new ArrayList<Expr>();
 	
 	/*
 	 * flags attempt to reduce the amount of work needed during simplification
@@ -64,17 +82,57 @@ public abstract class Expr extends QuickMath implements Comparable<Expr>, Serial
 		}
 	}
 	
-	static Random random = new Random(827746169);
+	public static long ruleCallCount = 0;
 	
-	public int ID = random.nextInt();
-	
-	public Flags flags = new Flags();
-	
-	private static final long serialVersionUID = -8297916729116741273L;
-
-	private ArrayList<Expr> subExpr = new ArrayList<Expr>();//many expression types have sub expressions like sums
-	
-	public abstract Expr simplify(Settings settings);//all expressions will have a simplify call, this is the most important function 
+	public Expr simplify(Settings settings){//all expressions will have a simplify call, this is the most important function 
+		
+		Expr toBeSimplified = copy();
+		if(flags.simple) return toBeSimplified;
+		
+		if(USE_CACHE){
+			Expr cacheOut = cached.get(this);
+			if(cacheOut != null){
+				return cacheOut.copy();
+			}
+		}
+		
+		@SuppressWarnings("unchecked")
+		Class<Expr> originalType = (Class<Expr>) this.getClass();
+		if(simplifyChildren) toBeSimplified.simplifyChildren(settings);//simplify sub expressions
+		
+		ExprList ruleSequence = getRuleSequence();
+		
+		if(ruleSequence != null){
+			
+			for (int i = 0;i<ruleSequence.size();i++){
+				Rule rule = (Rule)ruleSequence.get(i);
+				
+				toBeSimplified = rule.applyRuleToExpr(toBeSimplified, settings);
+				ruleCallCount++;
+				if(!toBeSimplified.getClass().equals(originalType)) break;
+			}
+		}
+		
+		toBeSimplified.flags.simple = true;//result is simplified and should not be simplified again
+		
+		if(USE_CACHE){
+			if(cached.size()<CACHE_SIZE){
+				Expr original = copy();
+				cached.put(original, toBeSimplified.copy());
+				cachedKeys.add(original);
+			}else{
+				//remove a random 1024 items from cache
+				//System.out.println("shrinking cache!");
+				for(int i = 0;i<CACHE_SIZE/4;i++){
+					int randomIndex = random.nextInt(cachedKeys.size());
+					Expr expr = cachedKeys.get(randomIndex);
+					cachedKeys.remove(randomIndex);
+					cached.remove(expr);
+				}
+			}
+		}
+		return toBeSimplified;
+	}
 	
 	public Expr copy(){//copying this expression object
 		Expr out = null;
@@ -91,33 +149,48 @@ public abstract class Expr extends QuickMath implements Comparable<Expr>, Serial
 		
 	}
 	
-	@Override
-	public abstract String toString();//print the expression into console
+	@SuppressWarnings("static-method")
+	public Var getVar(){
+		return null;
+	}
 	
 	@Override
-	public boolean equals(Object other){
+	public String toString(){
+		String out = this.getClass().getSimpleName().toLowerCase()+"(";
+		for(int i = 0;i<size();i++){
+			out+=get(i);
+			if(i!=size()-1) out+=",";
+		}
+		out+=")";
+		return out;
+	}
+	
+	public boolean exactlyEquals(Object other){
 		if(other instanceof Expr){
 			Expr casted = (Expr)other;
-			if(casted.equalStruct(this)) return true;
-			return factor(sub(this,casted)).simplify(Settings.normal).equalStruct(num(0));		
+			if(casted.equals(this)) return true;
+			return factor(sub(this,casted)).simplify(Settings.normal).equals(num(0));		
 		}
 		return false;
 	}
 	
-	public boolean equalStruct(Expr other){//compares if two expression have the same tree
-		if(other == null) return false;
+	@Override
+	public boolean equals(Object other){//compares if two expression have the same tree
+		if(other == null || !(other instanceof Expr)) return false;
+		if(other == this) return true;
+		Expr otherCasted = (Expr)other;
 		if(other.getClass().equals(this.getClass())) {//make sure same type
 			
-			if(other.size() == size()) {//make sure they are the same size
+			if(otherCasted.size() == size()) {//make sure they are the same size
 				
 				if(this.commutative){
 					boolean usedIndex[] = new boolean[size()];//keep track of what indices have been used
-					int length = other.size();//length of the lists
+					int length = otherCasted.size();//length of the lists
 					
 					outer:for(int i = 0;i < length;i++) {
 						for(int j = 0;j < length;j++) {
 							if(usedIndex[j]) continue;
-							if(get(i).equalStruct(other.get(j))) {
+							if(get(i).equals(otherCasted.get(j))) {
 								usedIndex[j] = true;
 								continue outer;
 							}
@@ -128,7 +201,7 @@ public abstract class Expr extends QuickMath implements Comparable<Expr>, Serial
 					return true;//they are the same as everything was found
 				}
 				for(int i = 0;i<size();i++){//not commutative
-					if(!get(i).equalStruct(other.get(i))) return false;
+					if(!get(i).equals(otherCasted.get(i))) return false;
 				}
 				return true;
 			}
@@ -157,10 +230,6 @@ public abstract class Expr extends QuickMath implements Comparable<Expr>, Serial
 	public Object clone(){//deep copy of expression
 		return copy();
 	}
-	
-	public abstract ComplexFloat convertToFloat(ExprList varDefs);
-	
-	public boolean commutative = false;
 	
 	public boolean negative() {//Assumes its already simplified
 		if(this instanceof Num) return ((Num)this).signum() == -1;
@@ -229,14 +298,14 @@ public abstract class Expr extends QuickMath implements Comparable<Expr>, Serial
 	}
 	//returns if the expression is in this, not full proof for products and sums
 	public boolean contains(Expr expr) {
-		if(this.equalStruct(expr)) return true;
+		if(this.equals(expr)) return true;
 		for(Expr e:subExpr)if(e.contains(expr)) return true;
 		return false;
 	}
 	
 	//returns if the expression contains any variables
 	public boolean containsVars() {
-		if(this instanceof Var) return true;
+		if(this instanceof Var && ((Var)this).generic) return true;
 		for(Expr e:subExpr) if(e.containsVars()) return true;
 		return false;
 	}
@@ -255,7 +324,7 @@ public abstract class Expr extends QuickMath implements Comparable<Expr>, Serial
 				
 				boolean[] usedIndicies = new boolean[other.size()];
 				for(int i = 0;i<size();i++) {
-					if(get(i) instanceof Var) continue;//skip because they return true on anything
+					if(get(i) instanceof Var && ((Var)get(i)).generic) continue;//skip because they return true on anything
 					boolean found = false;
 					for(int j = 0;j<other.size();j++) {
 						if(usedIndicies[j]) continue;
@@ -324,7 +393,7 @@ public abstract class Expr extends QuickMath implements Comparable<Expr>, Serial
 	 * 
 	 */
 	boolean getParts(ExprList vars,ExprList exprs,Expr expr) {//template and this is input,vars and exprs are outputs
-		if(this instanceof Var) {//template encountered a variable, time for extraction into the expr list
+		if(this instanceof Var && ((Var)this).generic) {//template encountered a variable, time for extraction into the expr list
 			vars.add(copy());
 			exprs.add(expr.copy());
 		}else{
@@ -340,9 +409,9 @@ public abstract class Expr extends QuickMath implements Comparable<Expr>, Serial
 	}
 	//counts the variables in an expression into the provided arrayList and sorts them by frequency
 	void countVars(ArrayList<VarCount> varcounts) {
-		if(this instanceof Var) {
+		if(this instanceof Var && ((Var)this).generic) {
 			for(int i = 0;i<varcounts.size();i++) {//search
-				if(varcounts.get(i).v.equalStruct(this)) {
+				if(varcounts.get(i).v.equals(this)) {
 					varcounts.get(i).count++;
 					return;
 				}
@@ -380,7 +449,7 @@ public abstract class Expr extends QuickMath implements Comparable<Expr>, Serial
 			set.ints.add(i);
 			
 			for(int j = i+1;j<vars.size();j++) {
-				if(vars.get(i).equalStruct(vars.get(j))) {
+				if(vars.get(i).equals(vars.get(j))) {
 					set.ints.add(j);
 					
 				}
@@ -401,7 +470,7 @@ public abstract class Expr extends QuickMath implements Comparable<Expr>, Serial
 				
 				Expr e2 =  exprs.get(set.ints.get(i));
 				
-				if(!e2.equalStruct(e)) return false;
+				if(!e2.equals(e)) return false;
 			}
 			
 		}
@@ -611,7 +680,7 @@ public abstract class Expr extends QuickMath implements Comparable<Expr>, Serial
 	public Expr replace(ExprList equs) {
 		for(int i = 0;i<equs.size();i++) {
 			Equ e = (Equ)equs.get(i);
-			if(equalStruct(e.getLeftSide())) return e.getRightSide().copy();
+			if(equals(e.getLeftSide())) return e.getRightSide().copy();
 		}
 		
 		Expr replacedChildren = copy();
@@ -633,22 +702,6 @@ public abstract class Expr extends QuickMath implements Comparable<Expr>, Serial
 				subExpr.set(i, temp);
 			}
 		}
-	}
-	
-	public Expr getNextInnerFunction(Var v) {
-		if(size()>0 && contains(v)){
-			Expr highest = null;
-			long highestComplexity = 0;
-			for(int i = 0;i<size();i++) {
-				long current = get(i).complexity();
-				if(current>highestComplexity && get(i).contains(v)) {
-					highestComplexity = current;
-					highest = get(i);
-				}
-			}
-			return highest;
-		}
-		return copy();
 	}
 	
 	public static void saveExpr(Expr expr,String fileName)throws IOException{

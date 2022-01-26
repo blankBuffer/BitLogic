@@ -4,14 +4,75 @@ public class Diff extends Expr{
 	
 	private static final long serialVersionUID = -4094192362094389130L;
 	
-	static Equ baseCase = (Equ)createExpr("diff(x,x)=1");
-	static Equ logCase = (Equ)createExpr("diff(ln(a),x)=diff(a,x)/a");
-	static Equ powCase = (Equ)createExpr("diff(a^b,x)=a^b*diff(ln(a)*b,x)");
-	static Equ sinCase = (Equ)createExpr("diff(sin(a),x)=cos(a)*diff(a,x)");
-	static Equ cosCase = (Equ)createExpr("diff(cos(a),x)=-sin(a)*diff(a,x)");
-	static Equ tanCase = (Equ)createExpr("diff(tan(a),x)=(cos(a)^-2)*diff(a,x)");
-	static Equ atanCase = (Equ)createExpr("diff(atan(a),x)=diff(a,x)/(a^2+1)");
-	static Equ divCase = (Equ)createExpr("diff(a/b,x)=(diff(a,x)*b-a*diff(b,x))/(b^2)");
+	static Rule baseCase = new Rule("diff(x,x)=1","derivative of x",Rule.VERY_EASY);
+	static Rule logCase = new Rule("diff(ln(a),x)=diff(a,x)/a","derivative of log",Rule.EASY);
+	static Rule powCase = new Rule("diff(a^b,x)=a^b*diff(ln(a)*b,x)","power rule",Rule.EASY);
+	static Rule sinCase = new Rule("diff(sin(a),x)=cos(a)*diff(a,x)","derivative of sine",Rule.UNCOMMON);
+	static Rule cosCase = new Rule("diff(cos(a),x)=-sin(a)*diff(a,x)","derivative of cosine",Rule.UNCOMMON);
+	static Rule tanCase = new Rule("diff(tan(a),x)=(cos(a)^-2)*diff(a,x)","derivative of tangent",Rule.UNCOMMON);
+	static Rule atanCase = new Rule("diff(atan(a),x)=diff(a,x)/(a^2+1)","derivative of arctan",Rule.UNCOMMON);
+	static Rule divCase = new Rule("diff(a/b,x)=(diff(a,x)*b-a*diff(b,x))/(b^2)","derivative of division",Rule.TRICKY);
+	
+	static Rule constant = new Rule("derivative of a constant",Rule.VERY_EASY){
+		private static final long serialVersionUID = 1L;
+		
+		@Override
+		public Expr applyRuleToExpr(Expr e,Settings settings){
+			Diff d = (Diff)e;
+			if(!d.get().contains(d.getVar())){
+				Expr out = num(0);
+				return out;
+			}
+			return d;
+		}
+		
+	};
+	static Rule derivOfProd = new Rule("derivative of a product",Rule.TRICKY){
+		private static final long serialVersionUID = 1L;
+
+		@Override
+		public Expr applyRuleToExpr(Expr e,Settings settings){
+			Diff d = (Diff)e;
+			if(d.get() instanceof Prod){
+				Prod inner = (Prod)d.get();
+				
+				Sum out = new Sum();
+				for(int i = 0;i<inner.size();i++){
+					Expr copy = inner.copy();
+					copy.set(i, diff(copy.get(i),d.getVar()));
+					out.add(copy);
+				}
+				return out.simplify(settings);
+				
+			}
+			return d;
+		}
+		
+	};
+	
+	static ExprList ruleSequence = null;
+	
+	@Override
+	ExprList getRuleSequence() {
+		return ruleSequence;
+	}
+	
+	public static void loadRules(){
+		ruleSequence = exprList(
+				constant,
+				StandardRules.pullOutConstants,
+				baseCase,
+				StandardRules.linearOperator,
+				derivOfProd,
+				logCase,
+				powCase,
+				sinCase,
+				cosCase,
+				tanCase,
+				atanCase,
+				divCase
+			);
+	}
 	
 	Diff(){}//
 	public Diff(Expr e,Var v){
@@ -19,65 +80,10 @@ public class Diff extends Expr{
 		add(v);
 	}
 	
-	Var getVar() {
+	@Override
+	public Var getVar() {
 		return (Var)get(1);
 	}
-
-	@Override
-	public Expr simplify(Settings settings) {
-		Expr toBeSimplified = copy();
-		if(flags.simple) return toBeSimplified;
-		toBeSimplified.simplifyChildren(settings);
-		if(!get().contains(getVar())) toBeSimplified = num(0);
-		if(toBeSimplified instanceof Diff) toBeSimplified = extractOutConstants((Diff)toBeSimplified,settings);
-		if(toBeSimplified instanceof Diff) {
-			Expr get = toBeSimplified.get();
-			
-			if(get instanceof Var) toBeSimplified = toBeSimplified.modifyFromExample(baseCase,settings);
-			else if(get instanceof Log) toBeSimplified = toBeSimplified.modifyFromExample(logCase,settings);
-			else if(get instanceof Power) toBeSimplified = toBeSimplified.modifyFromExample(powCase,settings);
-			else if(get instanceof Sin) toBeSimplified = toBeSimplified.modifyFromExample(sinCase,settings);
-			else if(get instanceof Cos) toBeSimplified = toBeSimplified.modifyFromExample(cosCase,settings);
-			else if(get instanceof Tan) toBeSimplified = toBeSimplified.modifyFromExample(tanCase,settings);
-			else if(get instanceof Atan) toBeSimplified = toBeSimplified.modifyFromExample(atanCase,settings);
-			else if(get instanceof Div) toBeSimplified = toBeSimplified.modifyFromExample(divCase,settings);
-			else if(get instanceof Sum) {//derivative of sum becomes sum of derivatives
-				for(int i = 0;i<get.size();i++) get.set(i, diff(get.get(i),(Var)(getVar().copy())));
-				toBeSimplified = get;
-				toBeSimplified = toBeSimplified.simplify(settings);
-			}else if(get instanceof Prod) {//diff(a*b*c,x) -> diff(a,x)*b*c+a*diff(b,x)*c+a*b*diff(c,x)
-				Expr repl = new Sum();
-				for(int i = 0;i<get.size();i++) {
-					Prod p = (Prod)get.copy();
-					p.set(i, diff(p.get(i),(Var)getVar().copy()));
-					repl.add(p);
-				}
-				toBeSimplified = repl.simplify(settings);
-			}
-		}
-		toBeSimplified.flags.simple = true;
-		return toBeSimplified;
-	}
-	
-	static Expr extractOutConstants(Diff d,Settings settings) {
-		Expr res = seperateByVar(d.get(),d.getVar());
-		if(!res.get(0).equalStruct(Num.ONE)) {
-			return prod(res.get(0),diff(res.get(1),d.getVar())).simplify(settings);
-		}
-		return d;
-	}
-
-	@Override
-	public String toString() {
-		String out = "";
-		out+="diff(";
-		out+=get().toString();
-		out+=",";
-		out+=getVar().toString();
-		out+=")";
-		return out;
-	}
-
 	@Override
 	public ComplexFloat convertToFloat(ExprList varDefs) {
 		ComplexFloat delta = new ComplexFloat(1.0/Integer.MAX_VALUE,1.0/Integer.MAX_VALUE);
@@ -88,7 +94,7 @@ public class Diff extends Expr{
 		for(int i = 0;i < varDefs2.size();i++) {
 			Equ temp = (Equ)varDefs2.get(i);
 			Var v = (Var)temp.getLeftSide();
-			if(v.equalStruct(getVar())) {
+			if(v.equals(getVar())) {
 				((FloatExpr)temp.getRightSide()).value.set(ComplexFloat.add(((FloatExpr)temp.getRightSide()).value, delta));
 				break;
 			}

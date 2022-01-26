@@ -6,104 +6,101 @@ public class Cos extends Expr{
 	
 	private static final long serialVersionUID = -529344373251624547L;
 	
-	static Equ cosOfArctan = (Equ)createExpr("cos(atan(x))=1/sqrt(1+x^2)");
-	static Equ cosOfArcsin = (Equ)createExpr("cos(asin(x))=sqrt(1-x^2)");
-	static Equ cosOfArccos = (Equ)createExpr("cos(acos(x))=x");
+	static Rule cosOfArctan = new Rule("cos(atan(x))=1/sqrt(1+x^2)","cos or arctan",Rule.UNCOMMON);
+	static Rule cosOfArcsin = new Rule("cos(asin(x))=sqrt(1-x^2)","cos of arcsin",Rule.UNCOMMON);
+	static Rule cosOfArccos = new Rule("cos(acos(x))=x","cos of arccos",Rule.UNCOMMON);
 
 	Cos(){}//
 	public Cos(Expr a) {
 		add(a);
 	}
-
-	@Override
-	public Expr simplify(Settings settings) {
-		Expr toBeSimplified = copy();
-		if(flags.simple) return toBeSimplified;
-		
-		toBeSimplified.simplifyChildren(settings);
-		
-		toBeSimplified = toBeSimplified.modifyFromExample(cosOfArctan, settings);
-		toBeSimplified = toBeSimplified.modifyFromExample(cosOfArcsin, settings);
-		toBeSimplified = toBeSimplified.modifyFromExample(cosOfArccos, settings);
-		
-		if(toBeSimplified instanceof Cos) toBeSimplified.set(0,factor(toBeSimplified.get()).simplify(settings));
-		if(toBeSimplified instanceof Cos) toBeSimplified.set(0, toBeSimplified.get().abs(settings));
-		if(toBeSimplified instanceof Cos) toBeSimplified.set(0,distr(toBeSimplified.get()).simplify(settings));
-		
-		if(toBeSimplified instanceof Cos) toBeSimplified = unitCircle((Cos)toBeSimplified,settings);
-		
-		toBeSimplified.flags.simple = true;
-		
-		return toBeSimplified;
-	}
 	
-	public static Expr unitCircle(Cos cos,Settings settings) {
-		Pi pi = new Pi();
-		BigInteger three = BigInteger.valueOf(3),six = BigInteger.valueOf(6),four = BigInteger.valueOf(4);
-		Expr innerExpr = cos.get();
-		if(innerExpr.equalStruct(num(0))) {
-			return num(1);
-		}else if(innerExpr instanceof Pi)
-			return num(-1);
-		if(innerExpr instanceof Div && innerExpr.contains(pi())){
-			Div frac =((Div)innerExpr).ratioOfUnitCircle();
+	static Rule unitCircle = new Rule("unit circle for cos",Rule.TRICKY){
+		private static final long serialVersionUID = 1L;
+
+		@Override
+		public Expr applyRuleToExpr(Expr e,Settings settings){
+			Cos cos = (Cos)e;
+			Var pi = pi();
+			BigInteger three = BigInteger.valueOf(3),six = BigInteger.valueOf(6),four = BigInteger.valueOf(4);
+			Expr innerExpr = distr(cos.get()).simplify(settings);
 			
-			if(frac!=null) {
+			Expr out = cos;
+			if(innerExpr.equals(num(0))) {
+				out = num(1);
+			}else if(innerExpr.equals(pi))
+				out = num(-1);
+			if(innerExpr instanceof Div && innerExpr.contains(pi())){
+				Div frac =((Div)innerExpr).ratioOfUnitCircle();
 				
-				BigInteger numer = ((Num)frac.getNumer()).realValue,denom = ((Num)frac.getDenom()).realValue;
-				
-				numer = numer.mod(denom.multiply(BigInteger.TWO));//restrict to whole circle
-				int negate = 1;
-				
-				if(numer.compareTo(denom) == 1) {//if we are past the top half flip over x axis
-					numer = BigInteger.TWO.multiply(denom).subtract(numer);
-				}
-				
-				if(numer.compareTo(denom.divide(BigInteger.TWO)) == 1) {//if we are past quarter circle, reflect over y axis and flip sign
-					numer = denom.subtract(numer);
-					negate = -negate;
-				}
-				
-				if(numer.equals(BigInteger.ONE) && denom.equals(BigInteger.TWO)) return num(0);
-				else if(numer.equals(BigInteger.ONE) && denom.equals(three)) return inv(num(2*negate));
-				else if(numer.equals(BigInteger.ONE) && denom.equals(six)) return div(sqrt(num(3)),num(2*negate));
-				else if(numer.equals(BigInteger.ONE) && denom.equals(four)) return div(sqrt(num(2)),num(2*negate));
-				else if(numer.equals(BigInteger.ZERO)) return num(negate);
-				else {
-					//make it into the sin version for canonical form
-					return prod(  num(negate),   sin(sum( div(prod(pi(),num(numer)),num(denom)) ,div(pi(),num(2))))   ).simplify(settings);
-					//
+				if(frac!=null) {
 					
-				}
-				
-				
-			}
-			
-		}else if(innerExpr instanceof Sum) {//cos(x-pi/4) can be turned into sin(x+7*pi/4) because sin has symmetry
-			for(int i = 0;i<innerExpr.size();i++) {
-				if(innerExpr.get(i) instanceof Div && !innerExpr.get(i).containsVars() && innerExpr.get(i).contains(pi)) {
-					Div frac = ((Div)innerExpr.get(i)).ratioOfUnitCircle();
+					BigInteger numer = ((Num)frac.getNumer()).realValue,denom = ((Num)frac.getDenom()).realValue;
 					
-					if(frac!=null) {
-						//make it into the sin version for canonical form
-						return sin(sum( innerExpr ,div(pi(),num(2)))).simplify(settings);
-						//
+					numer = numer.mod(denom.multiply(BigInteger.TWO));//restrict to whole circle
+					int negate = 1;
+					
+					if(numer.compareTo(denom) == 1) {//if we are past the top half flip over x axis
+						numer = BigInteger.TWO.multiply(denom).subtract(numer);
 					}
 					
+					if(numer.compareTo(denom.divide(BigInteger.TWO)) == 1) {//if we are past quarter circle, reflect over y axis and flip sign
+						numer = denom.subtract(numer);
+						negate = -negate;
+					}
+					
+					if(numer.equals(BigInteger.ONE) && denom.equals(BigInteger.TWO)) out = num(0);
+					else if(numer.equals(BigInteger.ONE) && denom.equals(three)) out = inv(num(2*negate));
+					else if(numer.equals(BigInteger.ONE) && denom.equals(six)) out = div(sqrt(num(3)),num(2*negate));
+					else if(numer.equals(BigInteger.ONE) && denom.equals(four)) out = div(sqrt(num(2)),num(2*negate));
+					else if(numer.equals(BigInteger.ZERO)) out = num(negate);
+					else {
+						//make it into the sin version for canonical form
+						out = prod(  num(negate),   sin(sum( div(prod(pi(),num(numer)),num(denom)) ,div(pi(),num(2))))   ).simplify(settings);
+						//
+						
+					}
+					
+					
+				}
+				
+			}else if(innerExpr instanceof Sum) {//cos(x-pi/4) can be turned into sin(x+7*pi/4) because sin has symmetry
+				for(int i = 0;i<innerExpr.size();i++) {
+					if(innerExpr.get(i) instanceof Div && !innerExpr.get(i).containsVars() && innerExpr.get(i).contains(pi)) {
+						Div frac = ((Div)innerExpr.get(i)).ratioOfUnitCircle();
+						
+						if(frac!=null) {
+							//make it into the sin version for canonical form
+							out = sin(sum( innerExpr ,div(pi(),num(2)))).simplify(settings);
+							//
+						}
+						
+					}
 				}
 			}
+			return out;
 		}
-		return cos;
+	};
+	
+	static ExprList ruleSequence = null;
+	
+	public static void loadRules(){
+		ruleSequence = exprList(
+				cosOfArctan,
+				cosOfArcsin,
+				cosOfArccos,
+				StandardRules.evenFunction,
+				unitCircle
+		);
 	}
-
+	
 	@Override
-	public String toString() {
-		String out = "";
-		out+="cos(";
-		out+=get().toString();
-		out+=")";
-		return out;
+	ExprList getRuleSequence() {
+		return ruleSequence;
 	}
+	
+	
+	
 	@Override
 	public ComplexFloat convertToFloat(ExprList varDefs) {
 		return ComplexFloat.cos(get().convertToFloat(varDefs));

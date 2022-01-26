@@ -1,6 +1,10 @@
 package cas;
 
-public class ComplexFloat {
+import java.io.Serializable;
+
+public class ComplexFloat implements Serializable{
+	private static final long serialVersionUID = 5035686221005313754L;
+	
 	public double real = 0.0,imag = 0.0;
 	public static ComplexFloat ONE = new ComplexFloat(1,0);
 	public static ComplexFloat ZERO = new ComplexFloat(0,0);

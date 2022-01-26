@@ -10,11 +10,6 @@ public class ObjectExpr extends Expr{//behaves like variables
 	}
 
 	@Override
-	public Expr simplify(Settings settings) {
-		return copy();
-	}
-
-	@Override
 	public Expr copy() {
 		return new ObjectExpr(object);
 	}
@@ -25,7 +20,7 @@ public class ObjectExpr extends Expr{//behaves like variables
 	}
 
 	@Override
-	public boolean equalStruct(Expr other) {
+	public boolean equals(Object other) {
 		if(other instanceof ObjectExpr){
 			return ((ObjectExpr)other).object == object;//only comparing if same object
 		}
@@ -44,8 +39,13 @@ public class ObjectExpr extends Expr{//behaves like variables
 
 	@Override
 	boolean similarStruct(Expr other, boolean checked) {
-		if(other instanceof ObjectExpr) return equalStruct(other);
+		if(other instanceof ObjectExpr) return equals(other);
 		return false;
+	}
+
+	@Override
+	ExprList getRuleSequence() {
+		return null;
 	}
 	
 }

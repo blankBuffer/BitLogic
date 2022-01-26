@@ -28,7 +28,7 @@ public class BoolState extends Expr{
 	}
 
 	@Override
-	public boolean equalStruct(Expr other) {
+	public boolean equals(Object other) {
 		if(other instanceof BoolState) {
 			BoolState otherCasted = (BoolState)other;
 			if(otherCasted.state == state) return true;
@@ -38,7 +38,7 @@ public class BoolState extends Expr{
 
 	@Override
 	boolean similarStruct(Expr other,boolean checked) {
-		if(other instanceof BoolState) return equalStruct(other);
+		if(other instanceof BoolState) return equals(other);
 		return false;
 	}
 
@@ -52,6 +52,11 @@ public class BoolState extends Expr{
 	public ComplexFloat convertToFloat(ExprList varDefs) {
 		if(state == true) return new ComplexFloat(1,0);
 		return new ComplexFloat(0,0);
+	}
+
+	@Override
+	ExprList getRuleSequence() {
+		return null;
 	}
 
 }

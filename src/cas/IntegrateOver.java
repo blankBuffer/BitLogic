@@ -13,7 +13,9 @@ public class IntegrateOver extends Expr {
 	Expr getExpr() {
 		return get(2);
 	}
-	Var getVar() {
+	
+	@Override
+	public Var getVar() {
 		return (Var)get(3);
 	}
 	
@@ -24,20 +26,35 @@ public class IntegrateOver extends Expr {
 		add(e);
 		add(v);
 	}
+	
+	static Rule definiteIntegral = new Rule("integral with bounds",Rule.EASY){
+		private static final long serialVersionUID = 1L;
 
-	@Override
-	public Expr simplify(Settings settings) {
-		Expr toBeSimplified = copy();
-		if(flags.simple) return toBeSimplified;
-		toBeSimplified.simplifyChildren(settings);
-		
-		Expr test = integrate(((IntegrateOver)toBeSimplified).getExpr(),((IntegrateOver)toBeSimplified).getVar()).simplify(settings);
-		if(!test.containsType(Integrate.class)) {
-			toBeSimplified = sub(test.replace(equ(  ((IntegrateOver)toBeSimplified).getVar() , ((IntegrateOver)toBeSimplified).getMax() )),test.replace(equ(  ((IntegrateOver)toBeSimplified).getVar() , ((IntegrateOver)toBeSimplified).getMin() ))).simplify(settings);
+		@Override
+		public Expr applyRuleToExpr(Expr e,Settings settings){
+			IntegrateOver defInt = (IntegrateOver)e;
+			
+			Expr indefInt = integrate(defInt.getExpr(),defInt.getVar()).simplify(settings);
+			
+			if(!indefInt.containsType(Integrate.class)) {
+				return sub(indefInt.replace(equ(  defInt.getVar() , defInt.getMax() )),indefInt.replace(equ(  defInt.getVar() , defInt.getMin() ))).simplify(settings);
+			}
+			
+			return defInt;
 		}
-		
-		toBeSimplified.flags.simple = true;
-		return toBeSimplified;
+	};
+	
+	static ExprList ruleSequence = null;
+	
+	public static void loadRules(){
+		ruleSequence = exprList(
+				definiteIntegral		
+		);
+	}
+	
+	@Override
+	ExprList getRuleSequence() {
+		return ruleSequence;
 	}
 	
 	@Override
@@ -68,7 +85,7 @@ public class IntegrateOver extends Expr {
 		for(int i = 0;i < varDefs2.size();i++) {
 			Equ temp = (Equ)varDefs2.get(i);
 			Var v = (Var)temp.getLeftSide();
-			if(v.equalStruct(getVar())) {
+			if(v.equals(getVar())) {
 				varDefs2.remove(i);
 				break;
 			}

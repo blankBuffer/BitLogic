@@ -1,13 +1,10 @@
 package cas;
 
-import java.util.ArrayList;
-
 public class Func extends Expr{
 
 	private static final long serialVersionUID = -3146654431684411030L;
 	String name;
 	boolean example = false;
-	boolean simplifyChildren = true;
 	
 	ExprList getVars() {
 		return (ExprList)get();
@@ -65,16 +62,20 @@ public class Func extends Expr{
 		add(expr);
 		init();
 	}
-
-	public ArrayList<Rule> rules = new ArrayList<Rule>();
 	
 	@Override
-	public Expr simplify(Settings settings) {
-		if(size()>1){
-			return getExpr().replace(getVars()).simplify(settings);
-		}
+	public Expr simplify(Settings settings) {		
 		Expr toBeSimplified = copy();
 		if(flags.simple) return toBeSimplified;
+		
+		if(USE_CACHE){
+			Expr cacheOut = cached.get(this);
+			if(cacheOut != null){
+				return cacheOut.copy();
+			}
+		}
+		
+		Class<? extends Func> originalType = this.getClass();
 		if(simplifyChildren){
 			Func current = (Func)toBeSimplified;
 			for(int i = 0;i<current.parametersSize();i++) {
@@ -85,11 +86,21 @@ public class Func extends Expr{
 				}
 			}
 		}
-		for(Rule r:rules){
-			toBeSimplified = r.applyRuleToExpr(toBeSimplified, settings);
+		
+		ExprList ruleSequence = getRuleSequence();
+		
+		if(ruleSequence != null){
+			
+			for (int i = 0;i<ruleSequence.size();i++){
+				Rule rule = (Rule)ruleSequence.get(i);
+				toBeSimplified = rule.applyRuleToExpr(toBeSimplified, settings);
+				if(!toBeSimplified.getClass().equals(originalType)) break;
+			}
 		}
 		
-		toBeSimplified.flags.simple = true;
+		toBeSimplified.flags.simple = true;//result is simplified and should not be simplified again
+		
+		if(USE_CACHE && cached.size()<CACHE_SIZE) cached.put(copy(), toBeSimplified.copy());
 		return toBeSimplified;
 	}
 	
@@ -111,14 +122,15 @@ public class Func extends Expr{
 		}else out+=")";
 		return out;
 	}
-	
+	public ExprList ruleSequence = new ExprList();
 	@Override
 	public Expr copy() {
 		Func out = new Func(name);
 		for(int i = 0;i<size();i++){
 			out.add(get(i).copy());
 		}
-		out.rules = rules;
+		out.simplifyChildren = simplifyChildren;
+		out.ruleSequence = ruleSequence;
 		out.flags.set(flags);
 		return out;
 	}
@@ -126,6 +138,10 @@ public class Func extends Expr{
 	@Override
 	public ComplexFloat convertToFloat(ExprList varDefs) {
 		return getExpr().replace(getVars()).convertToFloat(varDefs);
+	}
+	@Override
+	ExprList getRuleSequence() {
+		return ruleSequence;
 	}
 	
 }

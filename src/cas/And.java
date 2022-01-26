@@ -9,22 +9,13 @@ public class And extends Expr{
 	}
 	
 	static Rule andContainsAnd = new Rule("and contains and",Rule.VERY_EASY){
-		@Override
-		public void init(){
-			example = "a&(b&c)=a&b&c";
-		}
+		private static final long serialVersionUID = 1L;
+		
 		@Override
 		public Expr applyRuleToExpr(Expr e,Settings settings){
-			And and = null;
-			if(e instanceof And){
-				and = (And)e;
-			}else{
-				return e;
-			}
-			Expr original = null;
+			And and = (And)e;
 			for(int i = 0;i<and.size();i++){
 				if(and.get(i) instanceof And){
-					if(original == null) original = e.copy();
 					And subAnd = (And)and.get(i);
 					and.remove(i);
 					i--;
@@ -33,31 +24,20 @@ public class And extends Expr{
 					}
 				}
 			}
-			if(original != null){
-				verboseMessage(original,and);
-			}
 			return and;
 		}
 		
 	};
 	
 	static Rule nullRule = new Rule("null rule",Rule.EASY){
-		@Override
-		public void init(){
-			example = "a&false=false";
-		}
+		private static final long serialVersionUID = 1L;
+		
 		@Override
 		public Expr applyRuleToExpr(Expr e,Settings settings){
-			And and = null;
-			if(e instanceof And){
-				and = (And)e;
-			}else{
-				return e;
-			}
+			And and = (And)e;
 			for(int i = 0;i<and.size();i++){
-				if(and.get(i).equalStruct(BoolState.FALSE)){
+				if(and.get(i).equals(BoolState.FALSE)){
 					Expr result = bool(false);
-					verboseMessage(e,result);
 					return result;
 				}
 			}
@@ -66,46 +46,27 @@ public class And extends Expr{
 	};
 	
 	static Rule removeTrues = new Rule("remove trues",Rule.VERY_EASY){
-		@Override
-		public void init(){
-			example = "a&b&true=a&b";
-		}
+		private static final long serialVersionUID = 1L;
+		
 		@Override
 		public Expr applyRuleToExpr(Expr e,Settings settings){
-			And and = null;
-			if(e instanceof And){
-				and = (And)e;
-			}else{
-				return e;
-			}
-			Expr original = null;
+			And and = (And)e;
 			for(int i = 0;i<and.size();i++){
-				if(and.get(i).equalStruct(BoolState.TRUE)){
-					if(original == null) original = e.copy(); 
+				if(and.get(i).equals(BoolState.TRUE)){
 					and.remove(i);
 					i--;
 				}
-			}
-			if(original != null){
-				verboseMessage(original,and);
 			}
 			return and;
 		}
 	};
 	
 	static Rule complement = new Rule("has complement",Rule.TRICKY){
-		@Override
-		public void init(){
-			example = "a&~a=false";
-		}
+		private static final long serialVersionUID = 1L;
+		
 		@Override
 		public Expr applyRuleToExpr(Expr e,Settings settings){
-			And and = null;
-			if(e instanceof And){
-				and = (And)e;
-			}else{
-				return e;
-			}
+			And and = (And)e;
 			for(int i = 0;i<and.size();i++){
 				Expr current = and.get(i);
 				Expr complement = current instanceof Not ? current.get() : not(current);
@@ -113,9 +74,8 @@ public class And extends Expr{
 				for(int j = i+1;j<and.size();j++){
 					Expr other = and.get(j);
 					
-					if(other.equalStruct(complement)){
+					if(other.equals(complement)){
 						Expr result = bool(false);
-						verboseMessage(e,result);
 						return result;
 					}
 				}
@@ -126,53 +86,34 @@ public class And extends Expr{
 	};
 	
 	static Rule removeDuplicates = new Rule("remove duplicates",Rule.VERY_EASY){
-		@Override
-		public void init(){
-			example = "a&a&b=a&b";
-		}
+		private static final long serialVersionUID = 1L;
+		
 		@Override
 		public Expr applyRuleToExpr(Expr e,Settings settings){
-			And and = null;
-			if(e instanceof And){
-				and = (And)e;
-			}else{
-				return e;
-			}
-			Expr original = null;
+			And and = (And)e;
 			for(int i = 0;i<and.size();i++){
 				Expr current = and.get(i);
 				
 				for(int j = i+1;j<and.size();j++){
 					Expr other = and.get(j);
 					
-					if(other.equalStruct(current)){
-						if(original == null) original = e.copy(); 
+					if(other.equals(current)){
 						and.remove(i);
 						i--;
 					}
 				}
 				
 			}
-			if(original != null){
-				verboseMessage(original,and);
-			}
 			return and;
 		}
 	};
 	
 	static Rule distribute = new Rule("and contains or",Rule.EASY){
-		@Override
-		public void init(){
-			example = "a&(b|c)=a&b|a&c";
-		}
+		private static final long serialVersionUID = 1L;
+		
 		@Override
 		public Expr applyRuleToExpr(Expr e,Settings settings){
-			And and = null;
-			if(e instanceof And){
-				and = (And)e;
-			}else{
-				return e;
-			}
+			And and = (And)e;
 			for(int i = 0;i<and.size();i++){
 				if(and.get(i) instanceof Or){
 					Or subOr = (Or)and.get(i).copy();
@@ -198,7 +139,6 @@ public class And extends Expr{
 					}
 					
 					Expr result = subOr.simplify(settings);
-					verboseMessage(e,result);
 					return result;
 				}
 			}
@@ -207,55 +147,41 @@ public class And extends Expr{
 	};
 	
 	static Rule aloneAnd = new Rule("and has one element",Rule.VERY_EASY){
-		String emptyAndExample = "alone and:=true";
-		String aloneAndExample = "alone and:a=a";
+		private static final long serialVersionUID = 1L;
+		
 		@Override
 		public Expr applyRuleToExpr(Expr e,Settings settings){
-			And and = null;
-			if(e instanceof And){
-				and = (And)e;
-			}else{
-				return e;
-			}
+			And and = (And)e;
 			Expr result = null;
 			if(and.size() == 0){
-				example = emptyAndExample;
 				result = bool(true);
 			}else if(and.size() == 1){
-				example = aloneAndExample;
 				result = and.get();
 			}
 			if(result != null){
-				verboseMessage(e,result);
 				return result;
 			}
 			return and;
 		}
 	};
 	
-	static Rule[] ruleSequence = {
-			andContainsAnd,
-			removeDuplicates,
-			nullRule,
-			removeTrues,
-			complement,
-			distribute,
-			aloneAnd,
-	};
+	static ExprList ruleSequence = null;
+	
+	public static void loadRules(){
+		ruleSequence = exprList(
+				andContainsAnd,
+				removeDuplicates,
+				nullRule,
+				removeTrues,
+				complement,
+				distribute,
+				aloneAnd
+		);
+	}
 
 	@Override
-	public Expr simplify(Settings settings) {
-		Expr toBeSimplified = copy();
-		if(flags.simple) return toBeSimplified;
-		
-		toBeSimplified.simplifyChildren(settings);//simplify all the sub expressions
-		
-		for (Rule r:ruleSequence){
-			toBeSimplified = r.applyRuleToExpr(toBeSimplified, settings);
-		}
-		
-		toBeSimplified.flags.simple = true;
-		return toBeSimplified;
+	ExprList getRuleSequence(){
+		return ruleSequence;
 	}
 
 	@Override

@@ -3,7 +3,6 @@ package ui;
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
-
 import javax.swing.JOptionPane;
 
 public class UI {
@@ -48,8 +47,9 @@ public class UI {
 				new MainWindow(editor);
 				continue;
 			}
-			editor.command(s);
+			int result = editor.command(s);
 			editor.printStack();
+			if(result == -1) break;
 		}
 		
 	}

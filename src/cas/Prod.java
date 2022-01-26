@@ -8,46 +8,56 @@ public class Prod extends Expr{
 	public Prod() {
 		commutative = true;
 	}
-	
-	@Override
-	public Expr simplify(Settings settings) {
-		Expr toBeSimplified = copy();
-		if(flags.simple) return toBeSimplified;
-		
-		toBeSimplified.simplifyChildren(settings);//simplify sub expressions
-		
-		factorSubSums((Prod)toBeSimplified,settings);//factor sums
-		
-		toBeSimplified = trigExpandElements.applyRuleToExpr(toBeSimplified, settings);
-		
-		toBeSimplified = combineWithDiv((Prod)toBeSimplified,settings);
-				
-		if(toBeSimplified instanceof Prod) {
-			prodContainsProd((Prod)toBeSimplified);//product contains a product
-		
-			boolean hasManyIntBases = hasManyIntBases();//improves performance
-				
-			if(hasManyIntBases) expandIntBases((Prod)toBeSimplified,settings);//12^x*m -> 2^(2*x)*3^x*m
+	static Rule epsilonInfReduction = new Rule("expressions with epsilon or infinity",Rule.EASY){
+		private static final long serialVersionUID = 1L;
+
+		@Override
+		public Expr applyRuleToExpr(Expr e,Settings settings){
+			Prod prod = (Prod)e;
 			
-			multiplyLikeTerms((Prod)toBeSimplified,settings);//x*x = x^2
+			Expr epsilon = epsilon();
+			Expr inf = inf();
+			boolean hasEpsilon = false;
+			boolean hasInf = false;
+			for(int i = 0;i<prod.size();i++){
+				if(prod.get(i).equals(epsilon)){
+					hasEpsilon = true;
+				}else if(prod.get(i).equals(inf)){
+					hasInf = true;
+				}
+				if(hasInf && hasEpsilon) break;
+			}
+			if(hasEpsilon && !hasInf){
+				if(prod.negative()){
+					prod.clear();
+					prod.add(neg(epsilon));
+				}else{
+					prod.clear();
+					prod.add(epsilon);
+				}
+			}else if(!hasEpsilon && hasInf){
+				if(prod.negative()){
+					prod.clear();
+					prod.add(neg(inf));
+				}else{
+					prod.clear();
+					prod.add(inf);
+				}
+			}else if(hasEpsilon && hasInf){
+				if(prod.negative()){
+					prod.clear();
+					prod.add(prod(num(-1),epsilon,inf));
+				}else{
+					prod.clear();
+					prod.add(prod(epsilon,inf));
+				}
+			}
 			
-			if(hasManyIntBases) expoIntoBase((Prod)toBeSimplified,settings);//10^(2*x)*a -> 100^x*a
-				
-			if(hasManyIntBases)multiplyIntBases((Prod)toBeSimplified);//2^x*10^x -> 20^x
-				
-			if(hasManyIntBases)simplifyIntBasePowers((Prod)toBeSimplified,settings);//re simplify powers with int bases
-			
-			multiplyIntegersAndInverses((Prod)toBeSimplified);//2*3 = 6
-			
-			checkForZero((Prod)toBeSimplified);//x*0 -> 0
-			
-			toBeSimplified = Prod.unCast(toBeSimplified);//if a product only has 1 element
+			return prod;
 		}
-		
-		toBeSimplified.flags.simple = true;//result is simplified and should not be simplified again
-		return toBeSimplified;
-	}
+	};
 	
+	//the following two functions are also used by div
 	static boolean foundProdInTrigInProd(Prod prod){
 		if(prod.containsType(Sin.class)){
 			for(int i = 0;i < prod.size();i++){
@@ -74,283 +84,376 @@ public class Prod extends Expr{
 	}
 	
 	static Rule trigExpandElements = new Rule("trig expand elements Prod",Rule.TRICKY){
-		@Override
-		public void init(){
-			example = "sin(2*x)*sin(x)=2*sin(x)*cos(x)*sin(x)";
-		}
+		private static final long serialVersionUID = 1L;
+
 		@Override
 		public Expr applyRuleToExpr(Expr e,Settings settings){
-			Prod prod = null;
-			if(e instanceof Prod){
-				prod = (Prod)e;
-			}else{
-				return e;
-			}
+			Prod prod = (Prod)e;
 			if(foundProdInTrigInProd(prod) && foundNonProdInTrigInProd(prod)){
-				Expr original = e.copy();
 				
 				for(int i = 0;i < prod.size();i++){
 					prod.set(i, trigExpand(prod.get(i),settings));
 				}
-				verboseMessage(original,prod);
 			}
 			return prod;
 		}
 	};
 	
-	static Expr combineWithDiv(Prod prod,Settings settings) {//combines into a div if there is a div in the product
-		
-		int indexOfDiv = -1;
-		for(int i = 0;i<prod.size();i++) {
-			if(prod.get(i) instanceof Div) {
-				indexOfDiv = i;
-				break;
-			}
-		}
-		
-		if(indexOfDiv != -1) {
-			Div div = (Div)prod.get(indexOfDiv);
-			prod.remove(indexOfDiv);
-			
-			Prod prodNumer = Prod.cast(div.getNumer());
-			Prod prodDenom = Prod.cast(div.getDenom());
-			
-			for(int i = 0;i<prod.size();i++) {
+	static Rule combineWithDiv = new Rule("combine products with division",Rule.EASY){
+		private static final long serialVersionUID = 1L;
 
+		@Override
+		public Expr applyRuleToExpr(Expr e,Settings settings){
+			Prod prod = (Prod)e;
+			
+			int indexOfDiv = -1;
+			for(int i = 0;i<prod.size();i++) {
 				if(prod.get(i) instanceof Div) {
-					Div castedDiv = (Div)prod.get(i);
-					
-					prodNumer.add(castedDiv.getNumer());
-					prodDenom.add(castedDiv.getDenom());
-					
-				}else {
-					prodNumer.add(prod.get(i));
-				}
-				
-			}
-			
-			return div(prodNumer,prodDenom).simplify(settings);
-		}
-		
-		return prod;
-	}
-	
-	boolean hasManyIntBases() {
-		int count = 0;
-		for(int i = 0;i<size();i++) {
-			if(get(i) instanceof Power) {
-				Power p = (Power)get(i);
-				if(p.getBase() instanceof Num) count++;
-				
-			}
-		}
-		if(count > 1) return true;
-		return false;
-	}
-	
-	static void factorSubSums(Prod prod,Settings settings) {
-		for(int i = 0;i<prod.size();i++) if(prod.get(i) instanceof Sum) prod.set(i,  factor(prod.get(i)).simplify(settings));
-	}
-	
-	
-	static void simplifyIntBasePowers(Prod prod,Settings settings) {
-		for(int i = 0;i<prod.size();i++) {
-			Expr current = prod.get(i);
-			if(current instanceof Power) {
-				Power currentPower = (Power)current;
-				if(currentPower.getBase() instanceof Num) {
-					
-					prod.set(i, currentPower.simplify(settings));
-					
-				}
-			}
-		}
-	}
-	
-	static void prodContainsProd(Prod prod) {
-		for(int i = 0;i<prod.size();i++) {
-			Expr current = prod.get(i);
-			if(current instanceof Prod) {
-				for(int j = 0;j<current.size();j++) prod.add(current.get(j));//add all the sub expressions into this product
-				prod.remove(i);//remove the sub product
-				i--;//shift back after deletion
-			}
-		}
-	}
-	
-	static void expoIntoBase(Prod prod,Settings settings) {//10^(2*x)*a -> 100^x*a
-		for(int i = 0;i<prod.size();i++) {
-			Expr current = prod.get(i);
-			if(current instanceof Power) {
-				Power currentPower = (Power)current;
-				if(currentPower.getExpo() instanceof Prod && currentPower.getBase() instanceof Num) {
-					Prod expoProd = (Prod)currentPower.getExpo();
-					
-					for(int j = 0;j<expoProd.size();j++) {
-						if(expoProd.get(j) instanceof Num) {
-							Num num = (Num)expoProd.get(j);
-							if(num.realValue.signum() == -1) continue;
-							expoProd.remove(j);
-							
-							BigInteger newBase = ((Num)currentPower.getBase()).realValue.pow(num.realValue.intValue());
-							
-							currentPower.setBase( num(newBase) );
-							currentPower.setExpo(expoProd.simplify(settings));
-							
-						}
-					}
-					
-				}
-			}
-		}
-	}
-	
-	static void multiplyIntBases(Prod prod) {
-		for(int i = 0;i<prod.size();i++) {
-			Expr current = prod.get(i);
-			
-			if(current instanceof Power) {
-				Power currentPower = (Power)current;
-				
-				if(currentPower.getBase() instanceof Num) {
-					Num numBase = (Num)currentPower.getBase();
-					
-					for(int j = i+1; j< prod.size(); j++) {
-						
-						Expr other = prod.get(j);
-						if(other instanceof Power) {
-							Power otherPower = (Power)other;
-							if(otherPower.getBase() instanceof Num && otherPower.getExpo().equalStruct(currentPower.getExpo())) {
-								
-								numBase.realValue = numBase.realValue.multiply(((Num)otherPower.getBase()).realValue);
-								
-								prod.remove(j);
-								j--;
-								
-							}
-							
-						}
-						
-					}
-					
-				}
-			}
-			prod.set(i, current);//do not simplify because next step does that
-		}
-	}
-	
-	static void expandIntBases(Prod prod,Settings settings) {
-		
-		for(int i = 0;i<prod.size();i++) {
-			Expr current = prod.get(i);
-			
-			if(current instanceof Power) {
-				Power currentPower = (Power)current;
-				
-				if(currentPower.getBase() instanceof Num && !(currentPower.getExpo() instanceof Num)) {
-					Num numBase = (Num)currentPower.getBase();
-					
-					if(numBase.realValue.isProbablePrime(128) || numBase.realValue.equals(BigInteger.valueOf(-1))) continue;//skip primes
-					
-					Prod primeFactors = primeFactor(numBase);
-					
-					for(int j = 0;j<primeFactors.size();j++) {
-						Power factor = (Power)primeFactors.get(j);
-						if(((Num)factor.getExpo()).realValue.equals(BigInteger.ONE)) {
-							prod.add(pow(factor.getBase(),currentPower.getExpo().copy()));
-						}else {
-							if(currentPower.getExpo() instanceof Prod) {
-								currentPower.getExpo().add(factor.getExpo());
-								prod.add(pow(factor.getBase(),currentPower.getExpo().simplify(settings)));
-							}else {
-								prod.add(pow(factor.getBase(),prod(currentPower.getExpo().copy(),factor.getExpo()).simplify(settings)));
-							}
-							
-						}
-					}
-					
-					prod.remove(i);
-					i--;
-					
-				}
-				
-			}
-			
-		}
-		
-	}
-	
-	static void multiplyLikeTerms(Prod prod,Settings settings) {//x*x -> x^2
-		for(int i = 0;i < prod.size();i++) {
-			
-			Expr current = prod.get(i);//get the current object in the array check
-			
-			Expr expo = new Sum();//create a sum object for the exponent
-			
-			if(current instanceof Num) continue;//ignore integers
-			
-			
-			Power currentCasted = Power.cast(current);	
-			current = currentCasted.getBase();//extract out the base and reassign current, current now represents the base of power
-			expo.add(currentCasted.getExpo());//extract out the exponent
-			
-			boolean found = false;
-			for(int j = i+1; j< prod.size();j++) {
-				Expr other = prod.get(j);
-				
-				if(other instanceof Num) continue;//ignore integers
-				
-				Power otherCasted = Power.cast(other);
-				if(otherCasted.getBase().equalStruct(current)) {//if other has equal base
-					expo.add(otherCasted.getExpo());
-					prod.remove(j);
-					j--;
-					found = true;
-				}
-			}
-			
-			if(found) {
-				Expr repl = new Power(current,expo);//replacement
-				prod.set(i,repl.simplify(settings));//modify the element with the replacement
-			}
-			
-		}
-	}
-	
-	static void checkForZero(Prod prod) {//x*0 -> 0
-		boolean foundZero = false;
-		for(int i = 0;i < prod.size();i++) {
-			if(prod.get(i) instanceof Num) {
-				Num casted = (Num)prod.get(i);
-				if(casted.equalStruct(Num.ZERO)) {
-					foundZero = true;
+					indexOfDiv = i;
 					break;
 				}
 			}
+			
+			if(indexOfDiv != -1) {
+				Div div = (Div)prod.get(indexOfDiv);
+				prod.remove(indexOfDiv);
+				
+				Prod prodNumer = Prod.cast(div.getNumer());
+				Prod prodDenom = Prod.cast(div.getDenom());
+				
+				for(int i = 0;i<prod.size();i++) {
+
+					if(prod.get(i) instanceof Div) {
+						Div castedDiv = (Div)prod.get(i);
+						
+						prodNumer.add(castedDiv.getNumer());
+						prodDenom.add(castedDiv.getDenom());
+						
+					}else {
+						prodNumer.add(prod.get(i));
+					}
+					
+				}
+				
+				return div(prodNumer,prodDenom).simplify(settings);
+			}
+			
+			return prod;
 		}
-		if(foundZero) {
-			prod.clear();
-			prod.add(new Num(0));
+		
+	};
+	
+	static Rule factorSubSums = new Rule("factor sum elements",Rule.EASY){
+		private static final long serialVersionUID = 1L;
+
+		@Override
+		public Expr applyRuleToExpr(Expr e,Settings settings){
+			Prod prod = (Prod)e;
+			for(int i = 0;i<prod.size();i++) if(prod.get(i) instanceof Sum) prod.set(i,  factor(prod.get(i)).simplify(settings));
+			return prod;
 		}
+	};
+	
+	static Rule reSimplifyIntBasePowers = new Rule("re-simplify int based powers",Rule.EASY){
+		private static final long serialVersionUID = 1L;
+
+		@Override
+		public Expr applyRuleToExpr(Expr e,Settings settings){
+			Prod prod = (Prod)e;
+			for(int i = 0;i<prod.size();i++) {
+				Expr current = prod.get(i);
+				if(current instanceof Power) {
+					Power currentPower = (Power)current;
+					if(currentPower.getBase() instanceof Num) {
+						
+						prod.set(i, currentPower.simplify(settings));
+						
+					}
+				}
+			}
+			return prod;
+		}
+		
+	};
+	
+	static Rule prodContainsProd = new Rule("product contains a product",Rule.EASY){
+		private static final long serialVersionUID = 1L;
+
+		@Override
+		public Expr applyRuleToExpr(Expr e,Settings settings){
+			Prod prod = (Prod)e;
+			
+			for(int i = 0;i<prod.size();i++) {
+				Expr current = prod.get(i);
+				if(current instanceof Prod) {
+					for(int j = 0;j<current.size();j++) prod.add(current.get(j));//add all the sub expressions into this product
+					prod.remove(i);//remove the sub product
+					i--;//shift back after deletion
+				}
+			}
+			
+			return prod;
+		}
+	};
+	
+	static Rule expoIntoBase = new Rule("power of integers with exponent being product",Rule.UNCOMMON){
+		private static final long serialVersionUID = 1L;
+
+		@Override
+		public Expr applyRuleToExpr(Expr e,Settings settings){
+			Prod prod = (Prod)e;
+			
+			for(int i = 0;i<prod.size();i++) {
+				Expr current = prod.get(i);
+				if(current instanceof Power) {
+					Power currentPower = (Power)current;
+					if(currentPower.getExpo() instanceof Prod && currentPower.getBase() instanceof Num) {
+						Prod expoProd = (Prod)currentPower.getExpo();
+						
+						for(int j = 0;j<expoProd.size();j++) {
+							if(expoProd.get(j) instanceof Num) {
+								Num num = (Num)expoProd.get(j);
+								if(num.realValue.signum() == -1) continue;
+								expoProd.remove(j);
+								
+								BigInteger newBase = ((Num)currentPower.getBase()).realValue.pow(num.realValue.intValue());
+								
+								currentPower.setBase( num(newBase) );
+								currentPower.setExpo(expoProd.simplify(settings));
+								
+							}
+						}
+						
+					}
+				}
+			}
+			
+			return prod;
+			
+		}
+		
+	};
+	
+	static Rule multiplyIntBases = new Rule("multiply int bases",Rule.UNCOMMON){
+		private static final long serialVersionUID = 1L;
+
+		@Override
+		public Expr applyRuleToExpr(Expr e,Settings settings){
+			Prod prod = (Prod)e;
+			
+			for(int i = 0;i<prod.size();i++) {
+				Expr current = prod.get(i);
+				
+				if(current instanceof Power) {
+					Power currentPower = (Power)current;
+					
+					if(currentPower.getBase() instanceof Num) {
+						Num numBase = (Num)currentPower.getBase();
+						
+						for(int j = i+1; j< prod.size(); j++) {
+							
+							Expr other = prod.get(j);
+							if(other instanceof Power) {
+								Power otherPower = (Power)other;
+								if(otherPower.getBase() instanceof Num && otherPower.getExpo().equals(currentPower.getExpo())) {
+									
+									numBase.realValue = numBase.realValue.multiply(((Num)otherPower.getBase()).realValue);
+									
+									prod.remove(j);
+									j--;
+									
+								}
+								
+							}
+							
+						}
+						
+					}
+				}
+				prod.set(i, current);//do not simplify because next step does that
+			}
+			
+			return prod;
+		}
+	};
+	
+	static Rule expandIntBases = new Rule("prime factor and expand int bases",Rule.TRICKY){
+		private static final long serialVersionUID = 1L;
+		
+		@Override
+		public Expr applyRuleToExpr(Expr e,Settings settings){
+			Prod prod = (Prod)e;
+			
+			for(int i = 0;i<prod.size();i++) {
+				Expr current = prod.get(i);
+				
+				if(current instanceof Power) {
+					Power currentPower = (Power)current;
+					
+					if(currentPower.getBase() instanceof Num && !(currentPower.getExpo() instanceof Num)) {
+						Num numBase = (Num)currentPower.getBase();
+						
+						if(numBase.realValue.isProbablePrime(128) || numBase.realValue.equals(BigInteger.valueOf(-1))) continue;//skip primes
+						
+						Prod primeFactors = primeFactor(numBase);
+						
+						for(int j = 0;j<primeFactors.size();j++) {
+							Power factor = (Power)primeFactors.get(j);
+							if(((Num)factor.getExpo()).realValue.equals(BigInteger.ONE)) {
+								prod.add(pow(factor.getBase(),currentPower.getExpo().copy()));
+							}else {
+								if(currentPower.getExpo() instanceof Prod) {
+									currentPower.getExpo().add(factor.getExpo());
+									prod.add(pow(factor.getBase(),currentPower.getExpo().simplify(settings)));
+								}else {
+									prod.add(pow(factor.getBase(),prod(currentPower.getExpo().copy(),factor.getExpo()).simplify(settings)));
+								}
+								
+							}
+						}
+						
+						prod.remove(i);
+						i--;
+						
+					}
+					
+				}
+				
+			}
+			
+			return prod;
+		}
+	};
+	
+	static Rule multiplyLikeTerms = new Rule("multiply like terms",Rule.EASY){
+		private static final long serialVersionUID = 1L;
+		
+		@Override
+		public Expr applyRuleToExpr(Expr e,Settings settings){
+			Prod prod = (Prod)e;
+			
+			for(int i = 0;i < prod.size();i++) {
+				
+				Expr current = prod.get(i);//get the current object in the array check
+				
+				Expr expo = new Sum();//create a sum object for the exponent
+				
+				if(current instanceof Num) continue;//ignore integers
+				
+				
+				Power currentCasted = Power.cast(current);	
+				current = currentCasted.getBase();//extract out the base and reassign current, current now represents the base of power
+				expo.add(currentCasted.getExpo());//extract out the exponent
+				
+				boolean found = false;
+				for(int j = i+1; j< prod.size();j++) {
+					Expr other = prod.get(j);
+					
+					if(other instanceof Num) continue;//ignore integers
+					
+					Power otherCasted = Power.cast(other);
+					if(otherCasted.getBase().equals(current)) {//if other has equal base
+						expo.add(otherCasted.getExpo());
+						prod.remove(j);
+						j--;
+						found = true;
+					}
+				}
+				
+				if(found) {
+					Expr repl = new Power(current,expo);//replacement
+					prod.set(i,repl.simplify(settings));//modify the element with the replacement
+				}
+				
+			}
+			
+			return prod;
+		}
+	};
+	
+	static Rule zeroInProd = new Rule("zero in the product",Rule.VERY_EASY){
+		private static final long serialVersionUID = 1L;
+		
+		@Override
+		public Expr applyRuleToExpr(Expr e,Settings settings){
+			Prod prod = (Prod)e;
+			
+			boolean foundZero = false;
+			for(int i = 0;i < prod.size();i++) {
+				if(prod.get(i) instanceof Num) {
+					Num casted = (Num)prod.get(i);
+					if(casted.equals(Num.ZERO)) {
+						foundZero = true;
+						break;
+					}
+				}
+			}
+			if(foundZero) {
+				prod.clear();
+				prod.add(new Num(0));
+			}
+			return prod;
+		}
+	};
+	
+	static Rule multiplyIntegers = new Rule("multiply integers",Rule.EASY){
+		private static final long serialVersionUID = 1L;
+		
+		@Override
+		public Expr applyRuleToExpr(Expr e,Settings settings){
+			Prod prod = (Prod)e;
+			
+			Num total = Num.ONE;
+			
+			
+			for(int i = 0;i < prod.size();i++) {
+				Expr expr = prod.get(i);
+				if(expr instanceof Num) {
+					Num exprCasted = (Num)expr;
+					total = total.multNum(exprCasted);
+					prod.remove(i);
+					i--;
+				}
+			}
+			
+			if(!total.equals(Num.ONE)) prod.add(total);
+			
+			return prod;
+		}
+	};
+	
+	static Rule aloneProd = new Rule("product is alone",Rule.VERY_EASY){
+		private static final long serialVersionUID = 1L;
+		
+		@Override
+		public Expr applyRuleToExpr(Expr e,Settings settings){
+			return Prod.unCast(e);
+		}
+	};
+	
+	static ExprList ruleSequence = null;
+	
+	public static void loadRules(){
+		ruleSequence = exprList(
+				factorSubSums,
+				trigExpandElements,
+				combineWithDiv,
+				prodContainsProd,
+				expandIntBases,
+				multiplyLikeTerms,
+				expoIntoBase,
+				multiplyIntBases,
+				reSimplifyIntBasePowers,
+				multiplyIntegers,
+				zeroInProd,
+				epsilonInfReduction,
+				aloneProd
+		);
 	}
 	
-	static void multiplyIntegersAndInverses(Prod prod) {//incomplete
-		
-		Num total = Num.ONE;
-		
-			
-		for(int i = 0;i < prod.size();i++) {
-			Expr expr = prod.get(i);
-			if(expr instanceof Num) {
-				Num exprCasted = (Num)expr;
-				total = total.multNum(exprCasted);
-				prod.remove(i);
-				i--;
-			}
-		}
-		
-		if(!total.equalStruct(Num.ONE)) prod.add(total);
-		
+	@Override
+	ExprList getRuleSequence() {
+		return ruleSequence;
 	}
 	
 	@Override

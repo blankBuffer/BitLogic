@@ -4,88 +4,101 @@ public class LambertW extends Expr {
 
 	private static final long serialVersionUID = 1242113729865756736L;
 	
-	static Equ hasInverse = (Equ)createExpr("w(x*e^x)=x");
-	static Equ productWithLog = (Equ)createExpr("w(x*ln(x))=ln(x)");
-	static Equ isNegOne = (Equ)createExpr("w((-1)/e)=-1");
-	static Equ ratioLog = (Equ)createExpr("w((-ln(x))/x)=-ln(x)");
+	static Rule hasInverse = new Rule("w(x*e^x)=x","lambert w of product exponential",Rule.UNCOMMON);
+	static Rule productWithLog = new Rule("w(x*ln(x))=ln(x)","lambert w of product of logs",Rule.UNCOMMON);
+	static Rule isNegOne = new Rule("w((-1)/e)=-1","lambert w of -1/e",Rule.UNCOMMON);
+	static Rule ratioLog = new Rule("w((-ln(x))/x)=-ln(x)","lambert w of -ln(x) over x",Rule.UNCOMMON);
+	
+	static Rule crazyProductRule = new Rule("crazy product rule",Rule.VERY_DIFFICULT){
+		private static final long serialVersionUID = 1L;
+		
+		Expr crazyProductRuleFormat;
+		Expr crazyProductRuleFormat2;
+		
+		@Override
+		public void init(){
+			crazyProductRuleFormat = createExpr("(k*ln(b)*b^(c/n))/n");
+			crazyProductRuleFormat2 = createExpr("(ln(b)*b^(c/n))/n");
+		}
+		
+		@Override
+		public Expr applyRuleToExpr(Expr e,Settings settings){
+			LambertW lam = (LambertW)e;
+			
+			Expr originalExpr = lam.get();
+			
+			boolean canCompute = false;
+			
+			ExprList equs = originalExpr.getEqusFromTemplate(crazyProductRuleFormat);
+			
+			Expr n=null,k=null,b=null,c=null;
+			
+			if(equs != null && !canCompute){
+				n = Expr.getExprByName(equs, "n");
+				k=Expr.getExprByName(equs, "k");
+				b=Expr.getExprByName(equs, "b");
+				c=Expr.getExprByName(equs, "c");
+				canCompute = true;
+			}else{
+				equs = originalExpr.getEqusFromTemplate(crazyProductRuleFormat2);
+			}
+			
+			if(equs != null && !canCompute){
+				n = Expr.getExprByName(equs, "n");
+				k=num(1);
+				b=Expr.getExprByName(equs, "b");
+				c=Expr.getExprByName(equs, "c");
+				canCompute = true;
+			}
+			
+			if(canCompute){
+				
+				Expr v = div(prod(n,lambertW( div(prod(ln(b),k,pow(b,div(c,n))),n)) ),ln(b));
+				
+				ComplexFloat approxV = v.convertToFloat(new ExprList());
+				
+				
+				try{
+					v = num(Math.round(approxV.real));
+				}catch(Exception e2){
+					return lam;
+				}
+					
+				Expr testExpr = div(prod(v,ln(b),pow(b,div(v,n))),n);
+					
+				Expr test = factor(sub(originalExpr,testExpr));
+				test = test.simplify(settings);
+				if(test.equals(num(0))){
+					return div(prod(v,ln(b)),n).simplify(settings);
+				}
+				
+			}
+			
+			return lam;
+		}
+		
+	};
 
 	LambertW(){}//
 	public LambertW(Expr e){
 		add(e);
 	}
 	
-	@Override
-	public Expr simplify(Settings settings) {
-		Expr toBeSimplified = copy();
-		if(flags.simple) return toBeSimplified;
-		
-		toBeSimplified.simplifyChildren(settings);
-		
-		if(toBeSimplified instanceof LambertW) toBeSimplified = toBeSimplified.modifyFromExample(hasInverse, settings);
-		if(toBeSimplified instanceof LambertW) toBeSimplified = toBeSimplified.modifyFromExample(isNegOne, settings);
-		if(toBeSimplified instanceof LambertW) toBeSimplified = toBeSimplified.modifyFromExample(productWithLog, settings);
-		if(toBeSimplified instanceof LambertW) toBeSimplified = toBeSimplified.modifyFromExample(ratioLog, settings);
-		
-		if(toBeSimplified instanceof LambertW) toBeSimplified = crazyProductRule((LambertW)toBeSimplified,settings);
-		
-		toBeSimplified.flags.simple = true;
-		return toBeSimplified;
+	static ExprList ruleSequence = null;
+	
+	public static void loadRules(){
+		ruleSequence = exprList(
+				hasInverse,
+				isNegOne,
+				productWithLog,
+				ratioLog,
+				crazyProductRule
+		);
 	}
 	
-	static Expr crazyProductRuleFormat = createExpr("(k*ln(b)*b^(c/n))/n");
-	static Expr crazyProductRuleFormat2 = createExpr("(ln(b)*b^(c/n))/n");
-	public static Expr crazyProductRule(LambertW lam,Settings settings){
-		
-		Expr originalExpr = lam.get();
-		
-		boolean canCompute = false;
-		
-		ExprList equs = originalExpr.getEqusFromTemplate(crazyProductRuleFormat);
-		
-		Expr n=null,k=null,b=null,c=null;
-		
-		if(equs != null && !canCompute){
-			n = Expr.getExprByName(equs, "n");
-			k=Expr.getExprByName(equs, "k");
-			b=Expr.getExprByName(equs, "b");
-			c=Expr.getExprByName(equs, "c");
-			canCompute = true;
-		}else{
-			equs = originalExpr.getEqusFromTemplate(crazyProductRuleFormat2);
-		}
-		
-		if(equs != null && !canCompute){
-			n = Expr.getExprByName(equs, "n");
-			k=num(1);
-			b=Expr.getExprByName(equs, "b");
-			c=Expr.getExprByName(equs, "c");
-			canCompute = true;
-		}
-		
-		if(canCompute){
-			
-			Expr v = div(prod(n,lambertW( div(prod(ln(b),k,pow(b,div(c,n))),n)) ),ln(b));
-			
-			ComplexFloat approxV = v.convertToFloat(new ExprList());
-			
-			
-			try{
-				v = num(Math.round(approxV.real));
-			}catch(Exception e){
-				return lam;
-			}
-				
-			Expr testExpr = div(prod(v,ln(b),pow(b,div(v,n))),n);
-				
-			Expr test = factor(sub(originalExpr,testExpr));
-			test = test.simplify(settings);
-			if(test.equalStruct(num(0))){
-				return div(prod(v,ln(b)),n).simplify(settings);
-			}
-			
-		}
-		
-		return lam;
+	@Override
+	ExprList getRuleSequence() {
+		return ruleSequence;
 	}
 	
 	@Override

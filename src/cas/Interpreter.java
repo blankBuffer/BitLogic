@@ -1,42 +1,10 @@
 package cas;
-import java.io.File;
-import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.util.ArrayList;
-import java.util.Scanner;
 
 public class Interpreter extends QuickMath{
 	
 	public static Expr SUCCESS = var("done!");
-	
-	public static void runScript(String fileName,boolean verbose) {
-		long oldTime = System.nanoTime();
-		Scanner sc;
-		try {
-			sc = new Scanner(new File(fileName));
-			System.out.println("running "+fileName+" script...");
-			while(sc.hasNextLine()) {
-				String line = sc.nextLine();
-				if(verbose) System.out.print(line+" -> ");
-				Expr response = null;
-				try {
-					response = Ask.ask(line,Defs.blank,Settings.normal);
-				} catch (Exception e) {
-					e.printStackTrace();
-				}
-				if(verbose && response != null) System.out.print(response+" -> ");
-				response = response.replace(Defs.blank.getVars()).simplify(Settings.normal);
-				if(verbose && response != null) System.out.println(response);
-			}
-			
-		} catch (FileNotFoundException e) {
-			if(verbose) e.printStackTrace();
-			System.err.println("fail!");
-			return;
-		}
-		long delta = System.nanoTime() - oldTime;
-		System.out.println("took " + delta / 1000000.0 + " ms to finish script!\n");
-	}
 	
 	public static Expr createExpr(String string,Defs defs,Settings settings){
 		string = string.replaceAll(" ", "");//remove spaces
@@ -119,8 +87,6 @@ public class Interpreter extends QuickMath{
 			}else if(!containsOperators(string)){
 				String lowered = string.toLowerCase();
 				if(string.equals("i")) return num(0,1);
-				else if(lowered.equals("pi")) return pi();
-				else if(lowered.equals("e")) return e();
 				else if(lowered.equals("true")) return bool(true);
 				else if(lowered.equals("false")) return bool(false);
 				else{//variables
@@ -158,6 +124,12 @@ public class Interpreter extends QuickMath{
 						return integrateOver(params.get(0),params.get(1),params.get(2),(Var)params.get(3));
 					}else throw wrongParams;
 
+				}else if(op.equals("limit")) {
+					if(params.size() != 3) throw wrongParams;
+					Expr expr = params.get(0);
+					Var v = (Var)params.get(1);
+					Expr value = params.get(2);
+					return limit(expr,v,value);
 				}else if(op.equals("sinh")) {
 					if(params.size() != 1) throw wrongParams;
 					return sinh(params.get(0));
@@ -244,10 +216,6 @@ public class Interpreter extends QuickMath{
 					} catch (IOException e) {
 						e.printStackTrace();
 					}
-				}else if(op.equals("runScript")) {
-					if(params.size() != 2) throw wrongParams;
-					runScript(params.get(0).toString(),((BoolState)params.get(1)).state);
-					return SUCCESS;
 				}else if(op.equals("save")) {
 					if(params.size() != 2) throw wrongParams;
 					try {
@@ -290,6 +258,7 @@ public class Interpreter extends QuickMath{
 					if(f == null) {
 						throw new Exception("function: \""+op+"\" is not defined");
 					}
+					f = (Func) f.copy();
 					ExprList vars = f.getVars();
 					for(int i = 0;i<vars.size();i++) {
 						Equ equ = (Equ)vars.get(i);

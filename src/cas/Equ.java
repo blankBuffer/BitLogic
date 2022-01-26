@@ -9,18 +9,6 @@ public class Equ extends Expr{
 		add(leftSide);
 		add(rightSide);
 	}
-
-	@Override
-	public Expr simplify(Settings settings) {
-		Expr toBeSimplified = copy();
-		if(flags.simple) return toBeSimplified;
-		
-		toBeSimplified.simplifyChildren(settings);
-		
-		toBeSimplified.flags.simple = true;
-		return toBeSimplified;
-	}
-	
 	public Expr getLeftSide() {
 		return get(0);
 	}
@@ -49,6 +37,10 @@ public class Equ extends Expr{
 	@Override
 	public ComplexFloat convertToFloat(ExprList varDefs) {
 		return new ComplexFloat(0,0);
+	}
+	@Override
+	ExprList getRuleSequence() {
+		return null;
 	}
 
 }

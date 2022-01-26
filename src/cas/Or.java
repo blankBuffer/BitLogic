@@ -12,10 +12,8 @@ public class Or extends Expr{
 	}
 	
 	static Rule orContainsOr = new Rule("or contains or",Rule.VERY_EASY){
-		@Override
-		public void init(){
-			example = "a|(b|c)=a|b|c";
-		}
+		private static final long serialVersionUID = 1L;
+
 		@Override
 		public Expr applyRuleToExpr(Expr e,Settings settings){
 			Or or = null;
@@ -24,10 +22,8 @@ public class Or extends Expr{
 			}else{
 				return e;
 			}
-			Expr original = null;
 			for(int i = 0;i<or.size();i++){
 				if(or.get(i) instanceof Or){
-					if(original == null) original = e.copy();
 					Or subOr = (Or)or.get(i);
 					or.remove(i);
 					i--;
@@ -36,19 +32,14 @@ public class Or extends Expr{
 					}
 				}
 			}
-			if(original != null){
-				verboseMessage(original,or);
-			}
 			return or;
 		}
 		
 	};
 	
 	static Rule nullRule = new Rule("null rule",Rule.EASY){
-		@Override
-		public void init(){
-			example = "a|true=true";
-		}
+		private static final long serialVersionUID = 1L;
+
 		@Override
 		public Expr applyRuleToExpr(Expr e,Settings settings){
 			Or or = null;
@@ -58,9 +49,8 @@ public class Or extends Expr{
 				return e;
 			}
 			for(int i = 0;i<or.size();i++){
-				if(or.get(i).equalStruct(BoolState.TRUE)){
+				if(or.get(i).equals(BoolState.TRUE)){
 					Expr result = bool(true);
-					verboseMessage(e,result);
 					return result;
 				}
 			}
@@ -69,10 +59,8 @@ public class Or extends Expr{
 	};
 	
 	static Rule removeFalses = new Rule("remove falses",Rule.VERY_EASY){
-		@Override
-		public void init(){
-			example = "a|b|false=a&b";
-		}
+		private static final long serialVersionUID = 1L;
+
 		@Override
 		public Expr applyRuleToExpr(Expr e,Settings settings){
 			Or or = null;
@@ -81,24 +69,19 @@ public class Or extends Expr{
 			}else{
 				return e;
 			}
-			Expr original = null;
 			for(int i = 0;i<or.size();i++){
-				if(or.get(i).equalStruct(BoolState.FALSE)){
-					if(original == null) original = e.copy(); 
+				if(or.get(i).equals(BoolState.FALSE)){
 					or.remove(i);
 					i--;
 				}
-			}
-			if(original != null){
-				verboseMessage(original,or);
 			}
 			return or;
 		}
 	};
 	
 	static Rule complement = new Rule("has complement",Rule.TRICKY){
-		String easyExample = "a|~a=true";
-		String hardExample = "a&b|~a|~b=true";
+		private static final long serialVersionUID = 1L;
+
 		@Override
 		public Expr applyRuleToExpr(Expr e,Settings settings){
 			Or or = null;
@@ -119,7 +102,7 @@ public class Or extends Expr{
 						for(int k = 0;k<or.size();k++){
 							if(k == i) continue;
 							
-							if(or.get(k).equalStruct(toFind)){
+							if(or.get(k).equals(toFind)){
 								found = true;
 								break;
 							}
@@ -132,18 +115,14 @@ public class Or extends Expr{
 					}
 					if(hasAll){
 						Expr result = bool(true);
-						example = hardExample;
-						verboseMessage(e,result);
 						return result;
 					}
 				}else{
 					for(int j = i+1;j<or.size();j++){
 						Expr other = or.get(j);
 						
-						if(other.equalStruct(complement)){
+						if(other.equals(complement)){
 							Expr result = bool(true);
-							example = easyExample;
-							verboseMessage(e,result);
 							return result;
 						}
 					}
@@ -155,10 +134,8 @@ public class Or extends Expr{
 	};
 	
 	static Rule removeDuplicates = new Rule("remove duplicates",Rule.VERY_EASY){
-		@Override
-		public void init(){
-			example = "a&a&b=a&b";
-		}
+		private static final long serialVersionUID = 1L;
+
 		@Override
 		public Expr applyRuleToExpr(Expr e,Settings settings){
 			Or or = null;
@@ -167,33 +144,26 @@ public class Or extends Expr{
 			}else{
 				return e;
 			}
-			Expr original = null;
 			for(int i = 0;i<or.size();i++){
 				Expr current = or.get(i);
 				
 				for(int j = i+1;j<or.size();j++){
 					Expr other = or.get(j);
 					
-					if(other.equalStruct(current)){
-						if(original == null) original = e.copy(); 
+					if(other.equals(current)){
 						or.remove(i);
 						i--;
 					}
 				}
 				
 			}
-			if(original != null){
-				verboseMessage(original,or);
-			}
 			return or;
 		}
 	};
 	
 	static Rule absorb = new Rule("absorption",Rule.EASY){
-		@Override
-		public void init(){
-			example = "x|x&y=x";
-		}
+		private static final long serialVersionUID = 1L;
+
 		@Override
 		public Expr applyRuleToExpr(Expr e,Settings settings){
 			Or or = null;
@@ -202,7 +172,6 @@ public class Or extends Expr{
 			}else{
 				return e;
 			}
-			Expr original = null;
 			for(int i = 0;i<or.size();i++){
 				And current = And.cast(or.get(i));
 				for(int j = 0;j<or.size();j++){
@@ -215,7 +184,7 @@ public class Or extends Expr{
 							boolean found = false;
 							
 							for(int l = k;l<other.size();l++){
-								if(current.get(k).equalStruct(other.get(l))){
+								if(current.get(k).equals(other.get(l))){
 									found = true;
 									break;
 								}
@@ -228,7 +197,6 @@ public class Or extends Expr{
 						}
 						
 						if(hasAll){
-							if(original == null) original = e.copy();
 							or.remove(j);
 							if(j<i) i--;
 							j--;
@@ -237,16 +205,13 @@ public class Or extends Expr{
 					}
 				}
 			}
-			if(original != null){
-				verboseMessage(original,e);
-			}
 			return or;
 		}
 	};
 	
 	static Rule aloneOr = new Rule("or has one element",Rule.VERY_EASY){
-		String emptyOrExample = "alone or:=false";
-		String aloneOrExample = "alone or:a=a";
+		private static final long serialVersionUID = 1L;
+
 		@Override
 		public Expr applyRuleToExpr(Expr e,Settings settings){
 			Or or = null;
@@ -257,14 +222,11 @@ public class Or extends Expr{
 			}
 			Expr result = null;
 			if(or.size() == 0){
-				example = emptyOrExample;
 				result = bool(false);
 			}else if(or.size() == 1){
-				example = aloneOrExample;
 				result = or.get();
 			}
 			if(result != null){
-				verboseMessage(e,result);
 				return result;
 			}
 			return or;
@@ -273,17 +235,15 @@ public class Or extends Expr{
 	
 	private static int fastContains(Expr e,Expr a){//e is what your finding in a
 		for(int i = 0;i<a.size();i++){
-			if(a.get(i).equalStruct(e)){
+			if(a.get(i).equals(e)){
 				return i;
 			}
 		}
 		return -1;
 	}
 	static Rule redundance = new Rule("redundant factors",Rule.TRICKY){
-		@Override
-		public void init(){
-			example = "x&y|~x&z|~y&z|~x&q|~y&q=x&y|z|q";
-		}
+		private static final long serialVersionUID = 1L;
+
 		class BucketInfo{
 			ArrayList<Integer> indexes = new ArrayList<Integer>();
 			ExprList flippedVars = new ExprList();
@@ -314,7 +274,6 @@ public class Or extends Expr{
 			}else{
 				return e;
 			}
-			Expr original = e.copy();
 			for(int i = 0;i < or.size();i++){
 				And current = And.cast(or.get(i));
 				ExprList flipped = new ExprList();//flipped terms
@@ -359,7 +318,7 @@ public class Or extends Expr{
 				ArrayList<Expr> toBeAdded = new ArrayList<Expr>();
 				
 				for(int j = 0;j<buckets.bucketVar.size();j++){
-					if(buckets.buckets.get(j).flippedVars.equalStruct(flipped)){
+					if(buckets.buckets.get(j).flippedVars.equals(flipped)){
 						toBeRemoved.addAll(buckets.buckets.get(j).indexes);
 						toBeAdded.add(buckets.bucketVar.get(j));
 					}
@@ -373,20 +332,13 @@ public class Or extends Expr{
 					or.add(expr.simplify(settings));
 				}
 			}
-			if(!original.equalStruct(or)){
-				verboseMessage(original,or);
-			}
 			return or;
 		}
 	};
 	
 	static Rule consensus = new Rule("consensus rule",Rule.CHALLENGING){
-		
-		@Override
-		public void init(){
-			example = "x&y|~x&z|y&z=x&y|~x&z";
-		}
-		
+		private static final long serialVersionUID = 1L;
+
 		@Override
 		public Expr applyRuleToExpr(Expr e,Settings settings){
 			Or or = null;
@@ -396,7 +348,6 @@ public class Or extends Expr{
 				return e;
 			}
 			if(or.size()>=3){
-				Expr original = e.copy();
 				
 				outer:for(int i = 0;i<or.size();i++){
 					if(!(or.get(i) instanceof And && or.get(i).size()==2)) continue;
@@ -413,7 +364,7 @@ public class Or extends Expr{
 							Expr redundant = and(b,other.get(test));
 							for(int k = 0;k<or.size();k++){
 								if(i == k | j==k) continue;
-								if(or.get(k).equalStruct(redundant)){
+								if(or.get(k).equals(redundant)){
 									or.remove(k);
 									i--;
 									continue outer;
@@ -425,7 +376,7 @@ public class Or extends Expr{
 							Expr redundant = and(a,other.get(test));
 							for(int k = 0;k<or.size();k++){
 								if(i == k | j==k) continue;
-								if(or.get(k).equalStruct(redundant)){
+								if(or.get(k).equals(redundant)){
 									or.remove(k);
 									i--;
 									continue outer;
@@ -438,16 +389,14 @@ public class Or extends Expr{
 					
 				}
 				
-				if(!original.equalStruct(or)){
-					verboseMessage(original,or);
-				}
 			}
 			return or;
 		}
 	};
 	
 	static Rule ruleCombination = new Rule("rule set",Rule.CHALLENGING){
-		
+		private static final long serialVersionUID = 1L;
+
 		ExprList allFactorableVars(Or or){
 			ArrayList<VarCount> varcounts = new ArrayList<VarCount>();
 			or.countVars(varcounts);
@@ -496,7 +445,7 @@ public class Or extends Expr{
 						
 					}
 					Or factoredOutOrNew = Or.cast(this.applyRuleToExpr(factoredOutOr.copy(), settings) );
-					if(!factoredOutOrNew.equalStruct(factoredOutOr)){//re calculate to waste lest time
+					if(!factoredOutOrNew.equals(factoredOutOr)){//re calculate to waste lest time
 						i=-1;
 						allFactorableVars = allFactorableVars(or);
 					}
@@ -519,30 +468,25 @@ public class Or extends Expr{
 		}
 	};
 	
-	static Rule[] ruleSequence = {
-			orContainsOr,
-			removeDuplicates,
-			nullRule,
-			removeFalses,
-			absorb,
-			ruleCombination,
-			aloneOr,
-	};
-
-	@Override
-	public Expr simplify(Settings settings) {
-		Expr toBeSimplified = copy();
-		if(flags.simple) return toBeSimplified;
-		
-		toBeSimplified.simplifyChildren(settings);//simplify all the sub expressions
-		
-		for (Rule r:ruleSequence){
-			toBeSimplified = r.applyRuleToExpr(toBeSimplified, settings);
-		}
-		
-		toBeSimplified.flags.simple = true;
-		return toBeSimplified;
+	static ExprList ruleSequence = null;
+	
+	public static void loadRules(){
+		ruleSequence = exprList(
+				orContainsOr,
+				removeDuplicates,
+				nullRule,
+				removeFalses,
+				absorb,
+				ruleCombination,
+				aloneOr	
+		);
 	}
+	
+	@Override
+	ExprList getRuleSequence() {
+		return ruleSequence;
+	}
+	
 
 	@Override
 	public String toString() {

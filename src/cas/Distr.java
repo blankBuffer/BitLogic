@@ -9,66 +9,69 @@ public class Distr extends Expr{
 	public Distr(Expr expr) {
 		add(expr);
 	}
-
-	@Override
-	public Expr simplify(Settings settings) {
-		Expr toBeSimplified = copy();
-		if(flags.simple) return toBeSimplified;
-		
-		toBeSimplified = toBeSimplified.get();
-		
-		toBeSimplified = generalDistr(toBeSimplified,settings);
-		
-		toBeSimplified = toBeSimplified.simplify(settings);//we want to simplify after so that we don't factor while distributing
-		
-		toBeSimplified.flags.simple = true;
-		return toBeSimplified;
-	}
 	
-	static Expr generalDistr(Expr expr,Settings settings) {//2*(x+y) -> 2*x+2*y
-		if(expr instanceof Prod) {
-			Expr theSum = null;
-			Prod prod = null;
-			for(int i = 0;i<expr.size();i++) {
-				if(expr.get(i) instanceof Sum) {
-					theSum = expr.get(i).copy();
-					prod = (Prod)expr.copy();
-					prod.remove(i);
-					break;
-				}
-			}
-			if(theSum != null) {
-				
-				for(int i = 0;i<theSum.size();i++) {
-					theSum.set(i, distr(Prod.combine(prod,theSum.get(i))));
-				}
-				
-				return theSum.simplify(settings);
-			}
-		}else if(expr instanceof Div) {//(x+y)/3 -> x/3+y/3
-			Div casted = (Div)expr;
+	static Rule generalDistr = new Rule("general distribution",Rule.EASY){
+		private static final long serialVersionUID = 1L;
+
+		@Override
+		public Expr applyRuleToExpr(Expr e,Settings settings) {//2*(x+y) -> 2*x+2*y
+			Distr distr = (Distr)e;
 			
-			if(casted.getNumer() instanceof Sum) {
-				for (int i = 0;i < casted.getNumer().size();i++) {
-					casted.getNumer().set(i, div(casted.getNumer().get(i),casted.getDenom().copy()));
+			Expr expr = distr.get().copy();
+			Expr newExpr = null;
+			
+			if(expr instanceof Prod) {
+				Expr theSum = null;
+				Prod prod = null;
+				for(int i = 0;i<expr.size();i++) {
+					if(expr.get(i) instanceof Sum) {
+						theSum = expr.get(i).copy();
+						prod = (Prod)expr.copy();
+						prod.remove(i);
+						break;
+					}
 				}
-				return casted.getNumer().simplify(settings);
+				if(theSum != null) {
+					for(int i = 0;i<theSum.size();i++) {
+						theSum.set(i, distr(Prod.combine(prod,theSum.get(i))));
+					}
+					newExpr = theSum.simplify(settings);
+				}
+			}else if(expr instanceof Div) {//(x+y)/3 -> x/3+y/3
+				Div casted = (Div)expr;
+				
+				if(casted.getNumer() instanceof Sum) {
+					for (int i = 0;i < casted.getNumer().size();i++) {
+						casted.getNumer().set(i, div(casted.getNumer().get(i),casted.getDenom().copy()));
+					}
+					newExpr = casted.getNumer().simplify(settings);
+					
+				}
 				
 			}
-			
+			if(newExpr != null){
+				Expr out = distr(newExpr);
+				return out;
+			}
+			return e;
 		}
-		return expr;
-	}
-
-	@Override
-	public String toString() {
-		String out = "";
-		out+="distr(";
-		out+=get();
-		out+=")";
-		return out;
+	};
+	
+	static ExprList ruleSequence = null;
+	
+	public static void loadRules(){
+		
+		ruleSequence = exprList(
+				generalDistr,
+				StandardRules.becomeInner
+		);
+		
 	}
 	
+	@Override
+	ExprList getRuleSequence() {
+		return ruleSequence;
+	}
 	@Override
 	public ComplexFloat convertToFloat(ExprList varDefs) {
 		return get().convertToFloat(varDefs);

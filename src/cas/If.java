@@ -9,13 +9,7 @@ public class If extends Expr{
 		add(eq);
 		add(s);
 	}
-
-	@Override
-	public Expr simplify(Settings settings) {
-		// TODO Auto-generated method stub
-		return null;
-	}
-
+	
 	@Override
 	public String toString() {
 		// TODO Auto-generated method stub
@@ -24,6 +18,11 @@ public class If extends Expr{
 
 	@Override
 	public ComplexFloat convertToFloat(ExprList varDefs) {
+		// TODO Auto-generated method stub
+		return null;
+	}
+	@Override
+	ExprList getRuleSequence() {
 		// TODO Auto-generated method stub
 		return null;
 	}

@@ -13,10 +13,8 @@ public class Not extends Expr{
 	static Rule isFalse = new Rule("~false=true","false case",Rule.VERY_EASY);
 	static Rule containsNot = new Rule("~~x=x","contains not",Rule.VERY_EASY);
 	static Rule demorgan = new Rule("demorgan",Rule.EASY){
-		@Override
-		public void init(){
-			example = "~(a|b)=~a&~b";
-		}
+		private static final long serialVersionUID = 1L;
+
 		@Override
 		public Expr applyRuleToExpr(Expr e,Settings settings){
 			Not not = null;
@@ -32,33 +30,25 @@ public class Not extends Expr{
 					result.add(not(not.get().get(i)));
 				}
 				result = result.simplify(settings);
-				verboseMessage(e,result);
 				return result;
 			}
 			return not;
 		}
 	};
 	
-	static Rule[] ruleSequence = {
-			isTrue,
-			isFalse,
-			containsNot,
-			demorgan,
-	};
-
+	static ExprList ruleSequence = null;
+	public static void loadRules(){
+		ruleSequence = exprList(
+				isTrue,
+				isFalse,
+				containsNot,
+				demorgan
+		);
+	}
+	
 	@Override
-	public Expr simplify(Settings settings) {
-		Expr toBeSimplified = copy();
-		if(flags.simple) return toBeSimplified;
-		
-		toBeSimplified.simplifyChildren(settings);//simplify sub expressions
-		
-		for (Rule r:ruleSequence){
-			toBeSimplified = r.applyRuleToExpr(toBeSimplified, settings);
-		}
-		
-		toBeSimplified.flags.simple = true;//result is simplified and should not be simplified again
-		return toBeSimplified;
+	ExprList getRuleSequence() {
+		return ruleSequence;
 	}
 	
 	@Override

@@ -41,7 +41,7 @@ public class FloatExpr extends Expr{
 	}
 
 	@Override
-	public boolean equalStruct(Expr other) {
+	public boolean equals(Object other) {
 		if(other instanceof FloatExpr) {
 			FloatExpr otherCasted = (FloatExpr)other;
 			return otherCasted.value == value;
@@ -61,8 +61,13 @@ public class FloatExpr extends Expr{
 
 	@Override
 	boolean similarStruct(Expr other, boolean checked) {
-		if(other instanceof FloatExpr) return equalStruct(other);
+		if(other instanceof FloatExpr) return equals(other);
 		return false;
+	}
+
+	@Override
+	ExprList getRuleSequence() {
+		return null;
 	}
 
 }
