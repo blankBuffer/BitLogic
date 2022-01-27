@@ -90,6 +90,7 @@ public class Cos extends Expr{
 				cosOfArcsin,
 				cosOfArccos,
 				StandardRules.evenFunction,
+				StandardRules.distrInner,
 				unitCircle
 		);
 	}

@@ -290,7 +290,7 @@ public class Prod extends Expr{
 				if(current instanceof Power) {
 					Power currentPower = (Power)current;
 					
-					if(currentPower.getBase() instanceof Num && !(currentPower.getExpo() instanceof Num)) {
+					if(isPositiveRealNum(currentPower.getBase()) && !(currentPower.getExpo() instanceof Num)) {
 						Num numBase = (Num)currentPower.getBase();
 						
 						if(numBase.realValue.isProbablePrime(128) || numBase.realValue.equals(BigInteger.valueOf(-1))) continue;//skip primes

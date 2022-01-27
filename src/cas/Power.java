@@ -38,6 +38,8 @@ public class Power extends Expr{
 	private static Rule expOfLambertWProd = new Rule("e^(w(x)*n)=x^n/w(x)^n","e to lambert w product",Rule.TRICKY);
 	private static Rule powerOfOne = new Rule("a^1=a","exponent is one",Rule.VERY_EASY);
 	private static Rule fracInBase = new Rule("(a/b)^n=a^n/b^n","base is a fraction",Rule.EASY);
+	private static Rule sqrtOneMinusSin = new Rule("sqrt(1-sin(x))=sqrt(2)*sin(pi/4-x/2)","base is a fraction",Rule.UNCOMMON);
+	private static Rule sqrtOneMinusCos = new Rule("sqrt(1-cos(x))=sqrt(2)*sin(x/2)","base is a fraction",Rule.UNCOMMON);
 	
 	private static Rule oneToExpo = new Rule("base is one",Rule.VERY_EASY){
 		private static final long serialVersionUID = 1L;
@@ -366,13 +368,16 @@ public class Power extends Expr{
 				if(pow.getExpo() instanceof Div) frac = (Div)pow.getExpo();
 				boolean createsComplexNumber = false;
 				if(!settings.allowComplexNumbers && frac != null && frac.isNumericalAndReal()) {
-					if(((Num)frac.getDenom()).realValue.mod(BigInteger.TWO).equals(BigInteger.ZERO)) createsComplexNumber = true;
+					if(((Num)frac.getDenom()).realValue.mod(BigInteger.TWO).equals(BigInteger.ZERO)) createsComplexNumber = true;//root in the form (x)^(a/(2*n))
 				}
 				
 				Prod out = new Prod();
 				for(int i = 0;i<casted.size();i++) {
 					Expr expr = casted.get(i);
-					if(createsComplexNumber && expr.negative()) return pow;
+					if(createsComplexNumber && expr.negative()){
+						pow.setBase(distr(pow.getBase()).simplify(settings));
+						return pow;
+					}
 					out.add(pow(expr,pow.getExpo()).simplify(settings) );
 					casted.remove(i);
 					i--;
@@ -424,6 +429,8 @@ public class Power extends Expr{
 	public static void loadRules(){
 		ruleSequence = exprList(
 				powersWithEpsilonOrInf,
+				sqrtOneMinusSin,
+				sqrtOneMinusCos,
 				factorExponent,
 				baseHasPower,
 				negativeExpoToInv,

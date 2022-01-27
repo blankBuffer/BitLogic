@@ -138,4 +138,14 @@ public class StandardRules extends QuickMath{
 		
 	};
 	
+	static Rule showState = new Rule("print state",Rule.VERY_EASY){
+		private static final long serialVersionUID = 1L;
+		
+		@Override
+		public Expr applyRuleToExpr(Expr e,Settings settings){
+			System.out.println(e);
+			return e;
+		}
+	};
+	
 }

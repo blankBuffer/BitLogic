@@ -95,7 +95,7 @@ public abstract class Expr extends QuickMath implements Comparable<Expr>, Serial
 				return cacheOut.copy();
 			}
 		}
-		
+		//System.out.println(toBeSimplified);
 		@SuppressWarnings("unchecked")
 		Class<Expr> originalType = (Class<Expr>) this.getClass();
 		if(simplifyChildren) toBeSimplified.simplifyChildren(settings);//simplify sub expressions
@@ -561,6 +561,7 @@ public abstract class Expr extends QuickMath implements Comparable<Expr>, Serial
 			ExprList exampleParts = new ExprList();
 			ExprList parts = new ExprList();
 			boolean match = example.getLeftSide().checkForMatches(exampleParts,parts,this);
+			//System.out.println(exampleParts+"  "+parts);
 			if(!match) {
 				return new ModifyFromExampleResult(this,false);
 			}
@@ -641,11 +642,11 @@ public abstract class Expr extends QuickMath implements Comparable<Expr>, Serial
 	 */
 	public void sort(ArrayList<VarCount> varcounts) {
 		if(!flags.sorted) {
+			if (varcounts == null) {
+				varcounts = new ArrayList<VarCount>();
+				countVars(varcounts);
+			}
 			if(this instanceof Sum || this instanceof Prod || this instanceof ExprList) {
-				if (varcounts == null) {
-					varcounts = new ArrayList<VarCount>();
-					countVars(varcounts);
-				}
 				boolean wasSimple = flags.simple;
 				
 				int moved = 0;
@@ -670,6 +671,7 @@ public abstract class Expr extends QuickMath implements Comparable<Expr>, Serial
 			}
 			
 			for(int i = 0;i<size();i++) {
+				get(i).flags.sorted = false;//we have to reset the sort because parent was not sorted so varcounts may change
 				get(i).sort(varcounts);
 			}
 			

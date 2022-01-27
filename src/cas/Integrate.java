@@ -17,6 +17,51 @@ public class Integrate extends Expr{
 	static Rule eToXTimesSinX = new Rule("integrate(e^x*sin(x),x)=e^x*(sin(x)-cos(x))/2","integral of looping sine",Rule.UNCOMMON);
 	static Rule eToXTimesCosX = new Rule("integrate(e^x*cos(x),x)=e^x*(sin(x)+cos(x))/2","integral of looping cosine",Rule.UNCOMMON);
 	
+	static Rule recursivePowerOverSqrt = new Rule("power over sqrt",Rule.UNCOMMON){
+		private static final long serialVersionUID = 1L;
+		
+		Rule[] cases;
+		@Override
+		public void init(){
+			cases = new Rule[]{
+					new Rule("integrate(x^n/sqrt(a*x+b),x)=(2*x^n*sqrt(a*x+b))/(a*(2*n+1))-(2*n*b*integrate(x^(n-1)/sqrt(a*x+b),x))/(a*(2*n+1))","power over sqrt",Rule.UNCOMMON),
+					new Rule("integrate(x^n/sqrt(x+b),x)=(2*x^n*sqrt(x+b))/(2*n+1)-(2*n*b*integrate(x^(n-1)/sqrt(x+b),x))/(2*n+1)","power over sqrt",Rule.UNCOMMON),
+					new Rule("integrate(x/sqrt(a*x+b),x)=(2*x*sqrt(a*x+b))/(a*3)-(2*b*integrate(1/sqrt(a*x+b),x))/(a*3)","power over sqrt",Rule.UNCOMMON),
+					new Rule("integrate(x/sqrt(x+b),x)=(2*x*sqrt(x+b))/3-(2*b*integrate(1/sqrt(x+b),x))/3","power over sqrt",Rule.UNCOMMON),
+			};
+		}
+		
+		@Override
+		public Expr applyRuleToExpr(Expr e,Settings settings){
+			for(Rule r:cases){
+				e = r.applyRuleToExpr(e, settings);
+			}
+			return e;
+		}
+	};
+	
+	static Rule recursiveInvPowerOverSqrt = new Rule("1 over power times sqrt",Rule.UNCOMMON){
+		private static final long serialVersionUID = 1L;
+		
+		Rule[] cases;
+		@Override
+		public void init(){
+			cases = new Rule[]{
+					new Rule("integrate(1/(sqrt(a*x+b)*x^n),x)=(-sqrt(a*x+b))/((n-1)*b*x^(n-1))-(a*(2*n-3)*integrate(1/(sqrt(a*x+b)*x^(n-1)),x))/(2*b*(n-1))","power over sqrt",Rule.UNCOMMON),
+					new Rule("integrate(1/(sqrt(a*x+b)*x),x)=ln(1-sqrt(a*x+b)/sqrt(b))/sqrt(b)-ln(1+sqrt(a*x+b)/sqrt(b))/sqrt(b)","power over sqrt",Rule.UNCOMMON),
+					new Rule("integrate(1/(sqrt(x+b)*x^n),x)=(-sqrt(x+b))/((n-1)*b*x^(n-1))-((2*n-3)*integrate(1/(sqrt(x+b)*x^(n-1)),x))/(2*b*(n-1))","power over sqrt",Rule.UNCOMMON),
+					new Rule("integrate(1/(sqrt(x+b)*x),x)=ln(1-sqrt(x+b)/sqrt(b))/sqrt(b)-ln(1+sqrt(x+b)/sqrt(b))/sqrt(b)","power over sqrt",Rule.UNCOMMON),
+			};
+		}
+		
+		@Override
+		public Expr applyRuleToExpr(Expr e,Settings settings){
+			for(Rule r:cases){
+				e = r.applyRuleToExpr(e, settings);
+			}
+			return e;
+		}
+	};
 	
 	static Rule integralsWithPowers = new Rule("integral with powers",Rule.EASY){
 		private static final long serialVersionUID = 1L;
@@ -96,7 +141,7 @@ public class Integrate extends Expr{
 				ExprList poly = polyExtract(denom, integ.getVar(), settings);
 				if(poly != null && poly.size() == 3) {
 					Expr c = poly.get(0),b = poly.get(1),a = poly.get(2);
-					ExprList subTable = exprList(equ(var("0a"),a),equ(var("0b"),b),equ(var("0c"),c));
+					ExprList subTable = exprList(equ(var("0a"),a),equ(var("0b"),b),equ(var("0c"),c),equ(var("x"),integ.getVar()));
 					
 					Expr check = this.check.replace(subTable).simplify(settings);
 					
@@ -112,6 +157,43 @@ public class Integrate extends Expr{
 			
 		}
 		
+	};
+	
+	static Rule integralForArcsin = new Rule("integrals leading to arcsin",Rule.TRICKY){
+		private static final long serialVersionUID = 1L;
+		
+		Rule[] cases;
+		
+		Expr format;
+		Rule hardCase;
+		
+		@Override
+		public void init(){
+			cases = new Rule[]{
+					new Rule("integrate(1/sqrt(a-x^2),x)=asin(x/sqrt(a))","simple integral leading to arcsin",Rule.EASY),
+					new Rule("integrate(1/sqrt(a-b*x^2),x)=asin((sqrt(b)*x)/sqrt(a))/sqrt(b)","simple integral leading to arcsin",Rule.EASY),
+					new Rule("integrate(1/(sqrt(-x+a)*sqrt(x+b)),x)=asin((2*x+b-a)/(a+b))","simple integral leading to arcsin",Rule.EASY),
+			};
+			
+			format = createExpr("integrate(1/sqrt(a+b*x^2),x)");
+			hardCase = new Rule("integrate(1/sqrt(a+b*x^2),x)=asin((sqrt(-b)*x)/sqrt(a))/sqrt(-b)","simple integral leading to arcsin",Rule.EASY);
+		}
+		
+		@Override
+		public Expr applyRuleToExpr(Expr e,Settings settings){
+			for(Rule r:cases){
+				e = r.applyRuleToExpr(e, settings);
+			}
+			if(e.strictSimilarStruct(format)){
+				
+				ExprList equs = e.getEqusFromTemplate(format);
+				if(Expr.getExprByName(equs, "b").negative()){
+					e = hardCase.applyRuleToExpr(e, settings);
+				}
+				
+			}
+			return e;
+		}
 	};
 	
 	static Rule integrationByParts = new Rule("integration by parts",Rule.CHALLENGING){
@@ -385,6 +467,9 @@ public class Integrate extends Expr{
 				atanCase,
 				eToXTimesSinX,
 				eToXTimesCosX,
+				recursivePowerOverSqrt,
+				recursiveInvPowerOverSqrt,
+				integralForArcsin,
 				partialFraction,
 				polyDiv,
 				StandardRules.distrInner,

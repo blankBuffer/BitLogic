@@ -170,6 +170,7 @@ class MainWindow extends JFrame{
 		//
 		setVisible(true);
 		setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+		setAlwaysOnTop(true);
 		
 		saveWindow = new SaveStackWindow(this);
 		openWindow = new OpenStackWindow(this);

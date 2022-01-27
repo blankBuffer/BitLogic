@@ -115,6 +115,7 @@ public class Sin extends Expr{
 				sinOfAsin,
 				sinOfAcos,
 				StandardRules.oddFunction,
+				StandardRules.distrInner,
 				unitCircle
 		);
 	}

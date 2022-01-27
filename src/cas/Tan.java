@@ -94,6 +94,7 @@ public class Tan extends Expr{
 				tanOfArcsin,
 				tanOfArccos,
 				StandardRules.oddFunction,
+				StandardRules.distrInner,
 				unitCircle
 		);
 	}

@@ -50,12 +50,36 @@ public class Acos extends Expr{
 		}
 	};
 	
+	static Rule arccosWithSqrt = new Rule("arcsin with square root",Rule.UNCOMMON){
+		private static final long serialVersionUID = 1L;
+		
+		Rule[] cases;
+		@Override
+		public void init(){
+			cases = new Rule[]{
+				new Rule("acos(sqrt(a*x+b)/c)=asin((c^2-2*a*x-2*b)/c^2)/2+pi/4","arcsin with square root",Rule.UNCOMMON),
+				new Rule("acos(sqrt(x+b)/c)=asin((c^2-2*x-2*b)/c^2)/2+pi/4","arcsin with square root",Rule.UNCOMMON),
+				new Rule("acos(sqrt(a*x+b))=asin(1-2*a*x-2*b)/2+pi/4","arcsin with square root",Rule.UNCOMMON),
+				new Rule("acos(sqrt(x+b))=asin(1-2*x-2*b)/2+pi/4","arcsin with square root",Rule.UNCOMMON),
+			};
+		}
+		
+		@Override
+		public Expr applyRuleToExpr(Expr e,Settings settings){
+			for(Rule r:cases){
+				e = r.applyRuleToExpr(e, settings);
+			}
+			return e;
+		}
+	};
+	
 	static ExprList ruleSequence = null;
 	
 	static void loadRules() {
 		ruleSequence = exprList(
 				StandardRules.trigCompressInner,
 				negativeInner,
+				arccosWithSqrt,
 				containsInverse,
 				containsSin,
 				inverseUnitCircle

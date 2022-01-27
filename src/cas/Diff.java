@@ -11,6 +11,8 @@ public class Diff extends Expr{
 	static Rule cosCase = new Rule("diff(cos(a),x)=-sin(a)*diff(a,x)","derivative of cosine",Rule.UNCOMMON);
 	static Rule tanCase = new Rule("diff(tan(a),x)=(cos(a)^-2)*diff(a,x)","derivative of tangent",Rule.UNCOMMON);
 	static Rule atanCase = new Rule("diff(atan(a),x)=diff(a,x)/(a^2+1)","derivative of arctan",Rule.UNCOMMON);
+	static Rule asinCase = new Rule("diff(asin(a),x)=diff(a,x)/sqrt(1-a^2)","derivative of arctan",Rule.UNCOMMON);
+	static Rule acosCase = new Rule("diff(acos(a),x)=(-diff(a,x))/sqrt(1-a^2)","derivative of arctan",Rule.UNCOMMON);
 	static Rule divCase = new Rule("diff(a/b,x)=(diff(a,x)*b-a*diff(b,x))/(b^2)","derivative of division",Rule.TRICKY);
 	
 	static Rule constant = new Rule("derivative of a constant",Rule.VERY_EASY){
@@ -70,6 +72,8 @@ public class Diff extends Expr{
 				cosCase,
 				tanCase,
 				atanCase,
+				asinCase,
+				acosCase,
 				divCase
 			);
 	}

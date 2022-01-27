@@ -39,7 +39,7 @@ public class Distr extends Expr{
 				}
 			}else if(expr instanceof Div) {//(x+y)/3 -> x/3+y/3
 				Div casted = (Div)expr;
-				
+				casted.setNumer(distr(casted.getNumer()).simplify(settings));
 				if(casted.getNumer() instanceof Sum) {
 					for (int i = 0;i < casted.getNumer().size();i++) {
 						casted.getNumer().set(i, div(casted.getNumer().get(i),casted.getDenom().copy()));
