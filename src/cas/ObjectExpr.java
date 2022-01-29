@@ -38,12 +38,6 @@ public class ObjectExpr extends Expr{//behaves like variables
 	}
 
 	@Override
-	boolean similarStruct(Expr other, boolean checked) {
-		if(other instanceof ObjectExpr) return equals(other);
-		return false;
-	}
-
-	@Override
 	ExprList getRuleSequence() {
 		return null;
 	}

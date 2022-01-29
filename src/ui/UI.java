@@ -3,24 +3,23 @@ package ui;
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
-import javax.swing.JOptionPane;
 
 public class UI {
 	public static boolean GUI = false;
 	public static boolean CLEAR_TERM = false;
-	public static void createMessege(String messege) {
-		if(GUI) {
-			new Thread() {
-				@Override
-				public void run() {
-					JOptionPane.showMessageDialog(null,messege);
-				}
-			}.start();
-		}else {
-			System.out.println("messege: "+messege);
-		}
-	}
+	static MainWindow mainWindow = null;
 	
+	public static String fancyIntro() {
+		String img = ""
+				+ "▛▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▜\n"
+				+ "▌ ▛▀▀▄ ▀▛▘ ▀▛▘   ▌   ▗▛▜▖ ▗▛▜▖ ▀▛▘ ▗▛▜▖ ▐\n"
+				+ "▌ ▌  ▟  ▌   ▌    ▌   ▛  ▜ ▛  ▀  ▌  ▛  ▀ ▐\n"
+				+ "▌ ▌▀▀▄  ▌   ▌ ██ ▌   ▌  ▐ ▌ ▄▄  ▌  ▌    ▐\n"
+				+ "▌ ▌  ▐  ▌   ▌    ▌   ▙  ▟ ▙ ▘▟  ▌  ▙  ▄ ▐\n"
+				+ "▌ ▙▄▄▀ ▄▙▖  ▌    ▙▄▄ ▝▙▟▘ ▝▙▟▘ ▄▙▖ ▝▙▟▘ ▐\n"
+				+ "▙▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▟\n";
+		return img;
+	}
 	public static void clearTerm() {
 		System.out.print("\033[H\033[2J");
 		System.out.flush();
@@ -42,11 +41,6 @@ public class UI {
 			
 			if(CLEAR_TERM) clearTerm();
 			
-			if(s.equals("GUI")) {
-				GUI = true;
-				new MainWindow(editor);
-				continue;
-			}
 			int result = editor.command(s);
 			editor.printStack();
 			if(result == -1) break;
@@ -56,7 +50,7 @@ public class UI {
 	
 	public static void startGraphicalInterface() {
 		GUI = true;
-		new MainWindow();
+		mainWindow = new MainWindow();
 	}
 	
 }

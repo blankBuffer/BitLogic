@@ -60,12 +60,6 @@ public class FloatExpr extends Expr{
 	}
 
 	@Override
-	boolean similarStruct(Expr other, boolean checked) {
-		if(other instanceof FloatExpr) return equals(other);
-		return false;
-	}
-
-	@Override
 	ExprList getRuleSequence() {
 		return null;
 	}

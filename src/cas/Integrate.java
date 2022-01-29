@@ -7,7 +7,28 @@ public class Integrate extends Expr{
 	static Rule zeroCase = new Rule("integrate(0,x)=0","integral of zero",Rule.EASY);
 	static Rule oneCase = new Rule("integrate(1,x)=x","integral of one",Rule.EASY);
 	static Rule varCase = new Rule("integrate(x,x)=x^2/2","integral of variable",Rule.EASY);
-	static Rule invRule = new Rule("integrate(inv(x),x)=ln(x)","integral of the inverse",Rule.EASY);
+	static Rule invRule = new Rule("integral of the inverse",Rule.EASY){
+		private static final long serialVersionUID = 1L;
+		
+		Rule[] cases;
+		@Override
+		public void init(){
+			cases = new Rule[]{
+					new Rule("integrate(1/x,x)=ln(x)","integral of inverse",Rule.EASY),
+					new Rule("integrate(1/(b*x),x)=ln(b*x)/b","integral of inverse",Rule.EASY),
+					new Rule("integrate(1/(x+a),x)=ln(x+a)","integral of inverse",Rule.EASY),
+					new Rule("integrate(1/(a+b*x),x)=ln(a+b*x)/b","integral of inverse",Rule.EASY),
+			};
+		}
+		
+		@Override
+		public Expr applyRuleToExpr(Expr e,Settings settings){
+			for(Rule r:cases){
+				e = r.applyRuleToExpr(e, settings);
+			}
+			return e;
+		}
+	};
 	static Rule logCase = new Rule("integrate(ln(x),x)=ln(x)*x-x","integral of the log",Rule.UNCOMMON);
 	static Rule cosCase = new Rule("integrate(cos(x),x)=sin(x)","integral of the cosine",Rule.EASY);
 	static Rule sinCase = new Rule("integrate(sin(x),x)=-cos(x)","integral of the sin",Rule.EASY);
@@ -16,6 +37,10 @@ public class Integrate extends Expr{
 	static Rule atanCase = new Rule("integrate(atan(x),x)=x*atan(x)+ln(x^2+1)/-2","integral of arctan",Rule.UNCOMMON);
 	static Rule eToXTimesSinX = new Rule("integrate(e^x*sin(x),x)=e^x*(sin(x)-cos(x))/2","integral of looping sine",Rule.UNCOMMON);
 	static Rule eToXTimesCosX = new Rule("integrate(e^x*cos(x),x)=e^x*(sin(x)+cos(x))/2","integral of looping cosine",Rule.UNCOMMON);
+	static Rule cscCase = new Rule("integrate(1/sin(x),x)=ln((1-cos(x))/sin(x))","integral of 1 over sin",Rule.UNCOMMON);
+	static Rule secCase = new Rule("integrate(1/cos(x),x)=ln((1+sin(x))/cos(x))","integral of 1 over cos",Rule.UNCOMMON);
+	static Rule cotCase = new Rule("integrate(1/tan(x),x)=ln(sin(x))","integral of 1 over tan",Rule.UNCOMMON);
+	static Rule arcsinCase = new Rule("integrate(asin(x),x)=x*asin(x)+sqrt(1-x^2)","integral of arcsin",Rule.UNCOMMON);
 	
 	static Rule recursivePowerOverSqrt = new Rule("power over sqrt",Rule.UNCOMMON){
 		private static final long serialVersionUID = 1L;
@@ -164,33 +189,19 @@ public class Integrate extends Expr{
 		
 		Rule[] cases;
 		
-		Expr format;
-		Rule hardCase;
-		
 		@Override
 		public void init(){
 			cases = new Rule[]{
 					new Rule("integrate(1/sqrt(a-x^2),x)=asin(x/sqrt(a))","simple integral leading to arcsin",Rule.EASY),
 					new Rule("integrate(1/sqrt(a-b*x^2),x)=asin((sqrt(b)*x)/sqrt(a))/sqrt(b)","simple integral leading to arcsin",Rule.EASY),
-					new Rule("integrate(1/(sqrt(-x+a)*sqrt(x+b)),x)=asin((2*x+b-a)/(a+b))","simple integral leading to arcsin",Rule.EASY),
 			};
 			
-			format = createExpr("integrate(1/sqrt(a+b*x^2),x)");
-			hardCase = new Rule("integrate(1/sqrt(a+b*x^2),x)=asin((sqrt(-b)*x)/sqrt(a))/sqrt(-b)","simple integral leading to arcsin",Rule.EASY);
 		}
 		
 		@Override
 		public Expr applyRuleToExpr(Expr e,Settings settings){
 			for(Rule r:cases){
 				e = r.applyRuleToExpr(e, settings);
-			}
-			if(e.strictSimilarStruct(format)){
-				
-				ExprList equs = e.getEqusFromTemplate(format);
-				if(Expr.getExprByName(equs, "b").negative()){
-					e = hardCase.applyRuleToExpr(e, settings);
-				}
-				
 			}
 			return e;
 		}
@@ -204,8 +215,10 @@ public class Integrate extends Expr{
 		public Expr applyRuleToExpr(Expr e,Settings settings){
 			Integrate integ = (Integrate)e;
 			
-			if(integ.get() instanceof Prod && !integ.get().containsType(Integrate.class)) {
-				Prod innerProd = (Prod)integ.get().copy();
+			if(!integ.get().containsType(Integrate.class)) {
+				Div innerDiv = Div.cast(integ.get().copy());
+				Prod innerProd = Prod.cast(innerDiv.getNumer());
+				innerDiv.setNumer(innerProd);
 				int bestIndex = -1;
 				int confidence = -1;
 				for(int i = 0;i < innerProd.size();i++) {
@@ -213,11 +226,11 @@ public class Integrate extends Expr{
 					
 					if(innerProd.get(i) instanceof Ln){
 						currentConfidence = BEST;
-					}else if(innerProd.get(i) instanceof Atan){
+					}else if(innerProd.get(i) instanceof Atan || innerProd.get(i) instanceof Asin || innerProd.get(i) instanceof Acos){
 						currentConfidence = GREAT;
 					}else{
 						Power pow = Power.cast(innerProd.get(i));
-						if(isPolynomial(pow.getBase(),integ.getVar())) {
+						if(isPolynomial(pow.getBase(),integ.getVar()) && pow.getBase().contains(integ.getVar())) {
 							if(isPositiveRealNum(pow.getExpo())){
 								currentConfidence = GOOD;
 							}else{
@@ -240,9 +253,8 @@ public class Integrate extends Expr{
 				}
 				if(bestIndex != -1) {
 					Expr best = innerProd.get(bestIndex);
-					
 					innerProd.remove(bestIndex);
-					Expr newIntegral = integrate(innerProd,integ.getVar()).simplify(settings);
+					Expr newIntegral = integrate(innerDiv,integ.getVar()).simplify(settings);
 					if(!newIntegral.containsType(Integrate.class)) {
 						Expr out = sub(prod(newIntegral,best),integrate(prod(newIntegral.copy(),diff(best.copy(),integ.getVar())),integ.getVar()));
 						return out.simplify(settings);
@@ -286,28 +298,27 @@ public class Integrate extends Expr{
 		@Override
 		public Expr applyRuleToExpr(Expr e,Settings settings){
 			Integrate integ = (Integrate)e;
-			
-			if(integ.get() instanceof Prod) {
-				Prod innerProd = (Prod)integ.get();
 				
-				for(int i = 0;i<innerProd.size();i++) {
-					Prod prodCopy = (Prod)innerProd.copy();
-					
-					Expr testExpr = prodCopy.get(i);
-					prodCopy.remove(i);
-					Expr resToCheck = div(prodCopy,diff(testExpr,(Var)integ.getVar().copy()));
-					resToCheck = resToCheck.simplify(settings);
-					if(!resToCheck.contains(integ.getVar())) {
-						Prod res = new Prod();
-						res.add(pow(testExpr,num(2)));
-						res.add(resToCheck);
-						res.add(inv(num(2)));
-						return res.simplify(settings);
-					}
-					
+				
+			Div innerDiv = Div.cast(integ.get().copy());
+			Prod innerProd = Prod.cast(innerDiv.getNumer());
+			innerDiv.setNumer(innerProd);
+			for(int i = 0;i<innerProd.size();i++) {
+				Div divCopy = (Div)innerDiv.copy();
+				
+				Expr testExpr = divCopy.getNumer().get(i);
+				if(!testExpr.contains(integ.getVar())) continue;
+				
+				divCopy.getNumer().remove(i);
+				Expr resToCheck = div(divCopy,diff(testExpr,(Var)integ.getVar().copy()));
+				resToCheck = resToCheck.simplify(settings);
+				if(!resToCheck.contains(integ.getVar())) {
+					Div res = div(prod(pow(testExpr,num(2)),resToCheck),num(2));
+					return res.simplify(settings);
 				}
 				
 			}
+			
 			
 			return integ;
 		}
@@ -448,10 +459,85 @@ public class Integrate extends Expr{
 	
 	};
 	
+	static Rule psudoTrigSub = new Rule("psudo trig substitution",Rule.DIFFICULT) {
+		private static final long serialVersionUID = 1L;
+
+		Rule[] cases;
+		
+		@Override
+		public void init(){
+			cases = new Rule[]{
+					new Rule("integrate(x^2/sqrt(a-x^2),x)=a*asin(x/sqrt(a))/2-x*sqrt(a-x^2)/2","trig sub",Rule.DIFFICULT),
+					new Rule("integrate(x^2/sqrt(a-b*x^2),x)=a*asin((x*sqrt(b))/sqrt(a))/(2*b^(3/2))-x*sqrt(a-b*x^2)/(2*b)","trig sub",Rule.VERY_DIFFICULT),
+			};
+		}
+		
+		@Override
+		public Expr applyRuleToExpr(Expr e,Settings settings){
+			for(Rule r:cases){
+				e = r.applyRuleToExpr(e, settings);
+			}
+			
+			return e;
+		}
+	};
+	
+	/*
+	 * this rule makes integration more reliable for both other rules and for u substitutions
+	 * for example with an example equation of x^3/sqrt(1-x^2) we do not want the sqrt(1-x^2) to be in the form of sqrt(1-x)*sqrt(1+x)
+	 * while normally the ladder would be better for integration it creates more problems
+	 */
+	static Rule compressRoots = new Rule("compress roots",Rule.EASY) {//sqrt(a+b)*sqrt(a-b) -> sqrt(a^2-b^2)
+		private static final long serialVersionUID = 1L;
+		
+		public Expr compressRoots(Expr e,Settings settings) {
+			if(e instanceof Prod) {
+				for(int i = 0;i<e.size();i++) {
+					if(e.get(i) instanceof Power) {
+						Power current = (Power)e.get(i);
+						if(!(current.getExpo() instanceof Div)) continue;
+						Div frac = (Div)current.getExpo();
+						if(!frac.isNumericalAndReal()) continue;
+						
+						current.setBase(Prod.cast(current.getBase()));
+						
+						for(int j = i+1;j<e.size();j++) {
+							if(e.get(j) instanceof Power) {
+								Power otherPow = (Power)e.get(j);
+								if(otherPow.getExpo().equals(current.getExpo())) {
+									current.getBase().add(otherPow.getBase());
+									e.remove(j);
+									j--;
+								}
+								
+							}
+							
+						}
+						current.setBase(distr(current.getBase()).simplify(settings));
+					}
+				}
+				e = Prod.unCast(e);
+			}else {
+				for(int i = 0;i<e.size();i++) {
+					e.set(i,compressRoots(e.get(i),settings));
+				}
+			}
+			return e;
+		}
+		
+		@Override
+		public Expr applyRuleToExpr(Expr e,Settings settings) {
+			e = compressRoots(e,settings);
+			return e;
+		}
+		
+	};
+	
 	static ExprList ruleSequence = null;
 	
 	public static void loadRules(){
 		ruleSequence = exprList(
+				
 				zeroCase,
 				oneCase,
 				StandardRules.pullOutConstants,
@@ -467,8 +553,14 @@ public class Integrate extends Expr{
 				atanCase,
 				eToXTimesSinX,
 				eToXTimesCosX,
+				cscCase,
+				secCase,
+				cotCase,
+				arcsinCase,
+				compressRoots,
 				recursivePowerOverSqrt,
 				recursiveInvPowerOverSqrt,
+				psudoTrigSub,
 				integralForArcsin,
 				partialFraction,
 				polyDiv,
@@ -478,6 +570,7 @@ public class Integrate extends Expr{
 				normalUSub,
 				integrationByPartsSpecial,
 				StandardRules.linearOperator
+				
 		);
 	}
 	

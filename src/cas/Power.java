@@ -38,8 +38,10 @@ public class Power extends Expr{
 	private static Rule expOfLambertWProd = new Rule("e^(w(x)*n)=x^n/w(x)^n","e to lambert w product",Rule.TRICKY);
 	private static Rule powerOfOne = new Rule("a^1=a","exponent is one",Rule.VERY_EASY);
 	private static Rule fracInBase = new Rule("(a/b)^n=a^n/b^n","base is a fraction",Rule.EASY);
-	private static Rule sqrtOneMinusSin = new Rule("sqrt(1-sin(x))=sqrt(2)*sin(pi/4-x/2)","base is a fraction",Rule.UNCOMMON);
-	private static Rule sqrtOneMinusCos = new Rule("sqrt(1-cos(x))=sqrt(2)*sin(x/2)","base is a fraction",Rule.UNCOMMON);
+	private static Rule sqrtOneMinusSin = new Rule("sqrt(1-sin(x))=sqrt(2)*sin(pi/4-x/2)","sqrt of 1 minus sin",Rule.UNCOMMON);
+	private static Rule sqrtOneMinusCos = new Rule("sqrt(1-cos(x))=sqrt(2)*sin(x/2)","sqrt of 1 minus cos",Rule.UNCOMMON);
+	private static Rule sqrtOnePlusSin = new Rule("sqrt(1+sin(x))=sqrt(2)*cos(pi/4-x/2)","sqrt of 1 plus sin",Rule.UNCOMMON);
+	private static Rule sqrtOnePlusCos = new Rule("sqrt(1+cos(x))=sqrt(2)*cos(x/2)","sqrt of 1 plus cos",Rule.UNCOMMON);
 	
 	private static Rule oneToExpo = new Rule("base is one",Rule.VERY_EASY){
 		private static final long serialVersionUID = 1L;
@@ -431,6 +433,8 @@ public class Power extends Expr{
 				powersWithEpsilonOrInf,
 				sqrtOneMinusSin,
 				sqrtOneMinusCos,
+				sqrtOnePlusSin,
+				sqrtOnePlusCos,
 				factorExponent,
 				baseHasPower,
 				negativeExpoToInv,
@@ -464,15 +468,18 @@ public class Power extends Expr{
 	@Override
 	public String toString() {
 		String out = "";
-		if(sqrtObj.fastSimilarStruct(this)) {//fancy and having set to true makes it faster
+		
+		if(Rule.fastSimilarStruct(sqrtObj,this)) {//fancy and having set to true makes it faster
 			out+="sqrt(";
 			out+=getBase().toString();
 			out+=')';
-		}else if(cbrtObj.fastSimilarStruct(this)) {
+		}else if(Rule.fastSimilarStruct(cbrtObj,this)) {
 			out+="cbrt(";
 			out+=getBase().toString();
 			out+=')';
-		}else {
+		}else
+		
+		{
 			boolean useParenOnBase = false;//parentheses if
 			//base is a negative integer
 			//base is a sum or product or power

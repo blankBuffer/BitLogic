@@ -382,11 +382,11 @@ public class Div extends Expr{
 	ExprList getRuleSequence() {
 		return ruleSequence;
 	}
-	boolean isNumerical() {//returns if its just numbers
+	public boolean isNumerical() {//returns if its just numbers
 		return getNumer() instanceof Num && getDenom() instanceof Num;
 	}
 	
-	boolean isNumericalAndReal() {
+	public boolean isNumericalAndReal() {
 		return isNumerical() && !((Num)getNumer()).isComplex() && !((Num)getDenom()).isComplex();
 	}
 	

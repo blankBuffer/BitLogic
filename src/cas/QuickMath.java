@@ -864,19 +864,6 @@ public class QuickMath {
 		return out;
 	}
 	
-	static Equ isSin2x = (Equ)createExpr("sin(x)*cos(x)=sin(2*x)/2");
-	static Equ isSin2x_2 = (Equ)createExpr("a*sin(x)*cos(x)=a*sin(2*x)/2");
-	static Equ isCos2x = (Equ)createExpr("2*cos(x)^2-1=cos(2*x)");
-	static Equ isTan2x = (Equ)createExpr("2*tan(x)/(1-tan(x)^2)=tan(2*x)");
-	
-	public static Expr trigCompress(Expr e,Settings settings) {
-		e = e.modifyFromExample(isSin2x, settings);
-		e = e.modifyFromExample(isSin2x_2, settings);
-		e = e.modifyFromExample(isCos2x, settings);
-		e = e.modifyFromExample(isTan2x, settings);
-		return e;
-	}
-	
 	public static Expr trigExpand(Expr e,Settings settings){
 		if(e.containsType(Sin.class)){
 			Expr trigPart = null;

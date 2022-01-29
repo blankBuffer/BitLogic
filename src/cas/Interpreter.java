@@ -23,6 +23,10 @@ public class Interpreter extends QuickMath{
 		return createExprFromTokens(tokens,defs,settings);
 	}
 	
+	public static Expr createExprWithThrow(String string) throws Exception {
+		return createExprWithThrow(string,Defs.blank,Settings.normal);
+	}
+	
 	public static Expr createExpr(String string) {
 		return createExpr(string,Defs.blank,Settings.normal);
 	}
@@ -252,7 +256,7 @@ public class Interpreter extends QuickMath{
 					return approx( Unit.conv(params.get(0), Unit.getUnit(fromUnit), Unit.getUnit(toUnit)) ,new ExprList());
 				}else if(!op.equals("~")){
 					Func f = null;
-					if(f == null) f = SimpleFuncs.funcs.get(op);
+					f = SimpleFuncs.funcs.get(op);
 					if(f == null) f = defs.getFunc(op);
 					
 					if(f == null) {

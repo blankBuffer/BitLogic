@@ -97,12 +97,12 @@ public class Sum extends Expr{
 			outer:for(int i = 0;i<sum.size();i++) {
 				Expr current = sum.get(i);
 				if(!(current.containsType(Sin.class) || current.containsType(Cos.class))) continue;
-				if(sinsqr.fastSimilarStruct(current)) {
+				if(fastSimilarStruct(sinsqr,current)) {
 					Expr var = current.get(0).get(0);
 					for(int j = 0;j<sum.size();j++) {
 						if(j==i) continue;
 						Expr other = sum.get(j); 
-						if(cossqr.fastSimilarStruct(other)) {
+						if(fastSimilarStruct(cossqr,other)) {
 							Expr otherVar = other.get(0).get(0);
 							
 							if(otherVar.equals(var)) {
@@ -122,11 +122,11 @@ public class Sum extends Expr{
 					int index = -1;
 					String type = null;
 					for(int j = 0;j < current.size();j++) {
-						if(sinsqr.fastSimilarStruct(current.get(j))) {
+						if(fastSimilarStruct(sinsqr,current.get(j))) {
 							index = j;
 							type = "sin";
 							break;
-						}else if(cossqr.fastSimilarStruct(current.get(j))) {
+						}else if(fastSimilarStruct(cossqr,current.get(j))) {
 							index = j;
 							type = "cos";
 							break;
@@ -142,10 +142,10 @@ public class Sum extends Expr{
 							if(other instanceof Prod) {
 								index = -1;
 								for(int k = 0;k < other.size();k++) {
-									if(type == "cos" && sinsqr.fastSimilarStruct(other.get(k))) {
+									if(type == "cos" && fastSimilarStruct(sinsqr,other.get(k))) {
 										index = k;
 										break;
-									}else if(type == "sin" && cossqr.fastSimilarStruct(other.get(k))) {
+									}else if(type == "sin" && fastSimilarStruct(cossqr,other.get(k))) {
 										index = k;
 										break;
 									}

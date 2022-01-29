@@ -578,7 +578,7 @@ public class Ask extends QuickMath{
 	
 	public static Expr ask(String question,Defs defs,Settings settings) throws Exception {
 		
-		if(!question.contains(" ")) return createExpr(question);
+		if(!question.contains(" ")) return Interpreter.createExprWithThrow(question,defs,settings);
 		
 		boolean endsInQuestionMark = question.charAt(question.length()-1) == '?';
 		

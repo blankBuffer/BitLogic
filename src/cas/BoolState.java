@@ -37,12 +37,6 @@ public class BoolState extends Expr{
 	}
 
 	@Override
-	boolean similarStruct(Expr other,boolean checked) {
-		if(other instanceof BoolState) return equals(other);
-		return false;
-	}
-
-	@Override
 	public int hashCode() {
 		if(state) return -926360784;
 		return 971308753;

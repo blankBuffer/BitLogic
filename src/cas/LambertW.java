@@ -29,25 +29,25 @@ public class LambertW extends Expr {
 			
 			boolean canCompute = false;
 			
-			ExprList equs = originalExpr.getEqusFromTemplate(crazyProductRuleFormat);
+			ExprList equs = getEqusFromTemplate(crazyProductRuleFormat,originalExpr);
 			
 			Expr n=null,k=null,b=null,c=null;
 			
 			if(equs != null && !canCompute){
-				n = Expr.getExprByName(equs, "n");
-				k=Expr.getExprByName(equs, "k");
-				b=Expr.getExprByName(equs, "b");
-				c=Expr.getExprByName(equs, "c");
+				n = Rule.getExprByName(equs, "n");
+				k= Rule.getExprByName(equs, "k");
+				b= Rule.getExprByName(equs, "b");
+				c= Rule.getExprByName(equs, "c");
 				canCompute = true;
 			}else{
-				equs = originalExpr.getEqusFromTemplate(crazyProductRuleFormat2);
+				equs = getEqusFromTemplate(crazyProductRuleFormat2,originalExpr);
 			}
 			
 			if(equs != null && !canCompute){
-				n = Expr.getExprByName(equs, "n");
+				n = Rule.getExprByName(equs, "n");
 				k=num(1);
-				b=Expr.getExprByName(equs, "b");
-				c=Expr.getExprByName(equs, "c");
+				b=Rule.getExprByName(equs, "b");
+				c=Rule.getExprByName(equs, "c");
 				canCompute = true;
 			}
 			

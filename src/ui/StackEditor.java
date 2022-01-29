@@ -7,6 +7,12 @@ import cas.*;
 public class StackEditor extends cas.QuickMath {
 
 	private static Expr expr = null;
+	private String alerts = "";
+	
+	
+	public void createAlert(String string){
+		alerts = "alert: "+string+"\n";
+	}
 
 	void result() {
 		if (last() == null)
@@ -20,7 +26,7 @@ public class StackEditor extends cas.QuickMath {
 				expr = expr.replace(currentDefs.getVars()).simplify(currentSettings);// Substitutes the variables and}
 				
 				long delta = System.nanoTime() - oldTime;
-				System.out.println("took " + delta / 1000000.0 + " ms to compute, "+(Expr.ruleCallCount-startingInstructionCount)+" intructions called");
+				createAlert("took " + delta / 1000000.0 + " ms to compute, "+(Expr.ruleCallCount-startingInstructionCount)+" intructions called");
 			}
 		};
 		compute.start();
@@ -59,7 +65,7 @@ public class StackEditor extends cas.QuickMath {
 
 	public Expr last() {
 		if (size() < 1) {
-			UI.createMessege("the stack is empty");
+			createAlert("the stack is empty");
 			return null;
 		}
 		return stack.lastElement();
@@ -67,20 +73,26 @@ public class StackEditor extends cas.QuickMath {
 
 	public Expr sLast() {
 		if (size() < 2) {
-			UI.createMessege("need more elements");
+			createAlert("need more elements");
 			return null;
 		}
 		return stack.get(size() - 2);
 	}
 
-	public void printStack() {
-		System.out.println("**********************");
+	public String getStackAsString(){
+		String out = "";
+		out+="STACK\n";
+		out+="▛▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▜\n";
 		for (int i = 0; i < size(); i++) {
-			System.out.print((i + 1) + ": ");
-			System.out.println(stack.get(i));
+			out+=(i + 1) + ": "+stack.get(i)+"\n";
 		}
-		System.out.println("**********************");
-		//if(stack.size()>0) last().printTree(0);
+		out+="▙▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▟\n";
+		out+=alerts;
+		alerts = "";
+		return out;
+	}
+	public void printStack() {
+		System.out.print(getStackAsString());
 	}
 
 	void clear() {
@@ -225,13 +237,13 @@ public class StackEditor extends cas.QuickMath {
 	void similar() {
 		if (sLast() == null)
 			return;
-		stack.addElement(bool(sLast().strictSimilarStruct(last())));
+		stack.addElement(bool(Rule.strictSimilarStruct(sLast(),last())));
 	}
 	
 	void fastSimilar() {
 		if (sLast() == null)
 			return;
-		stack.addElement(bool(sLast().fastSimilarStruct(last())));
+		stack.addElement(bool(Rule.fastSimilarStruct(sLast(),last())));
 	}
 
 	void divide() {
@@ -260,7 +272,7 @@ public class StackEditor extends cas.QuickMath {
 		if (sLast() == null)
 			return;
 		if (!(last() instanceof Var)) {
-			UI.createMessege("the second element needs to be a variable");
+			createAlert("the second element needs to be a variable");
 			return;
 		}
 		stack.set(size() - 2, diff(sLast(), (Var) last()));
@@ -271,7 +283,7 @@ public class StackEditor extends cas.QuickMath {
 		if (sLast() == null)
 			return;
 		if (!(last() instanceof Var)) {
-			UI.createMessege("the second element needs to be a variable");
+			createAlert("the second element needs to be a variable");
 			return;
 		}
 		stack.set(size() - 2, integrate(sLast(), (Var) last()));
@@ -280,11 +292,11 @@ public class StackEditor extends cas.QuickMath {
 
 	void integrateOver() {
 		if (stack.size() < 4) {
-			UI.createMessege("need more elements");
+			createAlert("need more elements");
 			return;
 		}
 		if (!(last() instanceof Var)) {
-			UI.createMessege("the last element needs to be a variable");
+			createAlert("the last element needs to be a variable");
 			return;
 		}
 		stack.set(size() - 4, integrateOver(stack.get(size() - 4), stack.get(size() - 3), sLast(), (Var) last()));
@@ -295,10 +307,10 @@ public class StackEditor extends cas.QuickMath {
 		if (sLast() == null)
 			return;
 		if (!(last() instanceof Var)) {
-			UI.createMessege("the second element needs to be a variable");
+			createAlert("the second element needs to be a variable");
 			return;
 		} else if (!(sLast() instanceof Equ)) {
-			UI.createMessege("the first element needs to be an equation");
+			createAlert("the first element needs to be an equation");
 			return;
 		}
 		stack.set(size() - 2, solve((Equ) sLast(), (Var) last()));
@@ -419,10 +431,11 @@ public class StackEditor extends cas.QuickMath {
 		stack.remove(stack.size() - 1);
 	}
 
+	@SuppressWarnings("unused")
 	public int command(String command) {
 
 		if (command.isEmpty()) {
-			UI.createMessege("you typed nothing");
+			createAlert("you typed nothing");
 			return 0;
 		}
 		try {
@@ -501,7 +514,7 @@ public class StackEditor extends cas.QuickMath {
 				last().sort();
 				stack.set(size() - 1, last());// update visuals
 			}else if (command.equals("tree")) {
-				stack.addElement(var(last().printTree(0)));
+				stack.addElement(var(last().toStringTree(0)));
 			}else if (command.equals("complexity")) {
 				stack.addElement(num(last().complexity()));
 			}else if (command.equals("dup")) {
@@ -570,13 +583,13 @@ public class StackEditor extends cas.QuickMath {
 					if (index > -1 && index < size()) {
 						stack.addElement(stack.get(index).copy());
 					} else
-						UI.createMessege("invalid index");
+						createAlert("invalid index");
 				} else if (command.equals("remove")) {
 					int index = Integer.parseInt(parts[1]) - 1;
 					if (index > -1 && index < size()) {
 						stack.remove(index);
 					} else
-						UI.createMessege("invalid index");
+						createAlert("invalid index");
 				} else if (command.equals("swap")) {
 					int index = Integer.parseInt(parts[1]) - 1;
 					if (index > -1 && index < size()) {
@@ -584,7 +597,7 @@ public class StackEditor extends cas.QuickMath {
 						stack.set(index, last());
 						stack.set(size() - 1, temp);
 					} else
-						UI.createMessege("invalid index");
+						createAlert("invalid index");
 				}
 			} else {
 				long oldTime = System.nanoTime();
@@ -600,7 +613,7 @@ public class StackEditor extends cas.QuickMath {
 
 			}
 		} catch (Exception e) {
-			UI.createMessege("An error has occured\nreason: " + e.getMessage());
+			createAlert("An error has occured\nreason: " + e.getMessage());
 			e.printStackTrace();
 		}
 		return 0;

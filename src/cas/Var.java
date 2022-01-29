@@ -57,13 +57,6 @@ public class Var extends Expr{
 	}
 
 	@Override
-	boolean similarStruct(Expr other,boolean checked) {//all variables are similar
-		if(generic) return true;
-		
-		return equals(other);
-	}
-
-	@Override
 	public int hashCode() {
 		int ex = 913478934;
 		int sum = 0;

@@ -68,7 +68,7 @@ public class SimpleFuncs extends QuickMath{
 				}
 				Expr inner = tree.getParameter(0);
 				
-				return var(inner.printTree(0));
+				return var(inner.toStringTree(0));
 			}
 		});
 		

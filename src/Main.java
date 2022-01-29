@@ -1,5 +1,4 @@
 import java.io.File;
-import java.io.FileNotFoundException;
 import java.util.Scanner;
 
 import cas.*;
@@ -7,19 +6,8 @@ import ui.UI;
 
 public class Main extends QuickMath{
 	
-	public static final String VERSION = "1.5.0";
+	public static final String VERSION = "1.5.1";
 	
-	public static void fancyIntro() {
-		String img = ""
-				+ "▛▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▜\n"
-				+ "▌ ▛▀▀▄ ▀▛▘ ▀▛▘   ▌   ▗▛▜▖ ▗▛▜▖ ▀▛▘ ▗▛▜▖ ▐\n"
-				+ "▌ ▌  ▟  ▌   ▌    ▌   ▛  ▜ ▛  ▀  ▌  ▛  ▀ ▐\n"
-				+ "▌ ▌▀▀▄  ▌   ▌ ██ ▌   ▌  ▐ ▌ ▄▄  ▌  ▌    ▐\n"
-				+ "▌ ▌  ▐  ▌   ▌    ▌   ▙  ▟ ▙ ▘▟  ▌  ▙  ▄ ▐\n"
-				+ "▌ ▙▄▄▀ ▄▙▖  ▌    ▙▄▄ ▝▙▟▘ ▝▙▟▘ ▄▙▖ ▝▙▟▘ ▐\n"
-				+ "▙▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▟\n";
-		System.out.println(img);
-	}
 	static void mod(Integer a){
 		a++;
 	}
@@ -28,26 +16,29 @@ public class Main extends QuickMath{
 		long startingInstructionCount = Expr.ruleCallCount;
 		long oldTime = System.nanoTime();
 		Scanner sc;
+		int currentLine = 0;
 		try {
 			sc = new Scanner(new File(fileName));
 			System.out.println("running "+fileName+" test script...");
 			while(sc.hasNextLine()) {
 				String line = sc.nextLine();
+				currentLine++;
 				if(line.startsWith("#")) continue;
 				if(verbose) System.out.print(line+" -> ");
 				Expr response = null;
-				try {
-					response = Ask.ask(line,Defs.blank,Settings.normal);
-				} catch (Exception e) {
-					e.printStackTrace();
+				
+				response = Ask.ask(line,Defs.blank,Settings.normal);
+				
+				if(response != null) {
+					if(verbose) System.out.print(response+" -> ");
+					response = response.replace(Defs.blank.getVars()).simplify(Settings.normal);
+					if(verbose)System.out.println(response);
 				}
-				if(verbose && response != null) System.out.print(response+" -> ");
-				response = response.replace(Defs.blank.getVars()).simplify(Settings.normal);
-				if(verbose && response != null) System.out.println(response);
 			}
 			
-		} catch (FileNotFoundException e) {
+		} catch (Exception e) {
 			if(verbose) e.printStackTrace();
+			System.out.println("fail at line: "+currentLine);
 			return;
 		}
 		long delta = System.nanoTime() - oldTime;
@@ -61,7 +52,7 @@ public class Main extends QuickMath{
 	
 	public static void main(String[] args) {
 		
-		int gui = 0;
+		int gui = 1;
 		
 		for(int i = 0;i<args.length;i++) {
 			String arg = args[i];
@@ -76,7 +67,7 @@ public class Main extends QuickMath{
 		
 		if(UI.CLEAR_TERM) UI.clearTerm();
 		System.out.println("Benjamin Currie @2021 v "+VERSION+" , java runtime version: "+System.getProperty("java.version"));
-		fancyIntro();
+		System.out.println(UI.fancyIntro());
 		
 		Rule.loadRules();
 		

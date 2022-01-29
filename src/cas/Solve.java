@@ -5,16 +5,18 @@ import java.util.ArrayList;
 public class Solve extends Expr{
 	
 	private static final long serialVersionUID = 8530995692151126277L;
-	static Equ logCase = equ( createExpr("ln(a)=b") , createExpr("a=e^b") );//ln(a)=b -> a=e^b
-	static Equ rootCase = equ( createExpr("m^n=a") , createExpr("m=a^inv(n)")  );//m^n=a -> m=a^(1/n)
-	static Equ expoCase = equ( createExpr("m^n=a")   ,createExpr("n=ln(a)/ln(m)")  );//m^n=a -> n=ln(a)/ln(m)
-	static Equ baseAndExpoHaveVar = equ( createExpr("m^n=a")   ,createExpr("n*ln(m)=ln(a)")  );
-	static Equ divCase1 = equ(createExpr("a/b=y"),createExpr("a=y*b"));
-	static Equ divCase2 = equ(createExpr("a/b=y"),createExpr("b=a/y"));
-	static Equ divCase3 = equ(createExpr("a/b=y"),createExpr("a-y*b=0"));
+	static Rule logCase = new Rule(equ( createExpr("ln(a)=b") , createExpr("a=e^b") ),"log case for solve",Rule.EASY);//ln(a)=b -> a=e^b
+	static Rule rootCase = new Rule(equ( createExpr("m^n=a") , createExpr("m=a^inv(n)")  ),"root case for solve",Rule.EASY);//m^n=a -> m=a^(1/n)
+	static Rule expoCase = new Rule(equ( createExpr("m^n=a")   ,createExpr("n=ln(a)/ln(m)")  ),"expo case for solve",Rule.EASY);//m^n=a -> n=ln(a)/ln(m)
+	static Rule baseAndExpoHaveVar = new Rule(equ( createExpr("m^n=a")   ,createExpr("n*ln(m)=ln(a)")  ),"preperation for lambert w solve",Rule.UNCOMMON);
+	static Rule divCase1 = new Rule(equ(createExpr("a/b=y"),createExpr("a=y*b")),"numer has var for solve",Rule.EASY);
+	static Rule divCase2 = new Rule(equ(createExpr("a/b=y"),createExpr("b=a/y")),"denmo has var for solve",Rule.EASY);
+	static Rule divCase3 = new Rule( equ(createExpr("a/b=y"),createExpr("a-y*b=0")),"entire div has var for solve",Rule.UNCOMMON);
 	
-	static ArrayList<Equ> caseTable = new ArrayList<Equ>();
+	static ArrayList<Rule> caseTable = new ArrayList<Rule>();
 	static{//make rare case table
+		ArrayList<Equ> caseTable = new ArrayList<Equ>();
+		
 		//root problems
 		Expr rareCase1Ans = createExpr("x=(k^2-a)^2/(4*k^2)");
 		caseTable.add(equ( createExpr("sqrt(x)-sqrt(x+a)=k") , rareCase1Ans ));
@@ -75,6 +77,10 @@ public class Solve extends Expr{
 		caseTable.add(equ( createExpr("acos(x)=y") , createExpr("x=cos(y)") ));
 		caseTable.add(equ( createExpr("atan(x)=y") , createExpr("x=tan(y)") ));
 		caseTable.add(equ( createExpr("w(x)=y") , createExpr("x=y*e^y") ));
+		
+		for(Equ eq:caseTable) {
+			Solve.caseTable.add(new Rule(eq,"solving from case table",Rule.DIFFICULT));
+		}
 	}
 	
 	Solve(){}//
@@ -139,18 +145,17 @@ public class Solve extends Expr{
 			
 			
 			//special cases ///////
-			Expr.ModifyFromExampleResult result = null;
-			for(Equ rareCase:caseTable){
-				result = castedSolve.getEqu().modifyFromExampleSpecific(rareCase,settings);
-				if(result.expr instanceof ExprList){
-					for(int i = 0;i<result.expr.size();i++){
-						result.expr.set(i, solve((Equ)result.expr.get(i),castedSolve.getVar()) );
+			Expr result = null;
+			for(Rule rareCase:caseTable){
+				result = rareCase.applyRuleToExpr(castedSolve.getEqu(),settings);
+				if(result instanceof ExprList){
+					for(int i = 0;i<result.size();i++){
+						result.set(i, solve((Equ)result.get(i),castedSolve.getVar()) );
 					}
-					toBeSimplified = result.expr.simplify(settings);
+					toBeSimplified = result.simplify(settings);
 					break outer;
 				}
-				castedSolve.setEqu((Equ)result.expr);
-				if(result.success) break;
+				castedSolve.setEqu((Equ)result);
 			}
 			
 			//////	
@@ -163,11 +168,11 @@ public class Solve extends Expr{
 				boolean denomHasVar = castedDiv.getDenom().contains(castedSolve.getVar());
 				
 				if(numerHasVar && !denomHasVar) {
-					castedSolve.setEqu((Equ) castedSolve.getEqu().modifyFromExample(divCase1, settings));
+					castedSolve.setEqu((Equ) divCase1.applyRuleToExpr(castedSolve.getEqu(), settings));
 				}else if(!numerHasVar && denomHasVar){
-					castedSolve.setEqu((Equ) castedSolve.getEqu().modifyFromExample(divCase2, settings));
+					castedSolve.setEqu((Equ) divCase2.applyRuleToExpr(castedSolve.getEqu(), settings));
 				}else if(numerHasVar && denomHasVar){
-					castedSolve.setEqu((Equ) castedSolve.getEqu().modifyFromExample(divCase3, settings));
+					castedSolve.setEqu((Equ) divCase3.applyRuleToExpr(castedSolve.getEqu(), settings));
 				}
 			}
 			
@@ -209,8 +214,8 @@ public class Solve extends Expr{
 								Expr c = eq.getRightSide();
 								
 								ExprList out = new ExprList();
-								out.add(     solve(equ(varPart,prod(sub(sqrt(  sum(pow(b,num(2)),prod(num(4),a,c))) , b ),inv(num(2)),inv(a))),castedSolve.getVar())     );
-								out.add(     solve(equ(varPart,prod(sum(sqrt(  sum(pow(b,num(2)),prod(num(4),a,c))) , b ),inv(num(-2)),inv(a))),castedSolve.getVar())    );
+								out.add(   solve(equ(varPart,prod(sub(sqrt(  sum(pow(b,num(2)),prod(num(4),a,c))) , b ),inv(num(2)),inv(a))),castedSolve.getVar())   );
+								out.add(   solve(equ(varPart,prod(sum(sqrt(  sum(pow(b,num(2)),prod(num(4),a,c))) , b ),inv(num(-2)),inv(a))),castedSolve.getVar())  );
 								
 								toBeSimplified = out.simplify(settings);
 								
@@ -223,14 +228,14 @@ public class Solve extends Expr{
 				
 			}
 				
-			castedSolve.setEqu( (Equ)castedSolve.getEqu().modifyFromExample(logCase,settings)  );//ln(x)=b -> x=e^b
+			castedSolve.setEqu( (Equ)logCase.applyRuleToExpr(castedSolve.getEqu(),settings)  );//ln(x)=b -> x=e^b
 				
 			
 			//rules involving powers
 			if(castedSolve.getEqu().getLeftSide() instanceof Power) {
 				Power castedPower = (Power)castedSolve.getEqu().getLeftSide();
 				if(!castedPower.getExpo().contains( castedSolve.getVar() )) {//case 1, only base has x
-					castedSolve.setEqu( (Equ)castedSolve.getEqu().modifyFromExample(rootCase,settings)  );
+					castedSolve.setEqu( (Equ)rootCase.applyRuleToExpr(castedSolve.getEqu(),settings)  );
 					if(castedPower.getExpo() instanceof Num) {
 						Num num = (Num)castedPower.getExpo();
 						if(num.realValue.mod(BigInteger.TWO).equals(BigInteger.ZERO) && !num.isComplex()) {//if exponent is divisible by two then there are two solutions
@@ -243,9 +248,9 @@ public class Solve extends Expr{
 						}
 					}
 				}else if(!castedPower.getBase().contains( castedSolve.getVar() )) {//expo case variable only in exponent
-					castedSolve.setEqu( (Equ)castedSolve.getEqu().modifyFromExample(expoCase,settings));
+					castedSolve.setEqu( (Equ)expoCase.applyRuleToExpr(castedSolve.getEqu(),settings));
 				}else{//generic problem:  x^(b*x)=a -> ln(x^(b*x))=ln(a) -> x*ln(x)=ln(a)/b -> ln(x)*e^ln(x)=ln(a)/b -> ln(x)=w(ln(a)/b)
-					castedSolve.setEqu( (Equ)castedSolve.getEqu().modifyFromExample(baseAndExpoHaveVar,settings));
+					castedSolve.setEqu( (Equ)baseAndExpoHaveVar.applyRuleToExpr(castedSolve.getEqu(),settings));
 				}
 			}
 			if(toBeSimplified instanceof Solve) {

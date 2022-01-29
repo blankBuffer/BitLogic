@@ -271,6 +271,7 @@ public class Plot extends QuickMath{
 		window.setSize(windowSize);
 		window.add(panel);
 		window.setVisible(true);
+		window.setAlwaysOnTop(true);
 		
 		
 		

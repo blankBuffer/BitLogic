@@ -48,6 +48,13 @@ public abstract class Expr extends QuickMath implements Comparable<Expr>, Serial
 	public static HashMap<Expr,Expr> cached = new HashMap<Expr,Expr>();
 	public static ArrayList<Expr> cachedKeys = new ArrayList<Expr>();
 	
+	void print() {
+		System.out.print(this);
+	}
+	void println() {
+		System.out.println(this);
+	}
+	
 	/*
 	 * flags attempt to reduce the amount of work needed during simplification
 	 * if an expression finishes a simplify call it is made simple such that it will not simplify again unless
@@ -83,9 +90,9 @@ public abstract class Expr extends QuickMath implements Comparable<Expr>, Serial
 	}
 	
 	public static long ruleCallCount = 0;
+	static int RECURSION_SAFETY;
 	
 	public Expr simplify(Settings settings){//all expressions will have a simplify call, this is the most important function 
-		
 		Expr toBeSimplified = copy();
 		if(flags.simple) return toBeSimplified;
 		
@@ -94,6 +101,11 @@ public abstract class Expr extends QuickMath implements Comparable<Expr>, Serial
 			if(cacheOut != null){
 				return cacheOut.copy();
 			}
+		}
+		RECURSION_SAFETY++;
+		if(RECURSION_SAFETY>128) {
+			System.err.println("RECURSION DETECTED");
+			return null;
 		}
 		//System.out.println(toBeSimplified);
 		@SuppressWarnings("unchecked")
@@ -131,6 +143,7 @@ public abstract class Expr extends QuickMath implements Comparable<Expr>, Serial
 				}
 			}
 		}
+		RECURSION_SAFETY--;
 		return toBeSimplified;
 	}
 	
@@ -310,103 +323,6 @@ public abstract class Expr extends QuickMath implements Comparable<Expr>, Serial
 		return false;
 	}
 	
-	//the checked variable simply keeps track weather chechForMatches has been checked
-	boolean similarStruct(Expr other,boolean checked){//returns if another expression is similar to this but any comparison with variables is returned true
-		if(other == null) return false;
-		if(other.getClass().equals(this.getClass())) {
-			if(this.commutative){
-				if(size() != other.size()) return false;
-				
-				sort();
-				other.sort();
-				
-				if(!checked) if(checkForMatches(other) == false) return false;
-				
-				boolean[] usedIndicies = new boolean[other.size()];
-				for(int i = 0;i<size();i++) {
-					if(get(i) instanceof Var && ((Var)get(i)).generic) continue;//skip because they return true on anything
-					boolean found = false;
-					for(int j = 0;j<other.size();j++) {
-						if(usedIndicies[j]) continue;
-						else if(get(i).fastSimilarStruct(other.get(j))) {
-							found = true;
-							usedIndicies[j] = true;
-							break;
-						}
-					}
-					if(!found) return false;
-				}
-				return true;
-			}//else not commutative
-			if(!checked) if(checkForMatches(other) == false) return false;
-			
-			for(int i = 0;i<size();i++) {
-				if(!get(i).fastSimilarStruct(other.get(i))) return false;
-			}
-			return true;
-		}
-		return false;
-	}
-	
-	/*
-	 * letting the template expression=this we check if the other expression is similar to the template
-	 * we DONT check for matches which is why its called fast
-	 * 
-	 * similar is defined as having a same tree but the variables might be different or other has expressions where the varibales would be
-	 * 
-	 * this is best understood by example
-	 * 
-	 * this=a^b other=2^3 , fastSimilar = true , strictSimilar = false
-	 * this=a^a other=2^3 , fastSimilar = true , strictSimilar = fasle (because 2 not equal to 3)
-	 * 
-	 * this=sin(x)^b other = a^b , not similar at all, why? because the template was expecting the base to be the sine function
-	 * 
-	 * note that with sums and products the length of sub expressions must be equal. It does its best to sort the expressions in the sum/product in a similar kind of way, but its not perfect
-	 * 
-	 */
-	public boolean fastSimilarStruct(Expr other) {
-		return similarStruct(other,true);
-	}
-	/*
-	 * a full similar comparisons we DO check for matches making it a guarantee
-	 * 
-	 * note that with sums and products the length must be equal
-	 * 
-	 */
-	public boolean strictSimilarStruct(Expr other) {
-		return similarStruct(other,false);
-	}
-	
-	/*
-	 * extracts the parts and variables from the template=this, and expr is the parts to be extracted 
-	 * example, let this=diff(x^a,x) and expr=diff(m^(k*l),m)
-	 * these expression break down into lists
-	 * this -> [x,a,x]
-	 * expr -> [m,k*l,m]
-	 * 
-	 * if this lists for some reason are not the same length it returns false saying that they can't be compared
-	 * returning true is saying no problems were encountered
-	 * 
-	 * this is useful because we can later compare the list for matching sets,
-	 * for example in this example the first and last element must be the same [ ->x ,a, ->x ],
-	 * this is what the check for matches function does
-	 * 
-	 */
-	boolean getParts(ExprList vars,ExprList exprs,Expr expr) {//template and this is input,vars and exprs are outputs
-		if(this instanceof Var && ((Var)this).generic) {//template encountered a variable, time for extraction into the expr list
-			vars.add(copy());
-			exprs.add(expr.copy());
-		}else{
-			if(size()==expr.size()) {
-				for(int i = 0;i<size();i++) {
-					if(!get(i).getParts(vars,exprs,expr.get(i))) return false;
-				}
-			}else {
-				return false;//different size so variables will obviously not match
-			}
-		}
-		return true;
-	}
 	//counts the variables in an expression into the provided arrayList and sorts them by frequency
 	void countVars(ArrayList<VarCount> varcounts) {
 		if(this instanceof Var && ((Var)this).generic) {
@@ -420,63 +336,6 @@ public abstract class Expr extends QuickMath implements Comparable<Expr>, Serial
 		}
 		else for(Expr e:subExpr) e.countVars(varcounts);
 		Collections.sort(varcounts);
-	}
-	
-	/*
-	 * looks at the template=this and checks if the parts list from this have the same pairs as the other expression
-	 */
-	
-	boolean checkForMatches(ExprList vars,ExprList exprs,Expr other) {//other is input,vars and exprs are outputs
-		
-		//part one, create index pairs
-		
-		ExprList usedVars = new ExprList();
-		ArrayList<IndexSet> indexSets = new ArrayList<IndexSet>();
-		
-		sort();
-		other.sort();
-		
-		if(!getParts(vars,exprs,other)) return false;//its possible for expressions to be un-strictly similar
-		
-		if(vars.size()!=exprs.size()) return false;
-		
-		
-		for(int i = 0;i<vars.size();i++) {
-			
-			if(usedVars.contains(vars.get(i))) continue;
-			
-			IndexSet set = new IndexSet();
-			set.ints.add(i);
-			
-			for(int j = i+1;j<vars.size();j++) {
-				if(vars.get(i).equals(vars.get(j))) {
-					set.ints.add(j);
-					
-				}
-			}
-			
-			if(set.ints.size() != 1) indexSets.add(set);
-			
-			usedVars.add(vars.get(i));
-		}
-		
-		
-		///parts two, check other has matches
-		
-		for(IndexSet set:indexSets) {
-			Expr e = exprs.get(set.ints.get(0));
-			for(int i = 1;i<set.ints.size();i++) {
-				if(set.ints.get(i) > exprs.size()) return false;
-				
-				Expr e2 =  exprs.get(set.ints.get(i));
-				
-				if(!e2.equals(e)) return false;
-			}
-			
-		}
-		
-		
-		return true;
 	}
 	
 	/*
@@ -505,79 +364,6 @@ public abstract class Expr extends QuickMath implements Comparable<Expr>, Serial
 			sum+= e.complexityForSorting();
 		}
 		return sum;
-	}
-	
-	boolean checkForMatches(Expr other) {//shortcut
-		ExprList vars = new ExprList();
-		ExprList exprs = new ExprList();
-		return checkForMatches(vars,exprs,other);
-	}
-	
-	static class ModifyFromExampleResult{
-		Expr expr;
-		boolean success;
-		ModifyFromExampleResult(Expr expr,boolean success ){
-			this.expr = expr;
-			this.success = success;
-		}
-	}
-	
-	public ExprList getEqusFromTemplate(Expr example) {
-		if(example.fastSimilarStruct(this)) {//we use fast similar struct here because we don't want to call the getParts function twice and its faster
-			ExprList exampleParts = new ExprList();
-			ExprList parts = new ExprList();
-			boolean match = example.checkForMatches(exampleParts,parts,this);
-			if(!match) {
-				return null;
-			}
-			ExprList equs = new ExprList();
-			for(int i = 0;i<parts.size();i++) equs.add(new Equ(exampleParts.get(i),parts.get(i)));
-			
-			return equs;
-			
-		}
-		return null;
-	}
-	public static Expr getExprByName(ExprList equs,String name){
-		for (int i = 0;i<equs.size();i++){
-			Equ currentEqu = (Equ) equs.get(i);
-			if(currentEqu.getLeftSide().toString().equals(name)){
-				return currentEqu.getRightSide();
-			}
-		}
-		return null;
-	}
-	
-	public Expr modifyFromExample(Equ example,Settings settings) {
-		return modifyFromExampleSpecific(example,settings).expr;
-	}
-	
-	public ModifyFromExampleResult modifyFromExampleSpecific(Equ example,Settings settings) {//returns object describing weather or not it was successful
-		//System.out.println(example.getLeftSide());
-		if(example.getLeftSide().fastSimilarStruct(this)) {//we use fast similar struct here because we don't want to call the getParts function twice and its faster
-			
-			//System.out.println(this+" "+example);
-			
-			ExprList exampleParts = new ExprList();
-			ExprList parts = new ExprList();
-			boolean match = example.getLeftSide().checkForMatches(exampleParts,parts,this);
-			//System.out.println(exampleParts+"  "+parts);
-			if(!match) {
-				return new ModifyFromExampleResult(this,false);
-			}
-			ExprList equs = new ExprList();
-			for(int i = 0;i<parts.size();i++) equs.add(new Equ(exampleParts.get(i),parts.get(i)));
-			
-			Expr out = example.getRightSide().replace(equs);
-			if(example.getLeftSide().getClass() == example.getRightSide().getClass()) {
-				out.simplifyChildren(settings);
-			}else {
-				out = out.simplify(settings);//no recursion since different class type
-			}
-			return new ModifyFromExampleResult(out,true);
-			
-		}
-		return new ModifyFromExampleResult(this,false);
 	}
 	
 	public boolean containsType(@SuppressWarnings("rawtypes") Class c) {//used for faster processing
@@ -725,7 +511,7 @@ public abstract class Expr extends QuickMath implements Comparable<Expr>, Serial
 	 * shows the entire expression structure without resorting or fancy printing
 	 * used for debugging
 	 */
-	public String printTree(int tab) {
+	public String toStringTree(int tab) {
 		String out = "";
 		
 		if(tab == 0){
@@ -740,7 +526,7 @@ public abstract class Expr extends QuickMath implements Comparable<Expr>, Serial
 		if(this instanceof Num || this instanceof Var) out+=(" name: "+this);
 		out+="\n";
 		for(int i = 0;i<size();i++) {
-			out+=get(i).printTree(tab+1);
+			out+=get(i).toStringTree(tab+1);
 		}
 		if(tab == 0) out+=("EXPR-TREE-END-------------")+"\n";
 		

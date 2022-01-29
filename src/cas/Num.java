@@ -152,11 +152,6 @@ public class Num extends Expr{
 		return false;
 	}
 	@Override
-	boolean similarStruct(Expr other,boolean checked) {
-		if(other instanceof Num) return equals(other);
-		return false;
-	}
-	@Override
 	public int hashCode() {
 		return realValue.intValue()+230487349;
 	}
