@@ -1,40 +1,26 @@
+![social_preview](https://user-images.githubusercontent.com/64857525/151658494-dcdd518e-cb50-44c8-b649-209eb8453767.jpeg)
+
 **Features**
 
-*write your questions in plain english like wolfram alpha.(buggy as heck and fairly limited)
+•Write your questions in plain english like wolfram alpha. (Limited)
 
-*differentiate and integrate equations symbolically and numerically have not implemented trig and weirstrass substitutions)
+•Differentiate and integrate equations symbolically and numerically
 
-*simplify distribute and factor (factoring of all integer roots of a polynomial can be found)
+•Simplify distribute and factor (factoring of all integer roots of a polynomial can be found)
 
-*plot equations
+•Boolean algebra
 
-*solve equations numerically or symbolically
+•Plot/Graph Stack
 
-*save expressions to disk
+•Solve equations numerically or symbolically
 
-*rpn, algebraic, english interpreter combined
+•Save expressions to disk
 
-*perfect power and prime factorization(not accessible by user
+•RPN (reverse polish notation), Algebraic, English interpreter combined into one
 
 
-Please do not claim for any of the project to be your own. This is designed by Benjamin Robert Currie.
-You may use it for your projects if I am referenced. This project uses JDA (java discord API for the discord bot).
+For the discord bot this project uses JDA (java discord API).
 
 If you want to use discord bot it requires two things, the access token and the id (event.getAuthor().getId()) for the owner of the bot.
 
-My progress of this project was available on youtube at https://www.youtube.com/channel/UCZPoceixYFsH3ATvvhuf9og/videos
-(ive stopped making videos for the time being because very time consuming and Ive changed my mind on alot of the design)
-
-Completely re written with many new techniques.
-
-simple GUI (not polished but functional), I prefer to use non GUI mode myself.
-
-Boolean algebra implemented
-
-Both RPN and algebraic input.
-
-The trigonometry is not fully implemented 
-
-
-
-Please be kind about my implementations, I am not a mathematician by any means. Ive only taken classes up to integral calculus so I may not do things in optimal ways. I also have not read any CAS books so there are most certainly logic problems with my design. That being said I do try my best
+simple GUI
