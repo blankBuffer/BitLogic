@@ -48,13 +48,13 @@ public class Solve extends Expr{
 		caseTable.add(equ( createExpr("a*sin(x)+cos(x)=y") , createExpr("x=acos(y/sqrt(a^2+1))+atan(a)") ));
 		caseTable.add(equ( createExpr("sin(x)+cos(x)=y") , createExpr("x=acos(y/sqrt(2))+pi/4") ));
 		//lambert w function
-		caseTable.add(equ( createExpr("x*ln(x)=y") , createExpr("x=e^w(y)") ));
-		caseTable.add(equ( createExpr("x*a^x=y") , createExpr("x=w(y*ln(a))/ln(a)") ));
-		caseTable.add(equ( createExpr("x*a^(b*x)=y") , createExpr("x=w(y*b*ln(a))/(b*ln(a))") ));
-		caseTable.add(equ( createExpr("x^n*a^x=y") , createExpr("x=n*w(y^(1/n)*ln(a)/n)/ln(a)") ));
-		caseTable.add(equ( createExpr("x^n*a^(b*x)=y") , createExpr("x=n*w(y^(1/n)*ln(a)*b/n)/(b*ln(a))") ));
-		caseTable.add(equ( createExpr("x+a^x=y") , createExpr("x=y-w(ln(a)*a^y)/ln(a)") ));
-		caseTable.add(equ( createExpr("b*x+a^x=y") , createExpr("x=(ln(a)*y-b*w((ln(a)*a^(y/b))/b))/(b*ln(a))") ));
+		caseTable.add(equ( createExpr("x*ln(x)=y") , createExpr("x=e^lambertW(y)") ));
+		caseTable.add(equ( createExpr("x*a^x=y") , createExpr("x=lambertW(y*ln(a))/ln(a)") ));
+		caseTable.add(equ( createExpr("x*a^(b*x)=y") , createExpr("x=lambertW(y*b*ln(a))/(b*ln(a))") ));
+		caseTable.add(equ( createExpr("x^n*a^x=y") , createExpr("x=n*lambertW(y^(1/n)*ln(a)/n)/ln(a)") ));
+		caseTable.add(equ( createExpr("x^n*a^(b*x)=y") , createExpr("x=n*lambertW(y^(1/n)*ln(a)*b/n)/(b*ln(a))") ));
+		caseTable.add(equ( createExpr("x+a^x=y") , createExpr("x=y-lambertW(ln(a)*a^y)/ln(a)") ));
+		caseTable.add(equ( createExpr("b*x+a^x=y") , createExpr("x=(ln(a)*y-b*lambertW((ln(a)*a^(y/b))/b))/(b*ln(a))") ));
 		
 		//subtract same type of function
 		{
@@ -76,7 +76,7 @@ public class Solve extends Expr{
 		caseTable.add(equ( createExpr("asin(x)=y") , createExpr("x=sin(y)") ));
 		caseTable.add(equ( createExpr("acos(x)=y") , createExpr("x=cos(y)") ));
 		caseTable.add(equ( createExpr("atan(x)=y") , createExpr("x=tan(y)") ));
-		caseTable.add(equ( createExpr("w(x)=y") , createExpr("x=y*e^y") ));
+		caseTable.add(equ( createExpr("lambertW(x)=y") , createExpr("x=y*e^y") ));
 		
 		for(Equ eq:caseTable) {
 			Solve.caseTable.add(new Rule(eq,"solving from case table",Rule.DIFFICULT));

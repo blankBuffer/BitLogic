@@ -107,6 +107,5 @@ public class Diff extends Expr{
 		
 		return ComplexFloat.div((ComplexFloat.sub(y1, y0)),delta);
 	}
-
 	
 }

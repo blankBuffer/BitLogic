@@ -11,18 +11,16 @@ import java.awt.image.BufferedImage;
 import java.text.DecimalFormat;
 import java.util.*;
 import javax.swing.*;
-import javax.swing.event.ChangeEvent;
-import javax.swing.event.ChangeListener;
 import javax.swing.event.ListDataEvent;
 import javax.swing.event.ListDataListener;
 
 public class Plot extends QuickMath{
 	PlotWindowParams plotParams = new PlotWindowParams();
-	Dimension windowSize = new Dimension(600,600);
 	
 	int mouseX,mouseY,pMouseX,pMouseY;
 	boolean mousePressed;
-	JPanel panel = null;
+	private JPanel panel = null;
+	private Color backgroundColor = Color.DARK_GRAY,foregroundColor = Color.LIGHT_GRAY;
 	
 	public static class PlotWindowParams{
 		
@@ -59,8 +57,8 @@ public class Plot extends QuickMath{
 		Random random = new Random(seed);
 		int strongest = (int)(random.nextDouble()*3);//makes it more colorful hopefully
 		int[] component = new int[3];
-		for(int i = 0;i<3;i++) component[i] = (int)(random.nextDouble()*256.0);
-		component[strongest]= 255;
+		for(int i = 0;i<3;i++) component[i] = (int)(random.nextDouble()*180.0);
+		component[strongest]= 180;
 		return new Color(component[0],component[1],component[2]);
 	}
 	
@@ -155,37 +153,36 @@ public class Plot extends QuickMath{
 		}
 	}
 	
-	public static BufferedImage renderGraph(ArrayList<Expr> stack,PlotWindowParams plotWindowParams,Dimension windowSize) {
+	public static BufferedImage renderGraph(ArrayList<Expr> stack,PlotWindowParams plotWindowParams,Dimension windowSize,Color backgroundColor,Color foregroundColor) {
 		BufferedImage out = new BufferedImage((int)windowSize.getWidth(),(int)windowSize.getHeight(),BufferedImage.TYPE_INT_RGB);
 		
 		Graphics g = out.createGraphics();
 		Graphics2D g2 = (Graphics2D)g;
 		
-		g.setColor(Color.DARK_GRAY);
+		g.setColor(backgroundColor);
 		g.fillRect(0, 0, (int)windowSize.getWidth(), (int)windowSize.getHeight());
 		
 		g2.setStroke(new BasicStroke(4));
 		
 		
 		renderPlots(g,stack,plotWindowParams,windowSize);
-		DecimalFormat numberFormat = new DecimalFormat("#.00");
+		DecimalFormat numberFormat = new DecimalFormat("#.000");
+		
+		g.setColor(foregroundColor);
 		//draw coordinate lines 1
 		for(int k = 0;k<2;k++) {
 			
 			double scale = Math.pow( 5.0 , Math.floor(Math.log(plotWindowParams.xMax-plotWindowParams.xMin)/Math.log( 5.0) )-k);
-			g2.setStroke(new BasicStroke(3-k*2));
+			if(k == 0) g2.setStroke(new BasicStroke(2));
+			if(k == 1) g2.setStroke(new BasicStroke(1));
 			for(double i =  Math.floor(plotWindowParams.xMin/scale)*scale;i<=plotWindowParams.xMax;i+=scale) {
 				int xLine = convertToExternalPositionX(i,plotWindowParams,windowSize);
-				g.setColor(Color.GRAY);
 				g.drawLine(xLine, 0, xLine, (int)windowSize.getHeight());
-				g.setColor(Color.WHITE);
 				if(k==0) g.drawString(""+numberFormat.format(i), xLine+10,20);
 			}
 			for(double i = Math.floor(plotWindowParams.yMin/scale)*scale;i<=plotWindowParams.yMax;i+=scale) {
 				int yLine = convertToExternalPositionY(i,plotWindowParams,windowSize);
-				g.setColor(Color.GRAY);
 				g.drawLine(0,yLine, (int)windowSize.getWidth(), yLine);
-				g.setColor(Color.WHITE);
 				if(k==0) g.drawString(""+numberFormat.format(i),10,yLine-10);
 			}
 		}
@@ -194,7 +191,6 @@ public class Plot extends QuickMath{
 		//draw x and y axis
 		int xAxisLocation = convertToExternalPositionX(0,plotWindowParams,windowSize);
 		int yAxisLocation = convertToExternalPositionY(0,plotWindowParams,windowSize);
-		g.setColor(Color.white);
 		g.drawLine(xAxisLocation, 0, xAxisLocation, (int)windowSize.getHeight());
 		g.drawLine(0,yAxisLocation, (int)windowSize.getWidth(), yAxisLocation);
 		
@@ -206,7 +202,7 @@ public class Plot extends QuickMath{
 	public static BufferedImage renderGraph(Expr e,PlotWindowParams plotWindowParams,Dimension windowSize) {
 		ArrayList<Expr> stack = new ArrayList<Expr>();
 		stack.add(e);
-		return renderGraph(stack,plotWindowParams,windowSize);
+		return renderGraph(stack,plotWindowParams,windowSize,Color.DARK_GRAY,Color.LIGHT_GRAY);
 	}
 	
 	BufferedImage graphImage;
@@ -214,42 +210,14 @@ public class Plot extends QuickMath{
 	private static Var y = var("y"),x = var("x");
 	void renderGraph(Graphics graphics,ArrayList<Expr> stack) {//everything, the background the plots
 		if(needsRepaint) {
-			graphImage = renderGraph(stack,plotParams,windowSize);
+			graphImage = renderGraph(stack,plotParams,panel.getSize(),backgroundColor,foregroundColor);
 			needsRepaint = false;
 		}
 		graphics.drawImage(graphImage,0,0,null);
 		
 		graphics.setColor(Color.WHITE);
-		graphics.drawString("x: "+(float)convertToInternalPositionX(mouseX,plotParams,windowSize), mouseX+40, mouseY);
-		graphics.drawString("y: "+(float)convertToInternalPositionY(mouseY,plotParams,windowSize), mouseX+40, mouseY+20);
-	}
-	
-	void createSliders(StackEditor stackEditor,JPanel slidersContainer) {
-		for(int i = 0;i<stackEditor.currentDefs.varsArrayList.size();i++) {
-			String name = ((Var)stackEditor.currentDefs.varsArrayList.get(i).getLeftSide()).name;
-			JLabel label = new JLabel( name );
-			slidersContainer.add(label);
-			
-			JSlider sliderTest = new JSlider(JSlider.HORIZONTAL,-10,10,0);
-			sliderTest.setMajorTickSpacing(5);
-			sliderTest.setMinorTickSpacing(1);
-			sliderTest.setPaintTicks(true);
-			sliderTest.setPaintLabels(true);
-			sliderTest.setSnapToTicks(true);
-			slidersContainer.add(sliderTest);
-			
-			sliderTest.addChangeListener(new ChangeListener() {
-
-				@Override
-				public void stateChanged(ChangeEvent e) {
-					stackEditor.currentDefs.changeVar(name, new FloatExpr(sliderTest.getValue()));
-					needsRepaint = true;
-					panel.repaint();
-				}
-				
-			});
-			
-		}
+		graphics.drawString("x: "+(float)convertToInternalPositionX(mouseX,plotParams,panel.getSize()), mouseX+40, mouseY);
+		graphics.drawString("y: "+(float)convertToInternalPositionY(mouseY,plotParams,panel.getSize()), mouseX+40, mouseY+20);
 	}
 	
 	volatile boolean needsRepaint = true;
@@ -267,13 +235,7 @@ public class Plot extends QuickMath{
 			}
 		};
 		
-		JFrame window = new JFrame("plot");
-		window.setSize(windowSize);
-		window.add(panel);
-		window.setVisible(true);
-		window.setAlwaysOnTop(true);
-		
-		
+		panel.setMinimumSize(new Dimension(200,200));
 		
 		panel.addMouseListener(new MouseListener() {
 			@Override
@@ -282,7 +244,6 @@ public class Plot extends QuickMath{
 
 			@Override
 			public void mousePressed(MouseEvent e) {
-				if(e.getButton() != MouseEvent.BUTTON1) window.setVisible(false);
 				mousePressed = true;
 			}
 
@@ -305,11 +266,11 @@ public class Plot extends QuickMath{
 			public void mouseWheelMoved(MouseWheelEvent e) {
 				double scrollAmount = e.getPreciseWheelRotation();
 				double slower = 1.0/25.0;
-				plotParams.xMin = plotParams.xMin+(convertToInternalPositionX(mouseX,plotParams,windowSize)-plotParams.xMin)*(scrollAmount*slower);
-				plotParams.xMax = plotParams.xMax-(plotParams.xMax-convertToInternalPositionX(mouseX,plotParams,windowSize))*(scrollAmount*slower);
+				plotParams.xMin = plotParams.xMin+(convertToInternalPositionX(mouseX,plotParams,panel.getSize())-plotParams.xMin)*(scrollAmount*slower);
+				plotParams.xMax = plotParams.xMax-(plotParams.xMax-convertToInternalPositionX(mouseX,plotParams,panel.getSize()))*(scrollAmount*slower);
 				
-				plotParams.yMin = plotParams.yMin+(convertToInternalPositionY(mouseY,plotParams,windowSize)-plotParams.yMin)*(scrollAmount*slower);
-				plotParams.yMax = plotParams.yMax-(plotParams.yMax-convertToInternalPositionY(mouseY,plotParams,windowSize))*(scrollAmount*slower);
+				plotParams.yMin = plotParams.yMin+(convertToInternalPositionY(mouseY,plotParams,panel.getSize())-plotParams.yMin)*(scrollAmount*slower);
+				plotParams.yMax = plotParams.yMax-(plotParams.yMax-convertToInternalPositionY(mouseY,plotParams,panel.getSize()))*(scrollAmount*slower);
 				needsRepaint = true;
 			}
 			
@@ -338,8 +299,6 @@ public class Plot extends QuickMath{
 			
 		};
 		stackEditor.stack.addListDataListener(dataListener);
-		stackEditor.currentDefs.functionsArrayList.addListDataListener(dataListener);
-		stackEditor.currentDefs.varsArrayList.addListDataListener(dataListener);
 		new Thread() {
 			@Override
 			public void run() {
@@ -348,7 +307,6 @@ public class Plot extends QuickMath{
 						sleep(1000/60);
 						Point mousePosition = panel.getMousePosition();
 						if(mousePosition != null) {
-							windowSize = window.getSize();
 							pMouseX = mouseX;
 							pMouseY = mouseY;
 							mouseX = mousePosition.x;
@@ -365,17 +323,23 @@ public class Plot extends QuickMath{
 							}
 							panel.repaint();
 						}
-						if(!window.isVisible()) break;
 					}
 				}catch(Exception e) {
 					e.printStackTrace();
 					System.exit(0);
 				}
-				window.dispose();
 				stackEditor.stack.removeListDataListener(dataListener);
-				stackEditor.currentDefs.functionsArrayList.removeListDataListener(dataListener);
-				stackEditor.currentDefs.varsArrayList.removeListDataListener(dataListener);
 			}
 		}.start();
+	}
+	
+	public JPanel getJPanel() {
+		return panel;
+	}
+	public void setBackgroundColor(Color color) {
+		backgroundColor = color;
+	}
+	public void setForegroundColor(Color color) {
+		foregroundColor = color;
 	}
 }

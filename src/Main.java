@@ -6,8 +6,6 @@ import ui.UI;
 
 public class Main extends QuickMath{
 	
-	public static final String VERSION = "1.5.1";
-	
 	static void mod(Integer a){
 		a++;
 	}
@@ -37,7 +35,7 @@ public class Main extends QuickMath{
 			}
 			
 		} catch (Exception e) {
-			if(verbose) e.printStackTrace();
+			e.printStackTrace();
 			System.out.println("fail at line: "+currentLine);
 			return;
 		}
@@ -66,7 +64,6 @@ public class Main extends QuickMath{
 		}
 		
 		if(UI.CLEAR_TERM) UI.clearTerm();
-		System.out.println("Benjamin Currie @2021 v "+VERSION+" , java runtime version: "+System.getProperty("java.version"));
 		System.out.println(UI.fancyIntro());
 		
 		Rule.loadRules();

@@ -431,7 +431,6 @@ public class StackEditor extends cas.QuickMath {
 		stack.remove(stack.size() - 1);
 	}
 
-	@SuppressWarnings("unused")
 	public int command(String command) {
 
 		if (command.isEmpty()) {
@@ -550,8 +549,6 @@ public class StackEditor extends cas.QuickMath {
 				mathML();
 			}else if (command.equals("quit") || command.equals("exit") || command.equals("close")) {
 				return -1;
-			} else if (command.equals("plot")) {
-				new graphics.Plot(this);
 			} else if (command.equals("approx")) {
 				approx();
 			} else if (command.equals("integrateOver")) {
@@ -561,19 +558,10 @@ public class StackEditor extends cas.QuickMath {
 				partialFrac(last(), v, currentSettings);
 			} else if (command.equals("hash")) {
 				stack.addElement(num(last().hashCode()));
-			}else if (command.equals("id")) {
-				stack.addElement(num( last().ID ));
 			} else if (command.equals("equal")) {
 				stack.addElement(new BoolState(last().equals(sLast())));
 			} else if(command.equals("exactlyEqual")){
 				stack.addElement(new BoolState(last().exactlyEquals(sLast())));
-			}else if (command.equals("define")) {
-				currentDefs.addVar(((Var) sLast()).name, last());
-				stack.removeRange(size() - 2, size() - 1);
-			} else if (command.equals("defineFunc")) {
-				String name = ((Var) stack.get(size() - 3)).name;
-				currentDefs.addFunc(func(name, (ExprList) sLast(), last()));
-				stack.removeRange(size() - 3, size() - 1);
 			} else if (command.contains(":") && !command.contains(" ")) {
 				String[] parts = command.split(":");
 				command = parts[0];

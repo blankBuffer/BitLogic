@@ -5,6 +5,9 @@ import java.io.IOException;
 import java.io.InputStreamReader;
 
 public class UI {
+	
+	public static final String VERSION = "1.5.2";
+	
 	public static boolean GUI = false;
 	public static boolean CLEAR_TERM = false;
 	static MainWindow mainWindow = null;
@@ -18,7 +21,7 @@ public class UI {
 				+ "▌ ▌  ▐  ▌   ▌    ▌   ▙  ▟ ▙ ▘▟  ▌  ▙  ▄ ▐\n"
 				+ "▌ ▙▄▄▀ ▄▙▖  ▌    ▙▄▄ ▝▙▟▘ ▝▙▟▘ ▄▙▖ ▝▙▟▘ ▐\n"
 				+ "▙▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▟\n";
-		return img;
+		return img+"Benjamin Currie @2021-2022 v "+VERSION+" , java runtime version: "+System.getProperty("java.version");
 	}
 	public static void clearTerm() {
 		System.out.print("\033[H\033[2J");

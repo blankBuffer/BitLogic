@@ -31,19 +31,21 @@ import java.util.Random;
 
 public abstract class Expr extends QuickMath implements Comparable<Expr>, Serializable{
 	
-	
+	static Random random;
 	public boolean commutative = false;
 	boolean simplifyChildren = true;
 	public Flags flags = new Flags();
-	static Random random = new Random(827746169);
 	static boolean USE_CACHE = true;
 	static int CACHE_SIZE = 2048;
-	public int ID = random.nextInt();
 	private static final long serialVersionUID = -8297916729116741273L;
 	private ArrayList<Expr> subExpr = new ArrayList<Expr>();//many expression types have sub expressions like sums
 	
 	abstract ExprList getRuleSequence();
 	public abstract ComplexFloat convertToFloat(ExprList varDefs);
+	public String typeName() {
+		String name = getClass().getSimpleName();
+		return Character.toLowerCase(name.charAt(0))+name.substring(1);
+	}
 	
 	public static HashMap<Expr,Expr> cached = new HashMap<Expr,Expr>();
 	public static ArrayList<Expr> cachedKeys = new ArrayList<Expr>();
@@ -96,7 +98,7 @@ public abstract class Expr extends QuickMath implements Comparable<Expr>, Serial
 		Expr toBeSimplified = copy();
 		if(flags.simple) return toBeSimplified;
 		
-		if(USE_CACHE){
+		if(USE_CACHE && !(this instanceof Func)) {
 			Expr cacheOut = cached.get(this);
 			if(cacheOut != null){
 				return cacheOut.copy();
@@ -108,8 +110,7 @@ public abstract class Expr extends QuickMath implements Comparable<Expr>, Serial
 			return null;
 		}
 		//System.out.println(toBeSimplified);
-		@SuppressWarnings("unchecked")
-		Class<Expr> originalType = (Class<Expr>) this.getClass();
+		String originalType = toBeSimplified.typeName();
 		if(simplifyChildren) toBeSimplified.simplifyChildren(settings);//simplify sub expressions
 		
 		ExprList ruleSequence = getRuleSequence();
@@ -120,8 +121,9 @@ public abstract class Expr extends QuickMath implements Comparable<Expr>, Serial
 				Rule rule = (Rule)ruleSequence.get(i);
 				
 				toBeSimplified = rule.applyRuleToExpr(toBeSimplified, settings);
+				//System.out.println(rule);
 				ruleCallCount++;
-				if(!toBeSimplified.getClass().equals(originalType)) break;
+				if(!toBeSimplified.typeName().equals(originalType)) break;
 			}
 		}
 		
@@ -129,12 +131,15 @@ public abstract class Expr extends QuickMath implements Comparable<Expr>, Serial
 		
 		if(USE_CACHE){
 			if(cached.size()<CACHE_SIZE){
-				Expr original = copy();
-				cached.put(original, toBeSimplified.copy());
-				cachedKeys.add(original);
+				if(!(this instanceof Func)) {
+					Expr original = copy();
+					cached.put(original, toBeSimplified.copy());
+					cachedKeys.add(original);
+				}
 			}else{
 				//remove a random 1024 items from cache
 				//System.out.println("shrinking cache!");
+				if(random == null) random = new Random(761234897);
 				for(int i = 0;i<CACHE_SIZE/4;i++){
 					int randomIndex = random.nextInt(cachedKeys.size());
 					Expr expr = cachedKeys.get(randomIndex);
@@ -169,7 +174,7 @@ public abstract class Expr extends QuickMath implements Comparable<Expr>, Serial
 	
 	@Override
 	public String toString(){
-		String out = this.getClass().getSimpleName().toLowerCase()+"(";
+		String out = typeName()+"(";
 		for(int i = 0;i<size();i++){
 			out+=get(i);
 			if(i!=size()-1) out+=",";
@@ -192,7 +197,7 @@ public abstract class Expr extends QuickMath implements Comparable<Expr>, Serial
 		if(other == null || !(other instanceof Expr)) return false;
 		if(other == this) return true;
 		Expr otherCasted = (Expr)other;
-		if(other.getClass().equals(this.getClass())) {//make sure same type
+		if(other instanceof Expr && ((Expr)other).typeName().equals(typeName())) {//make sure same type
 			
 			if(otherCasted.size() == size()) {//make sure they are the same size
 				
@@ -522,7 +527,7 @@ public abstract class Expr extends QuickMath implements Comparable<Expr>, Serial
 		for(int i = 0;i<tab-1;i++) tabStr+="   |";
 		if(tab>0) tabStr+="--->";
 		else tabStr+=">";
-		out+=(tabStr+this.getClass() +" hash: "+hashCode()+" id: "+ID);
+		out+=(tabStr+ typeName() +" hash: "+hashCode());
 		if(this instanceof Num || this instanceof Var) out+=(" name: "+this);
 		out+="\n";
 		for(int i = 0;i<size();i++) {

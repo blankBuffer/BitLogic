@@ -56,7 +56,7 @@ public class ExprList extends Expr{
 	public static ExprList cast(Expr e) {
 		if(e instanceof ExprList) return (ExprList)e;
 		ExprList out = new ExprList();
-		out.add(e);
+		if(e != null) out.add(e);
 		return out;
 	}
 

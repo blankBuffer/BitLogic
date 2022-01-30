@@ -1,5 +1,4 @@
 package cas;
-import java.io.IOException;
 import java.util.ArrayList;
 
 public class Interpreter extends QuickMath{
@@ -116,158 +115,35 @@ public class Interpreter extends QuickMath{
 				if(op.isBlank()) throw new Exception("confusing parenthesis");
 				Expr params = ExprList.cast( createExprFromToken(tokens.get(1),defs,settings));
 				
-				Exception wrongParams = new Exception("wrong number of parameters");
-				
-				if(op.equals("diff")) {
-					if(params.size() != 2) throw wrongParams;
-					return diff(params.get(0),(Var)params.get(1));
-				}else if(op.equals("integrate") || op.equals("int") || op.equals("integral") || op.equals("integrateOver")) {
-					if(params.size() == 2) {
-						return integrate(params.get(0),(Var)params.get(1));
-					}else if(params.size() == 4) {
-						return integrateOver(params.get(0),params.get(1),params.get(2),(Var)params.get(3));
-					}else throw wrongParams;
-
-				}else if(op.equals("limit")) {
-					if(params.size() != 3) throw wrongParams;
-					Expr expr = params.get(0);
-					Var v = (Var)params.get(1);
-					Expr value = params.get(2);
-					return limit(expr,v,value);
-				}else if(op.equals("sinh")) {
-					if(params.size() != 1) throw wrongParams;
-					return sinh(params.get(0));
-				}else if(op.equals("cosh")) {
-					if(params.size() != 1) throw wrongParams;
-					return cosh(params.get(0));
-				}else if(op.equals("tanh")) {
-					if(params.size() != 1) throw wrongParams;
-					return tanh(params.get(0));
-				}else if(op.equals("sqrt")) {
-					if(params.size() != 1) throw wrongParams;
-					return sqrt(params.get(0));
-				}else if(op.equals("cbrt")) {
-					if(params.size() != 1) throw wrongParams;
-					return cbrt(params.get(0));
-				}else if(op.equals("sin")) {
-					if(params.size() != 1) throw wrongParams;
-					return sin(params.get(0));
-				}else if(op.equals("cos")) {
-					if(params.size() != 1) throw wrongParams;
-					return cos(params.get(0));
-				}else if(op.equals("tan")) {
-					if(params.size() != 1) throw wrongParams;
-					return tan(params.get(0));
-				}else if(op.equals("atan") || op.equals("arctan")) {
-					if(params.size() != 1) throw wrongParams;
-					return atan(params.get(0));
-				}else if(op.equals("asin") || op.equals("arcsin")) {
-					if(params.size() != 1) throw wrongParams;
-					return asin(params.get(0));
-				}else if(op.equals("acos") || op.equals("arccos")) {
-					if(params.size() != 1) throw wrongParams;
-					return acos(params.get(0));
-				}else if(op.equals("w") || op.equals("lambertW")) {
-					if(params.size() != 1) throw wrongParams;
-					return lambertW(params.get(0));
-				}else if(op.equals("ln") || op.equals("log")) {
-					if(params.size() != 1) throw wrongParams;
-					return ln(params.get(0));
-				}else if(op.equals("exp")) {
-					if(params.size() != 1) throw wrongParams;
-					return exp(params.get(0));
-				}else if(op.equals("gamma")) {
-					if(params.size() != 1) throw wrongParams;
-					return gamma(params.get(0));
-				}else if(op.equals("solve")) {
-					if(params.size() != 2) throw wrongParams;
-					if(!(params.get() instanceof Equ)) throw new Exception("the first parameter should be an equation");
-					return solve((Equ)params.get(0),(Var)params.get(1));
-				}else if(op.equals("inv")) {
-					if(params.size() != 1) throw wrongParams;
-					return inv(params.get(0));
-				}else if(op.equals("approx")) {
-					if(params.size() > 2 || params.size() == 0) throw wrongParams;
-					if(params.size() == 1) return approx(params.get(0),new ExprList());
-					return approx(params.get(0),(ExprList)params.get(1));
-				}else if(op.equals("mathML")) {
-					return var("\""+generateMathML(params.get(0))+"\"");
-				}else if(op.equals("factor")) {
-					if(params.size() != 1) throw wrongParams;
-					return factor(params.get(0));
-				}else if(op.equals("distr")) {
-					if(params.size() != 1) throw wrongParams;
-					return distr(params.get(0));
-				}else if(op.equals("delete")) {
-					String name = ((Var)params.get(0)).name;
-					defs.removeVar(name);
-					return SUCCESS;
-				}else if(op.equals("deleteFunc")) {
-					String name = ((Var)params.get(0)).name;
-					defs.removeFunc(name);
-					return SUCCESS;
-				}else if(op.equals("clear")) {
-					defs.clear();
-					return SUCCESS;
-				}else if(op.equals("showDefs")) {
-					return var(defs.toString());
-				}else if(op.equals("open")) {
-					if(params.size() != 1) throw wrongParams;
-					try {
-						return Expr.openExpr(params.get(0).toString());
-					} catch (ClassNotFoundException e) {
-						e.printStackTrace();
-					} catch (IOException e) {
-						e.printStackTrace();
-					}
-				}else if(op.equals("save")) {
-					if(params.size() != 2) throw wrongParams;
-					try {
-						Expr.saveExpr(params.get(0), params.get(1).toString());
-						return SUCCESS;
-					} catch (IOException e) {
-						e.printStackTrace();
-					}
-				}else if(op.equals("define")) {
-					String name = ((Var)params.get(0)).name;
-					defs.addVar(name, params.get(1).simplify(Settings.normal));
-					return SUCCESS;
-				}else if(op.equals("r")) {//use is for modifyFromExample
-					return params.get().simplify(settings);
-				}else if(op.equals("defineFunc")) {
-					String name = ((Var)params.get(0)).name;
-					ExprList functionParams = null;
-					if(params.get(1) instanceof ExprList) {
-						functionParams = (ExprList)params.get(1);
-					}else {
-						functionParams = new ExprList();
-						functionParams.add(params.get(1));
-					}
-					for(int i = 0;i<functionParams.size();i++) {
-						functionParams.set(i, equ(functionParams.get(i),functionParams.get(i).copy()));
-					}
-					Func f = func(name ,functionParams ,params.get(2).simplify(Settings.normal ));
-					f.example = true;
-					defs.addFunc(f);
-					return SUCCESS;
-				}else if(op.equals("conv")){
-					String fromUnit = params.get(1).toString();
-					String toUnit = params.get(2).toString();
-					return approx( Unit.conv(params.get(0), Unit.getUnit(fromUnit), Unit.getUnit(toUnit)) ,new ExprList());
-				}else if(!op.equals("~")){
-					Func f = null;
-					f = SimpleFuncs.funcs.get(op);
-					if(f == null) f = defs.getFunc(op);
+				if(op.equals("define")) {
+					Equ def = (Equ)params.get(0);
 					
-					if(f == null) {
-						throw new Exception("function: \""+op+"\" is not defined");
+					if(def.getLeftSide() instanceof Func) {
+						Func f = new Func(def.getLeftSide().typeName());
+						
+						f.ruleSequence.add(new Rule(def,"function definition",Rule.EASY));
+						
+						defs.addFunc(f);
+					}else {
+						defs.addVar(def);
 					}
-					f = (Func) f.copy();
-					ExprList vars = f.getVars();
-					for(int i = 0;i<vars.size();i++) {
-						Equ equ = (Equ)vars.get(i);
-						equ.setRightSide(params.get(i));
+					
+					return var("done");
+				}
+				if(op.equals("defs")) {
+					return var(defs.toString());
+				}
+				
+				if(!op.equals("~")){
+					Expr[] paramsArray = new Expr[params.size()];
+					
+					for(int i = 0;i<params.size();i++) {
+						paramsArray[i] = params.get(i);
 					}
+					
+					Expr f = SimpleFuncs.getFuncByName(op,defs,paramsArray);
+					
+					
 					return f;
 				}
 				

@@ -34,8 +34,8 @@ public class Power extends Expr{
 	private static Rule eToFracLn = new Rule("e^(ln(a)/b)=a^(1/b)","e to fraction with ln",Rule.UNCOMMON);
 	private static Rule zeroToExpo = new Rule("0^x=0","base is zero",Rule.VERY_EASY);
 	private static Rule baseToLn = new Rule("a^ln(b)=e^(ln(a)*ln(b))","base not e and expo has log",Rule.UNCOMMON);
-	private static Rule expOfLambertW = new Rule("e^(w(x))=x/w(x)","e to lambert w",Rule.UNCOMMON);
-	private static Rule expOfLambertWProd = new Rule("e^(w(x)*n)=x^n/w(x)^n","e to lambert w product",Rule.TRICKY);
+	private static Rule expOfLambertW = new Rule("e^(lambertW(x))=x/lambertW(x)","e to lambert w",Rule.UNCOMMON);
+	private static Rule expOfLambertWProd = new Rule("e^(lambertW(x)*n)=x^n/lambertW(x)^n","e to lambert w product",Rule.TRICKY);
 	private static Rule powerOfOne = new Rule("a^1=a","exponent is one",Rule.VERY_EASY);
 	private static Rule fracInBase = new Rule("(a/b)^n=a^n/b^n","base is a fraction",Rule.EASY);
 	private static Rule sqrtOneMinusSin = new Rule("sqrt(1-sin(x))=sqrt(2)*sin(pi/4-x/2)","sqrt of 1 minus sin",Rule.UNCOMMON);
