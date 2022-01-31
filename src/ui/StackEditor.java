@@ -1,7 +1,4 @@
 package ui;
-
-import javax.swing.*;
-
 import cas.*;
 
 public class StackEditor extends cas.QuickMath {
@@ -56,8 +53,8 @@ public class StackEditor extends cas.QuickMath {
 	Settings currentSettings = new Settings();
 	public Defs currentDefs = new Defs();
 
-	public DefaultListModel<Expr> stack = new DefaultListModel<Expr>();
-	DefaultListModel<Expr> stackOld = new DefaultListModel<Expr>();
+	public ExprList stack = new ExprList();
+	public ExprList stackOld = new ExprList();
 
 	public int size() {
 		return stack.size();
@@ -68,7 +65,7 @@ public class StackEditor extends cas.QuickMath {
 			createAlert("the stack is empty");
 			return null;
 		}
-		return stack.lastElement();
+		return stack.get(stack.size()-1);
 	}
 
 	public Expr sLast() {
@@ -181,7 +178,7 @@ public class StackEditor extends cas.QuickMath {
 		for(int i = 0;i<3;i++){
 			stack.remove(size()-1);
 		}
-		stack.addElement( out);
+		stack.add( out);
 	}
 
 	void exponent() {
@@ -237,13 +234,13 @@ public class StackEditor extends cas.QuickMath {
 	void similar() {
 		if (sLast() == null)
 			return;
-		stack.addElement(bool(Rule.strictSimilarStruct(sLast(),last())));
+		stack.add(bool(Rule.strictSimilarStruct(sLast(),last())));
 	}
 	
 	void fastSimilar() {
 		if (sLast() == null)
 			return;
-		stack.addElement(bool(Rule.fastSimilarStruct(sLast(),last())));
+		stack.add(bool(Rule.fastSimilarStruct(sLast(),last())));
 	}
 
 	void divide() {
@@ -300,7 +297,9 @@ public class StackEditor extends cas.QuickMath {
 			return;
 		}
 		stack.set(size() - 4, integrateOver(stack.get(size() - 4), stack.get(size() - 3), sLast(), (Var) last()));
-		stack.removeRange(size() - 3, size() - 1);
+		for(int i = 0;i<3;i++) {
+			stack.remove(stack.size()-1);
+		}
 	}
 
 	void solve() {
@@ -325,7 +324,7 @@ public class StackEditor extends cas.QuickMath {
 	}
 
 	void createList() {
-		stack.addElement(new ExprList());
+		stack.add(new ExprList());
 	}
 
 	void addToList() {
@@ -341,13 +340,13 @@ public class StackEditor extends cas.QuickMath {
 		Expr temp = last();
 		stack.remove(size() - 1);
 		for (int i = 0; i < temp.size(); i++)
-			stack.addElement(temp.get(i));
+			stack.add(temp.get(i));
 	}
 
 	void duplicate() {
 		if (last() == null)
 			return;
-		stack.addElement(last().copy());
+		stack.add(last().copy());
 	}
 
 	void roll() {
@@ -441,7 +440,7 @@ public class StackEditor extends cas.QuickMath {
 			if (!command.equals("undo")) {
 				stackOld.clear();
 				for (int i = 0; i < size(); i++) {
-					stackOld.addElement(stack.get(i).copy());
+					stackOld.add(stack.get(i).copy());
 				}
 			}
 			if (command.equals("+")) {
@@ -485,9 +484,9 @@ public class StackEditor extends cas.QuickMath {
 			} else if (command.equals("integrate")) {
 				integrate();
 			} else if (command.equals("perfect-power")) {
-				stack.addElement(perfectPower((Num) last()));
+				stack.add(perfectPower((Num) last()));
 			} else if (command.equals("prime-factor")) {
-				stack.addElement(primeFactor((Num) last()));
+				stack.add(primeFactor((Num) last()));
 			} else if (command.equals("distr")) {
 				distr();
 			} else if (command.equals("solve")) {
@@ -513,15 +512,15 @@ public class StackEditor extends cas.QuickMath {
 				last().sort();
 				stack.set(size() - 1, last());// update visuals
 			}else if (command.equals("tree")) {
-				stack.addElement(var(last().toStringTree(0)));
+				stack.add(var(last().toStringTree(0)));
 			}else if (command.equals("complexity")) {
-				stack.addElement(num(last().complexity()));
+				stack.add(num(last().complexity()));
 			}else if (command.equals("dup")) {
 				duplicate();
 			} else if (command.equals("undo")) {
 				stack.clear();
 				for (int i = 0; i < stackOld.size(); i++) {
-					stack.addElement(stackOld.get(i));
+					stack.add(stackOld.get(i));
 				}
 			} else if (command.equals("roll")) {
 				roll();
@@ -557,11 +556,11 @@ public class StackEditor extends cas.QuickMath {
 				Var v = var("x");
 				partialFrac(last(), v, currentSettings);
 			} else if (command.equals("hash")) {
-				stack.addElement(num(last().hashCode()));
+				stack.add(num(last().hashCode()));
 			} else if (command.equals("equal")) {
-				stack.addElement(new BoolState(last().equals(sLast())));
+				stack.add(new BoolState(last().equals(sLast())));
 			} else if(command.equals("exactlyEqual")){
-				stack.addElement(new BoolState(last().exactlyEquals(sLast())));
+				stack.add(new BoolState(last().exactlyEquals(sLast())));
 			} else if (command.contains(":") && !command.contains(" ")) {
 				String[] parts = command.split(":");
 				command = parts[0];
@@ -569,7 +568,7 @@ public class StackEditor extends cas.QuickMath {
 				if (command.equals("dup")) {
 					int index = Integer.parseInt(parts[1]) - 1;
 					if (index > -1 && index < size()) {
-						stack.addElement(stack.get(index).copy());
+						stack.add(stack.get(index).copy());
 					} else
 						createAlert("invalid index");
 				} else if (command.equals("remove")) {
@@ -596,7 +595,7 @@ public class StackEditor extends cas.QuickMath {
 
 				System.out.println("meaning: " + convertedQ);
 				if (convertedQ != null) {
-					stack.addElement(convertedQ);
+					stack.add(convertedQ);
 				}
 
 			}

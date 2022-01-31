@@ -5,37 +5,50 @@ import ui.StackEditor;
 import java.awt.*;
 import java.awt.event.MouseEvent;
 import java.awt.event.MouseListener;
+import java.awt.event.MouseMotionListener;
 import java.awt.event.MouseWheelEvent;
 import java.awt.event.MouseWheelListener;
 import java.awt.image.BufferedImage;
 import java.text.DecimalFormat;
 import java.util.*;
 import javax.swing.*;
-import javax.swing.event.ListDataEvent;
-import javax.swing.event.ListDataListener;
 
-public class Plot extends QuickMath{
+public class Plot extends JPanel{
+	private static final long serialVersionUID = 2751307762529372797L;
+
 	PlotWindowParams plotParams = new PlotWindowParams();
 	
 	int mouseX,mouseY,pMouseX,pMouseY;
 	boolean mousePressed;
-	private JPanel panel = null;
 	private Color backgroundColor = Color.DARK_GRAY,foregroundColor = Color.LIGHT_GRAY;
+	StackEditor stackEditor;
+	public static final int MODE_2D = 0,MODE_3D = 1;
+	public int mode = MODE_2D;
 	
 	public static class PlotWindowParams{
 		
-		double xMin,xMax,yMin,yMax;
+		double xMin,xMax,yMin,yMax,zMin,zMax,zRot,xRot;
 		public PlotWindowParams() {
 			xMin = -10;
 			xMax = 10;
 			yMin = -10;
 			yMax = 10;
+			zMin = -10;
+			zMax = 10;
 		}
 		public PlotWindowParams(double xMin,double xMax,double yMin,double yMax) {
 			this.xMin = xMin;
 			this.xMax = xMax;
 			this.yMin = yMin;
 			this.yMax = yMax;
+		}
+		public PlotWindowParams(double xMin,double xMax,double yMin,double yMax,double zMin,double zMax) {
+			this.xMin = xMin;
+			this.xMax = xMax;
+			this.yMin = yMin;
+			this.yMax = yMax;
+			this.zMin = zMin;
+			this.zMax = zMax;
 		}
 	}
 	
@@ -65,10 +78,10 @@ public class Plot extends QuickMath{
 	
 	static int IN_TERMS_OF_X = 0,IN_TERMS_OF_Y = 1;
 	
-	static void basicPlot(Graphics g,Expr expr,int mode,PlotWindowParams plotWindowParams,Dimension windowSize) {//plots basic functions in terms  of x
+	static void basicPlot2D(Graphics g,Expr expr,int mode,PlotWindowParams plotWindowParams,Dimension windowSize) {//plots basic functions in terms  of x
 		if(mode == IN_TERMS_OF_X) {
 			double beforeY = 0;
-			Equ varDef = equ(var("x"),floatExpr(0));
+			Equ varDef = QuickMath.equ(QuickMath.var("x"),QuickMath.floatExpr(0));
 			ExprList varDefs = new ExprList();
 			varDefs.add(varDef);
 			
@@ -82,7 +95,7 @@ public class Plot extends QuickMath{
 			}
 		}else if(mode == IN_TERMS_OF_Y){
 			double beforeX = 0;
-			Equ varDef = equ(var("y"),floatExpr(0));
+			Equ varDef = QuickMath.equ(QuickMath.var("y"),QuickMath.floatExpr(0));
 			ExprList varDefs = new ExprList();
 			varDefs.add(varDef);
 			g.setColor(randomColor(expr.hashCode()));
@@ -96,8 +109,8 @@ public class Plot extends QuickMath{
 		}
 	}
 	
-	static void equPlot(Graphics g,Equ equ,int detail,PlotWindowParams plotWindowParams,Dimension windowSize) {//plots equations with x and y
-		Equ xDef = equ(var("x"),floatExpr(0)),yDef = equ(var("y"),floatExpr(0));
+	static void equPlot2D(Graphics g,Equ equ,int detail,PlotWindowParams plotWindowParams,Dimension windowSize) {//plots equations with x and y
+		Equ xDef = QuickMath.equ(QuickMath.var("x"),QuickMath.floatExpr(0)),yDef = QuickMath.equ(QuickMath.var("y"),QuickMath.floatExpr(0));
 		ExprList varDefs = new ExprList();
 		varDefs.add(xDef);
 		varDefs.add(yDef);
@@ -128,32 +141,32 @@ public class Plot extends QuickMath{
 		}
 	}
 	
-	static void renderPlots(Graphics g,ArrayList<Expr> stack,PlotWindowParams plotWindowParams,Dimension windowSize){//renders all the lines and geometry
+	static void renderPlots2D(Graphics g,ExprList stack,PlotWindowParams plotWindowParams,Dimension windowSize){//renders all the lines and geometry
 		for(int i = 0;i<stack.size();i++) {
 			Expr expr = stack.get(i);
 			if(expr instanceof Equ) {
 				Equ casted = (Equ)expr;
 				
 				if(casted.getLeftSide().equals(y)) {
-					basicPlot(g,casted.getRightSide(),IN_TERMS_OF_X,plotWindowParams,windowSize);
+					basicPlot2D(g,casted.getRightSide(),IN_TERMS_OF_X,plotWindowParams,windowSize);
 				}else if(casted.getLeftSide().equals(x)) {
-					basicPlot(g,casted.getRightSide(),IN_TERMS_OF_Y,plotWindowParams,windowSize);
+					basicPlot2D(g,casted.getRightSide(),IN_TERMS_OF_Y,plotWindowParams,windowSize);
 				}else {
-					equPlot(g,casted,4,plotWindowParams,windowSize);
+					equPlot2D(g,casted,4,plotWindowParams,windowSize);
 				}
 			}else if(expr instanceof ExprList){
-				ArrayList<Expr> subList = new ArrayList<Expr>();
+				ExprList subList = new ExprList();
 				for(int j = 0;j<expr.size();j++) {
 					subList.add( expr.get(j));
 				}
-				renderPlots(g,subList,plotWindowParams,windowSize);
+				renderPlots2D(g,subList,plotWindowParams,windowSize);
 			}else {
-				basicPlot(g,expr,IN_TERMS_OF_X,plotWindowParams,windowSize);
+				basicPlot2D(g,expr,IN_TERMS_OF_X,plotWindowParams,windowSize);
 			}
 		}
 	}
 	
-	public static BufferedImage renderGraph(ArrayList<Expr> stack,PlotWindowParams plotWindowParams,Dimension windowSize,Color backgroundColor,Color foregroundColor) {
+	public static BufferedImage renderGraph2D(ExprList stack,PlotWindowParams plotWindowParams,Dimension windowSize,Color backgroundColor,Color foregroundColor) {
 		BufferedImage out = new BufferedImage((int)windowSize.getWidth(),(int)windowSize.getHeight(),BufferedImage.TYPE_INT_RGB);
 		
 		Graphics g = out.createGraphics();
@@ -165,7 +178,7 @@ public class Plot extends QuickMath{
 		g2.setStroke(new BasicStroke(4));
 		
 		
-		renderPlots(g,stack,plotWindowParams,windowSize);
+		renderPlots2D(g,stack,plotWindowParams,windowSize);
 		DecimalFormat numberFormat = new DecimalFormat("#.000");
 		
 		g.setColor(foregroundColor);
@@ -199,45 +212,112 @@ public class Plot extends QuickMath{
 		return out;
 	}
 	
-	public static BufferedImage renderGraph(Expr e,PlotWindowParams plotWindowParams,Dimension windowSize) {
-		ArrayList<Expr> stack = new ArrayList<Expr>();
-		stack.add(e);
-		return renderGraph(stack,plotWindowParams,windowSize,Color.DARK_GRAY,Color.LIGHT_GRAY);
-	}
-	
-	BufferedImage graphImage;
-	
-	private static Var y = var("y"),x = var("x");
-	void renderGraph(Graphics graphics,ArrayList<Expr> stack) {//everything, the background the plots
-		if(needsRepaint) {
-			graphImage = renderGraph(stack,plotParams,panel.getSize(),backgroundColor,foregroundColor);
-			needsRepaint = false;
-		}
-		graphics.drawImage(graphImage,0,0,null);
+	public static BufferedImage renderGraph3D(ExprList stack,PlotWindowParams plotWindowParams,Dimension windowSize,Color backgroundColor,Color foregroundColor) {
+		BufferedImage out = new BufferedImage((int)windowSize.getWidth(),(int)windowSize.getHeight(),BufferedImage.TYPE_INT_RGB);
 		
-		graphics.setColor(Color.WHITE);
-		graphics.drawString("x: "+(float)convertToInternalPositionX(mouseX,plotParams,panel.getSize()), mouseX+40, mouseY);
-		graphics.drawString("y: "+(float)convertToInternalPositionY(mouseY,plotParams,panel.getSize()), mouseX+40, mouseY+20);
-	}
-	
-	volatile boolean needsRepaint = true;
-	public Plot(StackEditor stackEditor) {
-		panel = new JPanel() {
-			private static final long serialVersionUID = 4523041779264530987L;
-
-			@Override
-			public void paintComponent(Graphics g) {
-				ArrayList<Expr> stackClone = new ArrayList<Expr>();
-				for(int i = 0;i<stackEditor.stack.size();i++) {
-					stackClone.add(stackEditor.stack.get(i));
+		Graphics g = out.createGraphics();
+		
+		g.setColor(backgroundColor);
+		g.fillRect(0, 0, (int)windowSize.getWidth(), (int)windowSize.getHeight());
+		
+		if(stack.size()>0) {
+			
+			g.setColor(foregroundColor);
+			
+			int xRes = 50,yRes = 50;
+			
+			double[][] points = new double[yRes][xRes];
+			
+			Equ xDef = QuickMath.equ(QuickMath.var("x"),QuickMath.floatExpr(0)),yDef = QuickMath.equ(QuickMath.var("y"),QuickMath.floatExpr(0));
+			ExprList varDefs = new ExprList();
+			varDefs.add(xDef);
+			varDefs.add(yDef);
+			
+			Expr function = stack.get();
+			
+			for(int yIndex = 0;yIndex < yRes;yIndex++) {
+				double y = (plotWindowParams.yMax-plotWindowParams.yMin)*((double)yIndex/(yRes-1))+plotWindowParams.yMin;
+				for(int xIndex = 0;xIndex < xRes;xIndex++) {
+					double x = (plotWindowParams.xMax-plotWindowParams.xMin)*((double)xIndex/(xRes-1))+plotWindowParams.xMin;
+					
+					
+					((FloatExpr)xDef.getRightSide()).value.set(new ComplexFloat(x,0));
+					((FloatExpr)yDef.getRightSide()).value.set(new ComplexFloat(y,0));
+					
+					double z = function.convertToFloat(varDefs).real;
+					points[yIndex][xIndex] = z;
+					
 				}
-				renderGraph(g,stackClone);
+				
 			}
-		};
+			
+			double cosZ = Math.cos(plotWindowParams.zRot);
+			double sinZ = Math.sin(plotWindowParams.zRot);
+			
+			double cosX = Math.cos(plotWindowParams.xRot);
+			double sinX = Math.sin(plotWindowParams.xRot);
+			
+			g.translate(windowSize.width/2, windowSize.height/2);
+			for(int yIndex = 0 ;yIndex < yRes;yIndex++) {
+				for(int xIndex = 0;xIndex < xRes;xIndex++) {
+					double xPos = ((double)xIndex/(xRes-1)-0.5)*windowSize.width*0.75;
+					double yPos = ((double)yIndex/(xRes-1)-0.5)*windowSize.width*0.75;
+					double zPos = (-points[yIndex][xIndex])/(plotWindowParams.zMax-plotWindowParams.zMin)*windowSize.height*0.75;
+					
+					double newXPos = cosZ*xPos-sinZ*yPos;
+					double newYPos = cosZ*yPos+sinZ*xPos;
+					
+					xPos = newXPos;
+					yPos = newYPos;
+					
+					
+					newYPos = cosX*yPos-sinX*zPos;
+					double newZPos = cosX*zPos+sinX*yPos;
+					
+					yPos = newYPos;
+					zPos = newZPos;
+					
+					yPos+=windowSize.height*1.3;
+					
+					int size = Math.max(1, windowSize.width/128);
+					
+					g.fillRect((int)(windowSize.width*xPos/yPos), (int)(windowSize.width*zPos/yPos), size, size);
+				}
+			}
 		
-		panel.setMinimumSize(new Dimension(200,200));
+		}
 		
-		panel.addMouseListener(new MouseListener() {
+		g.dispose();
+		return out;
+	}
+	
+	private static Var y = QuickMath.var("y"),x = QuickMath.var("x");
+	void renderGraphWithMouse(Graphics graphics,ExprList stack,int mode) {//everything, the background the plots
+		BufferedImage graphImage = null;
+		if(mode == MODE_2D) {
+			graphImage = renderGraph2D(stack,plotParams,getSize(),backgroundColor,foregroundColor);
+		
+			graphics.drawImage(graphImage,0,0,null);
+			graphics.setColor(foregroundColor);
+			graphics.drawString("x: "+(float)convertToInternalPositionX(mouseX,plotParams,getSize()), mouseX+40, mouseY);
+			graphics.drawString("y: "+(float)convertToInternalPositionY(mouseY,plotParams,getSize()), mouseX+40, mouseY+20);
+		}else if(mode == MODE_3D) {
+			graphImage = renderGraph3D(stack,plotParams,getSize(),backgroundColor,foregroundColor);
+			graphics.drawImage(graphImage,0,0,null);
+		}
+	}
+	
+	@Override
+	public void paintComponent(Graphics g) {
+		renderGraphWithMouse(g,stackEditor.stack,mode);
+	}
+	
+	public Plot(StackEditor stackEditor) {
+		this.stackEditor = stackEditor;
+		
+		setMinimumSize(new Dimension(200,200));
+		
+		addMouseListener(new MouseListener() {
 			@Override
 			public void mouseClicked(MouseEvent e) {
 			}
@@ -260,82 +340,74 @@ public class Plot extends QuickMath{
 			public void mouseExited(MouseEvent e) {
 			}
 		});
-		panel.addMouseWheelListener(new MouseWheelListener() {
+		addMouseMotionListener(new MouseMotionListener() {
+
+			void update(MouseEvent e) {
+				pMouseX = mouseX;
+				pMouseY = mouseY;
+				mouseX = e.getX();
+				mouseY = e.getY();
+				
+				if(mousePressed) {
+					if(mode == MODE_2D) {
+						double panX = (pMouseX-mouseX)/(double)getWidth()*(plotParams.xMax-plotParams.xMin);
+						double panY = (pMouseY-mouseY)/(double)getHeight()*(plotParams.yMax-plotParams.yMin);
+						plotParams.xMin+=panX;
+						plotParams.xMax+=panX;
+						plotParams.yMin-=panY;
+						plotParams.yMax-=panY;
+					}else if(mode == MODE_3D) {
+						plotParams.zRot-=((double)pMouseX-mouseX)/100.0;
+						plotParams.xRot+=((double)pMouseY-mouseY)/100.0;
+					}
+				}
+				
+				repaint();
+			}
+			
+			@Override
+			public void mouseDragged(MouseEvent e) {
+				update(e);
+				
+			}
+
+			@Override
+			public void mouseMoved(MouseEvent e) {
+				update(e);
+			}
+			
+		});
+		addMouseWheelListener(new MouseWheelListener() {
 
 			@Override
 			public void mouseWheelMoved(MouseWheelEvent e) {
 				double scrollAmount = e.getPreciseWheelRotation();
 				double slower = 1.0/25.0;
-				plotParams.xMin = plotParams.xMin+(convertToInternalPositionX(mouseX,plotParams,panel.getSize())-plotParams.xMin)*(scrollAmount*slower);
-				plotParams.xMax = plotParams.xMax-(plotParams.xMax-convertToInternalPositionX(mouseX,plotParams,panel.getSize()))*(scrollAmount*slower);
+				if(mode == MODE_2D) {
+					plotParams.xMin = plotParams.xMin+(convertToInternalPositionX(mouseX,plotParams,getSize())-plotParams.xMin)*(scrollAmount*slower);
+					plotParams.xMax = plotParams.xMax-(plotParams.xMax-convertToInternalPositionX(mouseX,plotParams,getSize()))*(scrollAmount*slower);
+					
+					plotParams.yMin = plotParams.yMin+(convertToInternalPositionY(mouseY,plotParams,getSize())-plotParams.yMin)*(scrollAmount*slower);
+					plotParams.yMax = plotParams.yMax-(plotParams.yMax-convertToInternalPositionY(mouseY,plotParams,getSize()))*(scrollAmount*slower);
+				}else if(mode == MODE_3D) {
+					plotParams.xMin*=(1.0+scrollAmount*slower);
+					plotParams.xMax*=(1.0+scrollAmount*slower);
+					
+					plotParams.yMin*=(1.0+scrollAmount*slower);
+					plotParams.yMax*=(1.0+scrollAmount*slower);
+					
+					plotParams.zMin*=(1.0+scrollAmount*slower);
+					plotParams.zMax*=(1.0+scrollAmount*slower);
+					
+				}
 				
-				plotParams.yMin = plotParams.yMin+(convertToInternalPositionY(mouseY,plotParams,panel.getSize())-plotParams.yMin)*(scrollAmount*slower);
-				plotParams.yMax = plotParams.yMax-(plotParams.yMax-convertToInternalPositionY(mouseY,plotParams,panel.getSize()))*(scrollAmount*slower);
-				needsRepaint = true;
+				repaint();
 			}
 			
 		});
-		ListDataListener dataListener = new ListDataListener() {
-
-			void reset() {
-				needsRepaint = true;
-				panel.repaint();
-			}
-			
-			@Override
-			public void intervalAdded(ListDataEvent e) {
-				reset();
-			}
-
-			@Override
-			public void intervalRemoved(ListDataEvent e) {
-				reset();
-			}
-
-			@Override
-			public void contentsChanged(ListDataEvent e) {
-				reset();
-			}
-			
-		};
-		stackEditor.stack.addListDataListener(dataListener);
-		new Thread() {
-			@Override
-			public void run() {
-				try {
-					while(true) {
-						sleep(1000/60);
-						Point mousePosition = panel.getMousePosition();
-						if(mousePosition != null) {
-							pMouseX = mouseX;
-							pMouseY = mouseY;
-							mouseX = mousePosition.x;
-							mouseY = mousePosition.y;
-							
-							if(mousePressed) {
-								double panX = (pMouseX-mouseX)/(double)panel.getWidth()*(plotParams.xMax-plotParams.xMin);
-								double panY = (pMouseY-mouseY)/(double)panel.getHeight()*(plotParams.yMax-plotParams.yMin);
-								plotParams.xMin+=panX;
-								plotParams.xMax+=panX;
-								plotParams.yMin-=panY;
-								plotParams.yMax-=panY;
-								needsRepaint = true;
-							}
-							panel.repaint();
-						}
-					}
-				}catch(Exception e) {
-					e.printStackTrace();
-					System.exit(0);
-				}
-				stackEditor.stack.removeListDataListener(dataListener);
-			}
-		}.start();
+		
 	}
 	
-	public JPanel getJPanel() {
-		return panel;
-	}
 	public void setBackgroundColor(Color color) {
 		backgroundColor = color;
 	}

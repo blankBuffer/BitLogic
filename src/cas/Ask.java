@@ -1,5 +1,4 @@
 package cas;
-import java.awt.Dimension;
 import java.text.DecimalFormat;
 import java.time.Instant;
 import java.time.ZoneOffset;
@@ -10,8 +9,6 @@ import java.util.Date;
 import java.util.HashMap;
 import java.util.Set;
 import java.util.TimeZone;
-
-import graphics.Plot;
 
 public class Ask extends QuickMath{
 	
@@ -638,29 +635,6 @@ public class Ask extends QuickMath{
 				}
 			}
 			return out;
-		}
-		
-		if(tokens.contains("plot") || tokens.contains("graph")) {
-			Expr exprToPlot = Interpreter.createExprWithThrow(tokens.get(indexes.get(0)),defs,settings);
-			Plot.PlotWindowParams windowParams = null;
-			
-			if(indexes.size() == 2) {
-				ExprList params = (ExprList)Interpreter.createExprWithThrow(tokens.get(indexes.get(1)),defs,settings);
-				double xMin = params.get(0).convertToFloat(null).real;
-				double xMax = params.get(1).convertToFloat(null).real;
-				double yMin = params.get(2).convertToFloat(null).real;
-				double yMax = params.get(3).convertToFloat(null).real;
-				windowParams = new Plot.PlotWindowParams(xMin,xMax , yMin, yMax);
-				
-			}else {
-				windowParams = new Plot.PlotWindowParams();
-			}
-			
-			Dimension imageSize = new Dimension(400,400);
-			
-			
-			return new ObjectExpr(Plot.renderGraph(exprToPlot, windowParams, imageSize));
-			
 		}
 		//
 		
