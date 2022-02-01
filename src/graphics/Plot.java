@@ -16,7 +16,7 @@ import javax.swing.*;
 public class Plot extends JPanel{
 	private static final long serialVersionUID = 2751307762529372797L;
 
-	PlotWindowParams plotParams = new PlotWindowParams();
+	public PlotWindowParams plotParams = new PlotWindowParams();
 	
 	int mouseX,mouseY,pMouseX,pMouseY;
 	boolean mousePressed;
@@ -27,7 +27,7 @@ public class Plot extends JPanel{
 	
 	public static class PlotWindowParams{
 		
-		double xMin,xMax,yMin,yMax,zMin,zMax,zRot,xRot;
+		public double xMin,xMax,yMin,yMax,zMin,zMax,zRot,xRot;
 		public PlotWindowParams() {
 			xMin = -10;
 			xMax = 10;
@@ -49,6 +49,22 @@ public class Plot extends JPanel{
 			this.yMax = yMax;
 			this.zMin = zMin;
 			this.zMax = zMax;
+		}
+		
+		public void set(double xMin,double xMax,double yMin,double yMax,double zMin,double zMax) {
+			this.xMin = xMin;
+			this.xMax = xMax;
+			this.yMin = yMin;
+			this.yMax = yMax;
+			this.zMin = zMin;
+			this.zMax = zMax;
+		}
+		
+		public void set(double xMin,double xMax,double yMin,double yMax) {
+			this.xMin = xMin;
+			this.xMax = xMax;
+			this.yMin = yMin;
+			this.yMax = yMax;
 		}
 	}
 	
@@ -212,7 +228,36 @@ public class Plot extends JPanel{
 		return out;
 	}
 	
-	public static BufferedImage renderGraph3D(ExprList stack,PlotWindowParams plotWindowParams,Dimension windowSize,Color backgroundColor,Color foregroundColor) {
+	static class Point{
+		double x,y,z;
+		Point(double x,double y,double z){
+			this.x = x;
+			this.y = y;
+			this.z = z;
+		}
+	}
+	
+	static class Quad implements Comparable<Quad>{
+		int[] x,z;
+		double y;
+		Color color;
+		Quad(int[] x,int[] z,double y,Color color) {
+			this.x = x;
+			this.z = z;
+			this.y = y;
+			this.color = color;
+		}
+		@Override
+		public int compareTo(Quad o) {
+			return Double.compare(y, o.y);
+		}
+		public void render(Graphics g) {
+			g.setColor(color);
+			g.fillPolygon(x, z, 4);
+		}
+	}
+	
+	public static BufferedImage renderGraph3D(ExprList stack,PlotWindowParams plotWindowParams,Dimension windowSize,Color backgroundColor,Color foregroundColor,int resolution) {
 		BufferedImage out = new BufferedImage((int)windowSize.getWidth(),(int)windowSize.getHeight(),BufferedImage.TYPE_INT_RGB);
 		
 		Graphics g = out.createGraphics();
@@ -224,17 +269,17 @@ public class Plot extends JPanel{
 			
 			g.setColor(foregroundColor);
 			
-			int xRes = 50,yRes = 50;
-			
-			double[][] points = new double[yRes][xRes];
-			
 			Equ xDef = QuickMath.equ(QuickMath.var("x"),QuickMath.floatExpr(0)),yDef = QuickMath.equ(QuickMath.var("y"),QuickMath.floatExpr(0));
 			ExprList varDefs = new ExprList();
 			varDefs.add(xDef);
 			varDefs.add(yDef);
 			
-			Expr function = stack.get();
+			//generate points
+			int xRes = resolution,yRes = resolution;
+			Point[][] points = new Point[yRes][xRes];
 			
+			Expr function = stack.get();
+			//calculate function
 			for(int yIndex = 0;yIndex < yRes;yIndex++) {
 				double y = (plotWindowParams.yMax-plotWindowParams.yMin)*((double)yIndex/(yRes-1))+plotWindowParams.yMin;
 				for(int xIndex = 0;xIndex < xRes;xIndex++) {
@@ -245,24 +290,24 @@ public class Plot extends JPanel{
 					((FloatExpr)yDef.getRightSide()).value.set(new ComplexFloat(y,0));
 					
 					double z = function.convertToFloat(varDefs).real;
-					points[yIndex][xIndex] = z;
+					points[yIndex][xIndex] = new Point(x,y,z);
 					
 				}
 				
 			}
 			
+			//rotational transformation and scaling
 			double cosZ = Math.cos(plotWindowParams.zRot);
 			double sinZ = Math.sin(plotWindowParams.zRot);
 			
 			double cosX = Math.cos(plotWindowParams.xRot);
 			double sinX = Math.sin(plotWindowParams.xRot);
-			
 			g.translate(windowSize.width/2, windowSize.height/2);
 			for(int yIndex = 0 ;yIndex < yRes;yIndex++) {
 				for(int xIndex = 0;xIndex < xRes;xIndex++) {
-					double xPos = ((double)xIndex/(xRes-1)-0.5)*windowSize.width*0.75;
-					double yPos = ((double)yIndex/(xRes-1)-0.5)*windowSize.width*0.75;
-					double zPos = (-points[yIndex][xIndex])/(plotWindowParams.zMax-plotWindowParams.zMin)*windowSize.height*0.75;
+					double xPos = points[yIndex][xIndex].x/(plotWindowParams.xMax-plotWindowParams.xMin);
+					double yPos = points[yIndex][xIndex].y/(plotWindowParams.yMax-plotWindowParams.yMin);
+					double zPos = (-points[yIndex][xIndex].z)/(plotWindowParams.zMax-plotWindowParams.zMin);
 					
 					double newXPos = cosZ*xPos-sinZ*yPos;
 					double newYPos = cosZ*yPos+sinZ*xPos;
@@ -277,14 +322,46 @@ public class Plot extends JPanel{
 					yPos = newYPos;
 					zPos = newZPos;
 					
-					yPos+=windowSize.height*1.3;
+					yPos+=3.5;//shift
 					
-					int size = Math.max(1, windowSize.width/128);
+					Point p = points[yIndex][xIndex];
 					
-					g.fillRect((int)(windowSize.width*xPos/yPos), (int)(windowSize.width*zPos/yPos), size, size);
+					p.x = 2*windowSize.width*xPos/yPos;
+					p.y = yPos;
+					p.z = 2*windowSize.width*zPos/yPos;
 				}
 			}
-		
+
+			ArrayList<Quad> quads = new ArrayList<Quad>();
+			
+			//create triangles
+			for(int yIndex = 0 ;yIndex < yRes-1;yIndex++) {
+				for(int xIndex = 0;xIndex < xRes-1;xIndex++) {
+					
+					Point p1 = points[yIndex][xIndex];
+					Point p2 = points[yIndex+1][xIndex];
+					Point p3 = points[yIndex+1][xIndex+1];
+					Point p4 = points[yIndex][xIndex+1];
+					
+					int brightness = (int)(((double)xIndex/xRes)*200.0+55.0);
+					Color color = new Color( brightness,brightness,brightness/2 );
+					
+					if((xIndex+yIndex)%2==0) color = color.darker();
+					
+					if(p1.y>0 && p2.y>0 && p3.y>0 && p4.y>0) {
+						quads.add(new Quad(new int[]{(int) p1.x,(int) p2.x,(int) p3.x,(int) p4.x}, new int[]{(int) p1.z,(int) p2.z,(int) p3.z,(int) p4.z}, p1.y+p3.y ,color));
+					}
+					
+				}
+			}
+			
+			Collections.sort(quads);
+			
+			for(int i = quads.size()-1;i>=0;i--) {
+				Quad q = quads.get(i);
+				q.render(g);
+			}
+			
 		}
 		
 		g.dispose();
@@ -302,7 +379,7 @@ public class Plot extends JPanel{
 			graphics.drawString("x: "+(float)convertToInternalPositionX(mouseX,plotParams,getSize()), mouseX+40, mouseY);
 			graphics.drawString("y: "+(float)convertToInternalPositionY(mouseY,plotParams,getSize()), mouseX+40, mouseY+20);
 		}else if(mode == MODE_3D) {
-			graphImage = renderGraph3D(stack,plotParams,getSize(),backgroundColor,foregroundColor);
+			graphImage = renderGraph3D(stack,plotParams,getSize(),backgroundColor,foregroundColor,48);
 			graphics.drawImage(graphImage,0,0,null);
 		}
 	}
@@ -390,14 +467,14 @@ public class Plot extends JPanel{
 					plotParams.yMin = plotParams.yMin+(convertToInternalPositionY(mouseY,plotParams,getSize())-plotParams.yMin)*(scrollAmount*slower);
 					plotParams.yMax = plotParams.yMax-(plotParams.yMax-convertToInternalPositionY(mouseY,plotParams,getSize()))*(scrollAmount*slower);
 				}else if(mode == MODE_3D) {
-					plotParams.xMin*=(1.0+scrollAmount*slower);
-					plotParams.xMax*=(1.0+scrollAmount*slower);
+					plotParams.xMin*=(1.0-scrollAmount*slower);
+					plotParams.xMax*=(1.0-scrollAmount*slower);
 					
-					plotParams.yMin*=(1.0+scrollAmount*slower);
-					plotParams.yMax*=(1.0+scrollAmount*slower);
+					plotParams.yMin*=(1.0-scrollAmount*slower);
+					plotParams.yMax*=(1.0-scrollAmount*slower);
 					
-					plotParams.zMin*=(1.0+scrollAmount*slower);
-					plotParams.zMax*=(1.0+scrollAmount*slower);
+					plotParams.zMin*=(1.0-scrollAmount*slower);
+					plotParams.zMax*=(1.0-scrollAmount*slower);
 					
 				}
 				

@@ -5,25 +5,25 @@ import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 
 import javax.swing.*;
-import javax.swing.border.LineBorder;
 
 import graphics.Plot;
 
 class MainWindow{
-	final int WINDOW_WIDTH = 800,WINDOW_HEIGHT = 400;
+	final int WINDOW_WIDTH = 900,WINDOW_HEIGHT = 500;
 	Color background,foreground;
 	StackEditor currentStack;
 	Font font;
 	final int MAX_CHARS = 1024;
 	
-	boolean clearTerminal = false;
+	static final boolean CLEAR_DEFAULT = true;
+	boolean clearTerminal = CLEAR_DEFAULT;
 	
 	void setColors() {
 		background = new Color(223,218,196);
 		foreground = new Color(75,47,46);
 	}
 	
-	JPanel createTerminal(JFrame window) {
+	JPanel createTerminal(JFrame window,Plot plot) {
 		JPanel terminal = new JPanel();
 		terminal.setLayout(new BorderLayout());
 		JTextArea terminalOut = new JTextArea();
@@ -36,7 +36,15 @@ class MainWindow{
 		JScrollPane scrollableTerminalOut = new JScrollPane(terminalOut);
 		scrollableTerminalOut.setMinimumSize(new Dimension(300,200));
 		
-		JTextField terminalIn = new JTextField();
+		JTextArea workArea = new JTextArea("work area",5,100);
+		workArea.setBackground(background);
+		workArea.setForeground(foreground);
+		workArea.setLineWrap(true);
+		workArea.setFont(font);
+		
+		JScrollPane scrollWorkArea = new JScrollPane(workArea);
+		
+		JTextField terminalIn = new JTextField("type here");
 		terminalIn.addActionListener(new ActionListener(){
 
 			@Override
@@ -59,24 +67,117 @@ class MainWindow{
 				
 				terminalOut.setText(newState);
 				terminalOut.setCaretPosition(terminalOut.getText().length());
+				
+				plot.repaint();
 			}
 			
 		});
 		terminalIn.setBackground(background);
 		terminalIn.setForeground(foreground);
 		terminalIn.setCaretColor(foreground);
-		terminalIn.setBorder(new LineBorder(foreground,4));
 		terminalIn.setFont(font);
 		
-		terminal.add(scrollableTerminalOut,BorderLayout.CENTER);
+		JSplitPane terminalOutAndWorkArea = new JSplitPane(JSplitPane.VERTICAL_SPLIT,scrollWorkArea,scrollableTerminalOut);
+		
+		terminal.add(terminalOutAndWorkArea,BorderLayout.CENTER);
 		terminal.add(terminalIn,BorderLayout.SOUTH);
 		return terminal;
 	}
 	
 	JPanel createOptionsMenu(JComponent bottomPanel,JPanel terminal,Plot plot) {
-		JCheckBox clearTerminalCheckBox = new JCheckBox("clear terminal");
+		Font smallFont = new Font("courier", Font.BOLD, 8);
+		JCheckBox clearTerminalCheckBox = new JCheckBox("clear terminal",CLEAR_DEFAULT);
+		clearTerminalCheckBox.setFont(smallFont);
+		clearTerminalCheckBox.setBackground(background);
 		JCheckBox showPlotCheckBox = new JCheckBox("show plot",true);
+		showPlotCheckBox.setFont(smallFont);
+		showPlotCheckBox.setBackground(background);
 		JComboBox<String> plotMode = new JComboBox<String>(new String[] {"2D","3D"});
+		plotMode.setBackground(background);
+		plotMode.setFont(smallFont);
+		
+		JButton getWindow = new JButton("get window");
+		getWindow.setFont(smallFont);
+		getWindow.setBackground(background);
+		
+		JButton setWindow = new JButton("set window");
+		setWindow.setFont(smallFont);
+		setWindow.setBackground(background);
+		
+		JButton reset = new JButton("reset");
+		reset.setFont(smallFont);
+		reset.setBackground(background);
+		
+		int chars = 6;
+		
+		JLabel xMinLabel = new JLabel("x-Min");
+		JTextField xMin = new JTextField("-10.0",chars);
+		
+		JLabel xMaxLabel = new JLabel("x-Max");
+		JTextField xMax = new JTextField("10.0",chars);
+		
+		JLabel yMinLabel = new JLabel("y-Min");
+		JTextField yMin = new JTextField("-10.0",chars);
+		
+		JLabel yMaxLabel = new JLabel("y-Max");
+		JTextField yMax = new JTextField("10.0",chars);
+		
+		JLabel zMinLabel = new JLabel("z-Min");
+		JTextField zMin = new JTextField("-10.0",chars);
+		
+		JLabel zMaxLabel = new JLabel("z-Max");
+		JTextField zMax = new JTextField("10.0",chars);
+		
+		JComponent[] domainControl = new JComponent[]{xMinLabel,xMin,xMaxLabel,xMax,yMinLabel,yMin,yMaxLabel,yMax,zMinLabel,zMin,zMaxLabel,zMax};
+		
+		for(JComponent c:domainControl) {
+			c.setFont(smallFont);
+			c.setBackground(background);
+		}
+		
+		setWindow.addActionListener(new ActionListener() {
+			@Override
+			public void actionPerformed(ActionEvent e) {
+				plot.plotParams.set(Double.parseDouble(xMin.getText()),Double.parseDouble(xMax.getText()),Double.parseDouble(yMin.getText()),Double.parseDouble(yMax.getText()),Double.parseDouble(zMin.getText()),Double.parseDouble(zMax.getText()));
+				plot.repaint();
+			}
+		});
+		
+		getWindow.addActionListener(new ActionListener() {
+			@Override
+			public void actionPerformed(ActionEvent e) {
+				xMin.setText(Double.toString(plot.plotParams.xMin));
+				xMin.setCaretPosition(0);
+				xMax.setText(Double.toString(plot.plotParams.xMax));
+				xMax.setCaretPosition(0);
+				
+				yMin.setText(Double.toString(plot.plotParams.yMin));
+				yMin.setCaretPosition(0);
+				yMax.setText(Double.toString(plot.plotParams.yMax));
+				yMax.setCaretPosition(0);
+				
+				zMin.setText(Double.toString(plot.plotParams.zMin));
+				zMin.setCaretPosition(0);
+				zMax.setText(Double.toString(plot.plotParams.zMax));
+				zMax.setCaretPosition(0);
+			}
+		});
+		
+		reset.addActionListener(new ActionListener() {
+			@Override
+			public void actionPerformed(ActionEvent e) {
+				plot.plotParams.xMin = -10;
+				plot.plotParams.xMax = 10;
+				
+				plot.plotParams.yMin = -10;
+				plot.plotParams.yMax = 10;
+				
+				plot.plotParams.zMin = -10;
+				plot.plotParams.zMax = 10;
+				
+				plot.repaint();
+			}
+		});
 		
 		clearTerminalCheckBox.addActionListener(new ActionListener() {
 
@@ -91,9 +192,11 @@ class MainWindow{
 			@Override
 			public void actionPerformed(ActionEvent e) {
 				if(showPlotCheckBox.isSelected()) {
+					plot.setVisible(true);
 					bottomPanel.removeAll();
 					bottomPanel.add(createSplitView(terminal,plot));
 				}else {
+					plot.setVisible(false);
 					bottomPanel.removeAll();
 					bottomPanel.add(terminal);
 				}
@@ -112,6 +215,7 @@ class MainWindow{
 				}else if(plotMode.getSelectedItem().equals("3D")) {
 					plot.mode = Plot.MODE_3D;
 				}
+				plot.repaint();
 			}
 			
 		});
@@ -122,6 +226,14 @@ class MainWindow{
 		options.add(clearTerminalCheckBox);
 		options.add(showPlotCheckBox);
 		options.add(plotMode);
+		
+		for(JComponent c:domainControl) {
+			options.add(c);
+		}
+		options.add(getWindow);
+		options.add(setWindow);
+		options.add(reset);
+		
 		return options;
 	}
 	
@@ -136,8 +248,8 @@ class MainWindow{
 		mainPanel.setLayout(new BorderLayout());
 		JPanel bottomPanel = new JPanel();
 		bottomPanel.setLayout(new BorderLayout());
-		JPanel terminal = createTerminal(window);
 		Plot plot = new Plot(currentStack);
+		JPanel terminal = createTerminal(window,plot);
 		plot.setBackgroundColor(background);
 		plot.setForegroundColor(foreground);
 		bottomPanel.add(createSplitView(terminal,plot));
@@ -158,6 +270,14 @@ class MainWindow{
 	}
 
 	public MainWindow(){
+		try {
+			UIManager.setLookAndFeel(
+			        UIManager.getCrossPlatformLookAndFeelClassName());
+		} catch (ClassNotFoundException | InstantiationException | IllegalAccessException
+				| UnsupportedLookAndFeelException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
 		currentStack = new StackEditor();
 		setColors();
 		font = new Font("courier", Font.BOLD, 12);
