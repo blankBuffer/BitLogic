@@ -135,7 +135,13 @@ public class QuickMath {
 		return new FloatExpr(s);
 	}
 	public static Equ equ(Expr a,Expr b) {
-		return new Equ(a,b);
+		return new Equ(a,b,Equ.EQUALS);
+	}
+	public static Equ equGreater(Expr a,Expr b) {
+		return new Equ(a,b,Equ.GREATER);
+	}
+	public static Equ equLess(Expr a,Expr b) {
+		return new Equ(a,b,Equ.LESS);
 	}
 	public static BoolState bool(boolean b) {
 		return new BoolState(b);
@@ -229,6 +235,9 @@ public class QuickMath {
 	}
 	public static Func func(String name,Equ v,Expr expr) {
 		return new Func(name,v,expr);
+	}
+	public static Func eval(Equ equ) {
+		return (Func)SimpleFuncs.getFuncByName("eval", Defs.blank, equ);
 	}
 	//
 	

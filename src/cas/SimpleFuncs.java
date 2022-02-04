@@ -11,7 +11,7 @@ public class SimpleFuncs extends QuickMath{
 		private static final long serialVersionUID = 1L;
 
 		@Override
-		Expr applyRuleToExpr(Expr e,Settings settings){
+		public Expr applyRuleToExpr(Expr e,Settings settings){
 			if(e instanceof Prod){
 				boolean changed = false;
 				for(int i = 0;i<e.size();i++){
@@ -39,7 +39,7 @@ public class SimpleFuncs extends QuickMath{
 				Power casted = (Power)e;
 				if( isPositiveRealNum(casted.getExpo()) && casted.getBase() instanceof Sum){
 					Expr result = multinomial(casted.getBase(),(Num)casted.getExpo(),settings);
-					return result;
+					return result.simplify(settings);
 				}
 			}
 			
@@ -61,6 +61,8 @@ public class SimpleFuncs extends QuickMath{
 	static Func conv = new Func("conv");
 	static Func mathML = new Func("mathML");
 	static Func subst = new Func("subst");
+	static Func eval = new Func("eval");
+	static Func expand = new Func("expand");
 	
 	public static void loadRules(){
 		tree.simplifyChildren = false;
@@ -68,7 +70,7 @@ public class SimpleFuncs extends QuickMath{
 			private static final long serialVersionUID = 1L;
 
 			@Override
-			Expr applyRuleToExpr(Expr e,Settings settings){
+			public Expr applyRuleToExpr(Expr e,Settings settings){
 				Func f = (Func)e;
 				return var(f.get().toStringTree(0));
 			}
@@ -79,7 +81,7 @@ public class SimpleFuncs extends QuickMath{
 			private static final long serialVersionUID = 1L;
 
 			@Override
-			Expr applyRuleToExpr(Expr e,Settings settings){
+			public Expr applyRuleToExpr(Expr e,Settings settings){
 				Func f = (Func)e;
 				
 				return num(f.get().size());
@@ -91,7 +93,7 @@ public class SimpleFuncs extends QuickMath{
 			private static final long serialVersionUID = 1L;
 
 				@Override
-				Expr applyRuleToExpr(Expr e,Settings settings){
+				public Expr applyRuleToExpr(Expr e,Settings settings){
 					Func f = (Func)e;
 					
 					return f.get().get( ((Num)f.get(1)).realValue.intValue() );
@@ -103,7 +105,7 @@ public class SimpleFuncs extends QuickMath{
 			private static final long serialVersionUID = 1L;
 
 			@Override
-			Expr applyRuleToExpr(Expr e,Settings settings){
+			public Expr applyRuleToExpr(Expr e,Settings settings){
 				Func f = (Func)e;
 				
 				Expr n = f.get(0);
@@ -120,7 +122,7 @@ public class SimpleFuncs extends QuickMath{
 			private static final long serialVersionUID = 1L;
 
 			@Override
-			Expr applyRuleToExpr(Expr e,Settings settings){
+			public Expr applyRuleToExpr(Expr e,Settings settings){
 				Func f = (Func)e;
 				return primeFactor((Num)f.get());
 			}
@@ -130,7 +132,7 @@ public class SimpleFuncs extends QuickMath{
 			private static final long serialVersionUID = 1L;
 
 			@Override
-			Expr applyRuleToExpr(Expr e,Settings settings){
+			public Expr applyRuleToExpr(Expr e,Settings settings){
 				Func f = (Func)e;
 				Expr inner = f.get(0);
 				Var var = (Var)f.get(1);
@@ -142,7 +144,7 @@ public class SimpleFuncs extends QuickMath{
 			private static final long serialVersionUID = 1L;
 
 			@Override
-			Expr applyRuleToExpr(Expr e,Settings settings){
+			public Expr applyRuleToExpr(Expr e,Settings settings){
 				Func f = (Func)e;
 				Expr inner = f.get(0);
 				Var var = (Var)f.get(1);
@@ -154,7 +156,7 @@ public class SimpleFuncs extends QuickMath{
 			private static final long serialVersionUID = 1L;
 
 			@Override
-			Expr applyRuleToExpr(Expr e,Settings settings){
+			public Expr applyRuleToExpr(Expr e,Settings settings){
 				Func f = (Func)e;
 				Expr inner = f.get(0);
 				Var var = (Var)f.get(1);
@@ -166,7 +168,7 @@ public class SimpleFuncs extends QuickMath{
 			private static final long serialVersionUID = 1L;
 
 			@Override
-			Expr applyRuleToExpr(Expr e,Settings settings){
+			public Expr applyRuleToExpr(Expr e,Settings settings){
 				Func f = (Func)e;
 				Expr a = f.get(0);
 				Expr b = f.get(1);
@@ -182,7 +184,7 @@ public class SimpleFuncs extends QuickMath{
 			private static final long serialVersionUID = 1L;
 
 			@Override
-			Expr applyRuleToExpr(Expr e,Settings settings){
+			public Expr applyRuleToExpr(Expr e,Settings settings){
 				Func f = (Func)e;
 				try {
 					Expr.saveExpr(f.get(0), f.get(1).toString());
@@ -200,7 +202,7 @@ public class SimpleFuncs extends QuickMath{
 			private static final long serialVersionUID = 1L;
 
 			@Override
-			Expr applyRuleToExpr(Expr e,Settings settings){
+			public Expr applyRuleToExpr(Expr e,Settings settings){
 				Func f = (Func)e;
 				
 				try {
@@ -255,6 +257,44 @@ public class SimpleFuncs extends QuickMath{
 				return f.get().replace((Equ)f.get(1)).simplify(settings);
 			}
 		});
+		
+		eval.ruleSequence.add(new Rule("evaluate",Rule.EASY) {
+			private static final long serialVersionUID = 1L;
+			
+			@Override
+			public Expr applyRuleToExpr(Expr e,Settings settings) {
+				Func f = (Func)e;
+				
+				if(f.get() instanceof Equ) {
+					Equ casted = (Equ)f.get();
+					boolean equal = casted.getLeftSide().exactlyEquals(casted.getRightSide());
+					
+					if(casted.type == Equ.EQUALS) {
+						return bool(equal);
+					}
+					if(casted.containsVars()) return bool(true);
+					if(casted.type == Equ.GREATER) {
+						return bool(!equal && casted.getLeftSide().convertToFloat(exprList()).real > casted.getRightSide().convertToFloat(exprList()).real );
+					}
+					if(casted.type == Equ.LESS) {
+						return bool(!equal && casted.getLeftSide().convertToFloat(exprList()).real < casted.getRightSide().convertToFloat(exprList()).real );
+					}
+				}
+				
+				return f;
+			}
+		});
+		
+		expand.simplifyChildren = false;
+		expand.ruleSequence.add(new Rule("expand",Rule.TRICKY) {
+			private static final long serialVersionUID = 1L;
+			
+			@Override
+			public Expr applyRuleToExpr(Expr e,Settings settings) {
+				Func f = (Func)e;
+				return fullExpand.applyRuleToExpr(f.get(), settings);
+			}
+		});
 	}
 	static{
 		addFunc(choose);
@@ -271,6 +311,8 @@ public class SimpleFuncs extends QuickMath{
 		addFunc(conv);
 		addFunc(mathML);
 		addFunc(subst);
+		addFunc(eval);
+		addFunc(expand);
 	}
 	
 	public static Expr getFuncByName(String funcName,Defs defs,Expr... params) {

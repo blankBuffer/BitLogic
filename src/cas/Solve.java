@@ -5,29 +5,10 @@ import java.util.ArrayList;
 public class Solve extends Expr{
 	
 	private static final long serialVersionUID = 8530995692151126277L;
-	static Rule logCase = new Rule(equ( createExpr("ln(a)=b") , createExpr("a=e^b") ),"log case for solve",Rule.EASY);//ln(a)=b -> a=e^b
-	static Rule rootCase = new Rule(equ( createExpr("m^n=a") , createExpr("m=a^inv(n)")  ),"root case for solve",Rule.EASY);//m^n=a -> m=a^(1/n)
-	static Rule expoCase = new Rule(equ( createExpr("m^n=a")   ,createExpr("n=ln(a)/ln(m)")  ),"expo case for solve",Rule.EASY);//m^n=a -> n=ln(a)/ln(m)
-	static Rule baseAndExpoHaveVar = new Rule(equ( createExpr("m^n=a")   ,createExpr("n*ln(m)=ln(a)")  ),"preperation for lambert w solve",Rule.UNCOMMON);
-	static Rule divCase1 = new Rule(equ(createExpr("a/b=y"),createExpr("a=y*b")),"numer has var for solve",Rule.EASY);
-	static Rule divCase2 = new Rule(equ(createExpr("a/b=y"),createExpr("b=a/y")),"denmo has var for solve",Rule.EASY);
-	static Rule divCase3 = new Rule( equ(createExpr("a/b=y"),createExpr("a-y*b=0")),"entire div has var for solve",Rule.UNCOMMON);
 	
 	static ArrayList<Rule> caseTable = new ArrayList<Rule>();
 	static{//make rare case table
 		ArrayList<Equ> caseTable = new ArrayList<Equ>();
-		
-		//root problems
-		Expr rareCase1Ans = createExpr("x=(k^2-a)^2/(4*k^2)");
-		caseTable.add(equ( createExpr("sqrt(x)-sqrt(x+a)=k") , rareCase1Ans ));
-		caseTable.add(equ( createExpr("sqrt(x+a)-sqrt(x)=k") , rareCase1Ans ));
-		caseTable.add(equ( createExpr("sqrt(x+a)+sqrt(x)=k") , rareCase1Ans ));
-		
-		Expr rareCase2Ans = createExpr("[x=(sqrt(4*a+4*y+1)+2*y+1)/2,x=(-sqrt(4*a+4*y+1)+2*y+1)/2]");
-		caseTable.add(equ( createExpr("x+sqrt(x+a)=y") , rareCase2Ans ));
-		caseTable.add(equ( createExpr("x-sqrt(x+a)=y") , rareCase2Ans ));
-		Expr rareCase2Ans2 = createExpr("[x=(sqrt(4*a-4*y+1)-2*y+1)/2,x=(-sqrt(4*a-4*y+1)-2*y+1)/2]");
-		caseTable.add(equ( createExpr("sqrt(x+a)-x=y") , rareCase2Ans2 ));
 		
 		Expr rareCase3Ans = createExpr("[x=(sqrt(-4*a*b+4*a*y^2+4*b*z^2+m^2+4*m*y*z)+m+2*y*z)/(2*(y^2-b)),x=(-sqrt(-4*a*b+4*a*y^2+4*b*z^2+m^2+4*m*y*z)+m+2*y*z)/(2*(y^2-b))]");
 		caseTable.add(equ( createExpr("y*x+sqrt(a+m*x+b*x^2)=z") , rareCase3Ans ));
@@ -40,21 +21,7 @@ public class Solve extends Expr{
 		caseTable.add(equ( createExpr("y*x-k*sqrt(a+m*x+b*x^2)=z") , rareCase4Ans ));
 		Expr rareCase4Ans2 = createExpr("[x=(-sqrt(-4*a*b*k^4+4*a*k^2*y^2+4*b*k^2*z^2+k^4*m^2+4*k^2*m*y*z)-k^2*m-2*y*z)/(-2*(b*k^2-y^2)),x=(sqrt(-4*a*b*k^4+4*a*k^2*y^2+4*b*k^2*z^2+k^4*m^2+4*k^2*m*y*z)-k^2*m-2*y*z)/(-2*(b*k^2-y^2))]");
 		caseTable.add(equ( createExpr("-y*x+k*sqrt(a+m*x+b*x^2)=z") , rareCase4Ans2 ));
-		//special
-		caseTable.add(equ( createExpr("a^b=1") , createExpr("[b=0,a=1]") ));
-		caseTable.add(equ( createExpr("sin(x)-cos(x)=0") , createExpr("x=pi/4") ));
-		caseTable.add(equ( createExpr("a*sin(x)+b*cos(x)=y") , createExpr("x=acos(y/sqrt(a^2+b^2))+atan(a/b)") ));
-		caseTable.add(equ( createExpr("sin(x)+b*cos(x)=y") , createExpr("x=acos(y/sqrt(1+b^2))+atan(1/b)") ));
-		caseTable.add(equ( createExpr("a*sin(x)+cos(x)=y") , createExpr("x=acos(y/sqrt(a^2+1))+atan(a)") ));
-		caseTable.add(equ( createExpr("sin(x)+cos(x)=y") , createExpr("x=acos(y/sqrt(2))+pi/4") ));
-		//lambert w function
-		caseTable.add(equ( createExpr("x*ln(x)=y") , createExpr("x=e^lambertW(y)") ));
-		caseTable.add(equ( createExpr("x*a^x=y") , createExpr("x=lambertW(y*ln(a))/ln(a)") ));
-		caseTable.add(equ( createExpr("x*a^(b*x)=y") , createExpr("x=lambertW(y*b*ln(a))/(b*ln(a))") ));
-		caseTable.add(equ( createExpr("x^n*a^x=y") , createExpr("x=n*lambertW(y^(1/n)*ln(a)/n)/ln(a)") ));
-		caseTable.add(equ( createExpr("x^n*a^(b*x)=y") , createExpr("x=n*lambertW(y^(1/n)*ln(a)*b/n)/(b*ln(a))") ));
-		caseTable.add(equ( createExpr("x+a^x=y") , createExpr("x=y-lambertW(ln(a)*a^y)/ln(a)") ));
-		caseTable.add(equ( createExpr("b*x+a^x=y") , createExpr("x=(ln(a)*y-b*lambertW((ln(a)*a^(y/b))/b))/(b*ln(a))") ));
+		
 		
 		//subtract same type of function
 		{
@@ -69,14 +36,6 @@ public class Solve extends Expr{
 			caseTable.add(equ( createExpr("m^a-y^a=0") , createExpr("m-y=0") ));
 			//negative versions
 		}
-		//solving inverses
-		caseTable.add(equ( createExpr("sin(x)=y") , createExpr("x=asin(y)") ));
-		caseTable.add(equ( createExpr("cos(x)=y") , createExpr("x=acos(y)") ));
-		caseTable.add(equ( createExpr("tan(x)=y") , createExpr("x=atan(y)") ));
-		caseTable.add(equ( createExpr("asin(x)=y") , createExpr("x=sin(y)") ));
-		caseTable.add(equ( createExpr("acos(x)=y") , createExpr("x=cos(y)") ));
-		caseTable.add(equ( createExpr("atan(x)=y") , createExpr("x=tan(y)") ));
-		caseTable.add(equ( createExpr("lambertW(x)=y") , createExpr("x=y*e^y") ));
 		
 		for(Equ eq:caseTable) {
 			Solve.caseTable.add(new Rule(eq,"solving from case table",Rule.DIFFICULT));
@@ -102,235 +61,473 @@ public class Solve extends Expr{
 		set(0,e);
 	}
 	
-	@Override
-	public Expr simplify(Settings settings) {
-		Expr toBeSimplified = copy();
-		if(flags.simple) return toBeSimplified;
+	static ExprList ruleSequence;
+	
+	static Rule solvedCase = new Rule("solved equation",Rule.VERY_EASY) {
+		private static final long serialVersionUID = 1L;
 		
-		{//first move everything to the left side
-			moveToLeftSide((Solve)toBeSimplified);
-		}
+		ExprList loopedSequence;
 		
-		toBeSimplified.simplifyChildren(settings);//simplify sub expressions
+		Rule moveNonVarPartsInProd;
+		Rule moveNonVarPartsInSum;
+		Rule moveToLeftSide;
+		Rule distrLeftSide;
+		Rule factorLeftSide;
+		Rule rightSideZeroCase;
+		Rule powerCase;
+		Rule inverseFunctionCase;
+		Rule fractionalCase;
+		Rule quadraticCase;
+		Rule lambertWCases;
+		Rule sinCosSumCase;
+		Rule rootCases;
 		
-		Solve castedSolve = (Solve)toBeSimplified;
-		
-		Expr originalProblem = castedSolve.getEqu().getLeftSide().copy();
-		
-		Equ oldEqu = null;
-		
-		outer:while(!castedSolve.getEqu().equals(oldEqu)) {
-			oldEqu = (Equ)castedSolve.getEqu().copy();
-				
-			if( !castedSolve.getEqu().getRightSide().equals(Num.ZERO)) castedSolve.getEqu().setLeftSide( distr(castedSolve.getEqu().getLeftSide()).simplify(settings));//distribute, we don't do it if right side is zero because we can use technique
-				
-			sumMoveNonImportantToRightSide(castedSolve,settings);//x+a+b=c -> x=c-a-b
+		@Override
+		public void init() {
 			
-			castedSolve.getEqu().setLeftSide( factor(castedSolve.getEqu().getLeftSide()).simplify(settings) );//factor
-			
-			if(castedSolve.getEqu().getRightSide().equals(Num.ZERO) && castedSolve.getEqu().getLeftSide() instanceof Prod) {//if left side is a product and right side is 0 each part of the product is an equation
-				ExprList repl = new ExprList();
+			rootCases = new Rule("solving with roots",Rule.VERY_DIFFICULT) {
+				private static final long serialVersionUID = 1L;
 				
-				Prod leftProd = (Prod)castedSolve.getEqu().getLeftSide();
-				
-				for(int i = 0;i<leftProd.size();i++) {
-					if(leftProd.get(i).contains(castedSolve.getVar())) {
-						repl.add(solve(equ(leftProd.get(i),num(0)),castedSolve.getVar()));
-					}
+				Rule[] cases;
+				@Override
+				public void init() {
+					cases = new Rule[] {
+							new Rule("sqrt(x)-sqrt(x+a)=k=x=(k^2-a)^2/(4*k^2)","sum of linear square roots",Rule.DIFFICULT),
+							new Rule("sqrt(x+a)-sqrt(x)=k=x=(k^2-a)^2/(4*k^2)","sum of linear square roots",Rule.DIFFICULT),
+							new Rule("sqrt(x+a)+sqrt(x)=k=x=(k^2-a)^2/(4*k^2)","sum of linear square roots",Rule.DIFFICULT),
+							
+							new Rule("x+sqrt(x+a)=y=[x=(sqrt(4*a+4*y+1)+2*y+1)/2,x=(-sqrt(4*a+4*y+1)+2*y+1)/2]","sum of linear square roots",Rule.DIFFICULT),
+							new Rule("x-sqrt(x+a)=y=[x=(sqrt(4*a+4*y+1)+2*y+1)/2,x=(-sqrt(4*a+4*y+1)+2*y+1)/2]","sum of linear square roots",Rule.DIFFICULT),
+							new Rule("sqrt(x+a)-x=y=[x=(sqrt(4*a-4*y+1)-2*y+1)/2,x=(-sqrt(4*a-4*y+1)-2*y+1)/2]","sum of linear square roots",Rule.DIFFICULT),
+					};
 				}
 				
-				toBeSimplified = repl.simplify(settings);
-				break;
-			}
-			
-			
-			//special cases ///////
-			Expr result = null;
-			for(Rule rareCase:caseTable){
-				result = rareCase.applyRuleToExpr(castedSolve.getEqu(),settings);
-				if(result instanceof ExprList){
-					for(int i = 0;i<result.size();i++){
-						result.set(i, solve((Equ)result.get(i),castedSolve.getVar()) );
-					}
-					toBeSimplified = result.simplify(settings);
-					break outer;
-				}
-				castedSolve.setEqu((Equ)result);
-			}
-			
-			//////	
-				
-			prodMoveNonImportantToRightSide(castedSolve,settings);//x*a*b=c -> x=c*inv(a)*inv(b)
-			
-			if(castedSolve.getEqu().getLeftSide() instanceof Div){
-				Div castedDiv = (Div)castedSolve.getEqu().getLeftSide();
-				boolean numerHasVar = castedDiv.getNumer().contains(castedSolve.getVar());
-				boolean denomHasVar = castedDiv.getDenom().contains(castedSolve.getVar());
-				
-				if(numerHasVar && !denomHasVar) {
-					castedSolve.setEqu((Equ) divCase1.applyRuleToExpr(castedSolve.getEqu(), settings));
-				}else if(!numerHasVar && denomHasVar){
-					castedSolve.setEqu((Equ) divCase2.applyRuleToExpr(castedSolve.getEqu(), settings));
-				}else if(numerHasVar && denomHasVar){
-					castedSolve.setEqu((Equ) divCase3.applyRuleToExpr(castedSolve.getEqu(), settings));
-				}
-			}
-			
-			{//quadratic solve
-				Equ eq = castedSolve.getEqu();
-				if(eq.getLeftSide() instanceof Prod) {
-					Prod pr = (Prod)eq.getLeftSide();
-					if(pr.size() == 2) {
-						Sum sumPart = null;
-						Expr varPart = null;
-						for(int i = 0;i<2;i++) {
-							if(pr.get(i) instanceof Sum) {
-								if(sumPart != null) break;
-								sumPart = (Sum)pr.get(i);
-							}else {
-								varPart = pr.get(i);
-							}
+				@Override
+				public Expr applyRuleToExpr(Expr e,Settings settings){
+					Solve solve = (Solve)e;
+					Var v = solve.getVar();
+					for(Rule rule:cases) {
+						Expr result = rule.applyRuleToExpr(solve.getEqu(), settings);
+						if(result instanceof Equ) {
+							solve.setEqu( (Equ)result );
+						}else if(result instanceof ExprList) {
+							for(int i = 0;i<result.size();i++) result.set(i, solve((Equ)result.get(i),v)  );
+							return result.simplify(settings);
 						}
-						if(sumPart!=null && varPart != null) {//I'm not going to use poly extract because i want it to solve more than the generic quadratic like sin(x)^2+sin(x)+2=0
-							Expr a = new Sum(),b = new Sum();
-							for(int i = 0;i<sumPart.size();i++) {
-								if(!sumPart.get(i).contains(varPart)) {
-									b.add(sumPart.get(i));
-								}else {
-									if(sumPart.get(i).equals(varPart)) a.add(num(1));
-									else if(sumPart.get(i) instanceof Prod) {
-										Prod subProd = (Prod)sumPart.get(i);
-										Prod p = new Prod();
-										for(int j = 0;j<subProd.size();j++) {
-											if(!subProd.get(j).equals(varPart)) {
-												p.add(subProd.get(j));
-											}
-										}
-										a.add(p);
-									}
-								}
-							}
-							if(!a.contains(castedSolve.getVar()) && !b.contains(castedSolve.getVar())) {
-								Expr c = eq.getRightSide();
-								
-								ExprList out = new ExprList();
-								out.add(   solve(equ(varPart,prod(sub(sqrt(  sum(pow(b,num(2)),prod(num(4),a,c))) , b ),inv(num(2)),inv(a))),castedSolve.getVar())   );
-								out.add(   solve(equ(varPart,prod(sum(sqrt(  sum(pow(b,num(2)),prod(num(4),a,c))) , b ),inv(num(-2)),inv(a))),castedSolve.getVar())  );
-								
-								toBeSimplified = out.simplify(settings);
-								
-								break;
+					}
+					return solve;
+				}
+				
+			};
+			
+			sinCosSumCase = new Rule("solving equations with summed sin and cos",Rule.UNCOMMON) {
+				private static final long serialVersionUID = 1L;
+				
+				Rule[] cases;
+				@Override
+				public void init() {
+					cases = new Rule[] {
+							new Rule("sin(x)+cos(x)=y=x=acos(y/sqrt(2))+pi/4","basic case of summed sin and cos",Rule.UNCOMMON),
+							new Rule("a*sin(x)+b*cos(x)=y=x=acos(y/sqrt(a^2+b^2))+atan(a/b)","hard case of summed sin and cos",Rule.UNCOMMON),
+							new Rule("sin(x)+b*cos(x)=y=x=acos(y/sqrt(1+b^2))+atan(1/b)","hard case of summed sin and cos",Rule.UNCOMMON),
+							new Rule("a*sin(x)+cos(x)=y=x=acos(y/sqrt(a^2+1))+atan(a)","hard case of summed sin and cos",Rule.UNCOMMON),
+					};
+				}
+				
+				@Override
+				public Expr applyRuleToExpr(Expr e,Settings settings){
+					Solve solve = (Solve)e;
+					solve.println();
+					for(Rule rule:cases) {
+						solve.setEqu( (Equ)rule.applyRuleToExpr(solve.getEqu(), settings) );
+					}
+					return solve;
+				}
+			};
+			
+			lambertWCases = new Rule("solving with lambert w",Rule.UNCOMMON) {
+				private static final long serialVersionUID = 1L;
+				
+				Rule[] cases;
+				@Override
+				public void init() {
+					cases = new Rule[] {
+							new Rule("x*ln(x)=y=x=e^lambertW(y)","basic case of lambert w",Rule.UNCOMMON),
+							new Rule("x*a^x=y=x=lambertW(y*ln(a))/ln(a)","hard case of lambert w",Rule.UNCOMMON),
+							new Rule("x*a^(b*x)=y=x=lambertW(y*b*ln(a))/(b*ln(a))","hard case of lambert w",Rule.UNCOMMON),
+							new Rule("x^n*a^x=y=x=n*lambertW(y^(1/n)*ln(a)/n)/ln(a)","hard case of lambert w",Rule.UNCOMMON),
+							new Rule("x^n*a^(b*x)=y=x=n*lambertW(y^(1/n)*ln(a)*b/n)/(b*ln(a))","hard case of lambert w",Rule.UNCOMMON),
+							new Rule("x+a^x=y=x=y-lambertW(ln(a)*a^y)/ln(a)","",Rule.UNCOMMON),
+							new Rule("b*x+a^x=y=x=(ln(a)*y-b*lambertW((ln(a)*a^(y/b))/b))/(b*ln(a))","hard case of lambert w",Rule.UNCOMMON),
+					};
+				}
+				
+				@Override
+				public Expr applyRuleToExpr(Expr e,Settings settings){
+					Solve solve = (Solve)e;
+					for(Rule rule:cases) {
+						solve.setEqu( (Equ)rule.applyRuleToExpr(solve.getEqu(), settings) );
+					}
+					return solve;
+				}
+			};
+			
+			quadraticCase = new Rule("",Rule.TRICKY) {
+				private static final long serialVersionUID = 1L;
+				
+				Expr ans;
+				@Override
+				public void init() {
+					ans = createExpr("[x=(-b+sqrt(b^2+4*a*c))/2*a,x=(-b-sqrt(b^2+4*a*c))/2*a]");
+				}
+				
+				@Override
+				public Expr applyRuleToExpr(Expr e,Settings settings){
+					Solve solve = (Solve)e;
+					
+					Equ equ = solve.getEqu();
+					Var v = solve.getVar();
+					
+					if(equ.getLeftSide() instanceof Prod) {
+						Prod leftSide = (Prod)equ.getLeftSide();
+						if(leftSide.size() == 2) {
+							Expr varPart = null,sumPart = null;
+							
+							if(leftSide.get(0) instanceof Sum) {
+								sumPart = leftSide.get(0);
+								varPart = leftSide.get(1);
+							}else if(leftSide.get(1) instanceof Sum) {
+								sumPart = leftSide.get(1);
+								varPart = leftSide.get(0);
 							}
 							
+							if(varPart == null || sumPart == null) return solve;
+								
+							Expr constantParts = new Sum();
+							Expr variableParts = new Sum();
+							
+							for(int i = 0;i<sumPart.size();i++) {
+								if(sumPart.get(i).contains(varPart)) {
+									Expr test = div(sumPart.get(i),varPart).simplify(settings);
+									if(test.contains(varPart)) return solve;
+									variableParts.add(test);
+								}else {
+									constantParts.add(sumPart.get(i));
+								}
+							}
+							Expr a = Sum.unCast(variableParts);
+							Expr b = Sum.unCast(constantParts);
+							Expr c = equ.getRightSide();
+							
+							//a*x^2+b*x=c
+							//x = -b+sqrt(b^2+4*a*c)/2a
+							
+							Expr answer = ans.replace( exprList( equ(var("a"),a),equ(var("b"),b),equ(var("c"),c),equ(var("x"),varPart) ) );
+							
+							for(int i = 0;i<answer.size();i++) {
+								answer.set(i, solve( (Equ)answer.get(i) ,v));
+							}
+							
+							return answer.simplify(settings);
 						}
 					}
+					
+					return solve;
 				}
 				
-			}
-				
-			castedSolve.setEqu( (Equ)logCase.applyRuleToExpr(castedSolve.getEqu(),settings)  );//ln(x)=b -> x=e^b
-				
+			};
 			
-			//rules involving powers
-			if(castedSolve.getEqu().getLeftSide() instanceof Power) {
-				Power castedPower = (Power)castedSolve.getEqu().getLeftSide();
-				if(!castedPower.getExpo().contains( castedSolve.getVar() )) {//case 1, only base has x
-					castedSolve.setEqu( (Equ)rootCase.applyRuleToExpr(castedSolve.getEqu(),settings)  );
-					if(castedPower.getExpo() instanceof Num) {
-						Num num = (Num)castedPower.getExpo();
-						if(num.realValue.mod(BigInteger.TWO).equals(BigInteger.ZERO) && !num.isComplex()) {//if exponent is divisible by two then there are two solutions
-							ExprList repl = new ExprList();//result has more than one solution so stored in a list
-							repl.add(castedSolve.copy());
-							castedSolve.getEqu().setRightSide(neg(castedSolve.getEqu().getRightSide()));
-							repl.add(castedSolve);
-							toBeSimplified = repl.simplify(settings);
-							break;
-						}
+			fractionalCase = new Rule("fraction case for solve",Rule.EASY) {
+				private static final long serialVersionUID = 1L;
+				Rule mainCase;
+				@Override
+				public void init() {
+					mainCase = new Rule(equ( createExpr("a/b=c") , createExpr("a-c*b=0") ),"log case for solve",Rule.EASY);
+				}
+				@Override
+				public Expr applyRuleToExpr(Expr e,Settings settings){
+					Solve solve = (Solve)e;
+					solve.setEqu( (Equ)mainCase.applyRuleToExpr(solve.getEqu(), settings) );
+					return solve;
+				}
+			};
+			
+			inverseFunctionCase = new Rule("inverse function case",Rule.EASY) {
+				private static final long serialVersionUID = 1L;
+				Rule[] cases;
+				@Override
+				public void init() {
+					cases = new Rule[] {
+							new Rule(equ( createExpr("ln(a)=b") , createExpr("a=e^b") ),"log case for solve",Rule.EASY),
+							
+							new Rule(equ( createExpr("sin(a)=b") , createExpr("a=asin(b)") ),"sin case for solve",Rule.EASY),
+							new Rule(equ( createExpr("cos(a)=b") , createExpr("a=acos(b)") ),"cos case for solve",Rule.EASY),
+							new Rule(equ( createExpr("tan(a)=b") , createExpr("a=atan(b)") ),"tan case for solve",Rule.EASY),
+							
+							new Rule(equ( createExpr("asin(a)=b") , createExpr("a=sin(b)") ),"tan case for solve",Rule.EASY),
+							new Rule(equ( createExpr("acos(a)=b") , createExpr("a=cos(b)") ),"tan case for solve",Rule.EASY),
+							new Rule(equ( createExpr("atan(a)=b") , createExpr("a=tan(b)") ),"tan case for solve",Rule.EASY),
+							
+							new Rule(equ( createExpr("lambertW(a)=b") , createExpr("a=b*e^b") ),"tan case for solve",Rule.EASY),
+					};
+				}
+				@Override
+				public Expr applyRuleToExpr(Expr e,Settings settings){
+					Solve solve = (Solve)e;
+					for(Rule rule:cases) {
+						solve.setEqu( (Equ)rule.applyRuleToExpr(solve.getEqu(), settings) );
 					}
-				}else if(!castedPower.getBase().contains( castedSolve.getVar() )) {//expo case variable only in exponent
-					castedSolve.setEqu( (Equ)expoCase.applyRuleToExpr(castedSolve.getEqu(),settings));
-				}else{//generic problem:  x^(b*x)=a -> ln(x^(b*x))=ln(a) -> x*ln(x)=ln(a)/b -> ln(x)*e^ln(x)=ln(a)/b -> ln(x)=w(ln(a)/b)
-					castedSolve.setEqu( (Equ)baseAndExpoHaveVar.applyRuleToExpr(castedSolve.getEqu(),settings));
+					return solve;
 				}
-			}
-			if(toBeSimplified instanceof Solve) {
-				if(castedSolve.getEqu().getLeftSide().equals(castedSolve.getVar())) toBeSimplified = castedSolve.getEqu();//solved !!!
-			}
-		}
-		
-		if(toBeSimplified instanceof Solve){//last resort
-			{//integer tests
-				ExprList sol = new ExprList();
-				BigInteger mag = BigInteger.valueOf(128);
-				Expr[] nums = new Expr[257+3];
-				int index = 0;
-				for(BigInteger i = mag.negate();i.compareTo(mag)!=1;i=i.add(BigInteger.ONE)){
-					Num iV = num(i);
-					nums[index]=iV;
-					index++;
-				}
-				nums[257+0] = Num.I;
-				nums[257+1] = pi();
-				nums[257+2] = e();
+			};
+			
+			powerCase = new Rule("power case for solving",Rule.EASY) {
+				private static final long serialVersionUID = 1L;
 				
-				for(Expr testValue:nums){
-					ComplexFloat test = originalProblem.replace(equ(castedSolve.getVar(),testValue)).convertToFloat(new ExprList());
-					if(Math.abs(test.real)<1){
-						Expr testZero = originalProblem.replace(equ(castedSolve.getVar(),testValue)).simplify(settings);
-						if(testZero.equals(num(0))){//double check
-							sol.add(equ(castedSolve.getVar().copy(),testValue));
+				Rule rootCase,expoCase,baseAndExpoHaveVar;
+				
+				@Override
+				public void init() {
+					rootCase = new Rule(equ( createExpr("m^n=a") , createExpr("m=a^inv(n)")  ),"root case for solve",Rule.EASY);
+					expoCase = new Rule(equ( createExpr("m^n=a")   ,createExpr("n=ln(a)/ln(m)")  ),"expo case for solve",Rule.EASY);
+					baseAndExpoHaveVar = new Rule(equ( createExpr("m^n=a")   ,createExpr("n*ln(m)=ln(a)")  ),"preperation for lambert w solve",Rule.UNCOMMON);
+				}
+				
+				@Override
+				public Expr applyRuleToExpr(Expr e,Settings settings){
+					Solve solve = (Solve)e;
+					
+					Var v = solve.getVar();
+					
+					if(solve.getEqu().getLeftSide() instanceof Power) {
+						Power pow = (Power)solve.getEqu().getLeftSide();
+						
+						boolean baseHasVar = pow.getBase().contains(v);
+						boolean expoHasVar = pow.getExpo().contains(v);
+						
+						if(baseHasVar && !expoHasVar) {
+							Div frac = Div.cast(pow.getExpo());
+							
+							boolean plusMinus = frac.isNumericalAndReal() && ((Num)frac.getNumer()).realValue.mod(BigInteger.TWO).equals(BigInteger.ZERO);
+							
+							Equ newEqu = (Equ)rootCase.applyRuleToExpr(solve.getEqu(), settings);
+							
+							if(plusMinus) {
+								Equ newEquNeg = (Equ)newEqu.copy();
+								newEquNeg.setRightSide(neg(newEquNeg.getRightSide()));
+								return exprList( solve(newEquNeg,v), solve(newEqu,v) ).simplify(settings);
+							}
+							solve.setEqu(newEqu);
+						}else if(!baseHasVar && expoHasVar) {
+							solve.setEqu((Equ)expoCase.applyRuleToExpr(solve.getEqu(), settings));
+						}else if(baseHasVar && expoHasVar) {
+							solve.setEqu((Equ)baseAndExpoHaveVar.applyRuleToExpr(solve.getEqu(), settings));
+						}
+						
+					}
+					
+					return solve;
+				}
+			};
+			
+			factorLeftSide = new Rule("factor left side",Rule.EASY) {
+				private static final long serialVersionUID = 1L;
+				
+				@Override
+				public Expr applyRuleToExpr(Expr e,Settings settings){
+					Solve solve = (Solve)e;
+					if(solve.getEqu().getLeftSide() instanceof Sum) {
+						solve.getEqu().setLeftSide(factor(solve.getEqu().getLeftSide()).simplify(settings));
+					}
+					return solve;
+				}
+			};
+			
+			rightSideZeroCase = new Rule("right side is zero",Rule.EASY) {
+				private static final long serialVersionUID = 1L;
+				
+				@Override
+				public Expr applyRuleToExpr(Expr e,Settings settings){
+					Solve solve = (Solve)e;
+					
+					Var v = solve.getVar();
+					
+					if(solve.getEqu().getRightSide().equals(Num.ZERO) && solve.getEqu().getLeftSide() instanceof Prod) {
+						ExprList solutions = new ExprList();
+						Prod leftSide = (Prod)solve.getEqu().getLeftSide();
+						
+						for(int i = 0;i<leftSide.size();i++) {
+							Expr current = leftSide.get(i);
+							if(current.contains(v)) {
+								Expr solution = solve( equ(current,num(0)), v).simplify(settings);
+								if(!(solution instanceof Solve)) {
+									solutions.add(solution);
+								}
+							}
+						}
+						if(solutions.size()>0) {
+							return solutions;
 						}
 					}
+					
+					return solve;
 				}
-				if(sol.size()>0){
-					toBeSimplified = sol.simplify(settings);
+			};
+			
+			distrLeftSide = new Rule("distribute left side",Rule.EASY) {
+				private static final long serialVersionUID = 1L;
+				
+				@Override
+				public Expr applyRuleToExpr(Expr e,Settings settings){
+					Solve solve = (Solve)e;
+					
+					if(solve.getEqu().getLeftSide() instanceof Prod) {
+						solve.getEqu().setLeftSide(distr(solve.getEqu().getLeftSide()).simplify(settings));
+					}
+					
+					return solve;
 				}
-			}
+			};
+			
+			moveToLeftSide = new Rule("move everything to the left side",Rule.VERY_EASY) {
+				private static final long serialVersionUID = 1L;
+				
+				Rule[] cases;
+				
+				@Override
+				public void init() {
+					cases = new Rule[] {
+							new Rule("solve(a=b,x)=solve(a-b=0,x)","move everything to the left side",Rule.VERY_EASY),
+							new Rule("solve(a>b,x)=solve(a-b>0,x)","move everything to the left side",Rule.VERY_EASY),
+							new Rule("solve(a<b,x)=solve(a-b<0,x)","move everything to the left side",Rule.VERY_EASY),
+					};
+				}
+				
+				@Override
+				public Expr applyRuleToExpr(Expr e,Settings settings){
+					for(Rule r:cases){
+						e = r.applyRuleToExpr(e, settings);
+					}
+					return e;
+				}
+				
+			};
+			
+			moveNonVarPartsInProd = new Rule("move non var parts to the right side (prod)",Rule.EASY) {
+				private static final long serialVersionUID = 1L;
+
+				@Override
+				public Expr applyRuleToExpr(Expr e,Settings settings){
+					Solve solve = (Solve)e;
+					
+					Var v = solve.getVar();
+					
+					if(solve.getEqu().getLeftSide() instanceof Prod) {
+						Prod leftSide = (Prod)solve.getEqu().getLeftSide();
+						
+						Prod rightSide = Prod.cast(solve.getEqu().getRightSide());
+						for(int i = 0;i<leftSide.size();i++) {
+							if(!leftSide.get(i).contains(v)) {
+								Expr temp = leftSide.get(i);
+								
+								if(!temp.containsVars()) {
+									if(eval(equLess(temp,num(0))).simplify(settings).equals(BoolState.TRUE)) {
+										solve.getEqu().type = -solve.getEqu().type;
+									}
+								}
+								
+								leftSide.remove(i);
+								rightSide.add(inv(temp));
+								i--;
+							}
+						}
+						
+						solve.getEqu().setLeftSide(Prod.unCast(leftSide));
+						solve.getEqu().setRightSide(rightSide.simplify(settings));
+					}
+					
+					return solve;
+				}
+			};
+			
+			moveNonVarPartsInSum = new Rule("move non var parts to the right side (sum)",Rule.EASY) {
+				private static final long serialVersionUID = 1L;
+
+				@Override
+				public Expr applyRuleToExpr(Expr e,Settings settings){
+					Solve solve = (Solve)e;
+					
+					Var v = solve.getVar();
+					
+					if(solve.getEqu().getLeftSide() instanceof Sum) {
+						Sum leftSide = (Sum)solve.getEqu().getLeftSide();
+						
+						Sum rightSide = Sum.cast(solve.getEqu().getRightSide());
+						for(int i = 0;i<leftSide.size();i++) {
+							if(!leftSide.get(i).contains(v)) {
+								Expr temp = leftSide.get(i);
+								leftSide.remove(i);
+								rightSide.add(neg(temp));
+								i--;
+							}
+						}
+						
+						solve.getEqu().setLeftSide(Sum.unCast(leftSide));
+						solve.getEqu().setRightSide(rightSide.simplify(settings));
+					}
+					
+					return solve;
+				}
+			};
+			
+			loopedSequence = exprList(
+				rightSideZeroCase,
+				moveToLeftSide,
+				distrLeftSide,
+				moveNonVarPartsInSum,
+				factorLeftSide,
+				moveNonVarPartsInProd,
+				quadraticCase,
+				powerCase,
+				inverseFunctionCase,
+				lambertWCases,
+				sinCosSumCase,
+				rootCases,
+				fractionalCase
+			);
 		}
 		
-		toBeSimplified.flags.simple = true;
-		
-		return toBeSimplified;
-	}
-	
-	static void moveToLeftSide(Solve solve) {
-		if(!solve.getEqu().getRightSide().equals(Num.ZERO)) {
-			solve.getEqu().setLeftSide( sub(solve.getEqu().getLeftSide(),solve.getEqu().getRightSide()) );
-			solve.getEqu().setRightSide(num(0));
-		}
-	}
-	
-	static void sumMoveNonImportantToRightSide(Solve solve,Settings settings) {
-		if(solve.getEqu().getLeftSide() instanceof Sum) {
-			Sum leftSideSum = (Sum)solve.getEqu().getLeftSide();
-			Sum newRightSide = new Sum();
-			newRightSide.add(solve.getEqu().getRightSide());
-			for(int i = 0;i<leftSideSum.size();i++) {
-				if(!leftSideSum.get(i).contains(solve.getVar())) {
-					newRightSide.add(neg(leftSideSum.get(i)));
-					leftSideSum.remove(i);
-					i--;
+		@Override
+		public Expr applyRuleToExpr(Expr e,Settings settings){
+			Expr oldState = null;
+			Solve solve = (Solve)e;
+			while(!solve.getEqu().equals(oldState)) {
+				oldState = solve.getEqu().copy();
+				for(int i = 0;i<loopedSequence.size();i++) {
+					e = ((Rule)loopedSequence.get(i)).applyRuleToExpr(solve, settings);
+					if(!(e instanceof Solve)) break;
+					solve = (Solve)e;
+				}
+				if(e instanceof Solve) {
+					solve = (Solve)e;
+					if(solve.getEqu().getLeftSide().equals(solve.getVar())) {
+						return solve.getEqu();
+					}
 				}
 			}
-			solve.getEqu().setRightSide(newRightSide.simplify(settings));
-			solve.getEqu().setLeftSide(leftSideSum.simplify(settings));
+			return e;
 		}
+	};
+	
+	public static void loadRules() {
+		ruleSequence = exprList(
+				solvedCase
+		);
 	}
-	static void prodMoveNonImportantToRightSide(Solve solve,Settings settings) {
-		if(solve.getEqu().getLeftSide() instanceof Prod) {
-			Prod leftSideProd = (Prod)solve.getEqu().getLeftSide();
-			Prod newRightSide = new Prod();
-			newRightSide.add(solve.getEqu().getRightSide());
-			for(int i = 0;i<leftSideProd.size();i++) {
-				if(!leftSideProd.get(i).contains(solve.getVar())) {
-					newRightSide.add(inv(leftSideProd.get(i)));
-					leftSideProd.remove(i);
-					i--;
-				}
-			}
-			solve.getEqu().setRightSide(newRightSide.simplify(settings));
-			solve.getEqu().setLeftSide(leftSideProd.simplify(settings));
-		}
+	
+	@Override
+	ExprList getRuleSequence() {
+		return ruleSequence;
 	}
 	
 	@Override
@@ -351,8 +548,7 @@ public class Solve extends Expr{
 		FloatExpr guess = floatExpr(INITIAL_GUESS);
 		Expr expr = sub(getEqu().getLeftSide(),getEqu().getRightSide());
 		expr = sub(getVar(),div(expr,diff(expr,getVar())));
-		ExprList varDefs2 = (ExprList) varDefs.copy();
-		varDefs2.add(equ(getVar(),guess));
+		ExprList varDefs2 = exprList(equ(getVar(),guess));
 		
 		for(int i = 0;i<16;i++) guess.value = expr.convertToFloat(varDefs2);
 		
@@ -361,7 +557,7 @@ public class Solve extends Expr{
 	
 	
 	
-	/////////
+	///////// polynomial solving
 	private static double polyOut(double[] poly,double x) {
 		double out = 0;
 		double pow = 1;
@@ -497,11 +693,6 @@ public class Solve extends Expr{
 		}
 		
 		return solutions;
-	}
-	@Override
-	ExprList getRuleSequence() {
-		// TODO Auto-generated method stub
-		return null;
 	}
 
 }

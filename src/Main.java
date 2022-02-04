@@ -45,7 +45,7 @@ public class Main extends QuickMath{
 	}
 	
 	static void testRegion() {
-		runScript("bitLogicTest.bl",false);
+		//runScript("bitLogicTest.bl",false);
 	}
 	
 	public static void main(String[] args) {

@@ -193,7 +193,7 @@ public class Integrate extends Expr{
 		public void init(){
 			cases = new Rule[]{
 					new Rule("integrate(1/sqrt(a-x^2),x)=asin(x/sqrt(a))","simple integral leading to arcsin",Rule.EASY),
-					new Rule("integrate(1/sqrt(a-b*x^2),x)=asin((sqrt(b)*x)/sqrt(a))/sqrt(b)","simple integral leading to arcsin",Rule.EASY),
+					new Rule("integrate(1/sqrt(a+b*x^2),x)=asin((sqrt(-b)*x)/sqrt(a))/sqrt(-b)","eval(b<0)","simple integral leading to arcsin",Rule.EASY),
 			};
 			
 		}
@@ -215,7 +215,7 @@ public class Integrate extends Expr{
 		public Expr applyRuleToExpr(Expr e,Settings settings){
 			Integrate integ = (Integrate)e;
 			
-			if(!integ.get().containsType(Integrate.class)) {
+			if(!integ.get().containsType(Integrate.class) && !isPolynomialUnstrict(integ.get(),integ.getVar())) {
 				Div innerDiv = Div.cast(integ.get().copy());
 				Prod innerProd = Prod.cast(innerDiv.getNumer());
 				innerDiv.setNumer(innerProd);
@@ -468,7 +468,9 @@ public class Integrate extends Expr{
 		public void init(){
 			cases = new Rule[]{
 					new Rule("integrate(x^2/sqrt(a-x^2),x)=a*asin(x/sqrt(a))/2-x*sqrt(a-x^2)/2","trig sub",Rule.DIFFICULT),
-					new Rule("integrate(x^2/sqrt(a-b*x^2),x)=a*asin((x*sqrt(b))/sqrt(a))/(2*b^(3/2))-x*sqrt(a-b*x^2)/(2*b)","trig sub",Rule.VERY_DIFFICULT),
+					new Rule("integrate(x^2/sqrt(a+b*x^2),x)=a*asin((x*sqrt(-b))/sqrt(a))/(2*(-b)^(3/2))+x*sqrt(a-(-b)*x^2)/(2*b)","eval(b<0)","trig sub",Rule.VERY_DIFFICULT),
+					new Rule("integrate(sqrt(a-x^2),x)=a*asin(x/sqrt(a))/2+x*sqrt(a-x^2)/2","trig sub",Rule.VERY_DIFFICULT),
+					new Rule("integrate(sqrt(a+b*x^2),x)=a*asin(x*sqrt(-b)/sqrt(a))/(2*sqrt(-b))+x*sqrt(a+b*x^2)/2","eval(b<0)","trig sub",Rule.VERY_DIFFICULT),
 			};
 		}
 		
@@ -533,6 +535,18 @@ public class Integrate extends Expr{
 		
 	};
 	
+	static Rule fullExpandInner = new Rule("full expansion",Rule.TRICKY) {
+		private static final long serialVersionUID = 1L;
+		
+		@Override
+		public Expr applyRuleToExpr(Expr e,Settings settings) {
+			Integrate integ = (Integrate)e;
+			integ.set(0, SimpleFuncs.fullExpand.applyRuleToExpr(integ.get(), settings) );
+			return integ;
+		}
+		
+	};
+	
 	static ExprList ruleSequence = null;
 	
 	public static void loadRules(){
@@ -567,8 +581,10 @@ public class Integrate extends Expr{
 				StandardRules.distrInner,
 				specialUSub,
 				integrationByParts,
+				compressRoots,
 				normalUSub,
 				integrationByPartsSpecial,
+				fullExpandInner,
 				StandardRules.linearOperator
 				
 		);

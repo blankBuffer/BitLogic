@@ -48,7 +48,7 @@ public class Func extends Expr{
 	
 	@Override
 	public ComplexFloat convertToFloat(ExprList varDefs) {
-		return null;
+		return new ComplexFloat(0,0);
 	}
 	@Override
 	ExprList getRuleSequence() {

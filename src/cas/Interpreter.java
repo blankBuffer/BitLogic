@@ -49,15 +49,15 @@ public class Interpreter extends QuickMath{
 	}
 	
 	public static boolean isOperator(String string) {
-		return string.matches("[+\\-*/^,=!;:\\~\\&\\|\\[\\]\\{\\}\\(\\)]")&&!string.contains(" ");
+		return string.matches("[+\\-*/^,=><!;:\\~\\&\\|\\[\\]\\{\\}\\(\\)]")&&!string.contains(" ");
 	}
 	
 	public static boolean isProbablyExpr(String string) {
-		return string.matches("pi|i|e|.*[(0-9)(+\\-*/^,=!;:\\~\\&\\|\\[\\]\\{\\}\\(\\))].*")&&!string.contains(" ");
+		return string.matches("pi|i|e|.*[(0-9)(+\\-*/^,=><!;:\\~\\&\\|\\[\\]\\{\\}\\(\\))].*")&&!string.contains(" ");
 	}
 	
 	public static boolean containsOperators(String string) {
-		return string.matches(".*[+\\-*/^,=!;:\\~\\&\\|\\[\\]\\{\\}\\(\\)].*")&&!string.contains(" ");
+		return string.matches(".*[+\\-*/^,=><!;:\\~\\&\\|\\[\\]\\{\\}\\(\\)].*")&&!string.contains(" ");
 	}
 	
 	static void printTokens(ArrayList<String> tokens) {//for debugging
@@ -141,16 +141,22 @@ public class Interpreter extends QuickMath{
 						paramsArray[i] = params.get(i);
 					}
 					
-					Expr f = SimpleFuncs.getFuncByName(op,defs,paramsArray);
-					
-					
-					return f;
+					try {
+						Expr f = SimpleFuncs.getFuncByName(op,defs,paramsArray);
+						return f;
+					}catch(Exception e) {
+						//throw new Exception("error with parameters");
+						if(e instanceof java.lang.ArrayIndexOutOfBoundsException) {
+							throw new Exception("wrong number of parameters");
+						}
+						throw new Exception("wrong type in parameters");
+					}
 				}
 				
 			}
 		}
-		boolean isSum = false,isProd = false,isList = false,isFactorial = false,isScript = false,isAnd = false,isOr = false,isNot = false;
-		int indexOfPowToken = -1,indexOfEquToken = -1;
+		boolean isSum = false,isProd = false,isList = false,isFactorial = false,isScript = false,isAnd = false,isOr = false,isNot = false,isEqu = false;
+		int indexOfPowToken = -1,equCount = 0;
 		boolean lastWasOperator = false;
 		for(int i = 0;i<tokens.size();i++) {
 			String token = tokens.get(i);
@@ -158,8 +164,9 @@ public class Interpreter extends QuickMath{
 			if(token.equals(",")) {
 				isList = true;
 				lastWasOperator = true;
-			}else if(token.equals("=")) {
-				indexOfEquToken = i;
+			}else if(token.equals("=") || token.equals(">") || token.equals("<")) {
+				isEqu = true;
+				equCount++;
 				lastWasOperator = true;
 			}else if(token.equals("+") || (token.equals("-") && !lastWasOperator)) {//the last operator check avoids error of misinterpreting x*-2*5 as a sum
 				isSum = true;
@@ -172,9 +179,6 @@ public class Interpreter extends QuickMath{
 				lastWasOperator = true;
 			}else if(token.equals("!")) {
 				isFactorial = true;
-				lastWasOperator = true;
-			}else if(token.equals(":")) {
-				//isAssignment = true;
 				lastWasOperator = true;
 			}else if(token.equals(";")) {
 				isScript = true;
@@ -228,7 +232,22 @@ public class Interpreter extends QuickMath{
 			
 			return list;
 			
-		}else if(indexOfEquToken != -1) {//is equation
+		}else if(isEqu) {//is equation
+			
+			int indexOfEquToken = 0;
+			int currentCount = 0;
+			
+			for(int i = 0; i < tokens.size();i++) {
+				String token = tokens.get(i);
+				if(token.equals("=") || token.equals(">") || token.equals("<")) {
+					currentCount++;
+				}
+				if(currentCount == equCount/2+1 ) {
+					indexOfEquToken = i;
+					break;
+				}
+			}
+			
 			ArrayList<String> leftSideTokens = new ArrayList<String>();
 			for(int i = 0;i<indexOfEquToken;i++) {
 				leftSideTokens.add(tokens.get(i));
@@ -237,7 +256,15 @@ public class Interpreter extends QuickMath{
 			for(int i = indexOfEquToken+1;i<tokens.size();i++) {
 				rightSideTokens.add(tokens.get(i));
 			}
-			return equ(createExprFromTokens(leftSideTokens,defs,settings),createExprFromTokens(rightSideTokens,defs,settings));
+			char symbol = tokens.get(indexOfEquToken).charAt(0);
+			
+			Expr leftSide = createExprFromTokens(leftSideTokens,defs,settings);
+			Expr rightSide = createExprFromTokens(rightSideTokens,defs,settings);
+			
+			if(symbol == '=') return equ(leftSide,rightSide);
+			if(symbol == '>') return equGreater(leftSide,rightSide);
+			if(symbol == '<') return equLess(leftSide,rightSide);
+			
 		}else if(isOr){
 			tokens.add("|");
 			Or or = new Or();
@@ -388,7 +415,7 @@ public class Interpreter extends QuickMath{
 	
 	
 	static char[] basicOperators = new char[] {
-		'*','+','-','^','/',',','=','!',':',';','&','|','~'
+		'*','+','-','^','/',',','=','!',':',';','&','|','~','<','>'
 	};
 	private static boolean isBasicOperator(char c) {
 		for(char o:basicOperators) {

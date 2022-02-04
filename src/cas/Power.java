@@ -29,10 +29,10 @@ public class Power extends Expr{
 	}
 	
 	private static Rule baseHasPower = new Rule("(a^b)^c=a^(b*c)","base has power",Rule.EASY);
-	private static Rule expoOfZero = new Rule("a^0=1","exponent is zero",Rule.VERY_EASY);
+	private static Rule expoOfZero = new Rule("a^0=1","~eval(a=0)","exponent is zero",Rule.VERY_EASY);
 	private static Rule eToLn = new Rule("e^ln(a)=a","e to ln",Rule.EASY);
 	private static Rule eToFracLn = new Rule("e^(ln(a)/b)=a^(1/b)","e to fraction with ln",Rule.UNCOMMON);
-	private static Rule zeroToExpo = new Rule("0^x=0","base is zero",Rule.VERY_EASY);
+	private static Rule zeroToExpo = new Rule("0^x=0","~eval(x=0)","base is zero",Rule.VERY_EASY);
 	private static Rule baseToLn = new Rule("a^ln(b)=e^(ln(a)*ln(b))","base not e and expo has log",Rule.UNCOMMON);
 	private static Rule expOfLambertW = new Rule("e^(lambertW(x))=x/lambertW(x)","e to lambert w",Rule.UNCOMMON);
 	private static Rule expOfLambertWProd = new Rule("e^(lambertW(x)*n)=x^n/lambertW(x)^n","e to lambert w product",Rule.TRICKY);
@@ -47,7 +47,7 @@ public class Power extends Expr{
 		private static final long serialVersionUID = 1L;
 
 		@Override
-		Expr applyRuleToExpr(Expr e,Settings settings){
+		public Expr applyRuleToExpr(Expr e,Settings settings){
 			Power power = (Power)e;
 			
 			if(Limit.stripDirection(power.getBase()).equals(Num.ONE) && !power.getExpo().equals(inf())){
@@ -68,11 +68,13 @@ public class Power extends Expr{
 		private static final long serialVersionUID = 1L;
 
 		@Override
-		Expr applyRuleToExpr(Expr e,Settings settings){
+		public Expr applyRuleToExpr(Expr e,Settings settings){
 			Power power = (Power)e;
 			if(power.getBase() instanceof Num && power.getExpo() instanceof Num) {
 				Num base = (Num)power.getBase();
 				Num expo = (Num)power.getExpo();
+				
+				if(power.contains(Num.ZERO)) return power;
 				
 				if(!expo.isComplex() && expo.realValue.compareTo(BigInteger.valueOf(10000))==-1) {
 					if(expo.signum()!=-1 ) {
@@ -89,7 +91,7 @@ public class Power extends Expr{
 		private static final long serialVersionUID = 1L;
 
 		@Override
-		Expr applyRuleToExpr(Expr e,Settings settings){
+		public Expr applyRuleToExpr(Expr e,Settings settings){
 			Power pow = (Power)e;
 			if(pow.getExpo().negative()) {
 				pow.setExpo(neg(pow.getExpo()));
@@ -105,7 +107,7 @@ public class Power extends Expr{
 		private static final long serialVersionUID = 1L;
 
 		@Override
-		Expr applyRuleToExpr(Expr e,Settings settings){
+		public Expr applyRuleToExpr(Expr e,Settings settings){
 			Power power = (Power)e;
 			
 			Expr factoredExpo = factor(power.getExpo()).simplify(settings);
@@ -122,7 +124,7 @@ public class Power extends Expr{
 		private static final long serialVersionUID = 1L;
 
 		@Override
-		Expr applyRuleToExpr(Expr e,Settings settings){
+		public Expr applyRuleToExpr(Expr e,Settings settings){
 			Power power = (Power)e;
 			
 			Expr factoredBase = factor(power.getBase()).simplify(settings);
@@ -140,7 +142,7 @@ public class Power extends Expr{
 
 		
 		@Override
-		Expr applyRuleToExpr(Expr e,Settings settings){
+		public Expr applyRuleToExpr(Expr e,Settings settings){
 			Power pow = (Power)e;
 			
 			if(pow.getBase().equals(e())) {
@@ -187,7 +189,7 @@ public class Power extends Expr{
 		private static final long serialVersionUID = 1L;
 
 		@Override
-		Expr applyRuleToExpr(Expr e,Settings settings){
+		public Expr applyRuleToExpr(Expr e,Settings settings){
 			Power pow = (Power)e;
 			if(pow.getExpo() instanceof Sum && pow.getBase().equals(e())) {
 				Sum expoSum = (Sum)pow.getExpo();
@@ -215,7 +217,7 @@ public class Power extends Expr{
 		private static final long serialVersionUID = 1L;
 
 		@Override
-		Expr applyRuleToExpr(Expr e,Settings settings){
+		public Expr applyRuleToExpr(Expr e,Settings settings){
 			Power pow = (Power)e;
 			if(pow.getBase() instanceof Num && !(pow.getExpo() instanceof Num)) {
 				
@@ -262,7 +264,7 @@ public class Power extends Expr{
 		private static final long serialVersionUID = 1L;
 
 		@Override
-		Expr applyRuleToExpr(Expr e,Settings settings){
+		public Expr applyRuleToExpr(Expr e,Settings settings){
 			Power pow = (Power)e;
 			
 			if(pow.getBase() instanceof Num) {
@@ -335,7 +337,7 @@ public class Power extends Expr{
 		private static final long serialVersionUID = 1L;
 
 		@Override
-		Expr applyRuleToExpr(Expr e,Settings settings){
+		public Expr applyRuleToExpr(Expr e,Settings settings){
 			Power power = (Power)e;
 			
 			if(power.getBase() instanceof Num && !(power.getExpo() instanceof Num)) {
@@ -361,7 +363,7 @@ public class Power extends Expr{
 		private static final long serialVersionUID = 1L;
 
 		@Override
-		Expr applyRuleToExpr(Expr e,Settings settings){
+		public Expr applyRuleToExpr(Expr e,Settings settings){
 			Power pow = (Power)e;
 			
 			if(pow.getBase() instanceof Prod) {
@@ -400,7 +402,7 @@ public class Power extends Expr{
 		private static final long serialVersionUID = 1L;
 
 		@Override
-		Expr applyRuleToExpr(Expr e,Settings settings){
+		public Expr applyRuleToExpr(Expr e,Settings settings){
 			Power pow = (Power)e;
 			
 			if(pow.getBase().equals(epsilon()) && !pow.getExpo().negative() && !Limit.zeroOrEpsilon(pow.getExpo())){

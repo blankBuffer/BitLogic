@@ -189,12 +189,18 @@ public class Sum extends Expr{
 				else if(sum.get(i) instanceof Prod) {
 					Prod innerProd = (Prod)sum.get(i);
 					int innerLogCount = 0;
+					boolean onlyConstantsOutside = true;
+					
 					for(int j = 0;j<innerProd.size();j++) {
-						if(innerProd.get(j) instanceof Ln && !(innerProd.get(j).get() instanceof Sum)) {
-							innerLogCount++;
+						if(innerProd.get(j) instanceof Ln) {
+							if(!(innerProd.get(j).get() instanceof Sum)) {
+								innerLogCount++;
+							}
+						}else {
+							if(innerProd.get(j).containsVars())onlyConstantsOutside = false;
 						}
 					}
-					if(innerLogCount == 1) {
+					if(innerLogCount == 1 && onlyConstantsOutside) {//we want it to constuct a product polynomial
 						indexSet.ints.add(i);
 						indexOfProdWithLog.ints.add(i);
 					}

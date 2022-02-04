@@ -19,7 +19,7 @@ public class Factor extends Expr{
 		private static final long serialVersionUID = 1L;
 
 		@Override
-		Expr applyRuleToExpr(Expr e,Settings settings) {
+		public Expr applyRuleToExpr(Expr e,Settings settings) {
 			Factor factor = (Factor)e;
 			Expr expr = factor.get();
 			
@@ -54,7 +54,7 @@ public class Factor extends Expr{
 		private static final long serialVersionUID = 1L;
 
 		@Override
-		Expr applyRuleToExpr(Expr e,Settings settings) {
+		public Expr applyRuleToExpr(Expr e,Settings settings) {
 			Factor factor = (Factor)e;
 			Expr expr = factor.get();
 			Var v = mostCommonVar(expr);

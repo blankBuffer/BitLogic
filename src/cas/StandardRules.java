@@ -13,7 +13,7 @@ public class StandardRules extends QuickMath{
 				e.set(0, newInner);
 				Expr out = neg(e);
 				
-				return out;
+				return out.simplify(settings);
 			}
 			
 			return e;
@@ -31,7 +31,7 @@ public class StandardRules extends QuickMath{
 				Expr newInner = neg(e.get()).simplify(settings);
 				e.set(0, newInner);
 				
-				return e;
+				return e.simplify(settings);
 			}
 			
 			return e;

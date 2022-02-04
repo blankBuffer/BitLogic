@@ -49,6 +49,8 @@ public class Rule extends Expr{
 				return true;
 			}//else not commutative
 			
+			if(template instanceof Equ && ((Equ)template).type != ((Equ)other).type ) return false;
+			
 			for(int i = 0;i<template.size();i++) {
 				if(!fastSimilarStruct(template.get(i),other.get(i))) return false;
 			}
@@ -115,7 +117,7 @@ public class Rule extends Expr{
 				return null;
 			}
 			ExprList equs = new ExprList();
-			for(int i = 0;i<parts.size();i++) equs.add(new Equ(exampleParts.get(i),parts.get(i)));
+			for(int i = 0;i<parts.size();i++) equs.add(equ(exampleParts.get(i),parts.get(i)));
 			
 			return equs;
 			
@@ -242,7 +244,7 @@ public class Rule extends Expr{
 	
 	public Equ pattern = null;
 	public Expr condition = null;
-	Expr applyRuleToExpr(Expr expr,Settings settings){//note this may modify the original expression. The return is there so that if it changes expression type
+	public Expr applyRuleToExpr(Expr expr,Settings settings){//note this may modify the original expression. The return is there so that if it changes expression type
 		if(fastSimilarStruct(pattern.getLeftSide(),expr)) {//we use fast similar struct here because we don't want to call the getParts function twice and its faster
 			
 			ExprList exampleParts = new ExprList();
@@ -252,11 +254,12 @@ public class Rule extends Expr{
 				return expr;
 			}
 			ExprList equs = new ExprList();
-			for(int i = 0;i<parts.size();i++) equs.add(new Equ(exampleParts.get(i),parts.get(i)));
+			for(int i = 0;i<parts.size();i++) equs.add(equ(exampleParts.get(i),parts.get(i)));
 			
 			if(condition != null) {
-				Expr conditionResult = condition.replace(equs);
-				if(conditionResult.equals(BoolState.FALSE)) return expr;
+				Expr condition = this.condition.replace(equs);
+				condition = condition.simplify(settings);
+				if(condition.simplify(settings).equals(BoolState.FALSE)) return expr;
 			}
 			
 			Expr out = pattern.getRightSide().replace(equs);
@@ -306,6 +309,8 @@ public class Rule extends Expr{
 		SimpleFuncs.loadRules();
 		Sum.loadRules();
 		Tan.loadRules();
+		
+		Solve.loadRules();
 		System.out.println("done loading Rules!");
 	}
 	

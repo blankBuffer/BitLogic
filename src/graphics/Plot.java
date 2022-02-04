@@ -20,7 +20,7 @@ public class Plot extends JPanel{
 	
 	int mouseX,mouseY,pMouseX,pMouseY;
 	boolean mousePressed;
-	private Color backgroundColor = Color.DARK_GRAY,foregroundColor = Color.LIGHT_GRAY;
+	private Color backgroundColor = Color.WHITE,foregroundColor = Color.DARK_GRAY;
 	StackEditor stackEditor;
 	public static final int MODE_2D = 0,MODE_3D = 1;
 	public int mode = MODE_2D;
@@ -35,6 +35,8 @@ public class Plot extends JPanel{
 			yMax = 10;
 			zMin = -10;
 			zMax = 10;
+			zRot = -0.2;
+			xRot = -0.2;
 		}
 		public PlotWindowParams(double xMin,double xMax,double yMin,double yMax) {
 			this.xMin = xMin;
@@ -343,10 +345,10 @@ public class Plot extends JPanel{
 					Point p3 = points[yIndex+1][xIndex+1];
 					Point p4 = points[yIndex][xIndex+1];
 					
-					int brightness = (int)(((double)xIndex/xRes)*200.0+55.0);
-					Color color = new Color( brightness,brightness,brightness/2 );
+					int brightness = (int) Math.min(Math.max(128.0-(p1.y-3.5)*256.0, 32),255);
+					Color color = new Color( brightness,brightness,brightness );
 					
-					if((xIndex+yIndex)%2==0) color = color.darker();
+					if((xIndex/2+yIndex/2)%2==0) color = color.darker();
 					
 					if(p1.y>0 && p2.y>0 && p3.y>0 && p4.y>0) {
 						quads.add(new Quad(new int[]{(int) p1.x,(int) p2.x,(int) p3.x,(int) p4.x}, new int[]{(int) p1.z,(int) p2.z,(int) p3.z,(int) p4.z}, p1.y+p3.y ,color));
@@ -485,10 +487,12 @@ public class Plot extends JPanel{
 		
 	}
 	
-	public void setBackgroundColor(Color color) {
+	@Override
+	public void setBackground(Color color) {
 		backgroundColor = color;
 	}
-	public void setForegroundColor(Color color) {
+	@Override
+	public void setForeground(Color color) {
 		foregroundColor = color;
 	}
 }

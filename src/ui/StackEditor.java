@@ -47,7 +47,8 @@ public class StackEditor extends cas.QuickMath {
 		} catch (InterruptedException e) {
 			e.printStackTrace();
 		}
-		stack.set(size() - 1, expr);
+		
+		if(expr != null) stack.set(size() - 1, expr);
 	}
 
 	Settings currentSettings = new Settings();
@@ -561,7 +562,8 @@ public class StackEditor extends cas.QuickMath {
 				stack.add(new BoolState(last().equals(sLast())));
 			} else if(command.equals("exactlyEqual")){
 				stack.add(new BoolState(last().exactlyEquals(sLast())));
-			} else if (command.contains(":") && !command.contains(" ")) {
+			}
+			else if (command.contains(":") && !command.contains(" ")) {
 				String[] parts = command.split(":");
 				command = parts[0];
 
