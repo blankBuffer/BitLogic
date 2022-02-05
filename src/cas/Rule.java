@@ -22,10 +22,7 @@ public class Rule extends Expr{
 			
 			if(template instanceof Num || template instanceof BoolState || template instanceof FloatExpr || template instanceof Var) return template.equals(other);
 			
-			if(!checked) {
-				template.sort();
-				other.sort();
-			}
+			if(!checked) other.sort();
 			if(template.size() != other.size()) return false;
 			
 			if(!checked) if(Rule.checkForMatches(template,other) == false) return false;
@@ -216,12 +213,14 @@ public class Rule extends Expr{
 	
 	public Rule(String pattern,String name,int difficulty){
 		this.pattern = (Equ) createExpr(pattern);
+		this.pattern.getLeftSide().sort();
 		this.name = name;
 		this.difficulty = difficulty;
 		init();
 	}
 	public Rule(String pattern,String condition,String name,int difficulty){
 		this.pattern = (Equ) createExpr(pattern);
+		this.pattern.getLeftSide().sort();
 		this.condition = createExpr(condition);
 		this.name = name;
 		this.difficulty = difficulty;
@@ -229,6 +228,7 @@ public class Rule extends Expr{
 	}
 	public Rule(Equ pattern,String name,int difficulty){
 		this.pattern = pattern;
+		this.pattern.getLeftSide().sort();
 		this.name = name;
 		this.difficulty = difficulty;
 		init();
@@ -245,8 +245,8 @@ public class Rule extends Expr{
 	public Equ pattern = null;
 	public Expr condition = null;
 	public Expr applyRuleToExpr(Expr expr,Settings settings){//note this may modify the original expression. The return is there so that if it changes expression type
+		//System.out.println(pattern.getLeftSide()+" "+expr+" "+fastSimilarStruct(pattern.getLeftSide(),expr));
 		if(fastSimilarStruct(pattern.getLeftSide(),expr)) {//we use fast similar struct here because we don't want to call the getParts function twice and its faster
-			
 			ExprList exampleParts = new ExprList();
 			ExprList parts = new ExprList();
 			boolean match = checkForMatches(exampleParts,parts,pattern.getLeftSide(),expr);

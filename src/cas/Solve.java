@@ -6,42 +6,6 @@ public class Solve extends Expr{
 	
 	private static final long serialVersionUID = 8530995692151126277L;
 	
-	static ArrayList<Rule> caseTable = new ArrayList<Rule>();
-	static{//make rare case table
-		ArrayList<Equ> caseTable = new ArrayList<Equ>();
-		
-		Expr rareCase3Ans = createExpr("[x=(sqrt(-4*a*b+4*a*y^2+4*b*z^2+m^2+4*m*y*z)+m+2*y*z)/(2*(y^2-b)),x=(-sqrt(-4*a*b+4*a*y^2+4*b*z^2+m^2+4*m*y*z)+m+2*y*z)/(2*(y^2-b))]");
-		caseTable.add(equ( createExpr("y*x+sqrt(a+m*x+b*x^2)=z") , rareCase3Ans ));
-		caseTable.add(equ( createExpr("y*x-sqrt(a+m*x+b*x^2)=z") , rareCase3Ans ));
-		Expr rareCase3Ans2 = createExpr("[x=(sqrt(-4*a*b+4*a*y^2+4*b*z^2+m^2+4*m*y*z)+m+2*y*z)/(2*(b-y^2)),x=(-sqrt(-4*a*b+4*a*y^2+4*b*z^2+m^2+4*m*y*z)+m+2*y*z)/(2*(b-y^2))]");
-		caseTable.add(equ( createExpr("-y*x+sqrt(a+m*x+b*x^2)=z") , rareCase3Ans2 ));
-		
-		Expr rareCase4Ans = createExpr("[x=(-sqrt(-4*a*b*k^4+4*a*k^2*y^2+4*b*k^2*z^2+k^4*m^2+4*k^2*m*y*z)-k^2*m-2*y*z)/(2*(b*k^2-y^2)),x=(sqrt(-4*a*b*k^4+4*a*k^2*y^2+4*b*k^2*z^2+k^4*m^2+4*k^2*m*y*z)-k^2*m-2*y*z)/(2*(b*k^2-y^2))]");
-		caseTable.add(equ( createExpr("y*x+k*sqrt(a+m*x+b*x^2)=z") , rareCase4Ans ));
-		caseTable.add(equ( createExpr("y*x-k*sqrt(a+m*x+b*x^2)=z") , rareCase4Ans ));
-		Expr rareCase4Ans2 = createExpr("[x=(-sqrt(-4*a*b*k^4+4*a*k^2*y^2+4*b*k^2*z^2+k^4*m^2+4*k^2*m*y*z)-k^2*m-2*y*z)/(-2*(b*k^2-y^2)),x=(sqrt(-4*a*b*k^4+4*a*k^2*y^2+4*b*k^2*z^2+k^4*m^2+4*k^2*m*y*z)-k^2*m-2*y*z)/(-2*(b*k^2-y^2))]");
-		caseTable.add(equ( createExpr("-y*x+k*sqrt(a+m*x+b*x^2)=z") , rareCase4Ans2 ));
-		
-		
-		//subtract same type of function
-		{
-			caseTable.add(equ( createExpr("sin(a)-sin(y)=0") , createExpr("a-y=0") ));
-			caseTable.add(equ( createExpr("cos(a)-cos(y)=0") , createExpr("a-y=0") ));
-			caseTable.add(equ( createExpr("tan(a)-tan(y)=0") , createExpr("a-y=0") ));
-			caseTable.add(equ( createExpr("asin(a)-asin(y)=0") , createExpr("a-y=0") ));
-			caseTable.add(equ( createExpr("acos(a)-acos(y)=0") , createExpr("a-y=0") ));
-			caseTable.add(equ( createExpr("atan(a)-atan(y)=0") , createExpr("a-y=0") ));
-			caseTable.add(equ( createExpr("ln(a)-ln(y)=0") , createExpr("a-y=0") ));
-			caseTable.add(equ( createExpr("a^m-a^y=0") , createExpr("m-y=0") ));
-			caseTable.add(equ( createExpr("m^a-y^a=0") , createExpr("m-y=0") ));
-			//negative versions
-		}
-		
-		for(Equ eq:caseTable) {
-			Solve.caseTable.add(new Rule(eq,"solving from case table",Rule.DIFFICULT));
-		}
-	}
-	
 	Solve(){}//
 	public Solve(Equ e,Var v){
 		add(e);
@@ -81,9 +45,51 @@ public class Solve extends Expr{
 		Rule lambertWCases;
 		Rule sinCosSumCase;
 		Rule rootCases;
+		Rule subtractiveZero;
+		
+		public Expr goThroughEquCases(Expr e,Settings settings,Rule[] cases) {
+			Solve solve = (Solve)e;
+			Var v = solve.getVar();
+			for(Rule rule:cases) {
+				Expr result = rule.applyRuleToExpr(solve.getEqu(), settings);
+				if(result instanceof Equ) {
+					solve.setEqu( (Equ)result );
+				}else if(result instanceof ExprList) {
+					for(int i = 0;i<result.size();i++) result.set(i, solve((Equ)result.get(i),v)  );
+					return result.simplify(settings);
+				}
+			}
+			return solve;
+		}
 		
 		@Override
 		public void init() {
+			
+			subtractiveZero = new Rule("subtracting two same functions",Rule.UNCOMMON) {
+				private static final long serialVersionUID = 1L;
+				
+				Rule[] cases;
+				@Override
+				public void init() {
+					cases = new Rule[] {
+							new Rule("m^a-y^a=0=m-y=0","subtracting powers, same exponent",Rule.UNCOMMON),
+							new Rule("a^m-a^y=0=m-y=0","subtracting powers, same base",Rule.UNCOMMON),
+							
+							new Rule("ln(a)-ln(y)=0=a-y=0","subtracting logs",Rule.UNCOMMON),
+							new Rule("sin(a)-sin(y)=0=a-y=0","subtracting sins",Rule.UNCOMMON),
+							new Rule("cos(a)-cos(y)=0=a-y=0","subtracting cos",Rule.UNCOMMON),
+							new Rule("tan(a)-tan(y)=0=a-y=0","subtracting tans",Rule.UNCOMMON),
+							new Rule("asin(a)-asin(y)=0=a-y=0","subtracting asins",Rule.UNCOMMON),
+							new Rule("acos(a)-acos(y)=0=a-y=0","subtracting acoss",Rule.UNCOMMON),
+							new Rule("atan(a)-atan(y)=0=a-y=0","subtracting atans",Rule.UNCOMMON),
+					};
+				}
+				
+				@Override
+				public Expr applyRuleToExpr(Expr e,Settings settings){
+					return goThroughEquCases(e,settings,cases);
+				}
+			};
 			
 			rootCases = new Rule("solving with roots",Rule.VERY_DIFFICULT) {
 				private static final long serialVersionUID = 1L;
@@ -99,23 +105,21 @@ public class Solve extends Expr{
 							new Rule("x+sqrt(x+a)=y=[x=(sqrt(4*a+4*y+1)+2*y+1)/2,x=(-sqrt(4*a+4*y+1)+2*y+1)/2]","sum of linear square roots",Rule.DIFFICULT),
 							new Rule("x-sqrt(x+a)=y=[x=(sqrt(4*a+4*y+1)+2*y+1)/2,x=(-sqrt(4*a+4*y+1)+2*y+1)/2]","sum of linear square roots",Rule.DIFFICULT),
 							new Rule("sqrt(x+a)-x=y=[x=(sqrt(4*a-4*y+1)-2*y+1)/2,x=(-sqrt(4*a-4*y+1)-2*y+1)/2]","sum of linear square roots",Rule.DIFFICULT),
+							
+							new Rule("y*x+sqrt(a+m*x+b*x^2)=z=[x=(sqrt(-4*a*b+4*a*y^2+4*b*z^2+m^2+4*m*y*z)+m+2*y*z)/(2*(y^2-b)),x=(-sqrt(-4*a*b+4*a*y^2+4*b*z^2+m^2+4*m*y*z)+m+2*y*z)/(2*(y^2-b))]","linear plus square root of quadratic",Rule.VERY_DIFFICULT),
+							new Rule("y*x-sqrt(a+m*x+b*x^2)=z=[x=(sqrt(-4*a*b+4*a*y^2+4*b*z^2+m^2+4*m*y*z)+m+2*y*z)/(2*(y^2-b)),x=(-sqrt(-4*a*b+4*a*y^2+4*b*z^2+m^2+4*m*y*z)+m+2*y*z)/(2*(y^2-b))]","linear plus square root of quadratic",Rule.VERY_DIFFICULT),
+							new Rule("-y*x+sqrt(a+m*x+b*x^2)=z=[x=(sqrt(-4*a*b+4*a*y^2+4*b*z^2+m^2+4*m*y*z)+m+2*y*z)/(2*(b-y^2)),x=(-sqrt(-4*a*b+4*a*y^2+4*b*z^2+m^2+4*m*y*z)+m+2*y*z)/(2*(b-y^2))]","linear plus square root of quadratic",Rule.VERY_DIFFICULT),
+							
+							new Rule("y*x+k*sqrt(a+m*x+b*x^2)=z=[x=(-sqrt(-4*a*b*k^4+4*a*k^2*y^2+4*b*k^2*z^2+k^4*m^2+4*k^2*m*y*z)-k^2*m-2*y*z)/(2*(b*k^2-y^2)),x=(sqrt(-4*a*b*k^4+4*a*k^2*y^2+4*b*k^2*z^2+k^4*m^2+4*k^2*m*y*z)-k^2*m-2*y*z)/(2*(b*k^2-y^2))]","linear plus square root of quadratic",Rule.VERY_DIFFICULT),
+							new Rule("y*x-k*sqrt(a+m*x+b*x^2)=z=[x=(-sqrt(-4*a*b*k^4+4*a*k^2*y^2+4*b*k^2*z^2+k^4*m^2+4*k^2*m*y*z)-k^2*m-2*y*z)/(2*(b*k^2-y^2)),x=(sqrt(-4*a*b*k^4+4*a*k^2*y^2+4*b*k^2*z^2+k^4*m^2+4*k^2*m*y*z)-k^2*m-2*y*z)/(2*(b*k^2-y^2))]","linear plus square root of quadratic",Rule.VERY_DIFFICULT),
+							new Rule("-y*x+k*sqrt(a+m*x+b*x^2)=z=[x=(-sqrt(-4*a*b*k^4+4*a*k^2*y^2+4*b*k^2*z^2+k^4*m^2+4*k^2*m*y*z)-k^2*m-2*y*z)/(-2*(b*k^2-y^2)),x=(sqrt(-4*a*b*k^4+4*a*k^2*y^2+4*b*k^2*z^2+k^4*m^2+4*k^2*m*y*z)-k^2*m-2*y*z)/(-2*(b*k^2-y^2))]","linear plus square root of quadratic",Rule.VERY_DIFFICULT),
+							
 					};
 				}
 				
 				@Override
 				public Expr applyRuleToExpr(Expr e,Settings settings){
-					Solve solve = (Solve)e;
-					Var v = solve.getVar();
-					for(Rule rule:cases) {
-						Expr result = rule.applyRuleToExpr(solve.getEqu(), settings);
-						if(result instanceof Equ) {
-							solve.setEqu( (Equ)result );
-						}else if(result instanceof ExprList) {
-							for(int i = 0;i<result.size();i++) result.set(i, solve((Equ)result.get(i),v)  );
-							return result.simplify(settings);
-						}
-					}
-					return solve;
+					return goThroughEquCases(e,settings,cases);
 				}
 				
 			};
@@ -136,12 +140,7 @@ public class Solve extends Expr{
 				
 				@Override
 				public Expr applyRuleToExpr(Expr e,Settings settings){
-					Solve solve = (Solve)e;
-					solve.println();
-					for(Rule rule:cases) {
-						solve.setEqu( (Equ)rule.applyRuleToExpr(solve.getEqu(), settings) );
-					}
-					return solve;
+					return goThroughEquCases(e,settings,cases);
 				}
 			};
 			
@@ -164,11 +163,7 @@ public class Solve extends Expr{
 				
 				@Override
 				public Expr applyRuleToExpr(Expr e,Settings settings){
-					Solve solve = (Solve)e;
-					for(Rule rule:cases) {
-						solve.setEqu( (Equ)rule.applyRuleToExpr(solve.getEqu(), settings) );
-					}
-					return solve;
+					return goThroughEquCases(e,settings,cases);
 				}
 			};
 			
@@ -273,11 +268,7 @@ public class Solve extends Expr{
 				}
 				@Override
 				public Expr applyRuleToExpr(Expr e,Settings settings){
-					Solve solve = (Solve)e;
-					for(Rule rule:cases) {
-						solve.setEqu( (Equ)rule.applyRuleToExpr(solve.getEqu(), settings) );
-					}
-					return solve;
+					return goThroughEquCases(e,settings,cases);
 				}
 			};
 			
@@ -397,18 +388,15 @@ public class Solve extends Expr{
 				@Override
 				public void init() {
 					cases = new Rule[] {
-							new Rule("solve(a=b,x)=solve(a-b=0,x)","move everything to the left side",Rule.VERY_EASY),
-							new Rule("solve(a>b,x)=solve(a-b>0,x)","move everything to the left side",Rule.VERY_EASY),
-							new Rule("solve(a<b,x)=solve(a-b<0,x)","move everything to the left side",Rule.VERY_EASY),
+							new Rule("a=b=a-b=0","move everything to the left side",Rule.VERY_EASY),
+							new Rule("a>b=a-b>0","move everything to the left side",Rule.VERY_EASY),
+							new Rule("a<b=a-b<0","move everything to the left side",Rule.VERY_EASY),
 					};
 				}
 				
 				@Override
 				public Expr applyRuleToExpr(Expr e,Settings settings){
-					for(Rule r:cases){
-						e = r.applyRuleToExpr(e, settings);
-					}
-					return e;
+					return goThroughEquCases(e,settings,cases);
 				}
 				
 			};
@@ -493,6 +481,7 @@ public class Solve extends Expr{
 				lambertWCases,
 				sinCosSumCase,
 				rootCases,
+				subtractiveZero,
 				fractionalCase
 			);
 		}
