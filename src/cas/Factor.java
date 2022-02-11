@@ -24,7 +24,7 @@ public class Factor extends Expr{
 			Expr expr = factor.get();
 			
 			Var v = mostCommonVar(expr);
-			if(expr instanceof Sum && v != null && isPolynomial(expr,v )) {
+			if(expr instanceof Sum && v != null && isPlainPolynomial(expr,v )) {
 				
 				ExprList coefs = polyExtract(expr,v,settings);
 				if(coefs == null) return e;
@@ -58,7 +58,7 @@ public class Factor extends Expr{
 			Factor factor = (Factor)e;
 			Expr expr = factor.get();
 			Var v = mostCommonVar(expr);
-			if(expr instanceof Sum && v!=null && expr.size() == 2 && isPolynomial(expr,v)) {
+			if(expr instanceof Sum && v!=null && expr.size() == 2 && isPlainPolynomial(expr,v)) {
 				Power pow = null;
 				Expr other = null;
 				if(expr.get(0) instanceof Power) {
@@ -258,9 +258,12 @@ public class Factor extends Expr{
 				//
 				if(factors.size()>0) {
 					//divide terms by factors
+					//System.out.println(expr+" "+factors);
+					
 					for(int i = 0;i<expr.size();i++) {
 						expr.set(i, div(expr.get(i),factors).simplify(settings));
 					}
+					//System.out.println(expr);
 					//
 					expr = Prod.combine(factors, factor(expr).simplify(settings));
 					
@@ -306,7 +309,7 @@ public class Factor extends Expr{
 			
 			Var v = mostCommonVar(expr);
 			
-			if(expr instanceof Sum && v != null && isPolynomial(expr,v) ) {
+			if(expr instanceof Sum && v != null && isPlainPolynomial(expr,v) ) {
 				int degree = degree(expr,v).intValue();
 				if(degree < 2) return e;
 				ExprList poly = polyExtract(expr,v,settings);

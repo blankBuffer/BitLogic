@@ -1,5 +1,7 @@
 package cas;
 
+import java.math.BigInteger;
+
 public class Integrate extends Expr{
 
 	private static final long serialVersionUID = 5071855237530369367L;
@@ -30,9 +32,19 @@ public class Integrate extends Expr{
 		}
 	};
 	static Rule logCase = new Rule("integrate(ln(x),x)=ln(x)*x-x","integral of the log",Rule.UNCOMMON);
+	
 	static Rule cosCase = new Rule("integrate(cos(x),x)=sin(x)","integral of the cosine",Rule.EASY);
+	static Rule cosPowerCase = new Rule("integrate(cos(x)^n,x)=cos(x)^(n-1)*sin(x)/n+(n-1)/n*integrate(cos(x)^(n-2),x)","eval(n>1)","integral of cos to the n",Rule.DIFFICULT);
+	static Rule cosInvPowerCase = new Rule("integrate(1/cos(x)^n,x)=cos(x)^(1-n)*sin(x)/(n-1)+(n-2)*integrate(1/cos(x)^(n-2),x)/(n-1)","eval(n>1)","integral of 1 over cos to the n",Rule.DIFFICULT);
+	
 	static Rule sinCase = new Rule("integrate(sin(x),x)=-cos(x)","integral of the sin",Rule.EASY);
+	static Rule sinPowerCase = new Rule("integrate(sin(x)^n,x)=-sin(x)^(n-1)*cos(x)/n+(n-1)/n*integrate(sin(x)^(n-2),x)","eval(n>1)","integral of sin to the n",Rule.DIFFICULT);
+	static Rule sinInvPowerCase = new Rule("integrate(1/sin(x)^n,x)=-sin(x)^(1-n)*cos(x)/(n-1)+(n-2)*integrate(1/sin(x)^(n-2),x)/(n-1)","eval(n>1)","integral of 1 over sin to the n",Rule.DIFFICULT);
+	
 	static Rule tanCase = new Rule("integrate(tan(x),x)=-ln(cos(x))","integral of tan",Rule.UNCOMMON);
+	static Rule tanPowerCase = new Rule("integrate(tan(x)^n,x)=tan(x)^(n-1)/(n-1)-integrate(tan(x)^(n-2),x)","eval(n>1)","integral of tan to the n",Rule.DIFFICULT);
+	static Rule tanInvPowerCase = new Rule("integrate(1/tan(x)^n,x)=tan(x)^(1-n)/(1-n)-integrate(1/tan(x)^(n-2),x)","eval(n>1)","integral of 1 over tan to the n",Rule.DIFFICULT);
+	
 	static Rule secSqr = new Rule("integrate(cos(x)^-2,x)=tan(x)","integral of 1 over cosine squared",Rule.UNCOMMON);
 	static Rule atanCase = new Rule("integrate(atan(x),x)=x*atan(x)+ln(x^2+1)/-2","integral of arctan",Rule.UNCOMMON);
 	static Rule eToXTimesSinX = new Rule("integrate(e^x*sin(x),x)=e^x*(sin(x)-cos(x))/2","integral of looping sine",Rule.UNCOMMON);
@@ -184,6 +196,9 @@ public class Integrate extends Expr{
 		
 	};
 	
+	static Rule inverseQuadraticSimple = new Rule("integrate(x^a/(x^b+c),x)=atan(x^(a+1)/sqrt(c))/((a+1)*sqrt(c))","eval(b/(a+1)=2)&eval(c>0)","inverse quadratic with u sub",Rule.UNCOMMON);
+	static Rule inverseQuadraticSimple2 = new Rule("integrate(x^a/(d*x^b+c),x)=atan((x^(a+1)*sqrt(d))/sqrt(c))/((a+1)*sqrt(d*c))","eval(b/(a+1)=2)&eval(c*d>0)","inverse quadratic with u sub",Rule.UNCOMMON);
+	
 	static Rule integralForArcsin = new Rule("integrals leading to arcsin",Rule.TRICKY){
 		private static final long serialVersionUID = 1L;
 		
@@ -214,13 +229,16 @@ public class Integrate extends Expr{
 		@Override
 		public Expr applyRuleToExpr(Expr e,Settings settings){
 			Integrate integ = (Integrate)e;
-			
 			if(!integ.get().containsType(Integrate.class) && !isPolynomialUnstrict(integ.get(),integ.getVar())) {
 				Div innerDiv = Div.cast(integ.get().copy());
 				Prod innerProd = Prod.cast(innerDiv.getNumer());
 				innerDiv.setNumer(innerProd);
+				boolean denomIsFunc = innerDiv.getDenom().contains(integ.getVar());
 				int bestIndex = -1;
 				int confidence = -1;
+				
+				int fractionalPowerCount = 0;
+				
 				for(int i = 0;i < innerProd.size();i++) {
 					int currentConfidence = -1;
 					
@@ -228,15 +246,18 @@ public class Integrate extends Expr{
 						currentConfidence = BEST;
 					}else if(innerProd.get(i) instanceof Atan || innerProd.get(i) instanceof Asin || innerProd.get(i) instanceof Acos){
 						currentConfidence = GREAT;
-					}else{
+					}else if(!denomIsFunc){
 						Power pow = Power.cast(innerProd.get(i));
-						if(isPolynomial(pow.getBase(),integ.getVar()) && pow.getBase().contains(integ.getVar())) {
+						if(isPlainPolynomial(pow.getBase(),integ.getVar()) && pow.getBase().contains(integ.getVar())) {
 							if(isPositiveRealNum(pow.getExpo())){
 								currentConfidence = GOOD;
 							}else{
+								//System.out.println(pow);
 								Div frac = Div.cast(pow.getExpo());
 								if(frac!=null && frac.isNumericalAndReal()) {
+									if(!degree(pow.getBase(),integ.getVar()).equals(BigInteger.ONE)) return integ;//dangerous because square root does not have linear term
 									if(((Num)frac.getNumer()).realValue.signum() == 1) {
+										fractionalPowerCount++;
 										confidence = OKAY;
 									}
 								}
@@ -244,6 +265,8 @@ public class Integrate extends Expr{
 							}
 						}
 					}
+					
+					if(fractionalPowerCount>1) return integ;//dangerous because integrating more than one square root function is hard
 					
 					if(currentConfidence>confidence){
 						confidence = currentConfidence;
@@ -272,18 +295,19 @@ public class Integrate extends Expr{
 		@Override
 		public Expr applyRuleToExpr(Expr e,Settings settings){
 			Integrate integ = (Integrate)e;
-			
 			if(integ.get() instanceof Div && !integ.get().containsType(Integrate.class)) {
 				Div innerDiv = (Div)integ.get().copy();
 				if(innerDiv.getDenom() instanceof Power) {
 					Power denomPower = (Power)innerDiv.getDenom();
 					Div expo = Div.cast(denomPower.getExpo());
-					if(expo.isNumericalAndReal()) {
+					if(expo.isNumericalAndReal() && isPlainPolynomial(denomPower.getBase(),integ.getVar())) {
 						if( ((Num)expo.getNumer()).realValue.compareTo( ((Num)expo.getDenom()).realValue )  == 1) {//make sure the fraction is greater than 1
 							Expr integralOfDenom = integrate(inv(denomPower),integ.getVar()).simplify(settings);
 							Expr derivativeOfNumer = diff(innerDiv.getNumer(),integ.getVar()).simplify(settings);
-							Expr out = sub(prod(innerDiv.getNumer(),integralOfDenom),integrate( prod(derivativeOfNumer,integralOfDenom.copy()) ,integ.getVar()));
-							return out.simplify(settings);
+							if(!(derivativeOfNumer instanceof Div && ((Div)derivativeOfNumer).getDenom().contains(integ.getVar())  )) {
+								Expr out = sub(prod(innerDiv.getNumer(),integralOfDenom),integrate( prod(derivativeOfNumer,integralOfDenom.copy()) ,integ.getVar()));
+								return out.simplify(settings);
+							}
 						}
 					}
 				}
@@ -354,7 +378,7 @@ public class Integrate extends Expr{
 		public Expr applyRuleToExpr(Expr e,Settings settings){
 			Integrate integ = (Integrate)e;
 			
-			if(integ.contains(uSubVar) || integ.get().containsType(Integrate.class)) return integ;
+			if(integ.contains(uSubVar) || integ.get().containsType(Integrate.class) || isPolynomialUnstrict(integ.get(),integ.getVar())) return integ;
 			Expr u = null;
 			if(integ.get() instanceof Prod) {
 				Prod innerProd = (Prod)integ.get();
@@ -372,21 +396,25 @@ public class Integrate extends Expr{
 			}else if(integ.get() instanceof Div) {
 				Div casted =  ((Div)integ.get());
 				boolean logCase = !div(casted.getNumer(),diff(casted.getDenom() ,integ.getVar())).simplify(settings).contains(integ.getVar());
-				if(!casted.getNumer().contains(integ.getVar()) || logCase) {
+				
+				if(logCase) {
 					u = casted.getDenom();
-				}else {
+				}else if(!casted.getNumer().contains(integ.getVar())) {
+					u = casted.getDenom();
+				}else if(!casted.getDenom().contains(integ.getVar())){
 					u = casted.getNumer();
+				}else {
+					u = casted.getNumer().complexity() > casted.getDenom().complexity() ? casted.getNumer() : casted.getDenom();
 				}
 			}else {
 				u = integ.get();
 			}
 			
+			
 			if(u != null) {
 				while(true) {//try normal u and innermost u sub
-					
 					if(!u.equals(integ.getVar())) {
 						Equ eq = equ(u,uSubVar);//im calling it 0u since variables normally can't start with number
-						
 						Expr diffObj = diff(u,(Var)integ.getVar().copy()).simplify(settings);
 						diffObj = diffObj.replace(eq);//it is possible for derivative to contain u
 						Expr before = div(integ.get().replace(eq),diffObj);
@@ -559,10 +587,22 @@ public class Integrate extends Expr{
 				invRule,
 				integralsWithPowers,
 				inverseQuadratic,
+				inverseQuadraticSimple,
+				inverseQuadraticSimple2,
 				logCase,
+				
 				cosCase,
+				cosPowerCase,
+				cosInvPowerCase,
+				
 				sinCase,
+				sinPowerCase,
+				sinInvPowerCase,
+				
 				tanCase,
+				tanPowerCase,
+				tanInvPowerCase,
+				
 				secSqr,
 				atanCase,
 				eToXTimesSinX,
@@ -576,6 +616,7 @@ public class Integrate extends Expr{
 				recursiveInvPowerOverSqrt,
 				psudoTrigSub,
 				integralForArcsin,
+				
 				partialFraction,
 				polyDiv,
 				StandardRules.distrInner,

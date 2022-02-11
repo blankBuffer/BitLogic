@@ -4,13 +4,15 @@ public class Func extends Expr{
 
 	private static final long serialVersionUID = -3146654431684411030L;
 	String name;
+	int numberOfParams;
 	
 	void init(){
 	}
 	
 	Func(){}//
-	public Func(String name){
+	public Func(String name,int numberOfParams){
 		this.name = name;
+		this.numberOfParams = numberOfParams;
 		init();
 	}
 	public Func(String name,Expr... params){
@@ -42,6 +44,7 @@ public class Func extends Expr{
 		}
 		out.simplifyChildren = simplifyChildren;
 		out.ruleSequence = ruleSequence;
+		out.numberOfParams = numberOfParams;
 		out.flags.set(flags);
 		return out;
 	}

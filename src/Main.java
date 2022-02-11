@@ -33,7 +33,7 @@ public class Main extends QuickMath{
 					if(verbose)System.out.println(response);
 				}
 			}
-			
+			sc.close();
 		} catch (Exception e) {
 			e.printStackTrace();
 			System.out.println("fail at line: "+currentLine);
@@ -45,34 +45,32 @@ public class Main extends QuickMath{
 	}
 	
 	static void testRegion() {
-		runScript("bitLogicTest.bl",false);
+		//runScript("bitLogicTest.bl",true);
 	}
 	
 	public static void main(String[] args) {
+		Rule.loadRules();
 		
 		int gui = 1;
+		boolean clearTerm = false;
 		
 		for(int i = 0;i<args.length;i++) {
 			String arg = args[i];
 			if(arg.equals("gui")) gui = 1;
 			else if(arg.equals("no-gui")) gui = 2;
-			else if(arg.equals("clear-term")) UI.CLEAR_TERM = true;
+			else if(arg.equals("clear-term")) clearTerm = true;
 			else if(arg.equals("-s")) {
 				runScript(args[i+1], true);
 				i++;
 			}
 		}
 		
-		if(UI.CLEAR_TERM) UI.clearTerm();
-		System.out.println(UI.fancyIntro());
-		
-		Rule.loadRules();
-		
 		testRegion();
 		
 		//showMemoryUsage.start();
 		if(gui == 1) UI.startGraphicalInterface();
-		else if(gui == 2) UI.startCommandLineInterface();
+		else if(gui == 2) UI.startCommandLineInterface(clearTerm);
+		
 		
 	}
 	

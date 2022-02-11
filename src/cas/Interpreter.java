@@ -72,7 +72,13 @@ public class Interpreter extends QuickMath{
 		
 		errors(tokens);
 		
-		//System.out.println(tokens);
+		/*
+		for(String s:tokens) {
+			System.out.print(s);
+			System.out.print(" ");
+		}
+		System.out.println();
+		*/
 		
 		if(tokens.size() == 1) {
 			String string = tokens.get(0);
@@ -95,7 +101,7 @@ public class Interpreter extends QuickMath{
 				else{//variables
 					return var(string);
 				}
-			}else if(string.charAt(0) == '[') {
+			}else if(string.charAt(0) == '[' && string.charAt(string.length()-1) == ']') {
 				if(string.equals("[]")) return new ExprList();
 				return ExprList.cast(createExprFromToken(string.substring(1, string.length()-1),defs,settings));
 			}else if(string.charAt(0) == '{') {
@@ -119,10 +125,11 @@ public class Interpreter extends QuickMath{
 					Equ def = (Equ)params.get(0);
 					
 					if(def.getLeftSide() instanceof Func) {
-						Func f = new Func(def.getLeftSide().typeName());
-						
+						Func f = (Func)def.getLeftSide().copy();
 						f.ruleSequence.add(new Rule(def,"function definition",Rule.EASY));
+						System.out.println(f.getRuleSequence());
 						
+						f.clear();
 						defs.addFunc(f);
 					}else {
 						defs.addVar(def);
@@ -130,6 +137,16 @@ public class Interpreter extends QuickMath{
 					
 					return var("done");
 				}
+				if(op.equals("delete")) {
+					if(params.get(0) instanceof Func) {
+						defs.removeFunc(params.get(0).typeName());
+					}else {
+						defs.removeVar(params.get(0).toString());
+					}
+					
+					return var("done");
+				}
+				
 				if(op.equals("defs")) {
 					return var(defs.toString());
 				}
@@ -141,16 +158,9 @@ public class Interpreter extends QuickMath{
 						paramsArray[i] = params.get(i);
 					}
 					
-					try {
-						Expr f = SimpleFuncs.getFuncByName(op,defs,paramsArray);
-						return f;
-					}catch(Exception e) {
-						//throw new Exception("error with parameters");
-						if(e instanceof java.lang.ArrayIndexOutOfBoundsException) {
-							throw new Exception("wrong number of parameters");
-						}
-						throw new Exception("wrong type in parameters");
-					}
+					
+					Expr f = SimpleFuncs.getFuncByName(op,defs,paramsArray);
+					return f;
 				}
 				
 			}

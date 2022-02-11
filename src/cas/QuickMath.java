@@ -237,7 +237,10 @@ public class QuickMath {
 		return new Func(name,v,expr);
 	}
 	public static Func eval(Equ equ) {
-		return (Func)SimpleFuncs.getFuncByName("eval", Defs.blank, equ);
+		try {
+			return (Func)SimpleFuncs.getFuncByName("eval", Defs.blank, equ);
+		}catch(Exception e) {}
+		return null;
 	}
 	//
 	
@@ -369,7 +372,7 @@ public class QuickMath {
 				if(isPositiveRealNum(casted.getExpo())) {
 					if(casted.getBase().equals(v)) {
 						maxDegree = maxDegree.max(((Num)casted.getExpo()).realValue);
-					}else if(isPolynomial(casted.getBase(),v)) {
+					}else if(isPlainPolynomial(casted.getBase(),v)) {
 						maxDegree = maxDegree.max( degree(casted.getBase(),v).multiply(((Num)casted.getExpo()).realValue) );
 					}else return negOne;
 				}else return negOne;
@@ -391,7 +394,7 @@ public class QuickMath {
 		return maxDegree;
 	}
 	
-	public static boolean isPolynomialUnstrict(Expr expr,Var v){
+	public static boolean isPolynomialUnstrict(Expr expr,Var v){//is a polynomial in any form
 		if(!expr.contains(v) || expr.equals(v)) return true;
 		if(expr instanceof Sum || expr instanceof Prod){
 			for(int i = 0;i<expr.size();i++){
@@ -405,7 +408,7 @@ public class QuickMath {
 		return false;
 	}
 	
-	public static boolean isPolynomial(Expr expr,Var v) {
+	public static boolean isPlainPolynomial(Expr expr,Var v) {//basic polynomial
 		Sum exprSum = Sum.cast(expr);
 		for(int i = 0;i<exprSum.size();i++) {
 			Expr term = exprSum.get(i);

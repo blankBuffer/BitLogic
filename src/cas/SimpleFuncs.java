@@ -1,6 +1,8 @@
 package cas;
 
 import java.io.IOException;
+import java.math.BigInteger;
+import java.util.ArrayList;
 import java.util.HashMap;
 
 public class SimpleFuncs extends QuickMath{
@@ -47,22 +49,25 @@ public class SimpleFuncs extends QuickMath{
 		}
 	};
 	
-	static Func tree = new Func("tree");
-	static Func size = new Func("size");
-	static Func get = new Func("get");
-	static Func choose = new Func("choose");
-	static Func primeFactor = new Func("primeFactor");
-	static Func partialFrac = new Func("partialFrac");
-	static Func polyCoef = new Func("polyCoef");
-	static Func degree = new Func("degree");
-	static Func bigger = new Func("bigger");
-	static Func save = new Func("save");
-	static Func open = new Func("open");
-	static Func conv = new Func("conv");
-	static Func mathML = new Func("mathML");
-	static Func subst = new Func("subst");
-	static Func eval = new Func("eval");
-	static Func expand = new Func("expand");
+	static Func tree = new Func("tree",1);
+	static Func size = new Func("size",1);
+	static Func get = new Func("get",2);
+	static Func choose = new Func("choose",2);
+	static Func primeFactor = new Func("primeFactor",1);
+	static Func partialFrac = new Func("partialFrac",2);
+	static Func polyCoef = new Func("polyCoef",2);
+	static Func degree = new Func("degree",2);
+	static Func bigger = new Func("bigger",3);
+	static Func save = new Func("save",2);
+	static Func open = new Func("open",1);
+	static Func conv = new Func("conv",3);
+	static Func mathML = new Func("mathML",1);
+	static Func subst = new Func("subst",2);
+	static Func eval = new Func("eval",1);
+	static Func expand = new Func("expand",1);
+	static Func taylor = new Func("taylor",3);
+	static Func gui = new Func("gui",0);
+	static Func params = new Func("params",1);
 	
 	public static void loadRules(){
 		tree.simplifyChildren = false;
@@ -295,7 +300,66 @@ public class SimpleFuncs extends QuickMath{
 				return fullExpand.applyRuleToExpr(f.get(), settings);
 			}
 		});
+		
+		taylor.ruleSequence.add(new Rule("taylor series",Rule.TRICKY){
+			private static final long serialVersionUID = 1L;
+			
+			@Override
+			public Expr applyRuleToExpr(Expr e,Settings settings) {
+				Func f = (Func)e;
+				
+				Expr expr = f.get(0);
+				
+				Equ equ = (Equ)f.get(1);
+				Var v = (Var)equ.getLeftSide();
+				Num n = (Num)f.get(2);
+				
+				
+				Sum out = new Sum();
+				
+				for(int i = 0;i<n.realValue.intValue();i++) {
+					
+					out.add( div(prod(expr.replace(equ),pow(sub(v,equ.getRightSide()),num(i))),num(factorial(BigInteger.valueOf(i)))));
+					
+					expr = diff(expr,v).simplify(settings);
+				}
+				
+				return out.simplify(settings);
+			}
+		});
+		
+		gui.ruleSequence.add(new Rule("opens a new window",Rule.VERY_EASY) {
+			private static final long serialVersionUID = 1L;
+			
+			@SuppressWarnings("unused")
+			@Override
+			public Expr applyRuleToExpr(Expr e,Settings settings) {
+				new ui.MainWindow();
+				
+				return var("done");
+			}
+		});
+		
+		params.ruleSequence.add(new Rule("expected number paramters",Rule.VERY_EASY) {
+			private static final long serialVersionUID = 1L;
+			
+			@Override
+			public Expr applyRuleToExpr(Expr e,Settings settings) {
+				Func f = (Func)e;
+				
+				return num(getExpectectedParams(f.get().toString()));
+			}
+		});
 	}
+	
+	private static ArrayList<String> functionNames = new ArrayList<String>();
+	static HashMap<String,Integer> numberOfParams = new HashMap<String,Integer>();
+	
+	public static void addFunc(Func f){
+		simpleFuncs.put(f.name,f);
+		
+	}
+	
 	static{
 		addFunc(choose);
 		addFunc(get);
@@ -313,12 +377,108 @@ public class SimpleFuncs extends QuickMath{
 		addFunc(subst);
 		addFunc(eval);
 		addFunc(expand);
+		addFunc(taylor);
+		addFunc(gui);
+		addFunc(params);
+		
+		for(String s:simpleFuncs.keySet()) {
+			functionNames.add(s);
+		}
 	}
 	
-	public static Expr getFuncByName(String funcName,Defs defs,Expr... params) {
-		Expr func = simpleFuncs.get(funcName);
+	static {
+		numberOfParams.put("sin", 1);
+		numberOfParams.put("cos", 1);
+		numberOfParams.put("tan", 1);
+		numberOfParams.put("asin", 1);
+		numberOfParams.put("acos", 1);
+		numberOfParams.put("atan", 1);
+		numberOfParams.put("sqrt", 1);
+		numberOfParams.put("cbrt", 1);
+		numberOfParams.put("ln", 1);
+		numberOfParams.put("inv", 1);
+		numberOfParams.put("gamma", 1);
+		numberOfParams.put("factor", 1);
+		numberOfParams.put("distr", 1);
+		numberOfParams.put("exp", 1);
+		numberOfParams.put("inv", 1);
+		numberOfParams.put("sinh", 1);
+		numberOfParams.put("cosh", 1);
+		numberOfParams.put("tanh", 1);
+		numberOfParams.put("lambertW", 1);
+		
+		numberOfParams.put("solve", 2);
+		numberOfParams.put("diff", 2);
+		numberOfParams.put("integrate", 2);
+		numberOfParams.put("approx", 2);
+		
+		numberOfParams.put("integrateOver", 4);
+		numberOfParams.put("limit", 3);
+		
+		for(String s:numberOfParams.keySet()) {
+			functionNames.add(s);
+		}
+	}
+	
+	public static boolean isFunc(String name) {
+		return functionNames.contains(name);
+	}
+	
+	public static int getExpectectedParams(String funcName) {
+		Func func = simpleFuncs.get(funcName);
 		if(func != null) {
-			func = func.copy();
+			return func.numberOfParams;
+		}
+		
+		Integer num = numberOfParams.get(funcName);
+		if(num != null) {
+			return num;
+		}
+		
+		return 0;
+	}
+	
+	public static int getExpectectedParams(String funcName,Defs defs) {
+		Func func = simpleFuncs.get(funcName);
+		if(func != null) {
+			return func.numberOfParams;
+		}
+		
+		Integer num = numberOfParams.get(funcName);
+		if(num != null) {
+			return num;
+		}
+		
+		func = defs.getFunc(funcName);
+		if(func != null) {
+			return func.numberOfParams;
+		}
+		
+		return 0;
+	}
+	
+	public static Expr getFuncByName(String funcName,Defs defs,Expr... params) throws Exception {
+		
+		if(funcName.equals("approx")) {
+			if(params.length == 1) {
+				return approx(params[0],exprList());
+			}else if(params.length == 2) {
+				return approx(params[0],(ExprList)params[1]);
+			}else {
+				throw new Exception("function: "+funcName+", requires: 1 or 2 parameters");
+			}
+		}
+		
+		if(isFunc(funcName)) {
+			int expectedParams = getExpectectedParams(funcName,defs);
+			if(expectedParams != params.length) {
+				throw new Exception("function: "+funcName+", requires: "+expectedParams+", parameter(s)");
+			}
+		}
+		
+		Func func = simpleFuncs.get(funcName);
+		if(func != null) {
+			func = (Func)func.copy();
 			for(Expr param:params) func.add(param);
 			return func;
 		}
@@ -332,41 +492,37 @@ public class SimpleFuncs extends QuickMath{
 		if(funcName.equals("sqrt")) return sqrt(params[0]);
 		if(funcName.equals("cbrt")) return cbrt(params[0]);
 		if(funcName.equals("ln")) return ln(params[0]);
+		if(funcName.equals("inv")) return inv(params[0]);
 		if(funcName.equals("gamma")) return gamma(params[0]);
 		if(funcName.equals("factor")) return factor(params[0]);
 		if(funcName.equals("distr")) return distr(params[0]);
-		if(funcName.equals("solve")) return solve((Equ)params[0],(Var)params[1]);
 		if(funcName.equals("exp")) return exp(params[0]);
 		if(funcName.equals("inv")) return inv(params[0]);
 		if(funcName.equals("sinh")) return sinh(params[0]);
 		if(funcName.equals("cosh")) return cosh(params[0]);
 		if(funcName.equals("tanh")) return tanh(params[0]);
-		if(funcName.equals("approx")) {
-			if(params.length == 1) {
-				return approx(params[0],exprList());
-			}
-			return approx(params[0],(ExprList)params[1]);
-		}
 		if(funcName.equals("lambertW")) return lambertW(params[0]);
+		
+		if(funcName.equals("solve")) return solve((Equ)params[0],(Var)params[1]);
 		if(funcName.equals("diff")) return diff(params[0],(Var)params[1]);
 		if(funcName.equals("integrate")) return integrate(params[0],(Var)params[1]);
+		
 		if(funcName.equals("integrateOver")) return integrateOver(params[0],params[1],params[2],(Var)params[3]);
+	
 		if(funcName.equals("limit")) return limit(params[0],(Var)params[1],params[2]);
 		
-		Func f = defs.getFunc(funcName);
-		if(f != null) {
-			for(Expr param:params) f.add(param);
-			return f;
+		
+		func = defs.getFunc(funcName);
+		if(func != null) {
+			func = (Func) func.copy();
+			for(Expr param:params) func.add(param);
+			return func;
 		}
 		
 		Func blankFunc = new Func(funcName);
 		for(Expr param:params) blankFunc.add(param);
+		blankFunc.numberOfParams = params.length;
 		
 		return blankFunc;
-	}
-	
-	public static void addFunc(Func f){
-		simpleFuncs.put(f.name,f);
-		
 	}
 }

@@ -35,8 +35,8 @@ public class Plot extends JPanel{
 			yMax = 10;
 			zMin = -10;
 			zMax = 10;
-			zRot = -0.2;
-			xRot = -0.2;
+			zRot = -0.4;
+			xRot = -0.4;
 		}
 		public PlotWindowParams(double xMin,double xMax,double yMin,double yMax) {
 			this.xMin = xMin;
@@ -86,10 +86,13 @@ public class Plot extends JPanel{
 	
 	static Color randomColor(int seed) {
 		Random random = new Random(seed);
-		int strongest = (int)(random.nextDouble()*3);//makes it more colorful hopefully
+		int index = (int)(random.nextDouble()*3);//makes it more colorful hopefully
 		int[] component = new int[3];
-		for(int i = 0;i<3;i++) component[i] = (int)(random.nextDouble()*180.0);
-		component[strongest]= 180;
+		
+		component[index]= 255;
+		component[(index+1)%3] = 0;
+		component[(index+2)%3] = random.nextInt(256);
+		
 		return new Color(component[0],component[1],component[2]);
 	}
 	
@@ -280,7 +283,7 @@ public class Plot extends JPanel{
 			int xRes = resolution,yRes = resolution;
 			Point[][] points = new Point[yRes][xRes];
 			
-			Expr function = stack.get();
+			Expr function = stack.get(stack.size()-1);
 			//calculate function
 			for(int yIndex = 0;yIndex < yRes;yIndex++) {
 				double y = (plotWindowParams.yMax-plotWindowParams.yMin)*((double)yIndex/(yRes-1))+plotWindowParams.yMin;
@@ -351,7 +354,7 @@ public class Plot extends JPanel{
 					if((xIndex/2+yIndex/2)%2==0) color = color.darker();
 					
 					if(p1.y>0 && p2.y>0 && p3.y>0 && p4.y>0) {
-						quads.add(new Quad(new int[]{(int) p1.x,(int) p2.x,(int) p3.x,(int) p4.x}, new int[]{(int) p1.z,(int) p2.z,(int) p3.z,(int) p4.z}, p1.y+p3.y ,color));
+						quads.add(new Quad(new int[]{(int) p1.x,(int) p2.x,(int) p3.x,(int) p4.x}, new int[]{(int) p1.z,(int) p2.z,(int) p3.z,(int) p4.z}, Math.max(Math.max(p1.y,p2.y),p3.y) ,color));
 					}
 					
 				}

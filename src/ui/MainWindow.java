@@ -3,43 +3,61 @@ package ui;
 import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.awt.image.BufferedImage;
+import java.io.File;
+import java.io.FileNotFoundException;
 import java.util.ArrayList;
+import java.util.Scanner;
 
 import javax.swing.*;
 
+import cas.Expr;
+import cas.ExprRender;
 import graphics.Plot;
 
-class MainWindow{
+public class MainWindow{
 	final int WINDOW_WIDTH = 900,WINDOW_HEIGHT = 500;
 	//Color background,foreground;
 	StackEditor currentStack;
 	final int MAX_CHARS = 1024;
 	
-	static final boolean CLEAR_DEFAULT = true;
-	boolean clearTerminal = CLEAR_DEFAULT;
-	
+	boolean clearTerminal = true;
+	boolean keepWindowOnTop = false;
+	boolean showPlot = true;
+	static final int _2D = 0,_3D = 1;
+	int plotMode = _2D;
+	Color background = new Color(255,255,255),foreground = new Color(0,0,0);
+	Font font = new Font("Courier",0,12);
 	
 	JPanel createTerminal(JFrame window,Plot plot,ArrayList<JComponent> allComponents) {
-		Font font = new Font("Courier",0,12);
 		JPanel terminal = new JPanel();
 		terminal.setLayout(new BorderLayout());
 		JTextArea terminalOut = new JTextArea();
 		allComponents.add(terminalOut);
 		terminalOut.setLineWrap(true);
 		terminalOut.setEditable(false);
-		terminalOut.setFont(font);
 		terminalOut.setText(UI.fancyIntro());
 		JScrollPane scrollableTerminalOut = new JScrollPane(terminalOut);
 		scrollableTerminalOut.setMinimumSize(new Dimension(300,200));
 		
-		JTextArea workArea = new JTextArea("work area",5,100);
-		allComponents.add(workArea);
-		workArea.setLineWrap(true);
-		workArea.setFont(font);
 		
-		JScrollPane scrollWorkArea = new JScrollPane(workArea);
+		JTextField terminalIn = new JTextField();
 		
-		JTextField terminalIn = new JTextField("type here");
+		JPanel imgExprPanel = new JPanel() {
+			private static final long serialVersionUID = 5476956793821976634L;
+
+			@Override
+			public void paintComponent(Graphics g) {
+				if(currentStack.size()>0) {
+					BufferedImage image = ExprRender.createImg(currentStack.last(),new Dimension(getWidth(),getHeight()),terminalOut.getBackground(),terminalOut.getForeground() );
+					g.drawImage(image,0,0,getWidth(),getHeight(),null);
+				}else {
+					g.setColor(terminalOut.getBackground());
+					g.fillRect(0, 0, getWidth(), getHeight());
+				}
+			}
+		};
+		imgExprPanel.setPreferredSize(new Dimension(400,100));
 		
 		ActionListener terminalOutUpdate = new ActionListener(){
 
@@ -56,6 +74,8 @@ class MainWindow{
 				
 				terminalOut.setText(newState);
 				terminalOut.setCaretPosition(terminalOut.getText().length());
+				
+				imgExprPanel.repaint();
 				
 				plot.repaint();
 			}
@@ -94,21 +114,26 @@ class MainWindow{
 		
 		pushButton.addActionListener(terminalInPush);
 		
+		JPanel terminalOutWithImg = new JPanel();
+		terminalOutWithImg.setLayout(new BorderLayout());
+		terminalOutWithImg.add(scrollableTerminalOut,BorderLayout.CENTER);
 		
-		JSplitPane terminalOutAndWorkArea = new JSplitPane(JSplitPane.VERTICAL_SPLIT,scrollWorkArea,scrollableTerminalOut);
+		terminalOutWithImg.add(imgExprPanel,BorderLayout.SOUTH);
 		
-		terminal.add(terminalOutAndWorkArea,BorderLayout.CENTER);
+		terminal.add(terminalOutWithImg,BorderLayout.CENTER);
 		
 		
 		JPanel terminalInWithButton = new JPanel();
 		
 		terminalInWithButton.setLayout(new BorderLayout());
 		terminalInWithButton.add(terminalIn,BorderLayout.CENTER);
+		allComponents.add(terminalInWithButton);
 		
 		JPanel terminalInButtons = new JPanel();
 		terminalInButtons.setLayout(new FlowLayout());
 		terminalInButtons.add(resultButton);
 		terminalInButtons.add(pushButton);
+		allComponents.add(terminalInButtons);
 		
 		terminalInWithButton.add(terminalInButtons,BorderLayout.EAST);
 		
@@ -117,47 +142,60 @@ class MainWindow{
 	}
 	
 	JPanel createSettingsMenu(JFrame window,ArrayList<JComponent> allComponents) {
+		//
 		JPanel settingsPanel = new JPanel();
 		allComponents.add(settingsPanel);
 		
-		JCheckBox keepOnTop = new JCheckBox("on top",false);
+		//keep on top button
+		JCheckBox keepOnTop = new JCheckBox("on top",keepWindowOnTop);
 		allComponents.add(keepOnTop);
-		keepOnTop.addActionListener(new ActionListener() {
+		ActionListener keepOnTopUpdate = new ActionListener() {
 			@Override
 			public void actionPerformed(ActionEvent e) {
 				window.setAlwaysOnTop(keepOnTop.isSelected());
 			}
-		});
+		};
+		keepOnTop.addActionListener(keepOnTopUpdate);
+		keepOnTopUpdate.actionPerformed(null);
 		settingsPanel.add(keepOnTop);
+		//
 		
-		JCheckBox clearTerminalCheckBox = new JCheckBox("clear terminal",CLEAR_DEFAULT);
+		JCheckBox clearTerminalCheckBox = new JCheckBox("clear terminal",clearTerminal);
 		allComponents.add(clearTerminalCheckBox);
 		clearTerminalCheckBox.addActionListener(new ActionListener() {
-
 			@Override
 			public void actionPerformed(ActionEvent e) {
 				clearTerminal = clearTerminalCheckBox.isSelected();
 			}
-			
 		});
 		settingsPanel.add(clearTerminalCheckBox);
 		
+		JButton clearCache = new JButton("clear cache");
+		allComponents.add(clearCache);
+		clearCache.addActionListener(new ActionListener() {
+			@Override
+			public void actionPerformed(ActionEvent e) {
+				Expr.clearCache();
+			}
+		});
+		settingsPanel.add(clearCache);
+		
 		JPanel themeSetter = new JPanel();
 		JLabel backgroundLabel = new JLabel("background");
-		JTextField br = new JTextField("255",3),bg = new JTextField("255",3),bb = new JTextField("255",3);
+		JTextField br = new JTextField(String.valueOf(background.getRed()),3),bg = new JTextField(String.valueOf(background.getGreen()),3),bb = new JTextField(String.valueOf(background.getBlue()),3);
 		themeSetter.add(backgroundLabel);
 		themeSetter.add(br);
 		themeSetter.add(bg);
 		themeSetter.add(bb);
 		JLabel foregroundLabel = new JLabel("foreground");
-		JTextField fr = new JTextField("0",3),fg = new JTextField("0",3),fb = new JTextField("0",3);
+		JTextField fr = new JTextField(String.valueOf(foreground.getRed()),3),fg = new JTextField(String.valueOf(foreground.getGreen()),3),fb = new JTextField(String.valueOf(foreground.getBlue()),3);
 		themeSetter.add(foregroundLabel);
 		themeSetter.add(fr);
 		themeSetter.add(fg);
 		themeSetter.add(fb);
-		
+		//set theme
 		JButton setTheme = new JButton("set theme");
-		setTheme.addActionListener(new ActionListener() {
+		ActionListener updateTheme = new ActionListener() {
 			@Override
 			public void actionPerformed(ActionEvent e) {
 				Color background = new Color(Integer.parseInt(br.getText()),Integer.parseInt(bg.getText()),Integer.parseInt(bb.getText()));
@@ -166,9 +204,14 @@ class MainWindow{
 				for(JComponent c:allComponents) {
 					c.setBackground(background);
 					c.setForeground(foreground);
+					c.setFont(font);
+					
+					if(c instanceof JTextField) ((JTextField)c).setCaretColor(foreground);
 				}
 			}
-		});
+		};
+		setTheme.addActionListener(updateTheme);
+		updateTheme.actionPerformed(null);
 		themeSetter.add(setTheme);
 		
 		settingsPanel.add(themeSetter);
@@ -177,10 +220,6 @@ class MainWindow{
 	}
 	
 	JPanel createGraphicsMenu(JComponent bottomPanel,JPanel terminal,Plot plot,ArrayList<JComponent> allComponents) {
-		JCheckBox showPlotCheckBox = new JCheckBox("show plot",true);
-		allComponents.add(showPlotCheckBox);
-		JComboBox<String> plotMode = new JComboBox<String>(new String[] {"2D","3D"});
-		allComponents.add(plotMode);
 		
 		JButton getWindow = new JButton("get window");
 		allComponents.add(getWindow);
@@ -260,8 +299,10 @@ class MainWindow{
 				plot.repaint();
 			}
 		});
-		
-		showPlotCheckBox.addActionListener(new ActionListener() {
+		//show plot
+		JCheckBox showPlotCheckBox = new JCheckBox("show plot",showPlot);
+		allComponents.add(showPlotCheckBox);
+		ActionListener showPlotAction = new ActionListener() {
 
 			@Override
 			public void actionPerformed(ActionEvent e) {
@@ -278,28 +319,36 @@ class MainWindow{
 				bottomPanel.updateUI();
 			}
 			
-		});
-		
-		plotMode.addActionListener(new ActionListener() {
+		};
+		showPlotAction.actionPerformed(null);
+		showPlotCheckBox.addActionListener(showPlotAction);
+		//plot mode
+		JComboBox<String> plotModeComboBox = new JComboBox<String>(new String[] {"2D","3D"});
+		plotModeComboBox.setSelectedIndex(plotMode);
+		allComponents.add(plotModeComboBox);
+		ActionListener updatePlotMode = new ActionListener() {
 
 			@Override
 			public void actionPerformed(ActionEvent e) {
-				if(plotMode.getSelectedItem().equals("2D")) {
+				if(plotModeComboBox.getSelectedItem().equals("2D")) {
 					plot.mode = Plot.MODE_2D;
-				}else if(plotMode.getSelectedItem().equals("3D")) {
+				}else if(plotModeComboBox.getSelectedItem().equals("3D")) {
 					plot.mode = Plot.MODE_3D;
 				}
 				plot.repaint();
 			}
 			
-		});
+		};
+		plotModeComboBox.addActionListener(updatePlotMode);
+		updatePlotMode.actionPerformed(null);
+		//
 		
 		JPanel graphicsOptions = new JPanel();
 		
 		allComponents.add(graphicsOptions);
 		graphicsOptions.setLayout(new FlowLayout());
 		graphicsOptions.add(showPlotCheckBox);
-		graphicsOptions.add(plotMode);
+		graphicsOptions.add(plotModeComboBox);
 		
 		JPanel windowParams = new JPanel();
 		allComponents.add(windowParams);
@@ -335,8 +384,7 @@ class MainWindow{
 		JPanel terminal = createTerminal(window,plot,allComponents);
 		JPanel bottomPanel = new JPanel();
 		bottomPanel.setLayout(new BorderLayout());
-		bottomPanel.setLayout(new BorderLayout());
-		bottomPanel.add(createSplitView(terminal,plot));
+		
 		tabs.addTab("main view", bottomPanel);
 		tabs.addTab("graphics", createGraphicsMenu(bottomPanel,terminal,plot,allComponents));
 		tabs.addTab("settings", createSettingsMenu(window,allComponents));
@@ -353,8 +401,8 @@ class MainWindow{
 		window.setLocationRelativeTo(null);
 		window.setVisible(true);
 	}
-
-	public MainWindow(){
+	
+	static void setUIStyle() {
 		try {
 			UIManager.setLookAndFeel(
 			        UIManager.getCrossPlatformLookAndFeelClassName());
@@ -363,8 +411,44 @@ class MainWindow{
 			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
+	}
+	
+	static boolean getBoolInLine(String line) {
+		return Boolean.valueOf(line.substring(line.lastIndexOf(':')+1));
+	}
+	static int getIntInLine(String line) {
+		return Integer.valueOf(line.substring(line.lastIndexOf(':')+1));
+	}
+	
+	void loadPrefs() {
+		try {
+			Scanner defsReader = new Scanner(new File("prefs.txt"));
+			
+			clearTerminal = getBoolInLine(defsReader.nextLine());
+			keepWindowOnTop = getBoolInLine(defsReader.nextLine());
+			showPlot = getBoolInLine(defsReader.nextLine());
+			plotMode = getIntInLine(defsReader.nextLine());
+			
+			background = new Color(getIntInLine(defsReader.nextLine()),getIntInLine(defsReader.nextLine()),getIntInLine(defsReader.nextLine()));
+			foreground = new Color(getIntInLine(defsReader.nextLine()),getIntInLine(defsReader.nextLine()),getIntInLine(defsReader.nextLine()));
+			
+			defsReader.close();
+		} catch (FileNotFoundException e) {
+			e.printStackTrace();
+		}
+	}
+
+	public MainWindow(){
+		setUIStyle();
 		currentStack = new StackEditor();
-		
+		loadPrefs();
+		createWindow();
+	}
+	
+	public MainWindow(StackEditor stackEditor) {
+		setUIStyle();
+		currentStack = stackEditor;
+		loadPrefs();
 		createWindow();
 	}
 

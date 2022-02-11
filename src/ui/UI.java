@@ -8,11 +8,7 @@ public class UI {
 	
 	public static final String VERSION = "1.5.2";
 	
-	public static boolean GUI = false;
-	public static boolean CLEAR_TERM = false;
-	static MainWindow mainWindow = null;
-	
-	public static String fancyIntro() {
+	public static final String fancyIntro() {
 		String img = ""
 				+ "▛▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▜\n"
 				+ "▌ ▛▀▀▄ ▀▛▘ ▀▛▘   ▌   ▗▛▜▖ ▗▛▜▖ ▀▛▘ ▗▛▜▖ ▐\n"
@@ -28,8 +24,8 @@ public class UI {
 		System.out.flush();
 	}
 	
-	public static void startCommandLineInterface() {
-		GUI = false;
+	public static void startCommandLineInterface(boolean clearTerm) {
+		System.out.println(UI.fancyIntro());
 		StackEditor editor = new StackEditor();
 		BufferedReader bf = new BufferedReader(new
 		        InputStreamReader(System.in));
@@ -42,7 +38,7 @@ public class UI {
 				e.printStackTrace();
 			}
 			
-			if(CLEAR_TERM) clearTerm();
+			if(clearTerm) clearTerm();
 			
 			int result = editor.command(s);
 			editor.printStack();
@@ -51,9 +47,10 @@ public class UI {
 		
 	}
 	
+	@SuppressWarnings("unused")
 	public static void startGraphicalInterface() {
-		GUI = true;
-		mainWindow = new MainWindow();
+		System.out.println(UI.fancyIntro());
+		new MainWindow();
 	}
 	
 }

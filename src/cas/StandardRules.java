@@ -6,13 +6,11 @@ public class StandardRules extends QuickMath{
 		
 		@Override
 		public Expr applyRuleToExpr(Expr e,Settings settings){
-			
 			e.set(0,factor(e.get()).simplify(settings));
 			if(e.get().negative()) {
 				Expr newInner = neg(e.get()).simplify(settings);
 				e.set(0, newInner);
 				Expr out = neg(e);
-				
 				return out.simplify(settings);
 			}
 			

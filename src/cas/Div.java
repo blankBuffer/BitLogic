@@ -363,6 +363,131 @@ public class Div extends Expr{
 		}
 	};
 	
+	static Rule reduceTrigFraction = new Rule("reducing trig fraction",Rule.EASY) {
+		private static final long serialVersionUID = 1L;
+		
+		@Override
+		public Expr applyRuleToExpr(Expr e,Settings settings){
+			Div div = (Div)e;
+			
+			Prod numerProd = Prod.cast(div.getNumer());
+			Prod denomProd = Prod.cast(div.getDenom());
+			
+			Prod newNumerProd = new Prod();
+			Prod newDenomProd = new Prod();
+			
+			for(int i = 0;i<numerProd.size();i++) {
+				Prod.TermInfo termInfo = Prod.getTermInfo(numerProd.get(i));
+				if(termInfo != null) {
+					Expr var = termInfo.var;
+					
+					Num sinCount = num(0);
+					Num cosCount = num(0);
+					if(termInfo.typeName.equals("sin")) {
+						sinCount = sinCount.addNum(termInfo.expo);
+					}else if(termInfo.typeName.equals("cos")) {
+						cosCount = cosCount.addNum(termInfo.expo);
+					}else if(termInfo.typeName.equals("tan")) {
+						sinCount = sinCount.addNum(termInfo.expo);
+						cosCount = cosCount.subNum(termInfo.expo);
+					}
+					numerProd.remove(i);
+					i--;
+					//filter out numerator
+					for(int j = 0;j<numerProd.size();j++) {
+						Prod.TermInfo otherTermInfo = Prod.getTermInfo(numerProd.get(j));
+						if(otherTermInfo != null && otherTermInfo.var.equals(var)) {
+							
+							if(otherTermInfo.typeName.equals("sin")) {
+								sinCount = sinCount.addNum(otherTermInfo.expo);
+							}else if(otherTermInfo.typeName.equals("cos")) {
+								cosCount = cosCount.addNum(otherTermInfo.expo);
+							}else if(otherTermInfo.typeName.equals("tan")) {
+								sinCount = sinCount.addNum(otherTermInfo.expo);
+								cosCount = cosCount.subNum(otherTermInfo.expo);
+							}
+							
+							numerProd.remove(j);
+							j--;
+						}
+					}
+					//filter out denominator
+					for(int j = 0;j<denomProd.size();j++) {
+						Prod.TermInfo otherTermInfo = Prod.getTermInfo(denomProd.get(j));
+						if(otherTermInfo != null && otherTermInfo.var.equals(var)) {
+							
+							if(otherTermInfo.typeName.equals("sin")) {
+								sinCount = sinCount.subNum(otherTermInfo.expo);
+							}else if(otherTermInfo.typeName.equals("cos")) {
+								cosCount = cosCount.subNum(otherTermInfo.expo);
+							}else if(otherTermInfo.typeName.equals("tan")) {
+								sinCount = sinCount.subNum(otherTermInfo.expo);
+								cosCount = cosCount.addNum(otherTermInfo.expo);
+							}
+							
+							denomProd.remove(j);
+							j--;
+						}
+					}
+					//
+					
+					//move around calculation
+					Num tanCount = num(0);
+					if(!sinCount.equals(Num.ZERO) && !cosCount.equals(Num.ZERO)) {
+						if(sinCount.signum() == 1 ^ cosCount.signum() == 1) {
+							BigInteger tanCountBI = sinCount.realValue.abs().min(cosCount.realValue.abs());
+							BigInteger sumCount = sinCount.realValue.add(cosCount.realValue);
+							if(sinCount.negative()) {
+								tanCountBI = tanCountBI.negate();
+							}
+							
+							if(sumCount.signum() == 1 ^ sinCount.negative()) {
+								sinCount = num(sumCount);
+								cosCount = num(0);
+							}else {
+								sinCount = num(0);
+								cosCount = num(sumCount);
+							}
+							
+							tanCount = num(tanCountBI);
+						}
+					}
+					//re add back
+					if(!tanCount.equals(Num.ZERO)) {
+						if(tanCount.realValue.signum() == 1) {
+							newNumerProd.add(  Power.unCast(pow(tan(var),tanCount))  );
+						}else {
+							newDenomProd.add(  Power.unCast(pow(tan(var),tanCount.negate()))  );
+						}
+					}
+					if(!sinCount.equals(Num.ZERO)) {
+						if(sinCount.realValue.signum() == 1) {
+							newNumerProd.add(  Power.unCast(pow(sin(var),sinCount))  );
+						}else {
+							newDenomProd.add(  Power.unCast(pow(sin(var),sinCount.negate()))  );
+						}
+					}
+					if(!cosCount.equals(Num.ZERO)) {
+						if(cosCount.realValue.signum() == 1) {
+							newNumerProd.add(  Power.unCast(pow(cos(var),cosCount))  );
+						}else {
+							newDenomProd.add(  Power.unCast(pow(cos(var),cosCount.negate())) );
+						}
+					}
+					
+				}
+			}
+			
+			Expr newNumer = Prod.unCast(Prod.combine(numerProd, newNumerProd));
+			Expr newDenom = Prod.unCast(Prod.combine(denomProd, newDenomProd));
+			
+			div.setNumer(newNumer);
+			div.setDenom(newDenom);
+			
+			return div;
+		}
+	};
+	
 	static ExprList ruleSequence = null;
 	
 	public static void loadRules(){
@@ -370,6 +495,7 @@ public class Div extends Expr{
 				divWithEpsilon,
 				factorChildren,
 				trigExpandElements,
+				reduceTrigFraction,
 				divContainsDiv,
 				cancelOutTerms,
 				reduceFraction,

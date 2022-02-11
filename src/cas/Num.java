@@ -59,6 +59,12 @@ public class Num extends Expr{
 		return new Num(newReal,newImag);
 	}
 	
+	public Num subNum(Num other) {
+		BigInteger newReal = realValue.subtract(other.realValue);
+		BigInteger newImag = imagValue.subtract(other.imagValue);
+		return new Num(newReal,newImag);
+	}
+	
 	public Num multNum(Num other) {
 		BigInteger newReal = realValue.multiply(other.realValue).subtract(imagValue.multiply(other.imagValue));
 		BigInteger newImag = realValue.multiply(other.imagValue).add(imagValue.multiply(other.realValue));

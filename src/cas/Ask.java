@@ -1,4 +1,8 @@
 package cas;
+import java.awt.Color;
+import java.awt.Dimension;
+import java.io.File;
+import java.io.FileNotFoundException;
 import java.text.DecimalFormat;
 import java.time.Instant;
 import java.time.ZoneOffset;
@@ -7,8 +11,11 @@ import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.HashMap;
+import java.util.Scanner;
 import java.util.Set;
 import java.util.TimeZone;
+
+import graphics.Plot;
 
 public class Ask extends QuickMath{
 	
@@ -52,6 +59,44 @@ public class Ask extends QuickMath{
 			return getResponse(tokens);
 		}
 	}
+	static void loadBasicQuestions() {
+		try {
+			Scanner scanner = new Scanner(new File("QnA.txt"));
+			System.out.println("loading questions...");
+			while(scanner.hasNextLine()) {
+				String line = scanner.nextLine();
+				
+				if(line.startsWith("#")) continue;
+				
+				int barIndex = line.indexOf('|');
+				
+				if(line.contains(":")) {
+					int colonIndex = line.indexOf(':');
+					
+					String[] tokens = line.substring(0, colonIndex).split(",");
+					String output = line.substring(colonIndex+1, barIndex);
+					output = output.replace('`', '\n');
+					int wordLimit = Integer.valueOf(line.substring(barIndex+1));
+					
+					questions.add(new Question(tokens,output,wordLimit));
+				}else if(line.contains("\\")) {
+					int slashIndex = line.indexOf('\\');
+					
+					String[] tokens = line.substring(0, slashIndex).split(",");
+					Expr output = createExpr(line.substring(slashIndex+1, barIndex));
+					int wordLimit = Integer.valueOf(line.substring(barIndex+1));
+					
+					questions.add(new Question(tokens,output,wordLimit));
+				}
+				
+			}
+			scanner.close();
+			System.out.println("done loading questions!");
+		} catch (FileNotFoundException e) {
+			System.err.println("unable to load questions");
+		}
+	}
+	
 	
 	static ArrayList<Integer> indexOfExpressions(ArrayList<String> tokens) {
 		ArrayList<Integer> indexes = new ArrayList<Integer>();
@@ -69,7 +114,6 @@ public class Ask extends QuickMath{
 	static HashMap<String, String> replacement = new HashMap<String,String>();
 	static HashMap<String, String> phraseReplacement = new HashMap<String, String>();
 	static Set<String> phraseReplacementKeys = phraseReplacement.keySet();
-	static ArrayList<String> functionNames = new ArrayList<String>();
 	
 	static {
 		replacement.put("not", "~");
@@ -150,47 +194,11 @@ public class Ask extends QuickMath{
 		replacement.put("0th", "0");
 		replacement.put("10th", "10");
 		
+		replacement.put("graph", "plot");
 		
 		phraseReplacement.put("to the", "^");//example , 2 to the 3
 		phraseReplacement.put("square root", "sqrt");
 		phraseReplacement.put("cube root", "cbrt");
-		
-		//funny
-		
-		questions.add(new Question(new String[] {"meaning","life"},"that's a stupid question, you make the rules",10));
-		questions.add(new Question(new String[] {"god"},"Ben Currie is my creator, so he is God",10));
-		
-		String bestSubjectResponse = "math is the best, and anyone who disagrees is mad";
-		questions.add(new Question(new String[] {"favorite","subject"},bestSubjectResponse,10));
-		questions.add(new Question(new String[] {"best","subject"},bestSubjectResponse,10));
-		
-		//basic questions
-		
-		questions.add(new Question(new String[] {"help"},"Supported Math functions\n"
-				+ "Sin,Cos,Tan\n"
-				+ "diff(#expr,#var) for derivative\n"
-				+ "integrate(#expr,#var) for anti-derivatuve\n"
-				+ "integrateOver(#left-bound,#right-bound,#expr,#var)\n"
-				+ "solve(#eq,#var) for solving an equation\n"
-				+ "distr(#expr) distributes an expression\n"
-				+ "factor(#expr) to factor an expression\n"
-				+ "approx(#expr,[#variable-defs-list]) to approximate expression",7));
-		
-		//physics
-		questions.add(new Question(new String[] {"centripetal","acceleration"},div(pow(var("v"),num(2)),var("r")),6));
-		questions.add(new Question(new String[] {"rotational","kinetic","energy"},div(prod(var("I"),pow(var("w"),num(2))),num(2)),6));
-		questions.add(new Question(new String[] {"kinetic","energy"},div(prod(var("m"),pow(var("v"),num(2))),num(2)),6));
-		questions.add(new Question(new String[] {"potential","energy"},sum(prod(var("m"),var("g"),var("h")),div(prod(var("k"),pow(var("x"),num(2))),num(2))),6));
-		questions.add(new Question(new String[] {"momentum"},prod(var("m"),var("v")),6));
-		
-		Expr standardMomentOfInertia = prod(var("m"),pow(var("r"),num(2)));
-		questions.add(new Question(new String[] {"moment","inertia","point"},standardMomentOfInertia,8));
-		questions.add(new Question(new String[] {"moment","inertia","ring"},standardMomentOfInertia,8));
-		questions.add(new Question(new String[] {"moment","inertia","hollow","cylinder"},standardMomentOfInertia,10));
-		questions.add(new Question(new String[] {"moment","inertia","cylinder"},div(standardMomentOfInertia,num(2)),10));
-		questions.add(new Question(new String[] {"moment","inertia","disk"},div(standardMomentOfInertia,num(2)),10));
-		questions.add(new Question(new String[] {"moment","inertia","hollow","sphere"},div(prod(num(2),var("m"),pow(var("r"),num(2))),num("3")),10));
-		questions.add(new Question(new String[] {"moment","inertia","sphere"},div(prod(num(2),var("m"),pow(var("r"),num(2))),num("5")),10));
 		
 		questions.add(new Question(new String[] {"earth","acceleration"},Double.toString(Unit.EARTH_GRAVITY),8));
 		questions.add(new Question(new String[] {"acceleration","earth"},Double.toString(Unit.EARTH_GRAVITY),8));
@@ -267,30 +275,53 @@ public class Ask extends QuickMath{
 				return num((int)Math.floor(Math.random()*6+1.0));
 			}
 		});
+		questions.add(new Question(new String[] {"plot"},nullExpr,7){
+			@Override
+			Expr getResponse(ArrayList<String> tokens) {
+				Expr equation = null;
+				Plot.PlotWindowParams plotWind = new Plot.PlotWindowParams();
+				
+				boolean _3d = false;
+				int _3dTokenIndex = tokens.indexOf("3d");
+				if(_3dTokenIndex != -1) {
+					_3d = true;
+					tokens.remove(_3dTokenIndex);
+				}
+				
+				int indexOfExpr = indexOfExpr(0,tokens.size(),tokens);
+				if(indexOfExpr != -1){
+					equation = createExpr(tokens.get(indexOfExpr));
+				}
+				
+				int windowTokenIndex = tokens.indexOf("window");
+				if(windowTokenIndex != -1) {
+					ExprList windowParams = (ExprList) createExpr(tokens.get(windowTokenIndex+1));
+					plotWind.xMin = windowParams.get(0).convertToFloat(exprList()).real;
+					plotWind.xMax = windowParams.get(1).convertToFloat(exprList()).real;
+					plotWind.yMin = windowParams.get(2).convertToFloat(exprList()).real;
+					plotWind.yMax = windowParams.get(3).convertToFloat(exprList()).real;
+					
+					if(windowParams.size()>4) {
+						plotWind.zMin = windowParams.get(4).convertToFloat(exprList()).real;
+						plotWind.zMax = windowParams.get(5).convertToFloat(exprList()).real;
+					}
+					
+					if(windowParams.size()>6 ) {
+						plotWind.zRot = windowParams.get(6).convertToFloat(exprList()).real;
+						plotWind.xRot = windowParams.get(7).convertToFloat(exprList()).real;
+					}
+				}
+				
+				if(equation != null) {
+					if(!_3d)
+						return new ObjectExpr(Plot.renderGraph2D(exprList(equation), plotWind, new Dimension(400,400), new Color(64,64,64), new Color(255,255,255) ));
+					return new ObjectExpr(Plot.renderGraph3D(exprList(equation), plotWind, new Dimension(400,400),new Color(64,64,64), new Color(255,255,255), 48));
+				}
+				return var("not sure what to plot?");
+			}
+		});
 		//definitions
-		
-		questions.add(new Question(new String[] {"number"},"It is a labeling system to abstractly quantify things",5));
-		
-		//geometric definitions
-		questions.add(new Question(new String[] {"polygon"},"a 2d shape that is closed and made up of a finite number of sides and verticies",5));
-		questions.add(new Question(new String[] {"triangle"},"a polygon with three sides",5));
-		questions.add(new Question(new String[] {"square"},"a polygon with four sides",5));
-		questions.add(new Question(new String[] {"pentagon"},"a polygon with five sides",5));
-		questions.add(new Question(new String[] {"hexagon"},"a polygon with six sides",5));
-		
-		functionNames.add("sin");
-		functionNames.add("cos");
-		functionNames.add("tan");
-		functionNames.add("asin");
-		functionNames.add("acos");
-		functionNames.add("atan");
-		functionNames.add("sqrt");
-		functionNames.add("cbrt");
-		functionNames.add("ln");
-		functionNames.add("gamma");
-		functionNames.add("approx");
-		functionNames.add("mathML");
-		
+		loadBasicQuestions();
 	}
 	
 	static String numeric(String s) {
@@ -348,6 +379,10 @@ public class Ask extends QuickMath{
 		}
 	}
 	
+	static boolean oneParameterFunction(String funcName) {
+		return SimpleFuncs.isFunc(funcName) && SimpleFuncs.getExpectectedParams(funcName) == 1;
+	}
+	
 	static void combineTrailingOperatorTokens(ArrayList<String> tokens){//'2^ 3' -> '2^3'
 		for(int i = 0;i<tokens.size()-1;i++) {
 			String s = tokens.get(i);
@@ -357,7 +392,7 @@ public class Ask extends QuickMath{
 			char rightStartChar = tokens.get(i+1).charAt(0);
 			boolean rightHasOperator = Interpreter.isOperator(String.valueOf(rightStartChar)) && rightStartChar != '[' && rightStartChar != '~';
 			
-			if( (leftHasOperator || rightHasOperator)&&!functionalForm || functionalForm&&functionNames.contains(s) ) {
+			if( (leftHasOperator || rightHasOperator)&&!functionalForm || functionalForm && oneParameterFunction(s) ) {
 				tokens.set(i,tokens.get(i)+tokens.get(i+1));
 				tokens.remove(i+1);
 				i--;
@@ -368,7 +403,7 @@ public class Ask extends QuickMath{
 	
 	static void applyFunctionKeywords(ArrayList<String> tokens){
 		for(int i = tokens.size()-1;i>=0;i--) {
-			if(functionNames.contains(tokens.get(i))) {//function reading
+			if(oneParameterFunction(tokens.get(i))) {//function reading
 				int indexOfExpr = i+1;
 				if(tokens.get(i+1).equals("of")){
 					tokens.remove(i+1);

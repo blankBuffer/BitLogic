@@ -255,9 +255,9 @@ public class Solve extends Expr{
 					cases = new Rule[] {
 							new Rule(equ( createExpr("ln(a)=b") , createExpr("a=e^b") ),"log case for solve",Rule.EASY),
 							
-							new Rule(equ( createExpr("sin(a)=b") , createExpr("a=asin(b)") ),"sin case for solve",Rule.EASY),
-							new Rule(equ( createExpr("cos(a)=b") , createExpr("a=acos(b)") ),"cos case for solve",Rule.EASY),
-							new Rule(equ( createExpr("tan(a)=b") , createExpr("a=atan(b)") ),"tan case for solve",Rule.EASY),
+							new Rule(equ( createExpr("sin(a)=b") , createExpr("[a=asin(b),a=pi-asin(b)]") ),"sin case for solve",Rule.EASY),
+							new Rule(equ( createExpr("cos(a)=b") , createExpr("[a=acos(b),a=-acos(b)]") ),"cos case for solve",Rule.EASY),
+							new Rule(equ( createExpr("tan(a)=b") , createExpr("[a=atan(b),a=atan(b)-pi]") ),"tan case for solve",Rule.EASY),
 							
 							new Rule(equ( createExpr("asin(a)=b") , createExpr("a=sin(b)") ),"tan case for solve",Rule.EASY),
 							new Rule(equ( createExpr("acos(a)=b") , createExpr("a=cos(b)") ),"tan case for solve",Rule.EASY),

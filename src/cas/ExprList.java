@@ -40,6 +40,31 @@ public class ExprList extends Expr{
 			return list;
 		}
 	};
+	
+	static Rule listContainsList = new Rule("list contains list",Rule.VERY_EASY) {
+		
+		private static final long serialVersionUID = 1L;
+		
+		@Override
+		public Expr applyRuleToExpr(Expr e,Settings settings){
+			ExprList list = (ExprList)e;
+			
+			ExprList outList = new ExprList();
+			
+			for(int i = 0;i<list.size();i++) {
+				if(list.get(i) instanceof ExprList) {
+					ExprList subList = (ExprList)list.get(i);
+					for(int j = 0;j<subList.size();j++) {
+						outList.add(subList.get(j));
+					}
+				}else {
+					outList.add(list.get(i));
+				}
+			}
+			
+			return outList;
+		}
+	};
 
 	@Override
 	public String toString() {
@@ -69,6 +94,7 @@ public class ExprList extends Expr{
 	
 	public static void loadRules(){
 		ruleSequence = exprList(
+				listContainsList,
 				removeRepeats,
 				alone
 		);

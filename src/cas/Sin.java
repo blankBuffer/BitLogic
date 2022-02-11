@@ -70,7 +70,6 @@ public class Sin extends Expr{
 						Div frac = ((Div)innerExpr.get(i)).ratioOfUnitCircle();
 						
 						if(frac!=null) {
-							System.out.println(frac);
 							BigInteger numer = ((Num)frac.getNumer()).realValue,denom = ((Num)frac.getDenom()).realValue;
 							
 							if(denom.signum() == -1){

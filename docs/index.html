@@ -43,47 +43,30 @@
 		<div class="background-shade">
 			<center><h1>BitLogic Computer Algebra System</h1></center>
 		</div>
+		<center><img src="social_preview.jpeg" width="400"></center>
 		<center><h4>By Benjamin Currie</h4></center>
 		
 		<h2>Getting Started</h2>
-		<h3>Starting the program</h3>
-		<p>BitLogic.jar is the java executable which can be launched with either the "startJarGui" or "startJarNoGui" scripts. The jar will launch if double clicked on a compatible OS. You can also start the program from the terminal using either of the following commands<br><br>
-		<span class="highlighted">java -jar BitLogic.jar no-gui<br>java -jar BitLogic.jar gui</span><br><br>
-		You may need the latest version of the java JRE</p>
 		
-		<h3>Using BitLogic with the terminal</h3>
-		<p>once launched you should get an intro of BitLogic with <br><br>
-			<span class="highlighted">></span><br><br>
-			To quit type "quit" and hit <b>ENTER</b>
+		<a href="bitLogicArch.zip" download>Download BitLogic</a>
+		
+		<h3>Starting the program</h3>
+		<p>BitLogic.jar is the java executable which can be launched by double clicking it. It can also be opened with the following commands.<br><br>
+		<span class="highlighted">java -jar BitLogic.jar no-gui<br>java -jar BitLogic.jar gui</span><br><br>
+			The program requires java at least version 11</p>
+		
+		<h3>Learning the interface</h3>
+		<p>Once launched you should get a window<br><br>
+			
+			<img src="mainWindow.png" width="800">
 			<br><br>
-			Lets solve a simple linear equation: x+3=2x-5 in terms of x<br>
-			The first thing to know is that 2x must be written as 2*x so that the interpreter knows when to multiply.<br><br>
-			<b>Option 1, plain English</b><br><br>
+			On the bottom left hand corner there is an entry area where you can add and remove items like a command line interface. The push button does the same thing as hitting enter and adds what you typed in the entry text field onto the stack. The result button computes the result of the last item on the stack.<br><br>
 			
-			<img src="terminalExample1.png" alt="terminal example img" width="400">
-			<br>
-			hit <b>ENTER</b> to add it to the stack<br><br>
+			The last item on the stack will also be rendered in pretty print as seen above. On the right is the graph. You can move around by dragging your mouse over the graph. Scrolling the mouse wheel will control the zoom. To get more precise window control, go to the graphics tab.<br><br>
+			<img src="graphicsTab.png" width="800">
+			<br><br>
 			
-			
-			<b>Option 2, BitLogic syntax</b><br><br>
-			
-			<img src="terminalExample2.png" alt="terminal example img" width="400">
-			<br>
-			<br>
-			
-			The English analyzer or BitLogic interpreter created a valid BitLogic expression and added it to whats known as the stack. The stack keeps a list of items which can be
-			manipulated, removed, added, duplicated etc. For the time being just know that this is a view of all the expressions in memory. To get the result of this BitLogic expression type...<br><br>
-			
-			<span sclass="highlighted">
-			result
-			</span><br>
-			or<br>
-			<span class="highlighted">
-			r
-			</span><br><br>
-			hit <b>ENTER</b><br> This will compute the last item on the stack and generate the result and replace the old expression. You should get "x=8".<br>
-			
-			There are many other commands which exist and is under the commands with examples section.
+			In the graphics tab there are many choices in how the plot will render. The get window button retrieves the current window zoom and loads it into the x-Min xMax... text fields. The set window loads the parameters in the text fields and sets the plot window to those values. The reset button changes it back to the default zoom level.
 			
 		</p>
 		

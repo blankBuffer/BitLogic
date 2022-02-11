@@ -49,6 +49,10 @@ public abstract class Expr extends QuickMath implements Comparable<Expr>, Serial
 	
 	public static HashMap<Expr,Expr> cached = new HashMap<Expr,Expr>();
 	public static ArrayList<Expr> cachedKeys = new ArrayList<Expr>();
+	public static void clearCache() {
+		cached.clear();
+		cachedKeys.clear();
+	}
 	
 	void print() {
 		System.out.print(this);
@@ -105,7 +109,7 @@ public abstract class Expr extends QuickMath implements Comparable<Expr>, Serial
 			}
 		}
 		RECURSION_SAFETY++;
-		if(RECURSION_SAFETY>128) {
+		if(RECURSION_SAFETY>1000000) {
 			System.err.println("RECURSION DETECTED");
 			return toBeSimplified;
 		}
@@ -249,6 +253,24 @@ public abstract class Expr extends QuickMath implements Comparable<Expr>, Serial
 		return copy();
 	}
 	
+	public Expr removeCoefficients() {
+		if(this instanceof Num) return num(1);
+		else if(this instanceof Prod) {
+			Prod prodCopy = (Prod)copy();
+			for(int i = 0;i<prodCopy.size();i++) {
+				if(prodCopy.get(i) instanceof Num) {
+					prodCopy.remove(i);
+					i--;
+				}
+			}
+			return Prod.unCast(prodCopy);
+		}else if(this instanceof Div) {
+			Div casted = (Div)this;
+			return Div.unCast( div(casted.getNumer().removeCoefficients(),casted.getDenom().removeCoefficients()));
+		}
+		return copy();
+	}
+	
 	public boolean negative() {//Assumes its already simplified
 		if(this instanceof Num) return ((Num)this).signum() == -1;
 		else if(this instanceof Prod) {
@@ -266,7 +288,7 @@ public abstract class Expr extends QuickMath implements Comparable<Expr>, Serial
 			int highest  = Integer.MIN_VALUE;
 			int index = 0;
 			for(int i = 0;i<casted.size();i++) {
-				int current = casted.get(i).abs(Settings.normal).hashCode();//its very important to use the absolute value
+				int current = casted.get(i).removeCoefficients().hashCode();//its very important to use the absolute value
 				if(current>highest) {
 					highest = current;
 					index = i;
@@ -530,6 +552,10 @@ public abstract class Expr extends QuickMath implements Comparable<Expr>, Serial
 		out+=(tabStr+ typeName() +" hash: "+hashCode());
 		if(this instanceof Num || this instanceof Var) out+=(" name: "+this);
 		out+="\n";
+		if(this instanceof Func) {
+			out+="rules: "+((Func)this).getRuleSequence();
+			out+="\n";
+		}
 		for(int i = 0;i<size();i++) {
 			out+=get(i).toStringTree(tab+1);
 		}

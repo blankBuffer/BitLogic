@@ -275,6 +275,12 @@ public class Rule extends Expr{
 	}
 	@Override
 	public String toString(){
+		if(pattern != null && condition != null) {
+			return name+" "+pattern+" "+condition;
+		}
+		if(pattern != null && condition == null) {
+			return name+" "+pattern;
+		}
 		return name;
 	}
 	

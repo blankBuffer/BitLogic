@@ -5,6 +5,31 @@ public class Prod extends Expr{
 
 	private static final long serialVersionUID = -6256457097575815230L;
 	
+	static class TermInfo{
+		Expr var = null;
+		String typeName = null;
+		Num expo = null;
+		TermInfo(Expr var,String typeName,Num expo){
+			this.var = var;
+			this.typeName = typeName;
+			this.expo = expo;
+		}
+	}
+	static TermInfo getTermInfo(Expr e) {
+		if(e instanceof Sin || e instanceof Tan || e instanceof Cos) {
+			return new TermInfo(e.get(),e.typeName(),num(1));
+		}else if(e instanceof Power) {
+			Power casted = (Power)e;
+			if(isRealNum(casted.getExpo())) {
+				e = casted.getBase();
+				if(e instanceof Sin || e instanceof Tan || e instanceof Cos) {
+					return new TermInfo(e.get(),e.typeName(),(Num)casted.getExpo());
+				}
+			}
+		}
+		return null;
+	}
+	
 	public Prod() {
 		commutative = true;
 	}
@@ -422,6 +447,96 @@ public class Prod extends Expr{
 		}
 	};
 	
+	static Rule reduceTrigProd = new Rule("reducing trig fraction",Rule.EASY) {
+		private static final long serialVersionUID = 1L;
+		
+		@Override
+		public Expr applyRuleToExpr(Expr e,Settings settings){
+			Prod prod = (Prod)e;
+			
+			Prod newNumerProd = new Prod();
+			
+			for(int i = 0;i < prod.size();i++) {
+				TermInfo termInfo = getTermInfo(prod.get(i));
+				if(termInfo != null) {
+					Expr var = termInfo.var;
+					Num sinCount = num(0);
+					Num cosCount = num(0);
+					
+					if(termInfo.typeName.equals("sin")) {
+						sinCount = sinCount.addNum(termInfo.expo);
+					}else if(termInfo.typeName.equals("cos")) {
+						cosCount = cosCount.addNum(termInfo.expo);
+					}else if(termInfo.typeName.equals("tan")) {
+						sinCount = sinCount.addNum(termInfo.expo);
+						cosCount = cosCount.subNum(termInfo.expo);
+					}
+					
+					prod.remove(i);
+					i--;
+					
+					for(int j = 0;j < prod.size();j++) {
+						Prod.TermInfo otherTermInfo = Prod.getTermInfo(prod.get(j));
+						if(otherTermInfo != null && otherTermInfo.var.equals(var)) {
+							
+							if(otherTermInfo.typeName.equals("sin")) {
+								sinCount = sinCount.addNum(otherTermInfo.expo);
+							}else if(otherTermInfo.typeName.equals("cos")) {
+								cosCount = cosCount.addNum(otherTermInfo.expo);
+							}else if(otherTermInfo.typeName.equals("tan")) {
+								sinCount = sinCount.addNum(otherTermInfo.expo);
+								cosCount = cosCount.subNum(otherTermInfo.expo);
+							}
+							
+							prod.remove(j);
+							j--;
+						}
+					}
+					
+					//move around calculation
+					Num tanCount = num(0);
+					if(!sinCount.equals(Num.ZERO) && !cosCount.equals(Num.ZERO)) {
+						if(sinCount.signum() == 1 ^ cosCount.signum() == 1) {
+							BigInteger tanCountBI = sinCount.realValue.abs().min(cosCount.realValue.abs());
+							BigInteger sumCount = sinCount.realValue.add(cosCount.realValue);
+							if(sinCount.negative()) {
+								tanCountBI = tanCountBI.negate();
+							}
+							
+							if(sumCount.signum() == 1 ^ sinCount.negative()) {
+								sinCount = num(sumCount);
+								cosCount = num(0);
+							}else {
+								sinCount = num(0);
+								cosCount = num(sumCount);
+							}
+							
+							tanCount = num(tanCountBI);
+						}
+					}
+					//re add back
+					if(!tanCount.equals(Num.ZERO)) {
+						newNumerProd.add(  Power.unCast(pow(tan(var),tanCount))  );
+					}
+					if(!sinCount.equals(Num.ZERO)) {
+						newNumerProd.add(  Power.unCast(pow(sin(var),sinCount))  );
+					}
+					if(!cosCount.equals(Num.ZERO)) {
+						newNumerProd.add(  Power.unCast(pow(cos(var),cosCount))  );
+					}
+					
+					
+					
+				}
+				
+			}
+			
+			Expr newExpr = Prod.combine(newNumerProd, prod);
+			return newExpr;
+		}
+		
+	};
+	
 	static Rule aloneProd = new Rule("product is alone",Rule.VERY_EASY){
 		private static final long serialVersionUID = 1L;
 		
@@ -436,6 +551,7 @@ public class Prod extends Expr{
 	public static void loadRules(){
 		ruleSequence = exprList(
 				factorSubSums,
+				reduceTrigProd,
 				trigExpandElements,
 				combineWithDiv,
 				prodContainsProd,

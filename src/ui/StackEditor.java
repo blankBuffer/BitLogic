@@ -171,16 +171,6 @@ public class StackEditor extends cas.QuickMath {
 			return;
 		stack.set(size() - 1, not(last()));
 	}
-	
-	void limit(){
-		if (size() < 3)
-			return;
-		Limit out = new Limit(stack.get(size()-4),(Var)sLast(),last());
-		for(int i = 0;i<3;i++){
-			stack.remove(size()-1);
-		}
-		stack.add( out);
-	}
 
 	void exponent() {
 		if (sLast() == null)
@@ -196,66 +186,12 @@ public class StackEditor extends cas.QuickMath {
 		stack.remove(size() - 1);
 	}
 
-	void ln() {
-		if (last() == null)
-			return;
-		stack.set(size() - 1, ln(last()));
-	}
-
-	void log() {
-		if (sLast() == null)
-			return;
-		if(last().equals(e())){
-			stack.set(size() - 1, ln(sLast()));
-			stack.remove(size()-2);
-		}else{
-			stack.set(size() - 1, div(ln(sLast()), ln(last())));
-			stack.remove(size()-2);
-		}
-	}
-
-	void factor() {
-		if (last() == null)
-			return;
-		stack.set(size() - 1, factor(last()));
-	}
-
-	void distr() {
-		if (last() == null)
-			return;
-		stack.set(size() - 1, distr(last()));
-	}
-
-	void sqrt() {
-		if (last() == null)
-			return;
-		stack.set(size() - 1, sqrt(last()));
-	}
-
-	void similar() {
-		if (sLast() == null)
-			return;
-		stack.add(bool(Rule.strictSimilarStruct(sLast(),last())));
-	}
-	
-	void fastSimilar() {
-		if (sLast() == null)
-			return;
-		stack.add(bool(Rule.fastSimilarStruct(sLast(),last())));
-	}
-
 	void divide() {
 		if (sLast() == null)
 			return;
 
 		stack.set(size() - 2, div(sLast(), stack.get(size() - 1)));
 		stack.remove(size() - 1);
-	}
-
-	void inverse() {
-		if (last() == null)
-			return;
-		stack.set(size() - 1, inv(last()));
 	}
 
 	void swap() {
@@ -266,61 +202,24 @@ public class StackEditor extends cas.QuickMath {
 		stack.set(size() - 2, temp);
 	}
 
-	void diff() {
-		if (sLast() == null)
-			return;
-		if (!(last() instanceof Var)) {
-			createAlert("the second element needs to be a variable");
-			return;
-		}
-		stack.set(size() - 2, diff(sLast(), (Var) last()));
-		stack.remove(size() - 1);
-	}
-
-	void integrate() {
-		if (sLast() == null)
-			return;
-		if (!(last() instanceof Var)) {
-			createAlert("the second element needs to be a variable");
-			return;
-		}
-		stack.set(size() - 2, integrate(sLast(), (Var) last()));
-		stack.remove(size() - 1);
-	}
-
-	void integrateOver() {
-		if (stack.size() < 4) {
-			createAlert("need more elements");
-			return;
-		}
-		if (!(last() instanceof Var)) {
-			createAlert("the last element needs to be a variable");
-			return;
-		}
-		stack.set(size() - 4, integrateOver(stack.get(size() - 4), stack.get(size() - 3), sLast(), (Var) last()));
-		for(int i = 0;i<3;i++) {
-			stack.remove(stack.size()-1);
-		}
-	}
-
-	void solve() {
-		if (sLast() == null)
-			return;
-		if (!(last() instanceof Var)) {
-			createAlert("the second element needs to be a variable");
-			return;
-		} else if (!(sLast() instanceof Equ)) {
-			createAlert("the first element needs to be an equation");
-			return;
-		}
-		stack.set(size() - 2, solve((Equ) sLast(), (Var) last()));
-		stack.remove(size() - 1);
-	}
-
 	void equ() {
 		if (sLast() == null)
 			return;
 		stack.set(size() - 2, equ(sLast(), last()));
+		stack.remove(size() - 1);
+	}
+	
+	void greater() {
+		if (sLast() == null)
+			return;
+		stack.set(size() - 2, equGreater(sLast(), last()));
+		stack.remove(size() - 1);
+	}
+	
+	void less() {
+		if (sLast() == null)
+			return;
+		stack.set(size() - 2, equLess(sLast(), last()));
 		stack.remove(size() - 1);
 	}
 
@@ -359,76 +258,11 @@ public class StackEditor extends cas.QuickMath {
 		}
 		stack.set(0, temp);
 	}
-
-	void sin() {
-		if (last() == null)
-			return;
-		stack.set(size() - 1, sin(last()));
-	}
-
-	void cos() {
-		if (last() == null)
-			return;
-		stack.set(size() - 1, cos(last()));
-	}
-
-	void tan() {
-		if (last() == null)
-			return;
-		stack.set(size() - 1, tan(last()));
-	}
-
-	void sinh() {
-		if (last() == null)
-			return;
-		stack.set(size() - 1, sinh(last()));
-	}
-
-	void cosh() {
-		if (last() == null)
-			return;
-		stack.set(size() - 1, cosh(last()));
-	}
-
-	void tanh() {
-		if (last() == null)
-			return;
-		stack.set(size() - 1, tanh(last()));
-	}
-
-	void atan() {
-		if (last() == null)
-			return;
-		stack.set(size() - 1, atan(last()));
-	}
-	void asin() {
-		if (last() == null)
-			return;
-		stack.set(size() - 1, asin(last()));
-	}
-	void acos() {
-		if (last() == null)
-			return;
-		stack.set(size() - 1, acos(last()));
-	}
 	
-	void lambertW(){
-		if (last() == null)
-			return;
-		stack.set(size() - 1, lambertW(last()));
-	}
-	
-	void mathML() {
-		if (last() == null)
-			return;
-		stack.set(size() - 1, var("\""+generateMathML(last())+"\"" ) );
-	}
-
-	void approx() {
-		if (sLast() == null)
-			return;
-		stack.set(size() - 2, approx(sLast(), (ExprList) last()));
-		stack.remove(stack.size() - 1);
+	void undo() {
+		ExprList temp = stack;
+		stack = stackOld;
+		stackOld = temp;
 	}
 
 	public int command(String command) {
@@ -443,8 +277,10 @@ public class StackEditor extends cas.QuickMath {
 				for (int i = 0; i < size(); i++) {
 					stackOld.add(stack.get(i).copy());
 				}
-			}
-			if (command.equals("+")) {
+			} 
+			if(command.equals("undo")){
+				undo();
+			}else if (command.equals("+")) {
 				add();
 			} else if (command.equals("--")) {
 				negate();
@@ -456,114 +292,39 @@ public class StackEditor extends cas.QuickMath {
 				not();
 			} else if (command.equals("-")) {
 				subtract();
-			} else if (command.equals("limit")) {
-				limit();
-			}else if (command.equals("*")) {
+			} else if (command.equals("*")) {
 				multiply();
+			} else if (command.equals("/")) {
+				divide();
 			} else if (command.equals("^")) {
 				exponent();
 			} else if (command.equals("r") || (command.equals("result"))) {// get result
 				result();
 			} else if (command.equals("p") || command.equals("pop")) {// pop element
 				pop();
-			} else if (command.equals("ln") || command.equals("log")) {
-				log();
-			} else if (command.equals("sqrt")) {
-				sqrt();
-			} else if (command.equals("similar")) {
-				similar();
-			}	else if (command.equals("fastSimilar")) {
-				fastSimilar();
 			} else if (command.equals("swap")) {
 				swap();
-			} else if (command.equals("inv")) {
-				inverse();
-			} else if (command.equals("/")) {
-				divide();
-			} else if (command.equals("diff")) {
-				diff();
-			} else if (command.equals("integrate")) {
-				integrate();
-			} else if (command.equals("perfect-power")) {
-				stack.add(perfectPower((Num) last()));
-			} else if (command.equals("prime-factor")) {
-				stack.add(primeFactor((Num) last()));
-			} else if (command.equals("distr")) {
-				distr();
-			} else if (command.equals("solve")) {
-				solve();
 			} else if (command.equals("=")) {
 				equ();
+			} else if (command.equals(">")) {
+				greater();
+			} else if (command.equals("<")) {
+				less();
 			} else if (command.equals("[")) {
 				createList();
 			} else if (command.equals("]")) {
 				addToList();
-			} else if (command.equals("factor")) {
-				factor();
 			} else if (command.equals("break")) {
 				breakApart();
-			} else if (command.equals("save")) {
-				Expr.saveExpr(sLast(), last().toString());
-				stack.remove(size() - 1);
-			} else if (command.equals("open")) {
-				stack.set(size() - 1, Expr.openExpr(((Var) last()).name));
 			} else if (command.equals("clear")) {
 				clear();
-			} else if (command.equals("sort")) {
-				last().sort();
-				stack.set(size() - 1, last());// update visuals
-			}else if (command.equals("tree")) {
-				stack.add(var(last().toStringTree(0)));
-			}else if (command.equals("complexity")) {
-				stack.add(num(last().complexity()));
 			}else if (command.equals("dup")) {
 				duplicate();
-			} else if (command.equals("undo")) {
-				stack.clear();
-				for (int i = 0; i < stackOld.size(); i++) {
-					stack.add(stackOld.get(i));
-				}
 			} else if (command.equals("roll")) {
 				roll();
-			} else if (command.equals("sin")) {
-				sin();
-			} else if (command.equals("cos")) {
-				cos();
-			} else if (command.equals("tan")) {
-				tan();
-			} else if (command.equals("sinh")) {
-				sinh();
-			} else if (command.equals("cosh")) {
-				cosh();
-			} else if (command.equals("tanh")) {
-				tanh();
-			} else if (command.equals("atan")) {
-				atan();
-			}else if (command.equals("asin")) {
-				asin();
-			}else if (command.equals("acos")) {
-				acos();
-			}else if (command.equals("lambertW")) {
-				lambertW();
-			}else if (command.equals("mathML")) {
-				mathML();
-			}else if (command.equals("quit") || command.equals("exit") || command.equals("close")) {
+			} else if (command.equals("quit") || command.equals("exit") || command.equals("close")) {
 				return -1;
-			} else if (command.equals("approx")) {
-				approx();
-			} else if (command.equals("integrateOver")) {
-				integrateOver();
-			} else if (command.equals("poly")) {
-				Var v = var("x");
-				partialFrac(last(), v, currentSettings);
-			} else if (command.equals("hash")) {
-				stack.add(num(last().hashCode()));
-			} else if (command.equals("equal")) {
-				stack.add(new BoolState(last().equals(sLast())));
-			} else if(command.equals("exactlyEqual")){
-				stack.add(new BoolState(last().exactlyEquals(sLast())));
-			}
-			else if (command.contains(":") && !command.contains(" ")) {
+			}else if (command.contains(":") && !command.contains(" ")) {
 				String[] parts = command.split(":");
 				command = parts[0];
 
@@ -573,7 +334,7 @@ public class StackEditor extends cas.QuickMath {
 						stack.add(stack.get(index).copy());
 					} else
 						createAlert("invalid index");
-				} else if (command.equals("remove")) {
+				} else if (command.equals("del") || command.equals("pop")) {
 					int index = Integer.parseInt(parts[1]) - 1;
 					if (index > -1 && index < size()) {
 						stack.remove(index);
@@ -585,10 +346,29 @@ public class StackEditor extends cas.QuickMath {
 						Expr temp = stack.get(index);
 						stack.set(index, last());
 						stack.set(size() - 1, temp);
-					} else
+					} else {
 						createAlert("invalid index");
+					}
 				}
-			} else {
+			}else if(SimpleFuncs.isFunc(command)) {
+				int numberOfParams = SimpleFuncs.getExpectectedParams(command, currentDefs);
+				if(stack.size() >= numberOfParams) {
+					Expr[] paramsList = new Expr[numberOfParams];
+					int startPoint = stack.size()-numberOfParams;
+					for(int i = startPoint;i<stack.size();i++) {
+						paramsList[i-startPoint] = stack.get(i);
+					}
+					
+					Expr newStackItem = SimpleFuncs.getFuncByName(command, currentDefs, paramsList);
+					
+					for(int i = stack.size()-1;i>=startPoint;i--) {
+						stack.remove(i);
+					}
+					
+					stack.add(newStackItem);
+				}
+			}else {
+			
 				long oldTime = System.nanoTime();
 				Expr convertedQ = Ask.ask(command, currentDefs, currentSettings);
 
@@ -599,8 +379,8 @@ public class StackEditor extends cas.QuickMath {
 				if (convertedQ != null) {
 					stack.add(convertedQ);
 				}
-
 			}
+			
 		} catch (Exception e) {
 			createAlert("An error has occured\nreason: " + e.getMessage());
 			e.printStackTrace();

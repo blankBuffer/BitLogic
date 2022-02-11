@@ -37,7 +37,7 @@ public class Defs extends QuickMath implements Serializable{
 	
 	public Func getFunc(String name) {
 		Func out = functions.get(name);
-		if(out != null) return (Func)out.copy();
+		if(out != null) return out;
 		return null;
 	}
 	
