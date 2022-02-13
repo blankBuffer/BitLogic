@@ -222,6 +222,7 @@ public class Sum extends Expr{
 					Expr log = prod.get(0);
 					
 					Expr newInnerPow = pow(log.get(),nonLog).simplify(settings);
+
 					log.set(0, newInnerPow);
 					sum.set(i,log);
 					

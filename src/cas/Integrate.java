@@ -47,8 +47,10 @@ public class Integrate extends Expr{
 	
 	static Rule secSqr = new Rule("integrate(cos(x)^-2,x)=tan(x)","integral of 1 over cosine squared",Rule.UNCOMMON);
 	static Rule atanCase = new Rule("integrate(atan(x),x)=x*atan(x)+ln(x^2+1)/-2","integral of arctan",Rule.UNCOMMON);
+	
 	static Rule eToXTimesSinX = new Rule("integrate(e^x*sin(x),x)=e^x*(sin(x)-cos(x))/2","integral of looping sine",Rule.UNCOMMON);
 	static Rule eToXTimesCosX = new Rule("integrate(e^x*cos(x),x)=e^x*(sin(x)+cos(x))/2","integral of looping cosine",Rule.UNCOMMON);
+	
 	static Rule cscCase = new Rule("integrate(1/sin(x),x)=ln(1-cos(x))-ln(sin(x))","integral of 1 over sin",Rule.UNCOMMON);
 	static Rule secCase = new Rule("integrate(1/cos(x),x)=ln(1+sin(x))-ln(cos(x))","integral of 1 over cos",Rule.UNCOMMON);
 	static Rule cotCase = new Rule("integrate(1/tan(x),x)=ln(sin(x))","integral of 1 over tan",Rule.UNCOMMON);

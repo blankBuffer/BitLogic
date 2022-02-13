@@ -74,11 +74,56 @@ public class Ln extends Expr{
 			return log;
 		}
 	};
+	
+	static Rule logOfInverse = new Rule("ln(1/x)=-ln(x)","log of inverse becomes negative log",Rule.VERY_EASY);
+	static Rule logOfInverse2 = new Rule("ln((-1)/x)=-ln(-x)","log of inverse becomes negative log",Rule.VERY_EASY);
+	
+	
+	static Rule logWithSums = new Rule("remove sums from within logs",Rule.UNCOMMON) {//the goal is to remove sums inside of logs if they are part of a product or divisin
+		private static final long serialVersionUID = 1L;
+		
+		@Override
+		public Expr applyRuleToExpr(Expr e,Settings settings) {
+			Ln log = (Ln)e;
+			
+			if(log.get() instanceof Prod || log.get() instanceof Div) {
 
-	@Override
-	public ComplexFloat convertToFloat(ExprList varDefs) {
-		return ComplexFloat.ln(get().convertToFloat(varDefs));
-	}
+				Sum out = new Sum();
+				Div div = Div.cast(log.get());
+				
+				Prod prodNumer = Prod.cast(div.getNumer());
+				Prod prodDenom = Prod.cast(div.getDenom());
+				
+				for(int i = 0;i<prodNumer.size();i++) {
+					if(prodNumer.get(i) instanceof Sum || prodNumer.get(i) instanceof Power && ((Power)prodNumer.get(i)).getBase() instanceof Sum) {
+						out.add(ln(prodNumer.get(i)));
+						prodNumer.remove(i);
+						i--;
+					}
+				}
+				for(int i = 0;i<prodDenom.size();i++) {
+					if(prodDenom.get(i) instanceof Sum || prodDenom.get(i) instanceof Power && ((Power)prodDenom.get(i)).getBase() instanceof Sum) {
+						out.add(neg(ln(prodNumer.get(i))));
+						prodDenom.remove(i);
+						i--;
+					}
+				}
+				
+				
+				if(out.size()>0) {
+					div.setNumer(prodNumer);
+					div.setDenom(prodDenom);
+					log.set(0, div);
+					
+					out.add(log);
+					return out.simplify(settings);
+				}
+			}
+			
+			return log;
+		}
+		
+	};
 	
 	static ExprList ruleSequence = null;
 	
@@ -89,6 +134,9 @@ public class Ln extends Expr{
 				lnOfEpsilon,
 				lnOfInf,
 				lnOfEpsilonSum,
+				logOfInverse,
+				logOfInverse2,
+				logWithSums,
 				logOfPerfectPower,
 				powToProd
 		);
@@ -97,6 +145,11 @@ public class Ln extends Expr{
 	@Override
 	ExprList getRuleSequence() {
 		return ruleSequence;
+	}
+	
+	@Override
+	public ComplexFloat convertToFloat(ExprList varDefs) {
+		return ComplexFloat.ln(get().convertToFloat(varDefs));
 	}
 
 }
