@@ -1,5 +1,0 @@
-cd "$( dirname "${BASH_SOURCE[0]}" )"
-
-tar -cvf archive.tar src/ bin/ startNoGui createJar createJar_jdk_11 startGui compile saves/ compile_jdk_11 archive
-
-/usr/local/bin/xz -9e archive.tar
