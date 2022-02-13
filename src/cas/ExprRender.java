@@ -33,9 +33,25 @@ public class ExprRender extends QuickMath{
 		
 		static HashMap<String,String> nameExchange = new HashMap<String,String>();//use cooler symbols
 		static {
+			nameExchange.put("~","¬");
+			nameExchange.put("|","∨");
+			nameExchange.put("&", "∧");
 			nameExchange.put("pi", "π");
 			nameExchange.put("mu", "µ");
+			nameExchange.put("beta", "β");
+			nameExchange.put("alpha", "α");
+			nameExchange.put("theta", "θ");
+			nameExchange.put("delta", "Δ");
+			nameExchange.put("lambda", "λ");
+			nameExchange.put("epsilon","ε");
+			nameExchange.put("zeta","ζ");
+			nameExchange.put("sigma", "σ");
+			nameExchange.put("tau", "τ");
+			nameExchange.put("phi", "φ");
+			nameExchange.put("psi", "ψ");
+			nameExchange.put("omega", "ω");
 			nameExchange.put("integrate", "∫");
+			nameExchange.put("integrateOver", "∫");
 			nameExchange.put("diff", "∂");
 		}
 		public void makeString(String s) {//creates basic text image
@@ -122,7 +138,7 @@ public class ExprRender extends QuickMath{
 		}
 		
 		public void makeExpr(Expr e) {//create image from expression
-			if(e instanceof Var || e instanceof Num) {
+			if(e instanceof Var || e instanceof Num || e instanceof FloatExpr || e instanceof BoolState) {
 				makeString(e.toString());
 			}else if(e instanceof Power) {
 				Power pow = (Power)e;
@@ -281,6 +297,57 @@ public class ExprRender extends QuickMath{
 				graphics.drawImage(parameters.getImage(),leftBrac.getWidth(),0,parameters.getWidth(),getHeight(),null);
 				graphics.drawImage(rightBrac.getImage(),getWidth()-rightBrac.getWidth(),0,rightBrac.getWidth(),getHeight(),null);
 				
+			}else if(e instanceof And) {
+				ExprImg andImg = newExprImg();
+				andImg.makeString("&");
+				
+				
+				ArrayList<ExprImg> imgs = new ArrayList<ExprImg>();
+				for(int i = 0;i<e.size();i++) {
+					ExprImg imgEl = newExprImg();
+					
+					if(e.get(i) instanceof Or) imgEl.makeParen(e.get(i));
+					else imgEl.makeExpr(e.get(i));
+					
+					imgs.add(imgEl);
+					
+					if(i != e.size()-1) imgs.add(andImg);
+				}
+				
+				ExprImg[] exprImgs = new ExprImg[imgs.size()];
+				for(int i = 0;i<imgs.size();i++)exprImgs[i] = imgs.get(i);
+						
+				makeImgSeries(exprImgs);
+			}else if(e instanceof Or) {
+				ExprImg orImg = newExprImg();
+				orImg.makeString("|");
+				
+				
+				ArrayList<ExprImg> imgs = new ArrayList<ExprImg>();
+				for(int i = 0;i<e.size();i++) {
+					ExprImg imgEl = newExprImg();
+					
+					imgEl.makeExpr(e.get(i));
+					
+					imgs.add(imgEl);
+					
+					if(i != e.size()-1) imgs.add(orImg);
+				}
+				
+				ExprImg[] exprImgs = new ExprImg[imgs.size()];
+				for(int i = 0;i<imgs.size();i++)exprImgs[i] = imgs.get(i);
+						
+				makeImgSeries(exprImgs);
+			}else if(e instanceof Not) {
+				ExprImg notImg = newExprImg();
+				notImg.makeString("~");
+				
+				ExprImg exprImg = newExprImg();
+				
+				if(e.get() instanceof Var) exprImg.makeExpr(e.get());
+				else exprImg.makeParen(e.get());
+				
+				makeImgSeries(new ExprImg[] {notImg,exprImg});
 			}else {
 				ExprImg functionName = newExprImg();
 				functionName.makeString(e.typeName());
@@ -337,7 +404,7 @@ public class ExprRender extends QuickMath{
 		
 		g.setRenderingHints(new RenderingHints(RenderingHints.KEY_INTERPOLATION, RenderingHints.VALUE_INTERPOLATION_BILINEAR));
 		
-		g.setFont(new Font("courier",0,48));
+		g.setFont(new Font("monospace",0,48));
 		
 		//fitting expression image into desired space and centering it
 		ExprImg exprImgObj = new ExprImg(g);

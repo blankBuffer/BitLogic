@@ -49,8 +49,8 @@ public class Integrate extends Expr{
 	static Rule atanCase = new Rule("integrate(atan(x),x)=x*atan(x)+ln(x^2+1)/-2","integral of arctan",Rule.UNCOMMON);
 	static Rule eToXTimesSinX = new Rule("integrate(e^x*sin(x),x)=e^x*(sin(x)-cos(x))/2","integral of looping sine",Rule.UNCOMMON);
 	static Rule eToXTimesCosX = new Rule("integrate(e^x*cos(x),x)=e^x*(sin(x)+cos(x))/2","integral of looping cosine",Rule.UNCOMMON);
-	static Rule cscCase = new Rule("integrate(1/sin(x),x)=ln((1-cos(x))/sin(x))","integral of 1 over sin",Rule.UNCOMMON);
-	static Rule secCase = new Rule("integrate(1/cos(x),x)=ln((1+sin(x))/cos(x))","integral of 1 over cos",Rule.UNCOMMON);
+	static Rule cscCase = new Rule("integrate(1/sin(x),x)=ln(1-cos(x))-ln(sin(x))","integral of 1 over sin",Rule.UNCOMMON);
+	static Rule secCase = new Rule("integrate(1/cos(x),x)=ln(1+sin(x))-ln(cos(x))","integral of 1 over cos",Rule.UNCOMMON);
 	static Rule cotCase = new Rule("integrate(1/tan(x),x)=ln(sin(x))","integral of 1 over tan",Rule.UNCOMMON);
 	static Rule arcsinCase = new Rule("integrate(asin(x),x)=x*asin(x)+sqrt(1-x^2)","integral of arcsin",Rule.UNCOMMON);
 	
@@ -575,6 +575,71 @@ public class Integrate extends Expr{
 		
 	};
 	
+	static Rule sinCosProdCase = new Rule("product of sin and cos powers",Rule.UNCOMMON) {
+		private static final long serialVersionUID = 1L;
+		
+		Expr sinPowTemplate,cosPowTemplate;
+		
+		@Override
+		public void init() {
+			sinPowTemplate = createExpr("sin(x)^n");
+			cosPowTemplate = createExpr("cos(x)^n");
+		}
+		
+		@Override
+		public Expr applyRuleToExpr(Expr e,Settings settings) {
+			Integrate integ = (Integrate)e;
+			
+			if(integ.get() instanceof Prod && integ.get().size() == 2) {
+				Prod innerProd = (Prod)integ.get();
+				Power sinPow = null;
+				Power cosPow = null;
+				//extraction
+				for(int i = 0;i<2;i++) {
+					if(Rule.fastSimilarStruct(sinPowTemplate, innerProd.get(i))) {
+						sinPow = (Power)innerProd.get(i);
+					}else if(Rule.fastSimilarStruct(cosPowTemplate, innerProd.get(i))) {
+						cosPow = (Power)innerProd.get(i);
+					}
+				}
+				if(sinPow == null || cosPow == null) return integ;
+				boolean check = isPositiveRealNum(cosPow.getExpo()) && isPositiveRealNum(sinPow.getExpo()) && sinPow.getBase().get().equals(cosPow.getBase().get());
+				if(!check) return integ;
+				
+				ExprList polyCoef = polyExtract(sinPow.getBase().get(),integ.getVar(),settings);
+				if(polyCoef == null) return integ;
+				Expr coef = null;
+				if(polyCoef.size() == 2) {
+					coef = polyCoef.get(1);
+				}
+				if(coef == null) return integ;
+				
+				Num m = num(((Num)cosPow.getExpo()).realValue.shiftRight(1));
+				Num n = (Num)sinPow.getExpo();
+				Expr needsExpand = prod(  pow(sub(num(1),pow(var("0u"),num(2))),m),pow(var("0u"),n)  );
+				Expr expanded = SimpleFuncs.fullExpand.applyRuleToExpr(needsExpand, settings);
+				if(!isPlainPolynomial(expanded, var("0u"))) return integ;
+				
+				Expr out = null;
+				if(((Num)cosPow.getExpo()).realValue.mod(BigInteger.TWO).equals(BigInteger.ONE)) {//odd case
+					//cos(x)^(2*m+1)*sin(x)^n = (1-sin(x)^2)^m*sin(x)^n*cos(x)
+					//u=sin(x)
+					//integrate(cos(x)^(2*m+1)*sin(x)^n,x) = integrate((1-u^2)^m*u^n,u)
+					out = div(integrate(expanded,var("0u")).simplify(settings).replace(equ( var("0u") , sinPow.getBase() )),coef);
+				}else {//even case
+					//cos(x)^(2*m)*sin(x)^n = (1-sin(x)^2)^m*sin(x)^n
+					//u=sin(x)
+					//(1-u^2)*u^n
+					out = div(integrate(expanded.replace(equ( var("0u") , sinPow.getBase() )),integ.getVar()).simplify(settings),coef);
+				}
+				return out.simplify(settings);
+				
+			}
+			
+			return integ;
+		}
+	};
+	
 	static ExprList ruleSequence = null;
 	
 	public static void loadRules(){
@@ -602,6 +667,8 @@ public class Integrate extends Expr{
 				tanCase,
 				tanPowerCase,
 				tanInvPowerCase,
+				
+				sinCosProdCase,
 				
 				secSqr,
 				atanCase,

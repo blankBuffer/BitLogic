@@ -55,7 +55,7 @@ public class Not extends Expr{
 	public String toString() {
 		String out = "";
 		out+="~";
-		boolean paren = get() instanceof Or || get() instanceof And;
+		boolean paren = !(get() instanceof Var);
 		if(paren) out+="(";
 		out+=get();
 		if(paren) out+=")";
