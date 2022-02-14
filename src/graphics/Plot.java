@@ -1,6 +1,5 @@
 package graphics;
 import cas.*;
-import ui.StackEditor;
 
 import java.awt.*;
 import java.awt.event.MouseEvent;

@@ -152,7 +152,7 @@ public class ExprRender extends QuickMath{
 					sqrtImg.makeString("√");
 					
 					setWidth(sqrtImg.getWidth()+baseImg.getWidth());
-					int smallShift = oldGraphics.getFont().getSize()/4;
+					int smallShift = oldGraphics.getFont().getSize()/6;
 					setHeight(baseImg.getHeight()+smallShift);
 					setFractionBar(baseImg.getFractionBar()+smallShift);
 					
@@ -173,7 +173,7 @@ public class ExprRender extends QuickMath{
 					expoImg.makeExpr(pow.getExpo());
 					
 					setWidth(baseImg.getWidth()+expoImg.getWidth());
-					setHeight(baseImg.getHeight()+expoImg.getHeight()*2/3);
+					setHeight(baseImg.getHeight()+expoImg.getHeight()*3/4-oldGraphics.getFont().getSize()/2);
 					setFractionBar(getHeight()-baseImg.getHeight()+baseImg.getFractionBar());
 					initImg();
 					
@@ -404,7 +404,7 @@ public class ExprRender extends QuickMath{
 		
 		g.setRenderingHints(new RenderingHints(RenderingHints.KEY_INTERPOLATION, RenderingHints.VALUE_INTERPOLATION_BILINEAR));
 		
-		g.setFont(new Font("monospace",0,48));
+		g.setFont(new Font("courier new",0,48));
 		
 		//fitting expression image into desired space and centering it
 		ExprImg exprImgObj = new ExprImg(g);
