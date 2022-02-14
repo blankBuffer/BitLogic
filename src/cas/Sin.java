@@ -23,7 +23,7 @@ public class Sin extends Expr{
 			Sin sin = (Sin)e;
 			
 			Var pi = pi();
-			BigInteger three = BigInteger.valueOf(3),six = BigInteger.valueOf(6),four = BigInteger.valueOf(4);
+			BigInteger three = BigInteger.valueOf(3),six = BigInteger.valueOf(6),four = BigInteger.valueOf(4),twelve = BigInteger.valueOf(12);
 			
 			Expr innerExpr = sin.get();
 			if(innerExpr.equals(num(0))) {
@@ -52,6 +52,7 @@ public class Sin extends Expr{
 					else if(numer.equals(BigInteger.ONE) && denom.equals(three)) return div(sqrt(num(3)),num(2*negate));
 					else if(numer.equals(BigInteger.ONE) && denom.equals(six)) return inv(num(2*negate));
 					else if(numer.equals(BigInteger.ONE) && denom.equals(four)) return div(sqrt(num(2)),num(2*negate));
+					else if(numer.equals(BigInteger.ONE) && denom.equals(twelve)) return div(sum(sqrt(num(3)),num(-1)),prod(num(2),sqrt(num(2))));
 					else if(numer.equals(BigInteger.ZERO)) return num(0);
 					else {
 						if(negate == -1) {
@@ -117,6 +118,7 @@ public class Sin extends Expr{
 				StandardRules.distrInner,
 				unitCircle
 		);
+		Rule.initRules(ruleSequence);
 	}
 	
 	@Override

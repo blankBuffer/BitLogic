@@ -564,6 +564,7 @@ public class Limit extends Expr{
 				lhopitalsRule,
 				directSubst
 		);
+		Rule.initRules(ruleSequence);
 	}
 	
 	@Override

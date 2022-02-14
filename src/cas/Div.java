@@ -502,6 +502,7 @@ public class Div extends Expr{
 				overOne,
 				zeroInNum
 		);
+		Rule.initRules(ruleSequence);
 	}
 	
 	@Override

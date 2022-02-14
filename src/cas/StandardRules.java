@@ -42,6 +42,7 @@ public class StandardRules extends QuickMath{
 		Rule[] cases;
 		@Override
 		public void init(){
+			if(cases != null) return;
 			cases = new Rule[]{
 				new Rule("sin(x)*cos(x)=sin(2*x)/2","compressing trig",Rule.EASY),
 				new Rule("a*sin(x)*cos(x)=a*sin(2*x)/2","compressing trig",Rule.EASY),
@@ -145,5 +146,17 @@ public class StandardRules extends QuickMath{
 			return e;
 		}
 	};
+
+	public static void loadRules() {
+		oddFunction.init();
+		evenFunction.init();
+		trigCompressInner.init();
+		linearOperator.init();
+		pullOutConstants.init();
+		becomeInner.init();
+		distrInner.init();
+		factorInner.init();
+		showState.init();
+	}
 	
 }

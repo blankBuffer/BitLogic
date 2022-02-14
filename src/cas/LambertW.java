@@ -94,6 +94,7 @@ public class LambertW extends Expr {
 				ratioLog,
 				crazyProductRule
 		);
+		Rule.initRules(ruleSequence);
 	}
 	
 	@Override

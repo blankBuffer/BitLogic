@@ -210,6 +210,9 @@ public class Solve extends Expr{
 									constantParts.add(sumPart.get(i));
 								}
 							}
+							
+							if(!(variableParts.size() > 0 && constantParts.size() > 0)) return solve;
+							
 							Expr a = Sum.unCast(variableParts);
 							Expr b = Sum.unCast(constantParts);
 							Expr c = equ.getRightSide();
@@ -484,6 +487,7 @@ public class Solve extends Expr{
 				subtractiveZero,
 				fractionalCase
 			);
+			Rule.initRules(loopedSequence);
 		}
 		
 		@Override
@@ -512,6 +516,7 @@ public class Solve extends Expr{
 		ruleSequence = exprList(
 				solvedCase
 		);
+		Rule.initRules(ruleSequence);
 	}
 	
 	@Override

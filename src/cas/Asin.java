@@ -71,7 +71,7 @@ public class Asin extends Expr{
 				asinCosCase,
 				inverseUnitCircle
 		);
-		
+		Rule.initRules(ruleSequence);
 	}
 	@Override
 	ExprList getRuleSequence() {

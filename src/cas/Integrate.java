@@ -48,13 +48,45 @@ public class Integrate extends Expr{
 	static Rule secSqr = new Rule("integrate(cos(x)^-2,x)=tan(x)","integral of 1 over cosine squared",Rule.UNCOMMON);
 	static Rule atanCase = new Rule("integrate(atan(x),x)=x*atan(x)+ln(x^2+1)/-2","integral of arctan",Rule.UNCOMMON);
 	
-	static Rule eToXTimesSinX = new Rule("integrate(e^x*sin(x),x)=e^x*(sin(x)-cos(x))/2","integral of looping sine",Rule.UNCOMMON);
-	static Rule eToXTimesCosX = new Rule("integrate(e^x*cos(x),x)=e^x*(sin(x)+cos(x))/2","integral of looping cosine",Rule.UNCOMMON);
-	
 	static Rule cscCase = new Rule("integrate(1/sin(x),x)=ln(1-cos(x))-ln(sin(x))","integral of 1 over sin",Rule.UNCOMMON);
 	static Rule secCase = new Rule("integrate(1/cos(x),x)=ln(1+sin(x))-ln(cos(x))","integral of 1 over cos",Rule.UNCOMMON);
 	static Rule cotCase = new Rule("integrate(1/tan(x),x)=ln(sin(x))","integral of 1 over tan",Rule.UNCOMMON);
 	static Rule arcsinCase = new Rule("integrate(asin(x),x)=x*asin(x)+sqrt(1-x^2)","integral of arcsin",Rule.UNCOMMON);
+	
+	static Rule loopingIntegrals = new Rule("looping integrals",Rule.UNCOMMON) {
+		private static final long serialVersionUID = 1L;
+		
+		Rule[] cases;
+		@Override
+		public void init(){
+			cases = new Rule[]{
+					new Rule("integrate(sin(a*x)*b^(c*x),x)=c*ln(b)*sin(a*x)*b^(c*x)/(a^2+c^2*ln(b)^2)-a*cos(a*x)*b^(c*x)/(a^2+c^2*ln(b)^2)","integral of looping sine",Rule.UNCOMMON),
+					new Rule("integrate(sin(a*x)*b^x,x)=ln(b)*sin(a*x)*b^x/(a^2+ln(b)^2)-a*cos(a*x)*b^x/(a^2+ln(b)^2)","integral of looping sine",Rule.UNCOMMON),
+					new Rule("integrate(sin(x)*b^(c*x),x)=c*ln(b)*sin(x)*b^(c*x)/(1+c^2*ln(b)^2)-cos(x)*b^(c*x)/(1+c^2*ln(b)^2)","integral of looping sine",Rule.UNCOMMON),
+					new Rule("integrate(sin(x)*b^x,x)=ln(b)*sin(x)*b^x/(1+ln(b)^2)-cos(x)*b^x/(1+ln(b)^2)","integral of looping sine",Rule.UNCOMMON),
+					
+					new Rule("integrate(sin(x+k)*b^x,x)=ln(b)*sin(x+k)*b^x/(1+ln(b)^2)-cos(x+k)*b^x/(1+ln(b)^2)","integral of looping sine",Rule.UNCOMMON),
+					new Rule("integrate(sin(a*x+k)*b^x,x)=ln(b)*sin(a*x+k)*b^x/(a^2+ln(b)^2)-a*cos(a*x+k)*b^x/(a^2+ln(b)^2)","integral of looping sine",Rule.UNCOMMON),
+					
+					
+					new Rule("integrate(cos(a*x)*b^(c*x),x)=a*sin(a*x)*b^(c*x)/(a^2+c^2*ln(b)^2)+c*ln(b)*cos(a*x)*b^(c*x)/(a^2+c^2*ln(b)^2)","integral of looping cosine",Rule.UNCOMMON),
+					new Rule("integrate(cos(a*x)*b^x,x)=a*sin(a*x)*b^x/(a^2+ln(b)^2)+ln(b)*cos(a*x)*b^x/(a^2+ln(b)^2)","integral of looping cosine",Rule.UNCOMMON),
+					new Rule("integrate(cos(x)*b^(c*x),x)=sin(x)*b^(c*x)/(1+c^2*ln(b)^2)+c*ln(b)*cos(x)*b^(c*x)/(1+c^2*ln(b)^2)","integral of looping cosine",Rule.UNCOMMON),
+					new Rule("integrate(cos(x)*b^x,x)=sin(x)*b^x/(1+ln(b)^2)+ln(b)*cos(x)*b^x/(1+ln(b)^2)","integral of looping cosine",Rule.UNCOMMON),
+					
+					new Rule("integrate(cos(x+k)*b^x,x)=sin(x+k)*b^x/(1+ln(b)^2)+ln(b)*cos(x+k)*b^x/(1+ln(b)^2)","integral of looping cosine",Rule.UNCOMMON),
+					new Rule("integrate(cos(a*x+k)*b^x,x)=a*sin(a*x+k)*b^x/(a^2+ln(b)^2)+ln(b)*cos(a*x+k)*b^x/(a^2+ln(b)^2)","integral of looping cosine",Rule.UNCOMMON),
+			};
+		}
+		
+		@Override
+		public Expr applyRuleToExpr(Expr e,Settings settings){
+			for(Rule r:cases){
+				e = r.applyRuleToExpr(e, settings);
+			}
+			return e;
+		}
+	};
 	
 	static Rule recursivePowerOverSqrt = new Rule("power over sqrt",Rule.UNCOMMON){
 		private static final long serialVersionUID = 1L;
@@ -280,6 +312,7 @@ public class Integrate extends Expr{
 					Expr best = innerProd.get(bestIndex);
 					innerProd.remove(bestIndex);
 					Expr newIntegral = integrate(innerDiv,integ.getVar()).simplify(settings);
+					//newIntegral.println();
 					if(!newIntegral.containsType(Integrate.class)) {
 						Expr out = sub(prod(newIntegral,best),integrate(prod(newIntegral.copy(),diff(best.copy(),integ.getVar())),integ.getVar()));
 						return out.simplify(settings);
@@ -411,7 +444,6 @@ public class Integrate extends Expr{
 			}else {
 				u = integ.get();
 			}
-			
 			
 			if(u != null) {
 				while(true) {//try normal u and innermost u sub
@@ -674,8 +706,9 @@ public class Integrate extends Expr{
 				
 				secSqr,
 				atanCase,
-				eToXTimesSinX,
-				eToXTimesCosX,
+				
+				loopingIntegrals,
+				
 				cscCase,
 				secCase,
 				cotCase,
@@ -698,6 +731,7 @@ public class Integrate extends Expr{
 				StandardRules.linearOperator
 				
 		);
+		Rule.initRules(ruleSequence);
 	}
 	
 	@Override

@@ -460,6 +460,7 @@ public class Power extends Expr{
 				eToFracLn,
 				baseToLn
 			);
+		Rule.initRules(ruleSequence);
 	}
 	
 	@Override

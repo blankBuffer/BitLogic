@@ -395,7 +395,41 @@ public class ExprRender extends QuickMath{
 		}
 	}
 	
-	public static BufferedImage createImg(Expr e,Dimension imageSize,Color background,Color text) {
+	public static BufferedImage createImg(Expr e,Color background,Color text) {
+		BufferedImage defaultImageSize = new BufferedImage(256*4,256,BufferedImage.TYPE_INT_RGB);
+		Graphics2D g = defaultImageSize.createGraphics();
+		g.setColor(background);
+		g.fillRect(0, 0, defaultImageSize.getWidth(), defaultImageSize.getHeight());
+		g.setColor(text);
+		
+		g.setRenderingHints(new RenderingHints(RenderingHints.KEY_INTERPOLATION, RenderingHints.VALUE_INTERPOLATION_BILINEAR));
+		
+		g.setFont(new Font("courier new",0,48));
+		
+		ExprImg exprImgObj = new ExprImg(g);
+		exprImgObj.makeExpr(e);
+		BufferedImage exprImg = exprImgObj.getImage();
+		
+		int imgWid = 0,imgHei = 0;
+		double imageRatio = defaultImageSize.getWidth()/defaultImageSize.getHeight();
+		double exprImgRatio = (double)exprImg.getWidth()/exprImg.getHeight();
+		
+		if(imageRatio<exprImgRatio) {
+			double ratio =(double)defaultImageSize.getWidth()/exprImg.getWidth();
+			imgWid = (int)(ratio*exprImg.getWidth());
+			imgHei = (int)(ratio*exprImg.getHeight());
+		}else {
+			double ratio = (double)defaultImageSize.getHeight()/exprImg.getHeight();
+			imgWid = (int)(ratio*exprImg.getWidth());
+			imgHei = (int)(ratio*exprImg.getHeight());
+		}
+		
+		g.drawImage(exprImg,0,0,imgWid, imgHei, null);
+		
+		return defaultImageSize.getSubimage(0, 0, imgWid, imgHei);
+	}
+	
+	public static BufferedImage createImgInFrame(Expr e,Dimension imageSize,Color background,Color text) {
 		BufferedImage image = new BufferedImage(imageSize.width,imageSize.height,BufferedImage.TYPE_INT_RGB);
 		Graphics2D g = image.createGraphics();
 		g.setColor(background);

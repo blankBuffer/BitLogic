@@ -140,6 +140,7 @@ public class Ln extends Expr{
 				logOfPerfectPower,
 				powToProd
 		);
+		Rule.initRules(ruleSequence);
 	}
 	
 	@Override

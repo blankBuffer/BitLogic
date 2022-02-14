@@ -22,7 +22,7 @@ public class Cos extends Expr{
 		public Expr applyRuleToExpr(Expr e,Settings settings){
 			Cos cos = (Cos)e;
 			Var pi = pi();
-			BigInteger three = BigInteger.valueOf(3),six = BigInteger.valueOf(6),four = BigInteger.valueOf(4);
+			BigInteger three = BigInteger.valueOf(3),six = BigInteger.valueOf(6),four = BigInteger.valueOf(4),twelve = BigInteger.valueOf(12);
 			Expr innerExpr = distr(cos.get()).simplify(settings);
 			
 			Expr out = cos;
@@ -53,6 +53,7 @@ public class Cos extends Expr{
 					else if(numer.equals(BigInteger.ONE) && denom.equals(three)) out = inv(num(2*negate));
 					else if(numer.equals(BigInteger.ONE) && denom.equals(six)) out = div(sqrt(num(3)),num(2*negate));
 					else if(numer.equals(BigInteger.ONE) && denom.equals(four)) out = div(sqrt(num(2)),num(2*negate));
+					else if(numer.equals(BigInteger.ONE) && denom.equals(twelve)) return div(sum(sqrt(num(3)),num(1)),prod(num(2),sqrt(num(2))));
 					else if(numer.equals(BigInteger.ZERO)) out = num(negate);
 					else {
 						//make it into the sin version for canonical form
@@ -93,6 +94,7 @@ public class Cos extends Expr{
 				StandardRules.distrInner,
 				unitCircle
 		);
+		Rule.initRules(ruleSequence);
 	}
 	
 	@Override

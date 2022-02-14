@@ -76,6 +76,7 @@ public class Diff extends Expr{
 				acosCase,
 				divCase
 			);
+		Rule.initRules(ruleSequence);
 	}
 	
 	Diff(){}//

@@ -480,6 +480,7 @@ public class Or extends Expr{
 				ruleCombination,
 				aloneOr	
 		);
+		Rule.initRules(ruleSequence);
 	}
 	
 	@Override

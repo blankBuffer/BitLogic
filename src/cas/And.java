@@ -177,6 +177,7 @@ public class And extends Expr{
 				distribute,
 				aloneAnd
 		);
+		Rule.initRules(ruleSequence);
 	}
 
 	@Override

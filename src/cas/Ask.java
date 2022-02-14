@@ -541,6 +541,7 @@ public class Ask extends QuickMath{
 			if(token.contains("*")){
 				String[] parts = token.split("\\*");
 				if(parts.length == 2 && (Unit.unitNames.contains(parts[1]) || token.contains("degree"))){
+					if(Interpreter.containsOperators(parts[0]) || Interpreter.containsOperators(parts[1])) return;
 					try {
 						String fromUnit = parts[1];
 						if(fromUnit.equals("degree")){
@@ -574,9 +575,9 @@ public class Ask extends QuickMath{
 		
 		applyWordReplacement(tokens);
 		removeDuplicateOperators(tokens);
-		applyFunctionKeywords(tokens);
 		fractionalReading(tokens);
 		numberNounPair(tokens);
+		applyFunctionKeywords(tokens);
 		combineTrailingOperatorTokens(tokens);
 		specialFunctions(tokens);
 		

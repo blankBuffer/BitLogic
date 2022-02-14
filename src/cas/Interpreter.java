@@ -98,6 +98,7 @@ public class Interpreter extends QuickMath{
 				if(string.equals("i")) return num(0,1);
 				else if(lowered.equals("true")) return bool(true);
 				else if(lowered.equals("false")) return bool(false);
+				else if(lowered.equals("degree")) return div(pi(),num(180));
 				else{//variables
 					return var(string);
 				}

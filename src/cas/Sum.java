@@ -497,6 +497,7 @@ public class Sum extends Expr{
 				pythagOneMinusCosSqr,
 				pythagOnePlusTanSqr
 		);
+		Rule.initRules(ruleSequence);
 	}
 
 	@Override

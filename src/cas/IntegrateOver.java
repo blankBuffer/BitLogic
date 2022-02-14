@@ -50,6 +50,7 @@ public class IntegrateOver extends Expr {
 		ruleSequence = exprList(
 				definiteIntegral		
 		);
+		Rule.initRules(ruleSequence);
 	}
 	
 	@Override

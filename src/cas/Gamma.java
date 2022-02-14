@@ -79,6 +79,7 @@ public class Gamma extends Expr{
 			integerCase,
 			fracCase
 		);
+		Rule.initRules(ruleSequence);
 	}
 	
 	@Override

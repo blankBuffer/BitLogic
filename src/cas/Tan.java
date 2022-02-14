@@ -22,7 +22,7 @@ public class Tan extends Expr{
 			Tan tan = (Tan)e;
 			
 			Var pi = pi();
-			BigInteger three = BigInteger.valueOf(3),six = BigInteger.valueOf(6),four = BigInteger.valueOf(4),five = BigInteger.valueOf(5);
+			BigInteger three = BigInteger.valueOf(3),six = BigInteger.valueOf(6),four = BigInteger.valueOf(4),five = BigInteger.valueOf(5),twelve = BigInteger.valueOf(12);
 			
 			Expr innerExpr = tan.get();
 			if(innerExpr.equals(num(BigInteger.ZERO)) || innerExpr.equals(pi)) {
@@ -38,6 +38,7 @@ public class Tan extends Expr{
 					
 					if(numer.equals(BigInteger.ONE) && denom.equals(four)) return num(1);
 					else if(numer.equals(BigInteger.ONE) && denom.equals(three)) return sqrt(num(3));
+					else if(numer.equals(BigInteger.ONE) && denom.equals(twelve)) return sub(num(2),sqrt(num(3)));
 					else if(numer.equals(BigInteger.ONE) && denom.equals(six)) return div(sqrt(num(3)),num(3));
 					else if(numer.equals(BigInteger.TWO) && denom.equals(three)) return neg(sqrt(num(3)));
 					else if(numer.equals(three) && denom.equals(four)) return num(-1);
@@ -97,6 +98,7 @@ public class Tan extends Expr{
 				StandardRules.distrInner,
 				unitCircle
 		);
+		Rule.initRules(ruleSequence);
 	}
 	
 	@Override

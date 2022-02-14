@@ -3,11 +3,15 @@ package ui;
 import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.awt.event.MouseEvent;
+import java.awt.event.MouseListener;
 import java.awt.image.BufferedImage;
 import java.io.File;
 import java.io.FileNotFoundException;
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Scanner;
+import java.awt.datatransfer.*;
 
 import javax.swing.*;
 
@@ -47,15 +51,74 @@ public class MainWindow extends JFrame{
 		JPanel imgExprPanel = new JPanel() {
 			private static final long serialVersionUID = 5476956793821976634L;
 
+			BufferedImage exprImg = null;
 			@Override
 			public void paintComponent(Graphics g) {
 				if(currentStack.size()>0) {
-					BufferedImage image = ExprRender.createImg(currentStack.last(),new Dimension(getWidth(),getHeight()),terminalOut.getBackground(),terminalOut.getForeground() );
-					g.drawImage(image,0,0,getWidth(),getHeight(),null);
+					exprImg = ExprRender.createImgInFrame(currentStack.last(),new Dimension(getWidth(),getHeight()),terminalOut.getBackground(),terminalOut.getForeground() );
+					g.drawImage(exprImg,0,0,getWidth(),getHeight(),null);
 				}else {
 					g.setColor(terminalOut.getBackground());
 					g.fillRect(0, 0, getWidth(), getHeight());
+					exprImg = null;
 				}
+			}
+		};
+		MouseListener imageToClipBoard = new MouseListener() {
+			class TransferableImage implements Transferable {
+		        Image image;
+		        public TransferableImage( Image image ) {
+		            this.image = image;
+		        }
+		        @Override
+				public Object getTransferData( DataFlavor flavor ) throws UnsupportedFlavorException, IOException {
+		            if ( flavor.equals( DataFlavor.imageFlavor ) && image != null ) {
+		                return image;
+		            }
+					throw new UnsupportedFlavorException( flavor );
+		        }
+		        @Override
+				public DataFlavor[] getTransferDataFlavors() {
+		            DataFlavor[] flavors = new DataFlavor[ 1 ];
+		            flavors[ 0 ] = DataFlavor.imageFlavor;
+		            return flavors;
+		        }
+		        @Override
+				public boolean isDataFlavorSupported( DataFlavor flavor ) {
+		            DataFlavor[] flavors = getTransferDataFlavors();
+		            for ( int i = 0; i < flavors.length; i++ ) {
+		                if ( flavor.equals( flavors[ i ] ) ) {
+		                    return true;
+		                }
+		            }
+
+		            return false;
+		        }
+		    }
+			@Override
+			public void mouseClicked(MouseEvent e) {
+				if(currentStack.size() > 0) {
+					BufferedImage exprImg = ExprRender.createImg(currentStack.last(), terminalOut.getBackground(),terminalOut.getForeground());
+					Clipboard clipBoard = Toolkit.getDefaultToolkit().getSystemClipboard();
+					TransferableImage transImage = new TransferableImage(exprImg);
+					clipBoard.setContents(transImage, null);
+					JOptionPane.showMessageDialog(MainWindow.this, "copied image to clipboard");
+				}
+			}
+			@Override
+			public void mousePressed(MouseEvent e) {
+			}
+
+			@Override
+			public void mouseReleased(MouseEvent e) {
+			}
+
+			@Override
+			public void mouseEntered(MouseEvent e) {
+			}
+
+			@Override
+			public void mouseExited(MouseEvent e) {
 			}
 		};
 		JPanel terminalInWithButtons = new JPanel();
@@ -126,6 +189,8 @@ public class MainWindow extends JFrame{
 			terminalIn.addActionListener(terminalInPush);
 			resultButton.addActionListener(resultButtonUpdate);
 			pushButton.addActionListener(terminalInPush);
+			
+			imgExprPanel.addMouseListener(imageToClipBoard);
 			
 			terminalOutWithImg.add(scrollableTerminalOut,BorderLayout.CENTER);
 			terminalOutWithImg.add(imgExprPanel,BorderLayout.SOUTH);

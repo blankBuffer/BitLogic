@@ -565,6 +565,7 @@ public class Prod extends Expr{
 				epsilonInfReduction,
 				aloneProd
 		);
+		Rule.initRules(ruleSequence);
 	}
 	
 	@Override

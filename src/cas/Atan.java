@@ -45,6 +45,7 @@ public class Atan extends Expr{
 				containsInverse,
 				inverseUnitCircle
 		);
+		Rule.initRules(ruleSequence);
 	}
 	
 	@Override

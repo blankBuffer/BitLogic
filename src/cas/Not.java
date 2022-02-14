@@ -44,6 +44,7 @@ public class Not extends Expr{
 				containsNot,
 				demorgan
 		);
+		Rule.initRules(ruleSequence);
 	}
 	
 	@Override

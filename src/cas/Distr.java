@@ -63,7 +63,7 @@ public class Distr extends Expr{
 				generalDistr,
 				StandardRules.becomeInner
 		);
-		
+		Rule.initRules(ruleSequence);
 	}
 	
 	@Override

@@ -216,7 +216,6 @@ public class Rule extends Expr{
 		this.pattern.getLeftSide().sort();
 		this.name = name;
 		this.difficulty = difficulty;
-		init();
 	}
 	public Rule(String pattern,String condition,String name,int difficulty){
 		this.pattern = (Equ) createExpr(pattern);
@@ -224,22 +223,23 @@ public class Rule extends Expr{
 		this.condition = createExpr(condition);
 		this.name = name;
 		this.difficulty = difficulty;
-		init();
 	}
 	public Rule(Equ pattern,String name,int difficulty){
 		this.pattern = pattern;
 		this.pattern.getLeftSide().sort();
 		this.name = name;
 		this.difficulty = difficulty;
-		init();
 	}
 	public Rule(String name,int difficulty){
 		this.name = name;
 		this.difficulty = difficulty;
-		init();
 	}
+	
 	public void init(){
-		
+	}
+	
+	public static void initRules(ExprList ruleSequence) {
+		for(int i = 0;i<ruleSequence.size();i++) ((Rule)ruleSequence.get(i)).init();
 	}
 	
 	public Equ pattern = null;
@@ -286,6 +286,8 @@ public class Rule extends Expr{
 	
 	public static void loadRules(){
 		System.out.println("loading CAS rules...");
+		StandardRules.loadRules();
+		
 		Acos.loadRules();
 		And.loadRules();
 		Approx.loadRules();

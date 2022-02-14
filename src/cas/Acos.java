@@ -84,6 +84,7 @@ public class Acos extends Expr{
 				containsSin,
 				inverseUnitCircle
 		);
+		Rule.initRules(ruleSequence);
 	}
 	
 	@Override

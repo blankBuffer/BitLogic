@@ -30,6 +30,7 @@ public class Approx extends Expr{
 		ruleSequence = exprList(
 			getFloatExpr	
 		);
+		Rule.initRules(ruleSequence);
 	}
 	
 	@Override

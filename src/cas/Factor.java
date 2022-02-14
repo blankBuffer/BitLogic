@@ -372,6 +372,7 @@ public class Factor extends Expr{
 				StandardRules.becomeInner
 					
 		);
+		Rule.initRules(ruleSequence);
 	}
 	@Override
 	ExprList getRuleSequence() {

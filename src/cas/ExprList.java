@@ -98,6 +98,7 @@ public class ExprList extends Expr{
 				removeRepeats,
 				alone
 		);
+		Rule.initRules(ruleSequence);
 	}
 
 	@Override
