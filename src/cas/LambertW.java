@@ -115,7 +115,7 @@ public class LambertW extends Expr {
 		FloatExpr x = floatExpr(get().convertToFloat(varDefs));
 		if(x.value.real<-1.0/Math.E) return ComplexFloat.ZERO;
 		Solve expr = solve(equ(x,prod(var("y"),exp(var("y")))),var("y"));
-		expr.INITIAL_GUESS = Math.log( x.value.real+1);
+		expr.INITIAL_GUESS = Math.log( x.value.real+1)*3.0/4.0;
 		return expr.convertToFloat(varDefs);
 	}
 

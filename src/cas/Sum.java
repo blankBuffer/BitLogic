@@ -4,8 +4,6 @@ public class Sum extends Expr{
 	
 	private static final long serialVersionUID = 2026808885890783719L;
 	
-	static Rule pythagOneMinusSinSqr = new Rule("1-sin(x)^2=cos(x)^2","one minus sine squared",Rule.EASY);
-	static Rule pythagOneMinusCosSqr = new Rule("1-cos(x)^2=sin(x)^2","one minus consine squared",Rule.EASY);
 	static Rule pythagOnePlusTanSqr = new Rule("1+tan(x)^2=cos(x)^-2","one plus tangent squared",Rule.UNCOMMON);
 	
 	public Sum() {
@@ -77,7 +75,7 @@ public class Sum extends Expr{
 		}
 	};
 	
-	public static Rule pythagIden = new Rule("pythagorean identity",Rule.EASY){//sin(x)^2+cos(x)^2 = 1 and a*sin(x)^2+a*cos(x)^2=a
+	public static Rule complexPythagIden = new Rule("pythagorean identity",Rule.EASY){//sin(x)^2+cos(x)^2 = 1 and a*sin(x)^2+a*cos(x)^2=a
 		private static final long serialVersionUID = 1L;
 
 		Expr sinsqr,cossqr;
@@ -399,7 +397,114 @@ public class Sum extends Expr{
 			return sum;
 		}
 	};
+	
+	public static Rule basicPythagIden = new Rule("basic pythagorean identity",Rule.EASY) {
+		private static final long serialVersionUID = 1L;
+		
+		Expr sinSqrTemplate,cosSqrTemplate,sinSqrProdTemplate,cosSqrProdTemplate;
+		
+		@Override
+		public void init() {
+			sinSqrTemplate = createExpr("sin(x)^2");
+			cosSqrTemplate = createExpr("cos(x)^2");
+			sinSqrProdTemplate = createExpr("a*sin(x)^2");
+			cosSqrProdTemplate = createExpr("a*cos(x)^2");
+		}
+		
+		@Override
+		public Expr applyRuleToExpr(Expr e,Settings settings){
+			Sum sum = (Sum)e;
+			
+			outer:for(int i = 0;i<sum.size();i++) {
+				Expr current = sum.get(i);
+				if(Rule.fastSimilarStruct(sinSqrTemplate, current )) {
+					Expr var = current.get().get();
+					
+					for(int j = 0;j < sum.size();j++) {
+						if(j == i) continue;
+						if(sum.get(j).equals(Num.NEG_ONE)) {
+							sum.remove(Math.max(i, j));
+							sum.set(Math.min(i, j), neg(pow(cos(var),num(2))));
+							i--;
+							continue outer;
+						}
+					}
+				}else if(Rule.fastSimilarStruct(cosSqrTemplate, current )) {
+					Expr var = current.get().get();
+					
+					for(int j = 0;j < sum.size();j++) {
+						if(j == i) continue;
+						if(sum.get(j).equals(Num.NEG_ONE)) {
+							sum.remove(Math.max(i, j));
+							sum.set(Math.min(i, j), neg(pow(sin(var),num(2))));
+							i--;
+							continue outer;
+						}
+					}
+				}else if(Rule.fastSimilarStruct(sinSqrProdTemplate, sum.get(i))) {
+					ExprList equs = Rule.getEqusFromTemplate(sinSqrProdTemplate, sum.get(i));
+					Expr a = Rule.getExprByName(equs, "a");
+					Expr x = Rule.getExprByName(equs, "x");
+					
+					Expr negA = neg(a).simplify(settings);
+					
+					for(int j = 0;j < sum.size();j++) {
+						if(j == i) continue;
+						if(sum.get(j).equals(negA)) {
+							sum.remove(Math.max(i, j));
+							sum.set(Math.min(i, j), prod(negA,pow(cos(x),num(2))).simplify(settings) );
+							i--;
+							continue outer;
+						}
+					}
+				}else if(Rule.fastSimilarStruct(cosSqrProdTemplate, sum.get(i))) {
+					ExprList equs = Rule.getEqusFromTemplate(cosSqrProdTemplate, sum.get(i));
+					Expr a = Rule.getExprByName(equs, "a");
+					Expr x = Rule.getExprByName(equs, "x");
+					
+					Expr negA = neg(a).simplify(settings);
+					
+					for(int j = 0;j < sum.size();j++) {
+						if(j == i) continue;
+						if(sum.get(j).equals(negA)) {
+							sum.remove(Math.max(i, j));
+							sum.set(Math.min(i, j), prod(negA,pow(sin(x),num(2))).simplify(settings) );
+							i--;
+							continue outer;
+						}
+					}
+				}
+			}
+			
+			return sum;
+		}
+	};
+	
+	static ExprList ruleSequence = null;
+	
+	public static void loadRules(){
+		ruleSequence = exprList(
+				sumWithInf,
+				distrSubProds,
+				basicPythagIden,//1-sin(x)^2=cos(x)^2 cases
+				complexPythagIden,//Variants of sin(x)^2+cos(x)^2
+				sumContainsSum,//sums contains a sum
+				trigExpandElements,
+				addLogs,
+				addIntegersAndFractions,//1+2 = 3
+				addLikeTerms,//x+x = 2*x
+				addIntegersAndFractions,//1+2 = 3
+				alone,//alone sum is 0
+				pythagOnePlusTanSqr
+		);
+		Rule.initRules(ruleSequence);
+	}
 
+	@Override
+	ExprList getRuleSequence() {
+		return ruleSequence;
+	}
+	
 	@Override
 	public String toString() {
 		String out = "";
@@ -477,32 +582,6 @@ public class Sum extends Expr{
 		ComplexFloat total = new ComplexFloat(0,0);
 		for(int i = 0;i<size();i++) total =ComplexFloat.add(total, get(i).convertToFloat(varDefs));
 		return total;
-	}
-	
-	static ExprList ruleSequence = null;
-	
-	public static void loadRules(){
-		ruleSequence = exprList(
-				sumWithInf,
-				distrSubProds,
-				pythagIden,//Variants of sin(x)^2+cos(x)^2
-				sumContainsSum,//sums contains a sum
-				trigExpandElements,
-				addLogs,
-				addIntegersAndFractions,//1+2 = 3
-				addLikeTerms,//x+x = 2*x
-				addIntegersAndFractions,//1+2 = 3
-				alone,//alone sum is 0
-				pythagOneMinusSinSqr,
-				pythagOneMinusCosSqr,
-				pythagOnePlusTanSqr
-		);
-		Rule.initRules(ruleSequence);
-	}
-
-	@Override
-	ExprList getRuleSequence() {
-		return ruleSequence;
 	}
 
 }

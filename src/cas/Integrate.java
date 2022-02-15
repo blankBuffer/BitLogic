@@ -45,12 +45,14 @@ public class Integrate extends Expr{
 	static Rule tanPowerCase = new Rule("integrate(tan(x)^n,x)=tan(x)^(n-1)/(n-1)-integrate(tan(x)^(n-2),x)","eval(n>1)","integral of tan to the n",Rule.DIFFICULT);
 	static Rule tanInvPowerCase = new Rule("integrate(1/tan(x)^n,x)=tan(x)^(1-n)/(1-n)-integrate(1/tan(x)^(n-2),x)","eval(n>1)","integral of 1 over tan to the n",Rule.DIFFICULT);
 	
-	static Rule secSqr = new Rule("integrate(cos(x)^-2,x)=tan(x)","integral of 1 over cosine squared",Rule.UNCOMMON);
 	static Rule atanCase = new Rule("integrate(atan(x),x)=x*atan(x)+ln(x^2+1)/-2","integral of arctan",Rule.UNCOMMON);
 	
 	static Rule cscCase = new Rule("integrate(1/sin(x),x)=ln(1-cos(x))-ln(sin(x))","integral of 1 over sin",Rule.UNCOMMON);
 	static Rule secCase = new Rule("integrate(1/cos(x),x)=ln(1+sin(x))-ln(cos(x))","integral of 1 over cos",Rule.UNCOMMON);
 	static Rule cotCase = new Rule("integrate(1/tan(x),x)=ln(sin(x))","integral of 1 over tan",Rule.UNCOMMON);
+	
+	static Rule cotCscCase = new Rule("integrate(1/(tan(x)*sin(x)),x)=-1/sin(x)","integral of 1 over tan times sin",Rule.UNCOMMON);
+	
 	static Rule arcsinCase = new Rule("integrate(asin(x),x)=x*asin(x)+sqrt(1-x^2)","integral of arcsin",Rule.UNCOMMON);
 	
 	static Rule loopingIntegrals = new Rule("looping integrals",Rule.UNCOMMON) {
@@ -531,8 +533,12 @@ public class Integrate extends Expr{
 			cases = new Rule[]{
 					new Rule("integrate(x^2/sqrt(a-x^2),x)=a*asin(x/sqrt(a))/2-x*sqrt(a-x^2)/2","trig sub",Rule.DIFFICULT),
 					new Rule("integrate(x^2/sqrt(a+b*x^2),x)=a*asin((x*sqrt(-b))/sqrt(a))/(2*(-b)^(3/2))+x*sqrt(a-(-b)*x^2)/(2*b)","eval(b<0)","trig sub",Rule.VERY_DIFFICULT),
+					
 					new Rule("integrate(sqrt(a-x^2),x)=a*asin(x/sqrt(a))/2+x*sqrt(a-x^2)/2","trig sub",Rule.VERY_DIFFICULT),
 					new Rule("integrate(sqrt(a+b*x^2),x)=a*asin(x*sqrt(-b)/sqrt(a))/(2*sqrt(-b))+x*sqrt(a+b*x^2)/2","eval(b<0)","trig sub",Rule.VERY_DIFFICULT),
+					
+					new Rule("integrate(sqrt(a-x^2)/x^2,x)=-asin(x/sqrt(a))-sqrt(a-x^2)/x","trig sub",Rule.VERY_DIFFICULT),
+					new Rule("integrate(sqrt(a+b*x^2)/x^2,x)=b*asin(sqrt(-b)*x/sqrt(a))/sqrt(-b)-sqrt(a+b*x^2)/x","eval(b<0)","trig sub",Rule.VERY_DIFFICULT),
 			};
 		}
 		
@@ -704,7 +710,7 @@ public class Integrate extends Expr{
 				
 				sinCosProdCase,
 				
-				secSqr,
+				cotCscCase,
 				atanCase,
 				
 				loopingIntegrals,

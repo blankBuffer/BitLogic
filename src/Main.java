@@ -67,36 +67,10 @@ public class Main extends QuickMath{
 		
 		testRegion();
 		
-		//showMemoryUsage.start();
 		if(gui == 1) UI.startGraphicalInterface();
 		else if(gui == 2) UI.startCommandLineInterface(clearTerm);
 		
 		
 	}
-	
-	static Thread showMemoryUsage = new Thread("mem-use-visual"){
-		@Override
-		public void run() {
-			while(true) {
-				try {
-					Thread.sleep(100);
-					long freeMem = Runtime.getRuntime().freeMemory();
-					long mem = Runtime.getRuntime().totalMemory();
-					long percent = Math.round(((double)(mem-freeMem)/mem)*100.0);
-					for(int i = 0;i<50;i++){
-						if(i<percent/2){
-							System.out.print("*");
-						}else{
-							System.out.print("-");
-						}
-					}
-					System.out.println();
-				} catch (Exception e) {
-					System.out.println("stopping memory usage thread");
-					break;
-				}
-			}
-		}
-	};
 
 }
