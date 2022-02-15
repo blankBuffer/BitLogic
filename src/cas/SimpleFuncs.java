@@ -68,6 +68,7 @@ public class SimpleFuncs extends QuickMath{
 	static Func taylor = new Func("taylor",3);
 	static Func gui = new Func("gui",0);
 	static Func params = new Func("params",1);
+	static Func isNum = new Func("isNum",1);
 	
 	public static void loadRules(){
 		tree.simplifyChildren = false;
@@ -284,6 +285,8 @@ public class SimpleFuncs extends QuickMath{
 					if(casted.type == Equ.LESS) {
 						return bool(!equal && casted.getLeftSide().convertToFloat(exprList()).real < casted.getRightSide().convertToFloat(exprList()).real );
 					}
+				}else if(f.get() instanceof BoolState) {
+					return f.get();
 				}
 				
 				return f;
@@ -350,6 +353,17 @@ public class SimpleFuncs extends QuickMath{
 				return num(getExpectectedParams(f.get().toString()));
 			}
 		});
+		
+		isNum.ruleSequence.add(new Rule("is it number",Rule.VERY_EASY) {
+			private static final long serialVersionUID = 1L;
+			
+			@Override
+			public Expr applyRuleToExpr(Expr e,Settings settings) {
+				Func f = (Func)e;
+				
+				return bool(f.get() instanceof Num);
+			}
+		});
 	}
 	
 	private static ArrayList<String> functionNames = new ArrayList<String>();
@@ -380,6 +394,7 @@ public class SimpleFuncs extends QuickMath{
 		addFunc(taylor);
 		addFunc(gui);
 		addFunc(params);
+		addFunc(isNum);
 		
 		for(String s:simpleFuncs.keySet()) {
 			functionNames.add(s);

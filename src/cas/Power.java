@@ -441,7 +441,6 @@ public class Power extends Expr{
 				baseHasPower,
 				negativeExpoToInv,
 				oneToExpo,
-				fracInBase,
 				logInExpoProdToBase,
 				expOfLambertW,
 				expOfLambertWProd,
@@ -449,6 +448,7 @@ public class Power extends Expr{
 				perfectPowerInBase,
 				productInBase,
 				factorBase,
+				fracInBase,
 				productInBase,//second time
 				expoHasIntegerInSum,
 				expoSumHasLog,

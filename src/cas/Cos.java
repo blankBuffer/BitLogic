@@ -53,7 +53,7 @@ public class Cos extends Expr{
 					else if(numer.equals(BigInteger.ONE) && denom.equals(three)) out = inv(num(2*negate));
 					else if(numer.equals(BigInteger.ONE) && denom.equals(six)) out = div(sqrt(num(3)),num(2*negate));
 					else if(numer.equals(BigInteger.ONE) && denom.equals(four)) out = div(sqrt(num(2)),num(2*negate));
-					else if(numer.equals(BigInteger.ONE) && denom.equals(twelve)) return div(sum(sqrt(num(3)),num(1)),prod(num(2),sqrt(num(2))));
+					else if(numer.equals(BigInteger.ONE) && denom.equals(twelve)) return div(sum(sqrt(num(6)),sqrt(num(2))),num(4));
 					else if(numer.equals(BigInteger.ZERO)) out = num(negate);
 					else {
 						//make it into the sin version for canonical form

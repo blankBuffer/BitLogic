@@ -52,7 +52,7 @@ public class Sin extends Expr{
 					else if(numer.equals(BigInteger.ONE) && denom.equals(three)) return div(sqrt(num(3)),num(2*negate));
 					else if(numer.equals(BigInteger.ONE) && denom.equals(six)) return inv(num(2*negate));
 					else if(numer.equals(BigInteger.ONE) && denom.equals(four)) return div(sqrt(num(2)),num(2*negate));
-					else if(numer.equals(BigInteger.ONE) && denom.equals(twelve)) return div(sum(sqrt(num(3)),num(-1)),prod(num(2),sqrt(num(2))));
+					else if(numer.equals(BigInteger.ONE) && denom.equals(twelve)) return div(sub(sqrt(num(2)),sqrt(num(6))),num(-4));
 					else if(numer.equals(BigInteger.ZERO)) return num(0);
 					else {
 						if(negate == -1) {

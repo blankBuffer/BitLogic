@@ -488,6 +488,9 @@ public class Div extends Expr{
 		}
 	};
 	
+	static Rule rationalize = new Rule("a/b^(m/n)=a*b^((n-m)/n)/b","isNum(b)&isNum(m)","rationalize denom",Rule.VERY_EASY);
+	static Rule rationalize2 = new Rule("a/(k*b^(m/n))=a*b^((n-m)/n)/(k*b)","isNum(b)&isNum(k)&isNum(m)","rationalize denom",Rule.VERY_EASY);
+	
 	static ExprList ruleSequence = null;
 	
 	public static void loadRules(){
@@ -498,6 +501,8 @@ public class Div extends Expr{
 				reduceTrigFraction,
 				divContainsDiv,
 				cancelOutTerms,
+				rationalize,
+				rationalize2,
 				reduceFraction,
 				overOne,
 				zeroInNum

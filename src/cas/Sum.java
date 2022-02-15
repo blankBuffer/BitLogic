@@ -285,18 +285,12 @@ public class Sum extends Expr{
 				Expr current = sum.get(i).copy();//make sure its copy as we don't want to modify the real object
 				if(Limit.isInf(current)) continue;
 				
-				Num coef = num(1);//coefficient
+				Expr coef = num(1);//coefficient
 				
-				if(current instanceof Prod) {//if its a product
-					for(int j = 0;j<current.size();j++) {//look at each part of product
-						Expr partOfProd = current.get(j);
-						if(partOfProd instanceof Num) {//if its a number
-							coef = ((Num)partOfProd);
-							current.remove(j);
-							current = current.simplify(settings);//simplify so that it does not stay a product if it becomes alone
-							break;
-						}
-					}
+				if(current instanceof Prod || current instanceof Div) {//if its a product
+					ExprList parts = QuickMath.seperateCoef(current);
+					coef = parts.get(0);
+					current = parts.get(1);
 				}
 				
 				boolean foundSame = false;
@@ -305,25 +299,19 @@ public class Sum extends Expr{
 					Expr toComp = sum.get(j).copy();//expression to compare to
 					if(Limit.isInf(toComp)) continue;
 					
-					Num toCompCoef = num(1);
+					Expr toCompCoef = num(1);
 					
-					if(toComp instanceof Prod) {
-						for(int k = 0;k<toComp.size();k++) {//look at each part of product
-							Expr partOfProd = toComp.get(k);
-							if(partOfProd instanceof Num) {//if its a number
-								toCompCoef = ((Num)partOfProd);
-								toComp.remove(k);
-								toComp = toComp.simplify(settings);//simplify so that it does not stay a product if it becomes alone
-								break;
-							}
-						}
+					if(toComp instanceof Prod || toComp instanceof Div) {
+						ExprList parts = QuickMath.seperateCoef(toComp);
+						toCompCoef = parts.get(0);
+						toComp = parts.get(1);
 					}
 					
 					if(current.equals(toComp)) {
 						sum.remove(j);
 						j--;
 						foundSame = true;
-						coef = (Num)sum(coef,toCompCoef).simplify(settings);//must be num
+						coef = sum(coef,toCompCoef).simplify(settings);
 					}
 					
 				}
