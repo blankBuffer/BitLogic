@@ -139,14 +139,21 @@ public class Integrate extends Expr{
 	static Rule integralsWithPowers = new Rule("integral with powers",Rule.EASY){
 		private static final long serialVersionUID = 1L;
 		
-		Rule powerRule;
-		Rule inversePowerRule;
+		Rule powerRule,powerRule2,powerRule3;
+		Rule inversePowerRule,inversePowerRule2, inversePowerRule3;
 		Rule exponentRule;
 		
 		@Override
 		public void init(){
 			powerRule = new Rule("integrate(x^n,x)=x^(n+1)/(n+1)","integral of polynomial",Rule.EASY);
+			powerRule2 = new Rule("integrate((x+a)^n,x)=(x+a)^(n+1)/(n+1)","integral of polynomial",Rule.EASY);
+			powerRule3 = new Rule("integrate((b*x+a)^n,x)=(b*x+a)^(n+1)/((n+1)*b)","integral of polynomial",Rule.EASY);
+			
 			inversePowerRule = new Rule("integrate(1/x^n,x)=-1/(x^(n-1)*(n-1))","integral of 1 over a polynomial",Rule.EASY);
+			inversePowerRule2 = new Rule("integrate(1/(x+a)^n,x)=-1/((x+a)^(n-1)*(n-1))","integral of 1 over a polynomial",Rule.EASY);
+			inversePowerRule3 = new Rule("integrate(1/(b*x+a)^n,x)=-1/((b*x+a)^(n-1)*(n-1)*b)","integral of 1 over a polynomial",Rule.EASY);
+			
+			
 			exponentRule = new Rule("integrate(n^x,x)=n^x/ln(n)","integral of exponential",Rule.UNCOMMON);
 			
 		}
@@ -163,7 +170,11 @@ public class Integrate extends Expr{
 				boolean baseHasVar = inner.getBase().contains(v),expoHasVar = inner.getExpo().contains(v);
 				
 				if(baseHasVar && !expoHasVar){
-					return powerRule.applyRuleToExpr(integ, settings);
+					Expr out = integ;
+					out = powerRule.applyRuleToExpr(out, settings);
+					out = powerRule2.applyRuleToExpr(out, settings);
+					out = powerRule3.applyRuleToExpr(out, settings);
+					return out;
 				}else if(!baseHasVar && expoHasVar){
 					return exponentRule.applyRuleToExpr(integ, settings);
 				}
@@ -179,7 +190,11 @@ public class Integrate extends Expr{
 					boolean baseHasVar = inner.getBase().contains(v),expoHasVar = inner.getExpo().contains(v);
 					
 					if(baseHasVar && !expoHasVar){
-						return inversePowerRule.applyRuleToExpr(integ, settings);
+						Expr out = integ;
+						out = inversePowerRule.applyRuleToExpr(out, settings);
+						out = inversePowerRule2.applyRuleToExpr(out, settings);
+						out = inversePowerRule3.applyRuleToExpr(out, settings);
+						return out;
 					}
 					
 				}
@@ -190,7 +205,7 @@ public class Integrate extends Expr{
 		}
 	};
 	
-	static Rule inverseQuadratic = new Rule("inverse quadratic",Rule.TRICKY){
+	static Rule inverseQuadratic = new Rule("inverse quadratic",Rule.TRICKY){//robust
 		private static final long serialVersionUID = 1L;
 		
 		Expr arctanCase;
@@ -337,7 +352,7 @@ public class Integrate extends Expr{
 				if(innerDiv.getDenom() instanceof Power) {
 					Power denomPower = (Power)innerDiv.getDenom();
 					Div expo = Div.cast(denomPower.getExpo());
-					if(expo.isNumericalAndReal() && isPlainPolynomial(denomPower.getBase(),integ.getVar())) {
+					if(expo.isNumericalAndReal() && isPlainPolynomial(denomPower.getBase(),integ.getVar()) && degree(denomPower.getBase(),integ.getVar()).equals(BigInteger.ONE) ) {
 						if( ((Num)expo.getNumer()).realValue.compareTo( ((Num)expo.getDenom()).realValue )  == 1) {//make sure the fraction is greater than 1
 							Expr integralOfDenom = integrate(inv(denomPower),integ.getVar()).simplify(settings);
 							Expr derivativeOfNumer = diff(innerDiv.getNumer(),integ.getVar()).simplify(settings);
@@ -531,14 +546,23 @@ public class Integrate extends Expr{
 		@Override
 		public void init(){
 			cases = new Rule[]{
-					new Rule("integrate(x^2/sqrt(a-x^2),x)=a*asin(x/sqrt(a))/2-x*sqrt(a-x^2)/2","trig sub",Rule.DIFFICULT),
 					new Rule("integrate(x^2/sqrt(a+b*x^2),x)=a*asin((x*sqrt(-b))/sqrt(a))/(2*(-b)^(3/2))+x*sqrt(a-(-b)*x^2)/(2*b)","eval(b<0)","trig sub",Rule.VERY_DIFFICULT),
 					
-					new Rule("integrate(sqrt(a-x^2),x)=a*asin(x/sqrt(a))/2+x*sqrt(a-x^2)/2","trig sub",Rule.VERY_DIFFICULT),
+					new Rule("integrate(sqrt(a+b*x^2)/x^2,x)=b*asin(sqrt(-b)*x/sqrt(a))/sqrt(-b)-sqrt(a+b*x^2)/x","eval(b<0)","trig sub",Rule.VERY_DIFFICULT),
+					
 					new Rule("integrate(sqrt(a+b*x^2),x)=a*asin(x*sqrt(-b)/sqrt(a))/(2*sqrt(-b))+x*sqrt(a+b*x^2)/2","eval(b<0)","trig sub",Rule.VERY_DIFFICULT),
 					
-					new Rule("integrate(sqrt(a-x^2)/x^2,x)=-asin(x/sqrt(a))-sqrt(a-x^2)/x","trig sub",Rule.VERY_DIFFICULT),
-					new Rule("integrate(sqrt(a+b*x^2)/x^2,x)=b*asin(sqrt(-b)*x/sqrt(a))/sqrt(-b)-sqrt(a+b*x^2)/x","eval(b<0)","trig sub",Rule.VERY_DIFFICULT),
+					new Rule("integrate(sqrt(a+b*x^2),x)=x*sqrt(b)*sqrt(a+b*x^2)/(2*sqrt(b))+a*ln(sqrt(a+b*x^2)+x*sqrt(b))/(2*sqrt(b))","eval(b>0)","trig sub",Rule.CHALLENGING),
+					new Rule("integrate(sqrt(a+x^2),x)=x*sqrt(a+x^2)/2+a*ln(sqrt(a+x^2)+x)/2","eval(b>0)",Rule.CHALLENGING),
+					
+					new Rule("integrate(1/sqrt(a+b*x^2),x)=ln(x*sqrt(b)+sqrt(a+b*x^2))/(2*sqrt(b))-ln(sqrt(a+b*x^2)-x*sqrt(b))/(2*sqrt(b))","eval(a>0)&eval(b>0)","trig sub",Rule.CHALLENGING),
+					new Rule("integrate(1/sqrt(a+x^2),x)=ln(x+sqrt(a+x^2))/2-ln(sqrt(a+x^2)-x)/2","eval(a>0)","trig sub",Rule.CHALLENGING),
+					
+					new Rule("integrate(sqrt(x^2+a)/x^4,x)=-(x^2+a)^(3/2)/(3*a*x^3)","trig sub",Rule.VERY_DIFFICULT),
+					new Rule("integrate(sqrt(b*x^2+a)/x^4,x)=-(b*x^2+a)^(3/2)/(3*a*x^3)","trig sub",Rule.VERY_DIFFICULT),
+					
+					new Rule("integrate(sqrt(x^2+a)/x^3,x)=-sqrt(x^2+a)/(2*x^2)+atan(sqrt(x^2+a)/sqrt(-a))/(2*sqrt(-a))","eval(a<0)",Rule.VERY_DIFFICULT),
+					new Rule("integrate(sqrt(b*x^2+a)/x^3,x)=-sqrt(b*x^2+a)/(2*x^2)+atan(sqrt(b*x^2+a)/sqrt(-a))/(2*sqrt(-a))","eval(a<0)",Rule.VERY_DIFFICULT),
 			};
 		}
 		

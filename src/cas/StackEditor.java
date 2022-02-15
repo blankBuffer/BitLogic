@@ -81,7 +81,7 @@ public class StackEditor extends QuickMath {
 		out+="STACK\n";
 		out+="▛▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▜\n";
 		for (int i = 0; i < size(); i++) {
-			out+=(i + 1) + ": "+stack.get(i)+"\n";
+			out+=(i + 1) + ": "+stack.get(i)+"\tapprox\t"+stack.get(i).convertToFloat(currentDefs.getVars())+"\n";
 		}
 		out+="▙▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▟\n";
 		out+=alerts;
@@ -326,28 +326,30 @@ public class StackEditor extends QuickMath {
 			}else if (command.contains(":") && !command.contains(" ")) {
 				String[] parts = command.split(":");
 				command = parts[0];
-
+				int val = Integer.parseInt(parts[1]);
+				
 				if (command.equals("dup")) {
-					int index = Integer.parseInt(parts[1]) - 1;
-					if (index > -1 && index < size()) {
-						stack.add(stack.get(index).copy());
-					} else
-						createAlert("invalid index");
+					val--;
+					if (val > -1 && val < size()) {
+						stack.add(stack.get(val).copy());
+					} else createAlert("invalid index");
 				} else if (command.equals("del") || command.equals("pop")) {
-					int index = Integer.parseInt(parts[1]) - 1;
-					if (index > -1 && index < size()) {
-						stack.remove(index);
-					} else
-						createAlert("invalid index");
+					val--;
+					if (val > -1 && val < size()) {
+						stack.remove(val);
+					} else createAlert("invalid index");
 				} else if (command.equals("swap")) {
-					int index = Integer.parseInt(parts[1]) - 1;
-					if (index > -1 && index < size()) {
-						Expr temp = stack.get(index);
-						stack.set(index, last());
+					val--;
+					if (val > -1 && val < size()) {
+						Expr temp = stack.get(val);
+						stack.set(val, last());
 						stack.set(size() - 1, temp);
-					} else {
-						createAlert("invalid index");
-					}
+					} else createAlert("invalid index");
+				}else if (command.equals("roll")) {
+					if (size()>2) {
+						val = val%size();
+						for(int i = 0;i<val;i++) roll();
+					} else createAlert("need more elements");
 				}
 			}else if(SimpleFuncs.isFunc(command)) {
 				int numberOfParams = SimpleFuncs.getExpectectedParams(command, currentDefs);
