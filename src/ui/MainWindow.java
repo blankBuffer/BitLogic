@@ -499,7 +499,6 @@ public class MainWindow extends JFrame{
 		setSize(WINDOW_WIDTH,WINDOW_HEIGHT);
 		setMinimumSize(new Dimension(600,200));
 		add(createMainContainer());
-		setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 		setLocationRelativeTo(null);
 		setVisible(true);
 	}

@@ -462,7 +462,7 @@ public class Interpreter extends QuickMath{
 	private static void makeMultiSymbolOperators(ArrayList<String> tokens) {
 		for(int i = 0;i < tokens.size();i++) {
 			String fullToken = tokens.get(i);
-			if(fullToken.length()>1) continue; 
+			if(fullToken.isBlank() || fullToken.length()>1) continue; 
 			
 			char token = fullToken.charAt(0);
 			if(!isBasicOperator(token)) continue;
