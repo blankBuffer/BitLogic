@@ -87,7 +87,8 @@ public class ExprList extends Expr{
 
 	@Override
 	public ComplexFloat convertToFloat(ExprList varDefs) {
-		return new ComplexFloat(0,0);
+		if(size()==0) return new ComplexFloat(0,0);
+		return get().convertToFloat(varDefs);
 	}
 	
 	static ExprList ruleSequence = null;

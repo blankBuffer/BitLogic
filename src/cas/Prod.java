@@ -447,7 +447,7 @@ public class Prod extends Expr{
 		}
 	};
 	
-	static Rule reduceTrigProd = new Rule("reducing trig fraction",Rule.EASY) {
+	static Rule reduceTrigProd = new Rule("reducing trig product",Rule.EASY) {//tan(x)*cos(x) -> sin(x)
 		private static final long serialVersionUID = 1L;
 		
 		@Override
@@ -546,6 +546,65 @@ public class Prod extends Expr{
 		}
 	};
 	
+	static Rule multConj = new Rule("multiplying conjugates",Rule.TRICKY) {//(sqrt(2)+3)*(sqrt(2)-3) -> -7
+		private static final long serialVersionUID = 1L;
+		
+		Expr sqrtObjExtended,sqrtObjExtended2;
+		@Override
+		public void init() {
+			sqrtObjExtended = createExpr("a^(b/2)");
+			sqrtObjExtended2 = createExpr("a^(b/2)*c");
+		}
+		
+		@Override
+		public Expr applyRuleToExpr(Expr e,Settings settings){
+			Prod prod = (Prod)e;
+			
+			for(int i = 0;i<prod.size();i++) {
+				if(prod.get(i) instanceof Sum && prod.get(i).size() == 2) {
+					Sum current = (Sum)prod.get(i);
+					Num num = null;
+					Expr other = null;
+					
+					for(int j = 0;j<current.size();j++) {
+						if(current.get(j) instanceof Num) num = (Num)current.get(j);
+						else if(Rule.fastSimilarStruct(sqrtObjExtended, current.get(j)) || Rule.fastSimilarStruct(sqrtObjExtended2, current.get(j))) {
+							other = current.get(j);
+						}
+					}
+					
+					if(!(num != null && other != null)) continue;
+					
+					Sum conj = sum(other,num.negate());//Variant 1
+					Expr conj2 = sum(neg(other).simplify(settings),num);//Variant 2
+					
+					for(int j = i+1;j<prod.size();j++) {
+						Expr out = null;
+						if(prod.get(j).equals(conj)) {
+							out = factor(sub(pow(other,num(2)),num.pow(BigInteger.TWO))).simplify(settings);
+						}else if(prod.get(j).equals(conj2)) {
+							out = factor(sub(num.pow(BigInteger.TWO),pow(other,num(2)))).simplify(settings);
+						}
+						
+						if(out != null) {
+							prod.remove(j);
+							prod.remove(i);
+							if(out instanceof Prod) {
+								for(int k = 0;k<out.size();k++) prod.add(out.get(k));
+							}else prod.add(out);
+							
+							i--;
+							continue;
+						}
+					}
+					
+				}
+			}
+			
+			return prod;
+		}
+	};
+	
 	static ExprList ruleSequence = null;
 	
 	public static void loadRules(){
@@ -556,6 +615,7 @@ public class Prod extends Expr{
 				combineWithDiv,
 				prodContainsProd,
 				expandIntBases,
+				multConj,
 				multiplyLikeTerms,
 				expoIntoBase,
 				multiplyIntBases,

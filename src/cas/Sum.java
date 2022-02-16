@@ -4,7 +4,7 @@ public class Sum extends Expr{
 	
 	private static final long serialVersionUID = 2026808885890783719L;
 	
-	static Rule pythagOnePlusTanSqr = new Rule("1+tan(x)^2=cos(x)^-2","one plus tangent squared",Rule.UNCOMMON);
+	static Rule pythagOnePlusTanSqr = new Rule("1+tan(x)^2->cos(x)^-2","one plus tangent squared",Rule.UNCOMMON);
 	
 	public Sum() {
 		commutative = true;

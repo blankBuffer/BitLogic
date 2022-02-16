@@ -50,7 +50,7 @@ public class Main extends QuickMath{
 	
 	public static void main(String[] args) {
 		Rule.loadRules();
-		
+		SimpleFuncs.loadRules();
 		int gui = 1;
 		boolean clearTerm = false;
 		

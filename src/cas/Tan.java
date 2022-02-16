@@ -5,9 +5,9 @@ public class Tan extends Expr{
 	
 	private static final long serialVersionUID = -2282985074053649819L;
 
-	static Rule containsInverse = new Rule("tan(atan(x))=x","contains inverse",Rule.VERY_EASY);
-	static Rule tanOfArcsin = new Rule("tan(asin(x))=x/sqrt(1-x^2)","tan of arcsin",Rule.UNCOMMON);
-	static Rule tanOfArccos = new Rule("tan(acos(x))=sqrt(1-x^2)/x","tan of arccos",Rule.UNCOMMON);
+	static Rule containsInverse = new Rule("tan(atan(x))->x","contains inverse",Rule.VERY_EASY);
+	static Rule tanOfArcsin = new Rule("tan(asin(x))->x/sqrt(1-x^2)","tan of arcsin",Rule.UNCOMMON);
+	static Rule tanOfArccos = new Rule("tan(acos(x))->sqrt(1-x^2)/x","tan of arccos",Rule.UNCOMMON);
 	
 	Tan(){}//
 	public Tan(Expr a) {

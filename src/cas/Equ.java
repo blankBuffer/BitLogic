@@ -41,7 +41,7 @@ public class Equ extends Expr{
 	
 	@Override
 	public ComplexFloat convertToFloat(ExprList varDefs) {
-		return new ComplexFloat(0,0);
+		return getRightSide().convertToFloat(varDefs);//usually the solution is on the right side of the equation
 	}
 	@Override
 	ExprList getRuleSequence() {

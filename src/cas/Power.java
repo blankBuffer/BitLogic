@@ -28,20 +28,20 @@ public class Power extends Expr{
 		add(expo);
 	}
 	
-	private static Rule baseHasPower = new Rule("(a^b)^c=a^(b*c)","base has power",Rule.EASY);
-	private static Rule expoOfZero = new Rule("a^0=1","~eval(a=0)","exponent is zero",Rule.VERY_EASY);
-	private static Rule eToLn = new Rule("e^ln(a)=a","e to ln",Rule.EASY);
-	private static Rule eToFracLn = new Rule("e^(ln(a)/b)=a^(1/b)","e to fraction with ln",Rule.UNCOMMON);
-	private static Rule zeroToExpo = new Rule("0^x=0","~eval(x=0)","base is zero",Rule.VERY_EASY);
-	private static Rule baseToLn = new Rule("a^ln(b)=e^(ln(a)*ln(b))","base not e and expo has log",Rule.UNCOMMON);
-	private static Rule expOfLambertW = new Rule("e^(lambertW(x))=x/lambertW(x)","e to lambert w",Rule.UNCOMMON);
-	private static Rule expOfLambertWProd = new Rule("e^(lambertW(x)*n)=x^n/lambertW(x)^n","e to lambert w product",Rule.TRICKY);
-	private static Rule powerOfOne = new Rule("a^1=a","exponent is one",Rule.VERY_EASY);
-	private static Rule fracInBase = new Rule("(a/b)^n=a^n/b^n","base is a fraction",Rule.EASY);
-	private static Rule sqrtOneMinusSin = new Rule("sqrt(1-sin(x))=sqrt(2)*sin(pi/4-x/2)","sqrt of 1 minus sin",Rule.UNCOMMON);
-	private static Rule sqrtOneMinusCos = new Rule("sqrt(1-cos(x))=sqrt(2)*sin(x/2)","sqrt of 1 minus cos",Rule.UNCOMMON);
-	private static Rule sqrtOnePlusSin = new Rule("sqrt(1+sin(x))=sqrt(2)*cos(pi/4-x/2)","sqrt of 1 plus sin",Rule.UNCOMMON);
-	private static Rule sqrtOnePlusCos = new Rule("sqrt(1+cos(x))=sqrt(2)*cos(x/2)","sqrt of 1 plus cos",Rule.UNCOMMON);
+	private static Rule baseHasPower = new Rule("(a^b)^c->a^(b*c)","base has power",Rule.EASY);
+	private static Rule expoOfZero = new Rule("a^0->1","~eval(a=0)","exponent is zero",Rule.VERY_EASY);
+	private static Rule eToLn = new Rule("e^ln(a)->a","e to ln",Rule.EASY);
+	private static Rule eToFracLn = new Rule("e^(ln(a)/b)->a^(1/b)","e to fraction with ln",Rule.UNCOMMON);
+	private static Rule zeroToExpo = new Rule("0^x->0","~eval(x=0)","base is zero",Rule.VERY_EASY);
+	private static Rule baseToLn = new Rule("a^ln(b)->e^(ln(a)*ln(b))","base not e and expo has log",Rule.UNCOMMON);
+	private static Rule expOfLambertW = new Rule("e^(lambertW(x))->x/lambertW(x)","e to lambert w",Rule.UNCOMMON);
+	private static Rule expOfLambertWProd = new Rule("e^(lambertW(x)*n)->x^n/lambertW(x)^n","e to lambert w product",Rule.TRICKY);
+	private static Rule powerOfOne = new Rule("a^1->a","exponent is one",Rule.VERY_EASY);
+	private static Rule fracInBase = new Rule("(a/b)^n->a^n/b^n","base is a fraction",Rule.EASY);
+	private static Rule sqrtOneMinusSin = new Rule("sqrt(1-sin(x))->sqrt(2)*sin(pi/4-x/2)","sqrt of 1 minus sin",Rule.UNCOMMON);
+	private static Rule sqrtOneMinusCos = new Rule("sqrt(1-cos(x))->sqrt(2)*sin(x/2)","sqrt of 1 minus cos",Rule.UNCOMMON);
+	private static Rule sqrtOnePlusSin = new Rule("sqrt(1+sin(x))->sqrt(2)*cos(pi/4-x/2)","sqrt of 1 plus sin",Rule.UNCOMMON);
+	private static Rule sqrtOnePlusCos = new Rule("sqrt(1+cos(x))->sqrt(2)*cos(x/2)","sqrt of 1 plus cos",Rule.UNCOMMON);
 	
 	private static Rule oneToExpo = new Rule("base is one",Rule.VERY_EASY){
 		private static final long serialVersionUID = 1L;

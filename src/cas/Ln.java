@@ -6,11 +6,11 @@ public class Ln extends Expr{
 	
 	
 	private static final long serialVersionUID = 8168024064884459716L;
-	static Rule log1To0 = new Rule("ln(1)=0","log of 1",Rule.VERY_EASY);
-	static Rule logETo1 = new Rule("ln(e)=1","log of e",Rule.VERY_EASY);
-	static Rule powToProd = new Rule("ln(a^b)=b*ln(a)","log of power",Rule.EASY);
-	static Rule lnOfEpsilon = new Rule("ln(epsilon)=-inf","log of epsilon",Rule.EASY);
-	static Rule lnOfInf = new Rule("ln(inf)=inf","log of infinity",Rule.EASY);
+	static Rule log1To0 = new Rule("ln(1)->0","log of 1",Rule.VERY_EASY);
+	static Rule logETo1 = new Rule("ln(e)->1","log of e",Rule.VERY_EASY);
+	static Rule powToProd = new Rule("ln(a^b)->b*ln(a)","log of power",Rule.EASY);
+	static Rule lnOfEpsilon = new Rule("ln(epsilon)->-inf","log of epsilon",Rule.EASY);
+	static Rule lnOfInf = new Rule("ln(inf)->inf","log of infinity",Rule.EASY);
 	
 	static Rule lnOfEpsilonSum = new Rule("log of sum with epsilon",Rule.UNCOMMON){
 		private static final long serialVersionUID = 1L;
@@ -75,8 +75,8 @@ public class Ln extends Expr{
 		}
 	};
 	
-	static Rule logOfInverse = new Rule("ln(1/x)=-ln(x)","log of inverse becomes negative log",Rule.VERY_EASY);
-	static Rule logOfInverse2 = new Rule("ln((-1)/x)=-ln(-x)","log of inverse becomes negative log",Rule.VERY_EASY);
+	static Rule logOfInverse = new Rule("ln(1/x)->-ln(x)","log of inverse becomes negative log",Rule.VERY_EASY);
+	static Rule logOfInverse2 = new Rule("ln((-1)/x)->-ln(-x)","log of inverse becomes negative log",Rule.VERY_EASY);
 	
 	
 	static Rule logWithSums = new Rule("remove sums from within logs",Rule.UNCOMMON) {//the goal is to remove sums inside of logs if they are part of a product or divisin
@@ -136,6 +136,7 @@ public class Ln extends Expr{
 				lnOfEpsilonSum,
 				logOfInverse,
 				logOfInverse2,
+				StandardRules.factorInner,
 				logWithSums,
 				logOfPerfectPower,
 				powToProd

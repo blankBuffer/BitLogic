@@ -6,9 +6,9 @@ public class Cos extends Expr{
 	
 	private static final long serialVersionUID = -529344373251624547L;
 	
-	static Rule cosOfArctan = new Rule("cos(atan(x))=1/sqrt(1+x^2)","cos or arctan",Rule.UNCOMMON);
-	static Rule cosOfArcsin = new Rule("cos(asin(x))=sqrt(1-x^2)","cos of arcsin",Rule.UNCOMMON);
-	static Rule cosOfArccos = new Rule("cos(acos(x))=x","cos of arccos",Rule.UNCOMMON);
+	static Rule cosOfArctan = new Rule("cos(atan(x))->1/sqrt(1+x^2)","cos or arctan",Rule.UNCOMMON);
+	static Rule cosOfArcsin = new Rule("cos(asin(x))->sqrt(1-x^2)","cos of arcsin",Rule.UNCOMMON);
+	static Rule cosOfArccos = new Rule("cos(acos(x))->x","cos of arccos",Rule.UNCOMMON);
 
 	Cos(){}//
 	public Cos(Expr a) {

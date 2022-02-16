@@ -5,8 +5,8 @@ import java.math.BigInteger;
 public class Div extends Expr{
 	
 	private static final long serialVersionUID = -1262460519269095855L;
-	public static Rule overOne = new Rule("a/1=a","divide by one",Rule.VERY_EASY);
-	public static Rule zeroInNum = new Rule("0/a=0","zero in numerator",Rule.VERY_EASY);
+	public static Rule overOne = new Rule("a/1->a","divide by one",Rule.VERY_EASY);
+	public static Rule zeroInNum = new Rule("0/a->0","zero in numerator",Rule.VERY_EASY);
 
 	Div(){}//
 	public Div(Expr num,Expr den){
@@ -488,8 +488,8 @@ public class Div extends Expr{
 		}
 	};
 	
-	static Rule rationalize = new Rule("a/b^(m/n)=a*b^((n-m)/n)/b","isNum(b)&isNum(m)","rationalize denom",Rule.VERY_EASY);
-	static Rule rationalize2 = new Rule("a/(k*b^(m/n))=a*b^((n-m)/n)/(k*b)","isNum(b)&isNum(k)&isNum(m)","rationalize denom",Rule.VERY_EASY);
+	static Rule rationalize = new Rule("a/b^(m/n)->a*b^((n-m)/n)/b","isNum(b)&isNum(m)","rationalize denom",Rule.VERY_EASY);
+	static Rule rationalize2 = new Rule("a/(k*b^(m/n))->a*b^((n-m)/n)/(k*b)","isNum(b)&isNum(k)&isNum(m)","rationalize denom",Rule.VERY_EASY);
 	
 	static ExprList ruleSequence = null;
 	

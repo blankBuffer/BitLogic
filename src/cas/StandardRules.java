@@ -44,11 +44,12 @@ public class StandardRules extends QuickMath{
 		public void init(){
 			if(cases != null) return;
 			cases = new Rule[]{
-				new Rule("sin(x)*cos(x)=sin(2*x)/2","compressing trig",Rule.EASY),
-				new Rule("a*sin(x)*cos(x)=a*sin(2*x)/2","compressing trig",Rule.EASY),
-				new Rule("2*cos(x)^2-1=cos(2*x)","compressing trig",Rule.EASY),
-				new Rule("2*tan(x)/(1-tan(x)^2)=tan(2*x)","compressing trig",Rule.EASY),
+				new Rule("sin(x)*cos(x)->sin(2*x)/2","compressing trig",Rule.EASY),
+				new Rule("a*sin(x)*cos(x)->a*sin(2*x)/2","compressing trig",Rule.EASY),
+				new Rule("2*cos(x)^2-1->cos(2*x)","compressing trig",Rule.EASY),
+				new Rule("2*tan(x)/(1-tan(x)^2)->tan(2*x)","compressing trig",Rule.EASY),
 			};
+			Rule.initRules(cases);
 		}
 		
 		@Override

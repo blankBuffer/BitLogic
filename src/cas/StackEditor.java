@@ -81,7 +81,7 @@ public class StackEditor extends QuickMath {
 		out+="STACK\n";
 		out+="▛▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▜\n";
 		for (int i = 0; i < size(); i++) {
-			out+=(i + 1) + ": "+stack.get(i)+"\tapprox\t"+stack.get(i).convertToFloat(currentDefs.getVars())+"\n";
+			out+=(i + 1) + ": "+stack.get(i)+"  --->  "+stack.get(i).convertToFloat(currentDefs.getVars())+"\n";
 		}
 		out+="▙▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▟\n";
 		out+=alerts;
@@ -347,7 +347,7 @@ public class StackEditor extends QuickMath {
 					} else createAlert("invalid index");
 				}else if (command.equals("roll")) {
 					if (size()>2) {
-						val = val%size();
+						val = Math.floorMod(val,size());
 						for(int i = 0;i<val;i++) roll();
 					} else createAlert("need more elements");
 				}

@@ -59,10 +59,10 @@ public class Ask extends QuickMath{
 			return getResponse(tokens);
 		}
 	}
+	
 	static void loadBasicQuestions() {
 		try {
 			Scanner scanner = new Scanner(new File("QnA.txt"));
-			System.out.println("loading questions...");
 			while(scanner.hasNextLine()) {
 				String line = scanner.nextLine();
 				
@@ -91,9 +91,8 @@ public class Ask extends QuickMath{
 				
 			}
 			scanner.close();
-			System.out.println("done loading questions!");
 		} catch (FileNotFoundException e) {
-			System.err.println("unable to load questions");
+			System.err.println("unable to load questions file");
 		}
 	}
 	
@@ -321,7 +320,6 @@ public class Ask extends QuickMath{
 			}
 		});
 		//definitions
-		loadBasicQuestions();
 	}
 	
 	static String numeric(String s) {

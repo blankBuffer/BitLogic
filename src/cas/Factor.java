@@ -7,8 +7,8 @@ public class Factor extends Expr{
 	
 	private static final long serialVersionUID = -5448276275686292911L;
 	
-	static Rule sumOfCubes = new Rule("factor(a^3+b^3)=(a+b)*(a^2-a*b+b^2)","sum of cubes",Rule.UNCOMMON);
-	static Rule differenceOfCubes = new Rule("factor(a^3-b^3)=(a-b)*(a^2+a*b+b^2)","difference of cubes",Rule.UNCOMMON);
+	static Rule sumOfCubes = new Rule("factor(a^3+b^3)->(a+b)*(a^2-a*b+b^2)","sum of cubes",Rule.UNCOMMON);
+	static Rule differenceOfCubes = new Rule("factor(a^3-b^3)->(a-b)*(a^2+a*b+b^2)","difference of cubes",Rule.UNCOMMON);
 
 	Factor(){}//
 	public Factor(Expr expr) {

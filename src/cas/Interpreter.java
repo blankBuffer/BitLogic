@@ -69,7 +69,7 @@ public class Interpreter extends QuickMath{
 	}
 	
 	static Expr createExprFromTokens(ArrayList<String> tokens,Defs defs,Settings settings) throws Exception{
-		
+		//System.out.println("recieved: "+tokens);
 		errors(tokens);
 		
 		/*
@@ -113,27 +113,27 @@ public class Interpreter extends QuickMath{
 				return createExprFromTokens(generateTokens(tokens.get(0)),defs,settings);
 			}
 		}else if(tokens.size() == 2) {
-			if(tokens.get(0).equals("-")) {
+			if(tokens.get(0).equals("-")) {//negate
 				Expr expr = createExpr(tokens.get(1));
 				if(expr instanceof Num) return ((Num) expr).negate();
 				return neg(createExpr(tokens.get(1),defs,settings));
-			}else if(!tokens.get(1).equals("!")){
+			}else if(!tokens.get(1).equals("!")){//functional notation
 				String op = tokens.get(0);
 				if(op.isBlank()) throw new Exception("confusing parenthesis");
 				Expr params = ExprList.cast( createExprFromToken(tokens.get(1),defs,settings));
 				
 				if(op.equals("define")) {
-					Equ def = (Equ)params.get(0);
+					Expr def = params.get(0);
 					
-					if(def.getLeftSide() instanceof Func) {
-						Func f = (Func)def.getLeftSide().copy();
-						f.ruleSequence.add(new Rule(def,"function definition",Rule.EASY));
+					if(def instanceof Becomes && ((Becomes)def).getLeftSide() instanceof Func) {
+						Func f = (Func)((Becomes)def).getLeftSide().copy();
+						f.ruleSequence.add(new Rule(((Becomes)def),"function definition",Rule.EASY));
 						System.out.println(f.getRuleSequence());
 						
 						f.clear();
 						defs.addFunc(f);
 					}else {
-						defs.addVar(def);
+						defs.addVar((Equ)def);
 					}
 					
 					return var("done");
@@ -166,7 +166,7 @@ public class Interpreter extends QuickMath{
 				
 			}
 		}
-		boolean isSum = false,isProd = false,isList = false,isFactorial = false,isScript = false,isAnd = false,isOr = false,isNot = false,isEqu = false;
+		boolean isSum = false,isProdAndOrDiv = false,isList = false,isFactorial = false,isScript = false,isAnd = false,isOr = false,isNot = false,isEqu = false,isArrow = false;
 		int indexOfPowToken = -1,equCount = 0;
 		boolean lastWasOperator = false;
 		for(int i = 0;i<tokens.size();i++) {
@@ -183,7 +183,7 @@ public class Interpreter extends QuickMath{
 				isSum = true;
 				lastWasOperator = true;
 			}else if(token.equals("*") || token.equals("/")) {
-				isProd = true;
+				isProdAndOrDiv = true;
 				lastWasOperator = true;
 			}else if(token.equals("^")) {
 				if(indexOfPowToken == -1) indexOfPowToken = i;
@@ -203,10 +203,14 @@ public class Interpreter extends QuickMath{
 			}else if(token.equals("~")){
 				isNot = true;
 				lastWasOperator = true;
+			}else if(token.equals("->")) {
+				isArrow = true;
+				lastWasOperator = true;
 			}else {
 				lastWasOperator = false;
 			}
 		}
+		
 		if(isScript) {
 			
 			Script scr = new Script();
@@ -243,6 +247,21 @@ public class Interpreter extends QuickMath{
 			
 			return list;
 			
+		}else if(isArrow) {
+			int indexOfArrowToken = tokens.indexOf("->");
+			ArrayList<String> leftSideTokens = new ArrayList<String>();
+			for(int i = 0;i<indexOfArrowToken;i++) {
+				leftSideTokens.add(tokens.get(i));
+			}
+			ArrayList<String> rightSideTokens = new ArrayList<String>();
+			for(int i = indexOfArrowToken+1;i<tokens.size();i++) {
+				rightSideTokens.add(tokens.get(i));
+			}
+			
+			Expr leftSide = createExprFromTokens(leftSideTokens,defs,settings);
+			Expr rightSide = createExprFromTokens(rightSideTokens,defs,settings);
+			
+			return becomes(leftSide,rightSide);
 		}else if(isEqu) {//is equation
 			
 			int indexOfEquToken = 0;
@@ -316,6 +335,7 @@ public class Interpreter extends QuickMath{
 			tokens.remove(0);
 			return not(createExprFromTokens(tokens,defs,settings));
 		}else if(isSum) {
+			
 			tokens.add("+");
 			Expr sum = new Sum();
 			int indexOfLastAdd = 0;
@@ -324,7 +344,7 @@ public class Interpreter extends QuickMath{
 				String token = tokens.get(i);
 				if(token.equals("+") || token.equals("-")) {
 					if(i != 0) {
-						if(tokens.get(i-1).equals("^") || tokens.get(i-1).equals("/")) continue;//avoids error created by e^-x+x where the negative is actually in the exponent same things with x+y/-2
+						if(tokens.get(i-1).equals("^") || tokens.get(i-1).equals("/") || tokens.get(i-1).equals("*")) continue;//avoids error created by e^-x+x where the negative is actually in the exponent same things with x+y/-2
 						ArrayList<String> tokenSet = new ArrayList<String>();
 						for(int j = indexOfLastAdd;j<i;j++) {
 							tokenSet.add(tokens.get(j));
@@ -372,7 +392,7 @@ public class Interpreter extends QuickMath{
 			}
 			if(sum.size() == 1) return sum.get();
 			return sum;
-		}else if(isProd) {
+		}else if(isProdAndOrDiv) {
 			tokens.add("*");
 			Expr numerProd = new Prod();
 			Expr denomProd = new Prod();
@@ -425,7 +445,7 @@ public class Interpreter extends QuickMath{
 	}
 	
 	
-	static char[] basicOperators = new char[] {
+	private static char[] basicOperators = new char[] {
 		'*','+','-','^','/',',','=','!',':',';','&','|','~','<','>'
 	};
 	private static boolean isBasicOperator(char c) {
@@ -433,6 +453,34 @@ public class Interpreter extends QuickMath{
 			if(o == c) return true;
 		}
 		return false;
+	}
+	
+	private static ArrayList<String> multiSymbolOperators = new ArrayList<String>();
+	static {
+		multiSymbolOperators.add("->");
+	}
+	private static void makeMultiSymbolOperators(ArrayList<String> tokens) {
+		for(int i = 0;i < tokens.size();i++) {
+			String fullToken = tokens.get(i);
+			if(fullToken.length()>1) continue; 
+			
+			char token = fullToken.charAt(0);
+			if(!isBasicOperator(token)) continue;
+			symbolLoop:for(String multiSymbol:multiSymbolOperators) {
+				if(multiSymbol.charAt(0) == token) {
+					for(int j = 1;j<multiSymbol.length();j++) {
+						if(!(tokens.get(i+j).length() == 1 && multiSymbol.charAt(j) == tokens.get(i+j).charAt(0))) continue symbolLoop;
+					}
+					
+					for(int j = i+multiSymbol.length()-1;j>i;j--) {
+						tokens.remove(j);
+					}
+					tokens.set(i, multiSymbol);
+					
+				}
+			}
+			
+		}
 	}
 	
 	static ArrayList<String> generateTokens(String string) throws Exception{//splits up a string into its relevant subsections and removes parentheses	
@@ -469,10 +517,8 @@ public class Interpreter extends QuickMath{
 			String subString = string.substring(lastIndex, string.length());
 			if(!subString.isEmpty())tokens.add(subString);
 		}
-		//strange case of 6x meaning 6*x
 		
-		
-		
+		makeMultiSymbolOperators(tokens);
 		
 		return tokens;
 	}

@@ -236,6 +236,9 @@ public class QuickMath {
 	public static Func func(String name,Equ v,Expr expr) {
 		return new Func(name,v,expr);
 	}
+	public static Becomes becomes(Expr left,Expr right) {
+		return new Becomes(left,right);
+	}
 	public static Func eval(Equ equ) {
 		try {
 			return (Func)SimpleFuncs.getFuncByName("eval", Defs.blank, equ);

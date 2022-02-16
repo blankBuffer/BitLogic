@@ -210,21 +210,21 @@ public class Rule extends Expr{
 		return true;
 	}
 	
+	String patternStr = null;
+	String conditionStr = null;
 	
 	public Rule(String pattern,String name,int difficulty){
-		this.pattern = (Equ) createExpr(pattern);
-		this.pattern.getLeftSide().sort();
+		patternStr = pattern;
 		this.name = name;
 		this.difficulty = difficulty;
 	}
 	public Rule(String pattern,String condition,String name,int difficulty){
-		this.pattern = (Equ) createExpr(pattern);
-		this.pattern.getLeftSide().sort();
-		this.condition = createExpr(condition);
+		patternStr = pattern;
+		conditionStr = condition;
 		this.name = name;
 		this.difficulty = difficulty;
 	}
-	public Rule(Equ pattern,String name,int difficulty){
+	public Rule(Becomes pattern,String name,int difficulty){
 		this.pattern = pattern;
 		this.pattern.getLeftSide().sort();
 		this.name = name;
@@ -236,14 +236,24 @@ public class Rule extends Expr{
 	}
 	
 	public void init(){
+		if(patternStr != null) {
+			this.pattern = (Becomes) createExpr(patternStr);
+			this.pattern.getLeftSide().sort();
+		}
+		if(conditionStr != null) {
+			condition = createExpr(conditionStr);
+		}
 	}
 	
 	public static void initRules(ExprList ruleSequence) {
 		for(int i = 0;i<ruleSequence.size();i++) ((Rule)ruleSequence.get(i)).init();
 	}
+	public static void initRules(Rule[] ruleSequence) {
+		for(int i = 0;i<ruleSequence.length;i++) ruleSequence[i].init();
+	}
 	
-	public Equ pattern = null;
-	public Expr condition = null;
+	public Becomes pattern = null;//the template expresion, its basically an example of the problem
+	public Expr condition = null;//a condition for the variables, for example checking if a variable is positive
 	public Expr applyRuleToExpr(Expr expr,Settings settings){//note this may modify the original expression. The return is there so that if it changes expression type
 		//System.out.println(pattern.getLeftSide()+" "+expr+" "+fastSimilarStruct(pattern.getLeftSide(),expr));
 		if(fastSimilarStruct(pattern.getLeftSide(),expr)) {//we use fast similar struct here because we don't want to call the getParts function twice and its faster
@@ -320,6 +330,8 @@ public class Rule extends Expr{
 		
 		Solve.loadRules();
 		System.out.println("done loading Rules!");
+		
+		Ask.loadBasicQuestions();
 	}
 	
 	@Override

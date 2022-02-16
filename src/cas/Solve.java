@@ -72,17 +72,18 @@ public class Solve extends Expr{
 				@Override
 				public void init() {
 					cases = new Rule[] {
-							new Rule("m^a-y^a=0=m-y=0","subtracting powers, same exponent",Rule.UNCOMMON),
-							new Rule("a^m-a^y=0=m-y=0","subtracting powers, same base",Rule.UNCOMMON),
+							new Rule("m^a-y^a=0->m-y=0","subtracting powers, same exponent",Rule.UNCOMMON),
+							new Rule("a^m-a^y=0->m-y=0","subtracting powers, same base",Rule.UNCOMMON),
 							
-							new Rule("ln(a)-ln(y)=0=a-y=0","subtracting logs",Rule.UNCOMMON),
-							new Rule("sin(a)-sin(y)=0=a-y=0","subtracting sins",Rule.UNCOMMON),
-							new Rule("cos(a)-cos(y)=0=a-y=0","subtracting cos",Rule.UNCOMMON),
-							new Rule("tan(a)-tan(y)=0=a-y=0","subtracting tans",Rule.UNCOMMON),
-							new Rule("asin(a)-asin(y)=0=a-y=0","subtracting asins",Rule.UNCOMMON),
-							new Rule("acos(a)-acos(y)=0=a-y=0","subtracting acoss",Rule.UNCOMMON),
-							new Rule("atan(a)-atan(y)=0=a-y=0","subtracting atans",Rule.UNCOMMON),
+							new Rule("ln(a)-ln(y)=0->a-y=0","subtracting logs",Rule.UNCOMMON),
+							new Rule("sin(a)-sin(y)=0->a-y=0","subtracting sins",Rule.UNCOMMON),
+							new Rule("cos(a)-cos(y)=0->a-y=0","subtracting cos",Rule.UNCOMMON),
+							new Rule("tan(a)-tan(y)=0->a-y=0","subtracting tans",Rule.UNCOMMON),
+							new Rule("asin(a)-asin(y)=0->a-y=0","subtracting asins",Rule.UNCOMMON),
+							new Rule("acos(a)-acos(y)=0->a-y=0","subtracting acoss",Rule.UNCOMMON),
+							new Rule("atan(a)-atan(y)=0->a-y=0","subtracting atans",Rule.UNCOMMON),
 					};
+					Rule.initRules(cases);
 				}
 				
 				@Override
@@ -98,23 +99,24 @@ public class Solve extends Expr{
 				@Override
 				public void init() {
 					cases = new Rule[] {
-							new Rule("sqrt(x)-sqrt(x+a)=k=x=(k^2-a)^2/(4*k^2)","sum of linear square roots",Rule.DIFFICULT),
-							new Rule("sqrt(x+a)-sqrt(x)=k=x=(k^2-a)^2/(4*k^2)","sum of linear square roots",Rule.DIFFICULT),
-							new Rule("sqrt(x+a)+sqrt(x)=k=x=(k^2-a)^2/(4*k^2)","sum of linear square roots",Rule.DIFFICULT),
+							new Rule("sqrt(x)-sqrt(x+a)=k->x=(k^2-a)^2/(4*k^2)","sum of linear square roots",Rule.DIFFICULT),
+							new Rule("sqrt(x+a)-sqrt(x)=k->x=(k^2-a)^2/(4*k^2)","sum of linear square roots",Rule.DIFFICULT),
+							new Rule("sqrt(x+a)+sqrt(x)=k->x=(k^2-a)^2/(4*k^2)","sum of linear square roots",Rule.DIFFICULT),
 							
-							new Rule("x+sqrt(x+a)=y=[x=(sqrt(4*a+4*y+1)+2*y+1)/2,x=(-sqrt(4*a+4*y+1)+2*y+1)/2]","sum of linear square roots",Rule.DIFFICULT),
-							new Rule("x-sqrt(x+a)=y=[x=(sqrt(4*a+4*y+1)+2*y+1)/2,x=(-sqrt(4*a+4*y+1)+2*y+1)/2]","sum of linear square roots",Rule.DIFFICULT),
-							new Rule("sqrt(x+a)-x=y=[x=(sqrt(4*a-4*y+1)-2*y+1)/2,x=(-sqrt(4*a-4*y+1)-2*y+1)/2]","sum of linear square roots",Rule.DIFFICULT),
+							new Rule("x+sqrt(x+a)=y->[x=(sqrt(4*a+4*y+1)+2*y+1)/2,x=(-sqrt(4*a+4*y+1)+2*y+1)/2]","sum of linear square roots",Rule.DIFFICULT),
+							new Rule("x-sqrt(x+a)=y->[x=(sqrt(4*a+4*y+1)+2*y+1)/2,x=(-sqrt(4*a+4*y+1)+2*y+1)/2]","sum of linear square roots",Rule.DIFFICULT),
+							new Rule("sqrt(x+a)-x=y->[x=(sqrt(4*a-4*y+1)-2*y+1)/2,x=(-sqrt(4*a-4*y+1)-2*y+1)/2]","sum of linear square roots",Rule.DIFFICULT),
 							
-							new Rule("y*x+sqrt(a+m*x+b*x^2)=z=[x=(sqrt(-4*a*b+4*a*y^2+4*b*z^2+m^2+4*m*y*z)+m+2*y*z)/(2*(y^2-b)),x=(-sqrt(-4*a*b+4*a*y^2+4*b*z^2+m^2+4*m*y*z)+m+2*y*z)/(2*(y^2-b))]","linear plus square root of quadratic",Rule.VERY_DIFFICULT),
-							new Rule("y*x-sqrt(a+m*x+b*x^2)=z=[x=(sqrt(-4*a*b+4*a*y^2+4*b*z^2+m^2+4*m*y*z)+m+2*y*z)/(2*(y^2-b)),x=(-sqrt(-4*a*b+4*a*y^2+4*b*z^2+m^2+4*m*y*z)+m+2*y*z)/(2*(y^2-b))]","linear plus square root of quadratic",Rule.VERY_DIFFICULT),
-							new Rule("-y*x+sqrt(a+m*x+b*x^2)=z=[x=(sqrt(-4*a*b+4*a*y^2+4*b*z^2+m^2+4*m*y*z)+m+2*y*z)/(2*(b-y^2)),x=(-sqrt(-4*a*b+4*a*y^2+4*b*z^2+m^2+4*m*y*z)+m+2*y*z)/(2*(b-y^2))]","linear plus square root of quadratic",Rule.VERY_DIFFICULT),
+							new Rule("y*x+sqrt(a+m*x+b*x^2)=z->[x=(sqrt(-4*a*b+4*a*y^2+4*b*z^2+m^2+4*m*y*z)+m+2*y*z)/(2*(y^2-b)),x=(-sqrt(-4*a*b+4*a*y^2+4*b*z^2+m^2+4*m*y*z)+m+2*y*z)/(2*(y^2-b))]","linear plus square root of quadratic",Rule.VERY_DIFFICULT),
+							new Rule("y*x-sqrt(a+m*x+b*x^2)=z->[x=(sqrt(-4*a*b+4*a*y^2+4*b*z^2+m^2+4*m*y*z)+m+2*y*z)/(2*(y^2-b)),x=(-sqrt(-4*a*b+4*a*y^2+4*b*z^2+m^2+4*m*y*z)+m+2*y*z)/(2*(y^2-b))]","linear plus square root of quadratic",Rule.VERY_DIFFICULT),
+							new Rule("-y*x+sqrt(a+m*x+b*x^2)=z->[x=(sqrt(-4*a*b+4*a*y^2+4*b*z^2+m^2+4*m*y*z)+m+2*y*z)/(2*(b-y^2)),x=(-sqrt(-4*a*b+4*a*y^2+4*b*z^2+m^2+4*m*y*z)+m+2*y*z)/(2*(b-y^2))]","linear plus square root of quadratic",Rule.VERY_DIFFICULT),
 							
-							new Rule("y*x+k*sqrt(a+m*x+b*x^2)=z=[x=(-sqrt(-4*a*b*k^4+4*a*k^2*y^2+4*b*k^2*z^2+k^4*m^2+4*k^2*m*y*z)-k^2*m-2*y*z)/(2*(b*k^2-y^2)),x=(sqrt(-4*a*b*k^4+4*a*k^2*y^2+4*b*k^2*z^2+k^4*m^2+4*k^2*m*y*z)-k^2*m-2*y*z)/(2*(b*k^2-y^2))]","linear plus square root of quadratic",Rule.VERY_DIFFICULT),
-							new Rule("y*x-k*sqrt(a+m*x+b*x^2)=z=[x=(-sqrt(-4*a*b*k^4+4*a*k^2*y^2+4*b*k^2*z^2+k^4*m^2+4*k^2*m*y*z)-k^2*m-2*y*z)/(2*(b*k^2-y^2)),x=(sqrt(-4*a*b*k^4+4*a*k^2*y^2+4*b*k^2*z^2+k^4*m^2+4*k^2*m*y*z)-k^2*m-2*y*z)/(2*(b*k^2-y^2))]","linear plus square root of quadratic",Rule.VERY_DIFFICULT),
-							new Rule("-y*x+k*sqrt(a+m*x+b*x^2)=z=[x=(-sqrt(-4*a*b*k^4+4*a*k^2*y^2+4*b*k^2*z^2+k^4*m^2+4*k^2*m*y*z)-k^2*m-2*y*z)/(-2*(b*k^2-y^2)),x=(sqrt(-4*a*b*k^4+4*a*k^2*y^2+4*b*k^2*z^2+k^4*m^2+4*k^2*m*y*z)-k^2*m-2*y*z)/(-2*(b*k^2-y^2))]","linear plus square root of quadratic",Rule.VERY_DIFFICULT),
+							new Rule("y*x+k*sqrt(a+m*x+b*x^2)=z->[x=(-sqrt(-4*a*b*k^4+4*a*k^2*y^2+4*b*k^2*z^2+k^4*m^2+4*k^2*m*y*z)-k^2*m-2*y*z)/(2*(b*k^2-y^2)),x=(sqrt(-4*a*b*k^4+4*a*k^2*y^2+4*b*k^2*z^2+k^4*m^2+4*k^2*m*y*z)-k^2*m-2*y*z)/(2*(b*k^2-y^2))]","linear plus square root of quadratic",Rule.VERY_DIFFICULT),
+							new Rule("y*x-k*sqrt(a+m*x+b*x^2)=z->[x=(-sqrt(-4*a*b*k^4+4*a*k^2*y^2+4*b*k^2*z^2+k^4*m^2+4*k^2*m*y*z)-k^2*m-2*y*z)/(2*(b*k^2-y^2)),x=(sqrt(-4*a*b*k^4+4*a*k^2*y^2+4*b*k^2*z^2+k^4*m^2+4*k^2*m*y*z)-k^2*m-2*y*z)/(2*(b*k^2-y^2))]","linear plus square root of quadratic",Rule.VERY_DIFFICULT),
+							new Rule("-y*x+k*sqrt(a+m*x+b*x^2)=z->[x=(-sqrt(-4*a*b*k^4+4*a*k^2*y^2+4*b*k^2*z^2+k^4*m^2+4*k^2*m*y*z)-k^2*m-2*y*z)/(-2*(b*k^2-y^2)),x=(sqrt(-4*a*b*k^4+4*a*k^2*y^2+4*b*k^2*z^2+k^4*m^2+4*k^2*m*y*z)-k^2*m-2*y*z)/(-2*(b*k^2-y^2))]","linear plus square root of quadratic",Rule.VERY_DIFFICULT),
 							
 					};
+					Rule.initRules(cases);
 				}
 				
 				@Override
@@ -131,11 +133,12 @@ public class Solve extends Expr{
 				@Override
 				public void init() {
 					cases = new Rule[] {
-							new Rule("sin(x)+cos(x)=y=x=acos(y/sqrt(2))+pi/4","basic case of summed sin and cos",Rule.UNCOMMON),
-							new Rule("a*sin(x)+b*cos(x)=y=x=acos(y/sqrt(a^2+b^2))+atan(a/b)","hard case of summed sin and cos",Rule.UNCOMMON),
-							new Rule("sin(x)+b*cos(x)=y=x=acos(y/sqrt(1+b^2))+atan(1/b)","hard case of summed sin and cos",Rule.UNCOMMON),
-							new Rule("a*sin(x)+cos(x)=y=x=acos(y/sqrt(a^2+1))+atan(a)","hard case of summed sin and cos",Rule.UNCOMMON),
+							new Rule("sin(x)+cos(x)=y->x=acos(y/sqrt(2))+pi/4","basic case of summed sin and cos",Rule.UNCOMMON),
+							new Rule("a*sin(x)+b*cos(x)=y->x=acos(y/sqrt(a^2+b^2))+atan(a/b)","hard case of summed sin and cos",Rule.UNCOMMON),
+							new Rule("sin(x)+b*cos(x)=y->x=acos(y/sqrt(1+b^2))+atan(1/b)","hard case of summed sin and cos",Rule.UNCOMMON),
+							new Rule("a*sin(x)+cos(x)=y->x=acos(y/sqrt(a^2+1))+atan(a)","hard case of summed sin and cos",Rule.UNCOMMON),
 					};
+					Rule.initRules(cases);
 				}
 				
 				@Override
@@ -151,14 +154,15 @@ public class Solve extends Expr{
 				@Override
 				public void init() {
 					cases = new Rule[] {
-							new Rule("x*ln(x)=y=x=e^lambertW(y)","basic case of lambert w",Rule.UNCOMMON),
-							new Rule("x*a^x=y=x=lambertW(y*ln(a))/ln(a)","hard case of lambert w",Rule.UNCOMMON),
-							new Rule("x*a^(b*x)=y=x=lambertW(y*b*ln(a))/(b*ln(a))","hard case of lambert w",Rule.UNCOMMON),
-							new Rule("x^n*a^x=y=x=n*lambertW(y^(1/n)*ln(a)/n)/ln(a)","hard case of lambert w",Rule.UNCOMMON),
-							new Rule("x^n*a^(b*x)=y=x=n*lambertW(y^(1/n)*ln(a)*b/n)/(b*ln(a))","hard case of lambert w",Rule.UNCOMMON),
-							new Rule("x+a^x=y=x=y-lambertW(ln(a)*a^y)/ln(a)","",Rule.UNCOMMON),
-							new Rule("b*x+a^x=y=x=(ln(a)*y-b*lambertW((ln(a)*a^(y/b))/b))/(b*ln(a))","hard case of lambert w",Rule.UNCOMMON),
+							new Rule("x*ln(x)=y->x=e^lambertW(y)","basic case of lambert w",Rule.UNCOMMON),
+							new Rule("x*a^x=y->x=lambertW(y*ln(a))/ln(a)","hard case of lambert w",Rule.UNCOMMON),
+							new Rule("x*a^(b*x)=y->x=lambertW(y*b*ln(a))/(b*ln(a))","hard case of lambert w",Rule.UNCOMMON),
+							new Rule("x^n*a^x=y->x=n*lambertW(y^(1/n)*ln(a)/n)/ln(a)","hard case of lambert w",Rule.UNCOMMON),
+							new Rule("x^n*a^(b*x)=y->x=n*lambertW(y^(1/n)*ln(a)*b/n)/(b*ln(a))","hard case of lambert w",Rule.UNCOMMON),
+							new Rule("x+a^x=y->x=y-lambertW(ln(a)*a^y)/ln(a)","",Rule.UNCOMMON),
+							new Rule("b*x+a^x=y->x=(ln(a)*y-b*lambertW((ln(a)*a^(y/b))/b))/(b*ln(a))","hard case of lambert w",Rule.UNCOMMON),
 					};
+					Rule.initRules(cases);
 				}
 				
 				@Override
@@ -240,7 +244,8 @@ public class Solve extends Expr{
 				Rule mainCase;
 				@Override
 				public void init() {
-					mainCase = new Rule(equ( createExpr("a/b=c") , createExpr("a-c*b=0") ),"log case for solve",Rule.EASY);
+					mainCase = new Rule("a/b=c->a-c*b=0","div case for solve",Rule.EASY);
+					mainCase.init();
 				}
 				@Override
 				public Expr applyRuleToExpr(Expr e,Settings settings){
@@ -256,18 +261,19 @@ public class Solve extends Expr{
 				@Override
 				public void init() {
 					cases = new Rule[] {
-							new Rule(equ( createExpr("ln(a)=b") , createExpr("a=e^b") ),"log case for solve",Rule.EASY),
+							new Rule("ln(a)=b->a=e^b","log case for solve",Rule.EASY),
 							
-							new Rule(equ( createExpr("sin(a)=b") , createExpr("[a=asin(b),a=pi-asin(b)]") ),"sin case for solve",Rule.EASY),
-							new Rule(equ( createExpr("cos(a)=b") , createExpr("[a=acos(b),a=-acos(b)]") ),"cos case for solve",Rule.EASY),
-							new Rule(equ( createExpr("tan(a)=b") , createExpr("[a=atan(b),a=atan(b)-pi]") ),"tan case for solve",Rule.EASY),
+							new Rule("sin(a)=b->[a=asin(b),a=pi-asin(b)]","sin case for solve",Rule.EASY),
+							new Rule("cos(a)=b->[a=acos(b),a=-acos(b)]","cos case for solve",Rule.EASY),
+							new Rule("tan(a)=b->[a=atan(b),a=atan(b)-pi]","tan case for solve",Rule.EASY),
 							
-							new Rule(equ( createExpr("asin(a)=b") , createExpr("a=sin(b)") ),"tan case for solve",Rule.EASY),
-							new Rule(equ( createExpr("acos(a)=b") , createExpr("a=cos(b)") ),"tan case for solve",Rule.EASY),
-							new Rule(equ( createExpr("atan(a)=b") , createExpr("a=tan(b)") ),"tan case for solve",Rule.EASY),
+							new Rule("asin(a)=b->a=sin(b)","tan case for solve",Rule.EASY),
+							new Rule("acos(a)=b->a=cos(b)","tan case for solve",Rule.EASY),
+							new Rule("atan(a)=b->a=tan(b)","tan case for solve",Rule.EASY),
 							
-							new Rule(equ( createExpr("lambertW(a)=b") , createExpr("a=b*e^b") ),"tan case for solve",Rule.EASY),
+							new Rule("lambertW(a)=b->a=b*e^b","tan case for solve",Rule.EASY),
 					};
+					Rule.initRules(cases);
 				}
 				@Override
 				public Expr applyRuleToExpr(Expr e,Settings settings){
@@ -282,9 +288,11 @@ public class Solve extends Expr{
 				
 				@Override
 				public void init() {
-					rootCase = new Rule(equ( createExpr("m^n=a") , createExpr("m=a^inv(n)")  ),"root case for solve",Rule.EASY);
-					expoCase = new Rule(equ( createExpr("m^n=a")   ,createExpr("n=ln(a)/ln(m)")  ),"expo case for solve",Rule.EASY);
-					baseAndExpoHaveVar = new Rule(equ( createExpr("m^n=a")   ,createExpr("n*ln(m)=ln(a)")  ),"preperation for lambert w solve",Rule.UNCOMMON);
+					rootCase = new Rule("m^n=a->m=a^inv(n)","root case for solve",Rule.EASY);
+					rootCase.init();
+					expoCase = new Rule("m^n=a->n=ln(a)/ln(m)","expo case for solve",Rule.EASY);
+					baseAndExpoHaveVar = new Rule("m^n=a->n*ln(m)=ln(a)","preperation for lambert w solve",Rule.UNCOMMON);
+					baseAndExpoHaveVar.init();
 				}
 				
 				@Override
@@ -391,10 +399,11 @@ public class Solve extends Expr{
 				@Override
 				public void init() {
 					cases = new Rule[] {
-							new Rule("a=b=a-b=0","move everything to the left side",Rule.VERY_EASY),
-							new Rule("a>b=a-b>0","move everything to the left side",Rule.VERY_EASY),
-							new Rule("a<b=a-b<0","move everything to the left side",Rule.VERY_EASY),
+							new Rule("a=b->a-b=0","move everything to the left side",Rule.VERY_EASY),
+							new Rule("a>b->a-b>0","move everything to the left side",Rule.VERY_EASY),
+							new Rule("a<b->a-b<0","move everything to the left side",Rule.VERY_EASY),
 					};
+					Rule.initRules(cases);
 				}
 				
 				@Override
