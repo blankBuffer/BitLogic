@@ -257,8 +257,43 @@ public class Integrate extends Expr{
 		
 	};
 	
+	/*
+	 * these are the reverse process of diff(atan(x^n),x) -> (n-1)*x^(n-1)/(x^(2*n)+1)
+	 */
+	
 	static Rule inverseQuadraticSimple = new Rule("integrate(x^a/(x^b+c),x)->atan(x^(a+1)/sqrt(c))/((a+1)*sqrt(c))","eval(b/(a+1)=2)&eval(c>0)","inverse quadratic with u sub",Rule.UNCOMMON);
 	static Rule inverseQuadraticSimple2 = new Rule("integrate(x^a/(d*x^b+c),x)->atan((x^(a+1)*sqrt(d))/sqrt(c))/((a+1)*sqrt(d*c))","eval(b/(a+1)=2)&eval(c*d>0)","inverse quadratic with u sub",Rule.UNCOMMON);
+	
+	static Rule inverseQuadraticToNReduction = new Rule("1 over quadratic to the n",Rule.VERY_DIFFICULT) {
+		private static final long serialVersionUID = 1L;
+		
+		Expr ans;
+		Expr invPow;
+		
+		@Override
+		public void init() {
+			ans = createExpr("(-2*a*x-b)/((n-1)*(b^2-4*a*c)*(a*x^2+b*x+c)^(n-1))-2*(2*n-3)*a/((n-1)*(b^2-4*a*c))*integrate(1/(a*x^2+b*x+c)^(n-1),x)");
+			invPow = createExpr("1/q^n");
+		}
+		
+		@Override
+		public Expr applyRuleToExpr(Expr e,Settings settings) {
+			Integrate integ = (Integrate)e;
+			
+			if( !Rule.fastSimilarStruct(invPow,integ.get() )) return integ;
+			Power denom = (Power)(((Div)integ.get()).getDenom());
+			
+			if(!isPositiveRealNum(denom.getExpo())) return integ;
+			Num n = (Num)denom.getExpo();
+			
+			ExprList coef = polyExtract(denom.getBase() ,integ.getVar(),settings);
+			if(coef == null || coef.size() != 3) return integ;
+			ExprList equs = exprList(  equ(var("a"),coef.get(2)) , equ(var("b"),coef.get(1)) , equ(var("c"),coef.get(0)) , equ(var("n"),n) , equ(var("x"),integ.getVar()) );
+			
+			return ans.replace(equs).simplify(settings);
+		}
+		
+	};
 	
 	static Rule integralForArcsin = new Rule("integrals leading to arcsin",Rule.TRICKY){
 		private static final long serialVersionUID = 1L;
@@ -746,6 +781,7 @@ public class Integrate extends Expr{
 				sinCosProdCase,
 				
 				cotCscCase,
+				inverseQuadraticToNReduction,
 				atanCase,
 				
 				loopingIntegrals,

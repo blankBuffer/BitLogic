@@ -109,7 +109,7 @@ public abstract class Expr extends QuickMath implements Comparable<Expr>, Serial
 			}
 		}
 		RECURSION_SAFETY++;
-		if(RECURSION_SAFETY>1000000) {
+		if(RECURSION_SAFETY>256) {
 			System.err.println("RECURSION DETECTED");
 			return toBeSimplified;
 		}

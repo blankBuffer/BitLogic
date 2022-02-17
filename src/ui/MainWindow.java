@@ -25,6 +25,18 @@ public class MainWindow extends JFrame{
 	
 	final int WINDOW_WIDTH = 900,WINDOW_HEIGHT = 500;
 	
+	private static int WINDOW_INSTANCE_COUNT = 0;
+	
+	void closeWindow() {
+		if(WINDOW_INSTANCE_COUNT == 1) {
+			System.out.println("closing...");
+			System.exit(0);
+		}else {
+			dispose();
+			WINDOW_INSTANCE_COUNT--;
+		}
+	}
+	
 	StackEditor currentStack;
 	Plot plot;
 	JPanel mainViewPanel;
@@ -148,7 +160,8 @@ public class MainWindow extends JFrame{
 		ActionListener resultButtonUpdate = new ActionListener() {
 			@Override
 			public void actionPerformed(ActionEvent e) {
-				currentStack.command("result");
+				if(currentStack.command("result") == StackEditor.QUIT) closeWindow();
+				
 				terminalOutUpdate.actionPerformed(null);
 			}
 		};
@@ -156,11 +169,8 @@ public class MainWindow extends JFrame{
 		ActionListener terminalInPush = new ActionListener() {
 			@Override
 			public void actionPerformed(ActionEvent e) {
-				String command = terminalIn.getText();
-				int quit = currentStack.command(command);
-				if(quit == -1) {
-					MainWindow.this.dispose();
-				}
+				if(currentStack.command(terminalIn.getText()) == StackEditor.QUIT) closeWindow();
+				
 				terminalIn.setText("");
 				terminalOutUpdate.actionPerformed(e);
 			}
@@ -501,6 +511,7 @@ public class MainWindow extends JFrame{
 		add(createMainContainer());
 		setLocationRelativeTo(null);
 		setVisible(true);
+		WINDOW_INSTANCE_COUNT++;
 	}
 
 }

@@ -73,8 +73,8 @@ public class ExprRender extends QuickMath{
 			rightParenImg.makeString(")");
 			
 			setWidth(leftParenImg.getWidth()+eImg.getWidth()+rightParenImg.getWidth());
-			setHeight(eImg.getHeight());
-			setFractionBar(eImg.getFractionBar());
+			setHeight(Math.max(eImg.getHeight(),leftParenImg.getHeight()));
+			setFractionBar( Math.max(eImg.getFractionBar(),leftParenImg.getFractionBar()) );
 			
 			initImg();
 			graphics.drawImage(leftParenImg.getImage(),0,0,leftParenImg.getWidth(),getHeight(),null);
@@ -117,6 +117,7 @@ public class ExprRender extends QuickMath{
 		}
 		
 		public void makeCommaList(Expr e) {
+			if(e.size() == 0) return;
 			ExprImg commaImg = newExprImg();
 			commaImg.makeString(",");
 			
@@ -130,7 +131,6 @@ public class ExprRender extends QuickMath{
 					imgs.add(commaImg);
 				}
 			}
-			
 			ExprImg[] exprImgs = new ExprImg[imgs.size()];
 			for(int i = 0;i<imgs.size();i++)exprImgs[i] = imgs.get(i);
 					

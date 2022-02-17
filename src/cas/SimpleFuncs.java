@@ -54,7 +54,10 @@ public class SimpleFuncs extends QuickMath{
 	static Func get = new Func("get",2);
 	static Func choose = new Func("choose",2);
 	static Func primeFactor = new Func("primeFactor",1);
+	
 	static Func partialFrac = new Func("partialFrac",2);
+	static Func polyDiv = new Func("polyDiv",2);
+	
 	static Func polyCoef = new Func("polyCoef",2);
 	static Func degree = new Func("degree",2);
 	static Func bigger = new Func("bigger",3);
@@ -143,6 +146,17 @@ public class SimpleFuncs extends QuickMath{
 				Expr inner = f.get(0);
 				Var var = (Var)f.get(1);
 				return partialFrac(inner,var,settings);
+			}
+		});
+		
+		polyDiv.ruleSequence.add(new Rule("polynomial division",Rule.EASY) {
+			private static final long serialVersionUID = 1L;
+			
+			@Override
+			public Expr applyRuleToExpr(Expr e,Settings settings){
+				Func f = (Func)e;
+				Var v = (Var)f.get(1);
+				return polyDiv(f.get(), v, settings);
 			}
 		});
 		
@@ -380,7 +394,10 @@ public class SimpleFuncs extends QuickMath{
 		addFunc(size);
 		addFunc(tree);
 		addFunc(primeFactor);
+		
 		addFunc(partialFrac);
+		addFunc(polyDiv);
+		
 		addFunc(polyCoef);
 		addFunc(degree);
 		addFunc(bigger);

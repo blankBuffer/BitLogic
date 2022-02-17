@@ -296,42 +296,43 @@ public class Rule extends Expr{
 	
 	public static void loadRules(){
 		System.out.println("loading CAS rules...");
-		StandardRules.loadRules();
 		
+		StandardRules.loadRules();
 		Acos.loadRules();
 		And.loadRules();
 		Approx.loadRules();
+		
 		Asin.loadRules();
 		Atan.loadRules();
 		Cos.loadRules();
 		Diff.loadRules();
+		
 		Distr.loadRules();
 		Div.loadRules();
 		ExprList.loadRules();
-		
 		Factor.loadRules();
+		
 		Gamma.loadRules();
 		Integrate.loadRules();
 		IntegrateOver.loadRules();
 		LambertW.loadRules();
-		Limit.loadRules();
 		
+		Limit.loadRules();
 		Ln.loadRules();
 		Not.loadRules();
 		Or.loadRules();
+		
 		Power.loadRules();
 		Prod.loadRules();
-		
 		Sin.loadRules();
-		
 		SimpleFuncs.loadRules();
+		
 		Sum.loadRules();
 		Tan.loadRules();
-		
 		Solve.loadRules();
-		System.out.println("done loading Rules!");
-		
 		Ask.loadBasicQuestions();
+		
+		System.out.println("done loading Rules!");
 	}
 	
 	@Override

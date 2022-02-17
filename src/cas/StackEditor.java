@@ -2,6 +2,9 @@ package cas;
 
 public class StackEditor extends QuickMath {
 
+	public static final int QUIT = -1;
+	public static final int FINISHED = 0;
+	
 	private static Expr expr = null;
 	private String alerts = "";
 	
@@ -322,7 +325,7 @@ public class StackEditor extends QuickMath {
 			} else if (command.equals("roll")) {
 				roll();
 			} else if (command.equals("quit") || command.equals("exit") || command.equals("close")) {
-				return -1;
+				return QUIT;
 			}else if (command.contains(":") && !command.contains(" ")) {
 				String[] parts = command.split(":");
 				command = parts[0];
@@ -386,6 +389,6 @@ public class StackEditor extends QuickMath {
 			createAlert("An error has occured\nreason: " + e.getMessage());
 			e.printStackTrace();
 		}
-		return 0;
+		return FINISHED;
 	}
 }
