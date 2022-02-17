@@ -48,7 +48,7 @@
 		
 		<h2>Getting Started</h2>
 		
-		<a href="bitLogicArch_1.5.6.zip" download>Download BitLogic version 1.5.6</a>
+		<a href="bitLogicArch_1.5.8.zip" download>Download BitLogic version 1.5.8</a>
 		<br><br>
 		<a href="https://www.youtube.com/watch?v=wxWfP2_URYQ">youtube video</a>
 		<br><br>
@@ -83,10 +83,11 @@
 			<li>'dup' -- this duplicates the last item on the stack</li>
 			<li>'dup:(element number)' -- duplicates a specific element</li>
 			<li>'roll' -- this moves the last element to the first element and shifts everything downwards</li>
+			<li>'roll:(roll amount)' -- rolls the stack downwards by an amount. A negative number will make it roll up</li>
 			<li>'swap' -- the swaps the last two elements of the stack</li>
 			<li>'swap:(element number)' -- swaps the last element and a specific element</li>
 			<li>'pop/r' -- removes the last element from the stack</li>
-			<li>'remove:(element number):' -- removes a specific element from the stack</li>
+			<li>'pop:(element number):' -- removes a specific element from the stack</li>
 			<li>'result/r' -- computes the result of the last element on the stack</li>
 			<li>'break' -- breaks apart the last element into its components</li>
 		</ul>
@@ -119,17 +120,31 @@
 			<li>sqrt(expr) -- takes the square root</li>
 			<li>cbrt(expr) -- takes the cube root</li>
 			<li>inv(expr) -- takes the reciprical</li>
+			<li>gamma(a) -- the gamma function</li>
+			<li>lambertW(a) -- the lambert w function</li>
 			<li>diff(expr,variable) -- takes the derivative with respect to a variable</li>
 			<li>integrate(expr,variable) -- takes the integral with respect to a variable (indefinite without +C)</li>
 			<li>integrateOver(min,max,expr,variable) -- takes the integral over some domain (definite)</li>
 			<li>factor(expr) -- factors the expression</li>
 			<li>distr(expr) -- distributes the expression</li>
-			<h3>extra simple functions</h3>
-			<p>These functions work slightly differently internally but they appear like the other functions at the surface. You wont find java classes for these following functions.</p>
 			<li>choose(n,k) -- given n elements choose k elements and returns number of configurations</li>
-			<li>expand(expr) -- like distr except also expands powers entirly</li>
+			<li>expand(expr) -- like distr except also expands powers entirely</li>
 			<li>get(expr,index) -- gets a sub expression</li>
 			<li>size(expr) -- gets the number of sub expressions</li>
+			<li>tree(expression) -- prints a tree representation of the expression</li>
+			<li>primeFactor(n) -- attempts to find the prime factors of n</li>
+			<li>degree(poly,var) -- finds the degree of an expression assuming its a polynomial</li>
+			<li>conv(value,fromUnit,toUnit) -- does a unit conversion</li>
+			<li>subst(expression,[equations]) -- substitutes values from array in second parameter</li>
+			<li>eval(statement) -- evaluates if the provided statement is true</li>
+			<li>taylor(function,variable=center,degree) -- makes a taylor polynomial</li>
+			<li>polyCoef(polynomial,var) -- returns a list of the coefficients</li>
+			<li>params(funcName) -- returns the expected number of parameters of a function</li>
+			<li>isNum(expression) -- returns if the given expression is a number</li>
+			<li>partialFrac(expression,var) -- returns the partial fraction of the expression</li>
+			<li>polyDiv(expression,var) -- returns the polynomial division of the expression</li>
+			<li>gui() -- creates a new window instance</li>
+			
 		</ul>
 		
 		<p></p>
