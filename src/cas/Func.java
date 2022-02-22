@@ -35,7 +35,7 @@ public class Func extends Expr{
 		out+=")";
 		return out;
 	}
-	public ExprList ruleSequence = new ExprList();
+	public Sequence ruleSequence = sequence();
 	@Override
 	public Expr copy() {
 		Func out = new Func(name);
@@ -54,7 +54,7 @@ public class Func extends Expr{
 		return new ComplexFloat(0,0);
 	}
 	@Override
-	ExprList getRuleSequence() {
+	Sequence getRuleSequence() {
 		return ruleSequence;
 	}
 

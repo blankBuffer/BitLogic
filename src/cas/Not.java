@@ -36,9 +36,9 @@ public class Not extends Expr{
 		}
 	};
 	
-	static ExprList ruleSequence = null;
+	static Sequence ruleSequence = null;
 	public static void loadRules(){
-		ruleSequence = exprList(
+		ruleSequence = sequence(
 				isTrue,
 				isFalse,
 				containsNot,
@@ -48,7 +48,7 @@ public class Not extends Expr{
 	}
 	
 	@Override
-	ExprList getRuleSequence() {
+	Sequence getRuleSequence() {
 		return ruleSequence;
 	}
 	

@@ -49,7 +49,7 @@ public class BoolState extends Expr{
 	}
 
 	@Override
-	ExprList getRuleSequence() {
+	Sequence getRuleSequence() {
 		return null;
 	}
 

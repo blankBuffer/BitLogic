@@ -25,12 +25,12 @@ public class Solve extends Expr{
 		set(0,e);
 	}
 	
-	static ExprList ruleSequence;
+	static Sequence ruleSequence;
 	
 	static Rule solvedCase = new Rule("solved equation",Rule.VERY_EASY) {
 		private static final long serialVersionUID = 1L;
 		
-		ExprList loopedSequence;
+		Sequence loopedSequence;
 		
 		Rule moveNonVarPartsInProd;
 		Rule moveNonVarPartsInSum;
@@ -480,7 +480,7 @@ public class Solve extends Expr{
 				}
 			};
 			
-			loopedSequence = exprList(
+			loopedSequence = sequence(
 				rightSideZeroCase,
 				moveToLeftSide,
 				distrLeftSide,
@@ -522,14 +522,14 @@ public class Solve extends Expr{
 	};
 	
 	public static void loadRules() {
-		ruleSequence = exprList(
+		ruleSequence = sequence(
 				solvedCase
 		);
 		Rule.initRules(ruleSequence);
 	}
 	
 	@Override
-	ExprList getRuleSequence() {
+	Sequence getRuleSequence() {
 		return ruleSequence;
 	}
 	
@@ -570,11 +570,12 @@ public class Solve extends Expr{
 		}
 		return out;
 	}
-	static double small = 0.000000000000001;
+	static final double small = 0.000000000000001;
+	static final int LOOP_LIMIT = 128;
 	private static double secantSolve(double leftBound,double rightBound,double[] poly) {
 		double root = 0;
 		int count = 0;
-		while(count<128) {
+		while(count<LOOP_LIMIT) {
 			double fL = polyOut(poly,leftBound);
 			double fR = polyOut(poly,rightBound);
 			if(Math.signum(fL) == Math.signum(fR)) return Double.NaN;//need opposite sign
@@ -606,7 +607,7 @@ public class Solve extends Expr{
 	private static double newtonSolve(double[] poly,double[] deriv) {
 		double guess = 0;
 		int count = 0;
-		while(count<128) {
+		while(count<LOOP_LIMIT) {
 			double newGuess = guess-polyOut(poly,guess)/polyOut(deriv,guess);
 			double delta = Math.abs(newGuess-guess);
 			if(delta<Math.abs(poly[poly.length-1]*small)) {
@@ -617,7 +618,7 @@ public class Solve extends Expr{
 		}
 		return guess;
 	}
-	public static ArrayList<Double> polySolve(ExprList poly) {//an algorithm i came up with to solve all roots of a polynomial
+	public static ArrayList<Double> polySolve(Sequence poly) {//an algorithm i came up with to solve all roots of a polynomial
 		//init polyArray
 		double[] base = new double[poly.size()];
 		for(int i = 0;i<poly.size();i++) {
@@ -668,18 +669,22 @@ public class Solve extends Expr{
 			if(hasLeftSolution) {
 				double search = bounds.get(0);
 				double step = 1.0;
-				while((int)Math.signum(polyOut( currentPoly,search)) == leftSign) {
+				int count = 0;
+				while((int)Math.signum(polyOut( currentPoly,search)) == leftSign && count < LOOP_LIMIT) {
 					search -= step;
 					step *=2.0;
+					count++;
 				}
 				bounds.add(0, search);
 			}
 			if(hasRightSolution) {
 				double search = bounds.get(bounds.size()-1);
 				double step = 1.0;
-				while((int)Math.signum(polyOut( currentPoly,search)) == rightSign) {
+				int count = 0;
+				while((int)Math.signum(polyOut( currentPoly,search)) == rightSign && count < LOOP_LIMIT) {
 					search += step;
 					step *= 2.0;
+					count++;
 				}
 				bounds.add(search);
 			}

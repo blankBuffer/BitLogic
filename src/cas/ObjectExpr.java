@@ -38,7 +38,7 @@ public class ObjectExpr extends Expr{//behaves like variables
 	}
 
 	@Override
-	ExprList getRuleSequence() {
+	Sequence getRuleSequence() {
 		return null;
 	}
 	

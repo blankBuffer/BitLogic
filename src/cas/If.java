@@ -22,7 +22,7 @@ public class If extends Expr{
 		return null;
 	}
 	@Override
-	ExprList getRuleSequence() {
+	Sequence getRuleSequence() {
 		// TODO Auto-generated method stub
 		return null;
 	}

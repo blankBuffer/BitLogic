@@ -125,10 +125,10 @@ public class Ln extends Expr{
 		
 	};
 	
-	static ExprList ruleSequence = null;
+	static Sequence ruleSequence = null;
 	
 	public static void loadRules(){
-		ruleSequence = exprList(
+		ruleSequence = sequence(
 				log1To0,
 				logETo1,
 				lnOfEpsilon,
@@ -145,7 +145,7 @@ public class Ln extends Expr{
 	}
 	
 	@Override
-	ExprList getRuleSequence() {
+	Sequence getRuleSequence() {
 		return ruleSequence;
 	}
 	

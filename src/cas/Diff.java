@@ -53,15 +53,15 @@ public class Diff extends Expr{
 		
 	};
 	
-	static ExprList ruleSequence = null;
+	static Sequence ruleSequence = null;
 	
 	@Override
-	ExprList getRuleSequence() {
+	Sequence getRuleSequence() {
 		return ruleSequence;
 	}
 	
 	public static void loadRules(){
-		ruleSequence = exprList(
+		ruleSequence = sequence(
 				constant,
 				StandardRules.pullOutConstants,
 				baseCase,

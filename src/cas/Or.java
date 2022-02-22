@@ -468,10 +468,10 @@ public class Or extends Expr{
 		}
 	};
 	
-	static ExprList ruleSequence = null;
+	static Sequence ruleSequence = null;
 	
 	public static void loadRules(){
-		ruleSequence = exprList(
+		ruleSequence = sequence(
 				orContainsOr,
 				removeDuplicates,
 				nullRule,
@@ -484,7 +484,7 @@ public class Or extends Expr{
 	}
 	
 	@Override
-	ExprList getRuleSequence() {
+	Sequence getRuleSequence() {
 		return ruleSequence;
 	}
 	

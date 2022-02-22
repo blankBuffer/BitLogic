@@ -82,7 +82,7 @@ public class Var extends Expr{
 		return valuef;
 	}
 	@Override
-	ExprList getRuleSequence() {
+	Sequence getRuleSequence() {
 		return null;
 	}
 

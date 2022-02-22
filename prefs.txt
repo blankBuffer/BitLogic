@@ -3,8 +3,8 @@ keep_window_on_top:true
 show_plot:true
 plot_mode:0
 background_red:200
-background_green:180
-background_blue:120
-foreground_red:75
-foreground_green:47
+background_green:200
+background_blue:200
+foreground_red:46
+foreground_green:46
 foreground_blue:46

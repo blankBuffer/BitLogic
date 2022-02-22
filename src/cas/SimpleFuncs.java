@@ -534,6 +534,7 @@ public class SimpleFuncs extends QuickMath{
 		if(funcName.equals("cosh")) return cosh(params[0]);
 		if(funcName.equals("tanh")) return tanh(params[0]);
 		if(funcName.equals("lambertW")) return lambertW(params[0]);
+		if(funcName.equals("abs")) return abs(params[0]);
 		
 		if(funcName.equals("solve")) return solve((Equ)params[0],(Var)params[1]);
 		if(funcName.equals("diff")) return diff(params[0],(Var)params[1]);

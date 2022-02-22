@@ -51,6 +51,7 @@ integrate(1/sin(5*x)^7,x)
 integrate(pi*(6-6*x^2)^2,x)
 integrate(x/(x^2+1),x)
 integrate(x^2*atan(x),x)
+integrate(x^3/(9-4*x^2)^(3/2),x)
 #trig
 acos(2*sin(x)*cos(x))
 sin(pi/3)

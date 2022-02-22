@@ -1,6 +1,22 @@
 package cas;
 
 import java.util.ArrayList;
+/*
+ * rules are used to describe any expression transformation
+ * it can either be hard coded or use a pattern with the option of a condition
+ * a rule with a pattern is described in a string "before_state->after_state" the arrow -> signifies the transformation
+ * a condition can check weather some variables are in a range and you can have it in a boolean algebra statement
+ * 
+ * a typical rule used in this CAS can be written as follows 
+ * 
+ * Rule myRule = new Rule("x/x->1","~eval(x=0)","x divided by x",Rule.EASY);
+ * 
+ * the eval checks if a given statement is true or not eval(2=3) gives false but eval(2=2) gives true
+ * any eval with a variable returns true
+ * 
+ * the main reason for specifying the difficulty is for filtering out stupid simple rules from a simplify dump. 
+ * It's an arbitrary decision and you may not agree with my difficulty scoring but its not really important
+ */
 
 public class Rule extends Expr{
 	private static final long serialVersionUID = 5928512201641990677L;
@@ -13,7 +29,24 @@ public class Rule extends Expr{
 	public boolean verbose = VERBOSE_DEFAULT;
 	int difficulty = 0;
 	
-	//the checked variable simply keeps track weather chechForMatches has been checked
+	/*
+	 * the similarStruct function checks if the other expression has the same layout as the template
+	 * 
+	 * there are two wrapped functions for this function namely fastSimilarStruct and strictSimilarStruct
+	 * the main reason for having separate functions is because its not always necessary to check for variable matching pairs
+	 * 
+	 * similar is defined as having a same tree but the variables might be different or other has expressions where the variables would be
+	 * 
+	 * this is best understood by example
+	 * 
+	 * template=a^b other=2^3 , fastSimilar = true , strictSimilar = false
+	 * template=a^a other=2^3 , fastSimilar = true , strictSimilar = false (because 2 not equal to 3 and the template has the same symbol for both so it fails the matching pairs test)
+	 * 
+	 * this=sin(x)^b other = a^b , not similar at all, why? because the template was expecting the base to be the sine function
+	 * 
+	 * note that with sums and products the length of sub expressions must be equal. It does its best to sort the expressions in the sum/product in a similar kind of way, but its not perfect
+	 * 
+	 */
 	static boolean similarStruct(Expr template,Expr other,boolean checked){//returns if another expression is similar to this but any comparison with variables is returned true
 		if(other == null) return false;
 		if(template instanceof Var && ((Var) template).generic) return true;
@@ -60,41 +93,23 @@ public class Rule extends Expr{
 	/*
 	 * letting the template expression=this we check if the other expression is similar to the template
 	 * we DONT check for matches which is why its called fast
-	 * 
-	 * similar is defined as having a same tree but the variables might be different or other has expressions where the varibales would be
-	 * 
-	 * this is best understood by example
-	 * 
-	 * this=a^b other=2^3 , fastSimilar = true , strictSimilar = false
-	 * this=a^a other=2^3 , fastSimilar = true , strictSimilar = fasle (because 2 not equal to 3)
-	 * 
-	 * this=sin(x)^b other = a^b , not similar at all, why? because the template was expecting the base to be the sine function
-	 * 
-	 * note that with sums and products the length of sub expressions must be equal. It does its best to sort the expressions in the sum/product in a similar kind of way, but its not perfect
-	 * 
 	 */
 	public static boolean fastSimilarStruct(Expr template,Expr other) {
 		return similarStruct(template,other,true);
 	}
 	/*
-	 * a full similar comparisons we DO check for matches making it a guarantee
-	 * 
+	 * a full similar comparisons we DO check for matches making it a 'near' guarantee
 	 * note that with sums and products the length must be equal
-	 * 
 	 */
 	public static boolean strictSimilarStruct(Expr template,Expr other) {
 		return similarStruct(template,other,false);
 	}
 	
-	static class ModifyFromExampleResult{
-		Expr expr;
-		boolean success;
-		ModifyFromExampleResult(Expr expr,boolean success ){
-			this.expr = expr;
-			this.success = success;
-		}
-	}
-	
+	/*
+	 * this takes a list of equations as an input and you can ask for a particular value from the set
+	 * given [x=3,y=5,z=m] we can give the name "x" and it returns 3, if we ask for "z" it returns m
+	 * this is useful for extracting out variables from a template and putting them into objects manually
+	 */
 	public static Expr getExprByName(ExprList equs,String name){
 		for (int i = 0;i<equs.size();i++){
 			Equ currentEqu = (Equ) equs.get(i);
@@ -104,12 +119,15 @@ public class Rule extends Expr{
 		}
 		return null;
 	}
-	
+	/*
+	 * you give it a template expression and the expression which is similar and it returns a list of equations for the values of each variable
+	 * getEqusFromTemplate(a^b,2^3) returns [a=2,b=3] returns null if it can't be done
+	 */
 	static public ExprList getEqusFromTemplate(Expr template,Expr expr) {
-		if(fastSimilarStruct(template,expr)) {//we use fast similar struct here because we don't want to call the getParts function twice and its faster
-			ExprList exampleParts = new ExprList();
-			ExprList parts = new ExprList();
-			boolean match = checkForMatches(exampleParts,parts,template,expr);
+		if(fastSimilarStruct(template,expr)) {//we use fast similar struct here because we don't want to call the getParts and later we check for matches anyway
+			Sequence exampleParts = sequence();
+			Sequence parts = sequence();
+			boolean match = checkForMatches(exampleParts,parts,template,expr);//this effectively makes it a strictSimilarStruct anyway
 			if(!match) {
 				return null;
 			}
@@ -123,18 +141,18 @@ public class Rule extends Expr{
 	}
 	
 	static boolean checkForMatches(Expr template,Expr expr) {//shortcut
-		ExprList vars = new ExprList();
-		ExprList exprs = new ExprList();
+		Sequence vars = sequence();
+		Sequence exprs = sequence();
 		
 		return checkForMatches(vars,exprs,template,expr);
 	}
 	
 	/*
 	 * extracts the parts and variables from the template=this, and expr is the parts to be extracted 
-	 * example, let this=diff(x^a,x) and expr=diff(m^(k*l),m)
-	 * these expression break down into lists
-	 * this -> [x,a,x]
-	 * expr -> [m,k*l,m]
+	 * example, let template=diff(x^a,x) and expr=diff(m^(k*l),m)
+	 * these expression break down into lists based on the format of the template tree
+	 * template -> {x,a,x} the list is loaded into templateVarsOut
+	 * expr -> {m,k*l,m} the list is loaded into exprsPartsOut
 	 * 
 	 * if this lists for some reason are not the same length it returns false saying that they can't be compared
 	 * returning true is saying no problems were encountered
@@ -144,7 +162,7 @@ public class Rule extends Expr{
 	 * this is what the check for matches function does
 	 * 
 	 */
-	static boolean getParts(ExprList templateVarsOut,ExprList exprsPartsOut,Expr template,Expr expr) {//template and this is input,vars and exprs are outputs
+	static boolean getParts(Sequence templateVarsOut,Sequence exprsPartsOut,Expr template,Expr expr) {//template and this is input,vars and exprs are outputs
 		if(template instanceof Var && ((Var)template).generic) {//template encountered a variable, time for extraction into the expr list
 			templateVarsOut.add(template.copy());
 			exprsPartsOut.add(expr.copy());
@@ -159,8 +177,11 @@ public class Rule extends Expr{
 		}
 		return true;
 	}
-	
-	static boolean checkForMatches(ExprList templateVars,ExprList exprsParts,Expr template,Expr expr) {
+	/*
+	 * given a template and the expr it checks if the sets match for the parts list, it also loads the parts into
+	 * the templateVars and exprsParts list since they will likely be used later on to construct an equation set
+	 */
+	static boolean checkForMatches(Sequence templateVars,Sequence exprsParts,Expr template,Expr expr) {
 		
 		//part one, create index pairs
 		
@@ -245,7 +266,7 @@ public class Rule extends Expr{
 		}
 	}
 	
-	public static void initRules(ExprList ruleSequence) {
+	public static void initRules(Sequence ruleSequence) {
 		for(int i = 0;i<ruleSequence.size();i++) ((Rule)ruleSequence.get(i)).init();
 	}
 	public static void initRules(Rule[] ruleSequence) {
@@ -254,11 +275,21 @@ public class Rule extends Expr{
 	
 	public Becomes pattern = null;//the template expresion, its basically an example of the problem
 	public Expr condition = null;//a condition for the variables, for example checking if a variable is positive
+	/*
+	 * uses either the pattern provided or a hard coded system
+	 * just applies a transformation to an expression
+	 * 
+	 * NOTE if your using a pattern based rule make sure to call init before it is used
+	 * The reason its not set in stone with the constructor is because some rules are statically defined and we don't want the interpreter to construct
+	 * the tree if the interpreter is being upgraded otherwise as soon as it begins the run-time it will crash and tests can't be done
+	 * 
+	 * this can be override if you want to hard code a rule if it cant be done with patterns
+	 */
 	public Expr applyRuleToExpr(Expr expr,Settings settings){//note this may modify the original expression. The return is there so that if it changes expression type
 		//System.out.println(pattern.getLeftSide()+" "+expr+" "+fastSimilarStruct(pattern.getLeftSide(),expr));
 		if(fastSimilarStruct(pattern.getLeftSide(),expr)) {//we use fast similar struct here because we don't want to call the getParts function twice and its faster
-			ExprList exampleParts = new ExprList();
-			ExprList parts = new ExprList();
+			Sequence exampleParts = sequence();
+			Sequence parts = sequence();
 			boolean match = checkForMatches(exampleParts,parts,pattern.getLeftSide(),expr);
 			if(!match) {
 				return expr;
@@ -293,11 +324,16 @@ public class Rule extends Expr{
 		}
 		return name;
 	}
-	
+	/*
+	 * loads all the CAS rules into each type, this can take some time
+	 * this is required to be run somewhere before the CAS can be used, maybe put it as close to first line of main method
+	 */
 	public static void loadRules(){
 		System.out.println("loading CAS rules...");
 		
 		StandardRules.loadRules();
+		
+		Abs.loadRules();
 		Acos.loadRules();
 		And.loadRules();
 		Approx.loadRules();
@@ -336,7 +372,7 @@ public class Rule extends Expr{
 	}
 	
 	@Override
-	ExprList getRuleSequence() {
+	Sequence getRuleSequence() {
 		return null;
 	}
 	@Override

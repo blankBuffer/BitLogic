@@ -1,5 +1,10 @@
 package cas;
 
+/*
+ * the become expression type is what's used to create rule mappings, the arrow -> shows how the left argument "becomes"
+ * the right argument
+ */
+
 public class Becomes extends Expr{
 	private static final long serialVersionUID = 7853485933081337101L;
 
@@ -32,7 +37,7 @@ public class Becomes extends Expr{
 	}
 	
 	@Override
-	ExprList getRuleSequence() {
+	Sequence getRuleSequence() {
 		return null;
 	}
 	@Override

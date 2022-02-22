@@ -65,6 +65,9 @@ public class ComplexFloat implements Serializable{
 		double scaler = Math.exp(in.real);
 		return new ComplexFloat(Math.cos(in.imag)*scaler,Math.sin(in.imag)*scaler);
 	}
+	public static ComplexFloat mag(ComplexFloat in) {
+		return new ComplexFloat( Math.sqrt( in.real*in.real+in.imag*in.imag ) , 0 );
+	}
 	public static ComplexFloat pow(ComplexFloat base,ComplexFloat expo) {
 		if(base.real == 0.0 && base.imag == 0.0) return ZERO;
 		if(base.imag == 0.0 && expo.imag == 0.0 && base.real < 0 && 1.0/expo.real==Math.round(1.0/expo.real) && Math.round(1.0/expo.real)%2 == 1 ){

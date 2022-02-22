@@ -1,5 +1,7 @@
 package cas;
-
+/*
+ * this is a list where the order does not matter and will remove repeats of elements when simplified
+ */
 public class ExprList extends Expr{
 
 	private static final long serialVersionUID = 4631446864313039932L;
@@ -79,10 +81,16 @@ public class ExprList extends Expr{
 	}
 	
 	public static ExprList cast(Expr e) {
+		if(e == null) return exprList();
 		if(e instanceof ExprList) return (ExprList)e;
-		ExprList out = new ExprList();
-		if(e != null) out.add(e);
-		return out;
+		if(e instanceof Sequence) {
+			ExprList out = new ExprList();
+			for(int i = 0;i<e.size();i++) {
+				out.add(e.get(i));
+			}
+			return out;
+		}
+		return exprList(e);
 	}
 
 	@Override
@@ -91,10 +99,10 @@ public class ExprList extends Expr{
 		return get().convertToFloat(varDefs);
 	}
 	
-	static ExprList ruleSequence = null;
+	static Sequence ruleSequence = null;
 	
 	public static void loadRules(){
-		ruleSequence = exprList(
+		ruleSequence = sequence(
 				listContainsList,
 				removeRepeats,
 				alone
@@ -103,7 +111,7 @@ public class ExprList extends Expr{
 	}
 
 	@Override
-	ExprList getRuleSequence() {
+	Sequence getRuleSequence() {
 		return ruleSequence;
 	}
 

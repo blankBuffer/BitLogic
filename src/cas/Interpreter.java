@@ -103,12 +103,11 @@ public class Interpreter extends QuickMath{
 					return var(string);
 				}
 			}else if(string.charAt(0) == '[' && string.charAt(string.length()-1) == ']') {
-				if(string.equals("[]")) return new ExprList();
+				if(string.equals("[]")) return exprList();
 				return ExprList.cast(createExprFromToken(string.substring(1, string.length()-1),defs,settings));
-			}else if(string.charAt(0) == '{') {
-				if(string.equals("{}")) return new Script();
-				Script script = Script.cast(createExprFromToken(string.substring(1, string.length()-1),defs,settings));
-				return script;
+			}else if(string.charAt(0) == '{' && string.charAt(string.length()-1) == '}') {
+				if(string.equals("{}")) return sequence();
+				return Sequence.cast(createExprFromToken(string.substring(1, string.length()-1),defs,settings));
 			}else {
 				return createExprFromTokens(generateTokens(tokens.get(0)),defs,settings);
 			}
@@ -120,7 +119,7 @@ public class Interpreter extends QuickMath{
 			}else if(!tokens.get(1).equals("!")){//functional notation
 				String op = tokens.get(0);
 				if(op.isBlank()) throw new Exception("confusing parenthesis");
-				Expr params = ExprList.cast( createExprFromToken(tokens.get(1),defs,settings));
+				Expr params = Sequence.cast( createExprFromToken(tokens.get(1),defs,settings));
 				
 				if(op.equals("define")) {
 					Expr def = params.get(0);
@@ -166,14 +165,24 @@ public class Interpreter extends QuickMath{
 				
 			}
 		}
-		boolean isSum = false,isProdAndOrDiv = false,isList = false,isFactorial = false,isScript = false,isAnd = false,isOr = false,isNot = false,isEqu = false,isArrow = false;
+		boolean isSum = false,
+				isProdAndOrDiv = false,
+				isParams = false,
+				isFactorial = false,
+				isScript = false,
+				isAnd = false,
+				isOr = false,
+				isNot = false,
+				isEqu = false,
+				isArrow = false;
+		
 		int indexOfPowToken = -1,equCount = 0;
 		boolean lastWasOperator = false;
 		for(int i = 0;i<tokens.size();i++) {
 			String token = tokens.get(i);
 			
 			if(token.equals(",")) {
-				isList = true;
+				isParams = true;
 				lastWasOperator = true;
 			}else if(token.equals("=") || token.equals(">") || token.equals("<")) {
 				isEqu = true;
@@ -229,9 +238,9 @@ public class Interpreter extends QuickMath{
 			
 			return scr;
 			
-		}else if(isList) {
+		}else if(isParams) {
 			tokens.add(",");
-			ExprList list = new ExprList();
+			Sequence seq = sequence();
 			int indexOfLastComma = 0;
 			
 			for(int i = 0;i<tokens.size();i++) {
@@ -240,12 +249,12 @@ public class Interpreter extends QuickMath{
 					
 					ArrayList<String> tokenSet = new ArrayList<String>();
 					for(int j = indexOfLastComma;j<i;j++)  tokenSet.add(tokens.get(j));
-					list.add(createExprFromTokens(tokenSet,defs,settings));
+					seq.add(createExprFromTokens(tokenSet,defs,settings));
 					indexOfLastComma = i+1;
 				}
 			}
 			
-			return list;
+			return seq;
 			
 		}else if(isArrow) {
 			int indexOfArrowToken = tokens.indexOf("->");
@@ -335,7 +344,6 @@ public class Interpreter extends QuickMath{
 			tokens.remove(0);
 			return not(createExprFromTokens(tokens,defs,settings));
 		}else if(isSum) {
-			
 			tokens.add("+");
 			Expr sum = new Sum();
 			int indexOfLastAdd = 0;
@@ -355,8 +363,8 @@ public class Interpreter extends QuickMath{
 								boolean foundNum = false;
 								for(int k = 0;k<toBeAdded.size();k++) {
 									if(toBeAdded.get(k) instanceof Num) {
-										Num casted = (Num)toBeAdded.get(k);
-										casted.realValue = casted.realValue.negate();
+										Num negatedVersion = ((Num)toBeAdded.get(k)).negate();
+										toBeAdded.set(k, negatedVersion);
 										foundNum = true;
 										break;
 									}

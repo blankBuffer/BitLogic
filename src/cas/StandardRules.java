@@ -97,7 +97,7 @@ public class StandardRules extends QuickMath{
 			Expr expr = e.get();
 			Var v = e.getVar();
 			
-			ExprList res = seperateByVar(expr,v);
+			Sequence res = seperateByVar(expr,v);
 			if(!res.get(0).equals(Num.ONE)) {
 				e.set(0, res.get(1));
 				return prod(res.get(0),e).simplify(settings);

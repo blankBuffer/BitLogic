@@ -10,10 +10,23 @@ import java.awt.image.BufferedImage;
 import java.util.ArrayList;
 import java.util.HashMap;
 
-public class ExprRender extends QuickMath{
+/*
+ * renders expressions into images in pretty way ,built using unicode characters
+ */
+public class ExprRender extends QuickMath{//sort of a wrap of the image type but keeps track of fraction bar heights
 	
 	static class ExprImg{
 		private int width,height,fractionBar;
+		/*
+		 * the fraction bar is defined as the height from the top to the fraction line plus the font size/2
+		 * the reason for adding the font size/2 is because suppose we render 2/3+1
+		 * 
+		 *  2               2   + 1
+		 * --- + 1 and not ---
+		 *  3               3
+		 *  
+		 *  the '+' and '1' are drawn slightly below the --- line and sit half a character below it, looks nicer this way
+		*/
 		private BufferedImage exprImg = null;
 		
 		private Graphics2D oldGraphics = null;
@@ -224,7 +237,7 @@ public class ExprRender extends QuickMath{
 				imgs.add(firstElImg);
 				for(int i = 1;i<e.size();i++) {
 					boolean negative = e.get(i).negative();
-					Expr absElement = e.get(i).abs(Settings.normal);
+					Expr absElement = e.get(i).strangeAbs(Settings.normal);
 					if(negative) {
 						imgs.add(minusImg);
 					}else {
@@ -395,7 +408,7 @@ public class ExprRender extends QuickMath{
 		}
 	}
 	
-	public static BufferedImage createImg(Expr e,Color background,Color text) {
+	public static BufferedImage createImg(Expr e,Color background,Color text) {//this returns the image with the expression fitting the space as best as possible
 		BufferedImage defaultImageSize = new BufferedImage(256*4,256,BufferedImage.TYPE_INT_RGB);
 		Graphics2D g = defaultImageSize.createGraphics();
 		g.setColor(background);
@@ -429,7 +442,7 @@ public class ExprRender extends QuickMath{
 		return defaultImageSize.getSubimage(0, 0, imgWid, imgHei);
 	}
 	
-	public static BufferedImage createImgInFrame(Expr e,Dimension imageSize,Color background,Color text) {
+	public static BufferedImage createImgInFrame(Expr e,Dimension imageSize,Color background,Color text) {//makes an image and puts the expression into a specified frame with the image size parameter
 		BufferedImage image = new BufferedImage(imageSize.width,imageSize.height,BufferedImage.TYPE_INT_RGB);
 		Graphics2D g = image.createGraphics();
 		g.setColor(background);

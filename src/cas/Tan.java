@@ -60,7 +60,7 @@ public class Tan extends Expr{
 				}
 			}else if(innerExpr instanceof Sum){
 				for(int i = 0;i<innerExpr.size();i++) {
-					if(!innerExpr.get(i).containsVars() && innerExpr.get(i).contains(pi)) {
+					if(innerExpr.get(i) instanceof Div && !innerExpr.get(i).containsVars() && innerExpr.get(i).contains(pi)) {
 						
 						Div frac = ((Div)innerExpr.get(i)).ratioOfUnitCircle();
 						
@@ -88,9 +88,9 @@ public class Tan extends Expr{
 	public ComplexFloat convertToFloat(ExprList varDefs) {
 		return ComplexFloat.tan(get().convertToFloat(varDefs));
 	}
-	static ExprList ruleSequence = null;
+	static Sequence ruleSequence = null;
 	public static void loadRules(){
-		ruleSequence = exprList(
+		ruleSequence = sequence(
 				containsInverse,
 				tanOfArcsin,
 				tanOfArccos,
@@ -102,7 +102,7 @@ public class Tan extends Expr{
 	}
 	
 	@Override
-	ExprList getRuleSequence() {
+	Sequence getRuleSequence() {
 		return ruleSequence;
 	}
 

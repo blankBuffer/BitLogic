@@ -230,6 +230,9 @@ public class QuickMath {
 	public static LambertW lambertW(Expr expr){
 		return new LambertW(expr);
 	}
+	public static Abs abs(Expr e) {
+		return new Abs(e);
+	}
 	public static Func func(String name,ExprList vars,Expr expr) {
 		return new Func(name,vars,expr);
 	}
@@ -238,6 +241,13 @@ public class QuickMath {
 	}
 	public static Becomes becomes(Expr left,Expr right) {
 		return new Becomes(left,right);
+	}
+	public static Sequence sequence(Expr... exprs) {
+		Sequence out = new Sequence();
+		for(Expr e:exprs) {
+			out.add(e);
+		}
+		return out;
 	}
 	public static Func eval(Equ equ) {
 		try {
@@ -269,7 +279,7 @@ public class QuickMath {
 			if(denomDegree.compareTo(numerDegree) != 1) return expr;//denominator needs a greater degree
 			Expr denomFactored = factor(frac.getDenom()).simplify(settings);
 			
-			ExprList parts = seperateByVar(denomFactored,v);
+			Sequence parts = seperateByVar(denomFactored,v);
 			
 			Expr denomCoef = parts.get(0);
 			denomFactored = Prod.cast(parts.get(1));
@@ -285,7 +295,7 @@ public class QuickMath {
 				
 				Power currentTerm = Power.cast(denomFactored.get(i));
 				
-				ExprList poly = polyExtract(currentTerm.getBase(),v,settings);
+				Sequence poly = polyExtract(currentTerm.getBase(),v,settings);
 				Expr linearTermCoef = poly.get(1);
 				Equ solution = (Equ)ExprList.cast(solve(equ(currentTerm,Num.ZERO),v).simplify(settings)).get();
 				
@@ -317,10 +327,10 @@ public class QuickMath {
 	public static Expr polyDiv(Expr expr,Var v,Settings settings) {
 		if(expr instanceof Div) {
 			Div frac = (Div)expr.copy();
-			ExprList numPoly = polyExtract(distr(frac.getNumer()).simplify(settings),v,settings);
-			ExprList denPoly = polyExtract(distr(frac.getDenom()).simplify(settings),v,settings);
+			Sequence numPoly = polyExtract(distr(frac.getNumer()).simplify(settings),v,settings);
+			Sequence denPoly = polyExtract(distr(frac.getDenom()).simplify(settings),v,settings);
 			if(numPoly != null && denPoly != null && numPoly.size()>=denPoly.size()) {
-				ExprList[] result = polyDiv(numPoly,denPoly,settings);
+				Sequence[] result = polyDiv(numPoly,denPoly,settings);
 				Expr outPart =  exprListToPoly(result[0],v,settings);
 				Expr remainPart =  div(exprListToPoly(result[1],v,settings),frac.getDenom());
 				expr = sum(outPart,remainPart);
@@ -329,11 +339,11 @@ public class QuickMath {
 		return expr;
 	}
 	
-	public static ExprList[] polyDiv(ExprList num,ExprList den,Settings settings) {//returns output + remainder
-		ExprList remain = (ExprList)num.copy();
+	public static Sequence[] polyDiv(Sequence num,Sequence den,Settings settings) {//returns output + remainder
+		Sequence remain = (Sequence)num.copy();
 		Num zero = num(0);
 		
-		ExprList out = new ExprList();
+		Sequence out = sequence();
 		
 		while(remain.size() >= den.size()) {
 			if(den.get(den.size()-1).equals(zero)) {//avoid divide by zero situation
@@ -359,7 +369,7 @@ public class QuickMath {
 			remain.remove(remain.size()-1);
 		}
 		
-		return new ExprList[] { out,remain };
+		return new Sequence[] { out,remain };
 	}
 	
 	public static BigInteger degree(Expr expr,Var v) {//returns -1 if it is not possible
@@ -433,16 +443,16 @@ public class QuickMath {
 		return isRealNum(e) && !e.negative();
 	}
 	
-	public static ExprList polyExtract(Expr expr,Var v,Settings settings) {
+	public static Sequence polyExtract(Expr expr,Var v,Settings settings) {
 		BigInteger maxDegree = BigInteger.valueOf(16);
-		ExprList coef = new ExprList();
+		Sequence coef = sequence();
 		Sum sum = Sum.cast(expr);
 		for(int i = 0;i<sum.size();i++) {
 			Expr e = sum.get(i);
 			BigInteger degree = BigInteger.ZERO;
 			Expr contents = null;
 			if(e.contains(v)) {
-				ExprList parts = seperateByVar(e,v);
+				Sequence parts = seperateByVar(e,v);
 				if(parts.get(1).equals(v)) {
 					contents = parts.get(0);
 					degree = BigInteger.ONE;
@@ -485,8 +495,8 @@ public class QuickMath {
 		return num(1);
 	}
 	
-	public static ExprList seperateByVar(Expr e,Expr v) {//returns [coef,var parts]
-		ExprList out = new ExprList();
+	public static Sequence seperateByVar(Expr e,Expr v) {//returns {coef,var parts}
+		Sequence out = sequence();
 		if(!e.contains(v)) {
 			out.add(e.copy());
 			out.add(num(1));
@@ -507,8 +517,8 @@ public class QuickMath {
 			
 		}else if(e instanceof Div) {
 			Div casted = (Div)e;
-			ExprList numer = seperateByVar(casted.getNumer(),v);
-			ExprList denom = seperateByVar(casted.getDenom(),v);
+			Sequence numer = seperateByVar(casted.getNumer(),v);
+			Sequence denom = seperateByVar(casted.getDenom(),v);
 			
 			Expr coef = Div.unCast(div(numer.get(0),denom.get(0)));
 			Expr newExpr = Div.unCast(div(numer.get(1),denom.get(1)));
@@ -523,8 +533,8 @@ public class QuickMath {
 		return out;
 	}
 	
-	public static ExprList seperateCoef(Expr e) {//returns [coef,remain]
-		ExprList out = new ExprList();
+	public static Sequence seperateCoef(Expr e) {//returns [coef,remain]
+		Sequence out = sequence();
 		if(e instanceof Prod) {
 			Prod prodCopy = (Prod)e.copy();
 			for(int i = 0;i<prodCopy.size();i++) {
@@ -540,8 +550,8 @@ public class QuickMath {
 			out.add(Prod.unCast(prodCopy));
 		}else if(e instanceof Div) {
 			Div casted = (Div)e;
-			ExprList numer = seperateCoef(casted.getNumer());
-			ExprList denom = seperateCoef(casted.getDenom());
+			Sequence numer = seperateCoef(casted.getNumer());
+			Sequence denom = seperateCoef(casted.getDenom());
 			Expr newCoef = Div.unCast(div(numer.get(0),denom.get(0)));
 			Expr newExpr = Div.unCast(div(numer.get(1),denom.get(1)));
 			out.add(newCoef);
@@ -557,7 +567,7 @@ public class QuickMath {
 		return out;
 	}
 	
-	static Expr exprListToPoly(ExprList poly,Var v,Settings settings){
+	static Expr exprListToPoly(Sequence poly,Var v,Settings settings){
 		if(poly.size()==0) return num(0);
 		Sum out = new Sum();
 		for(int i = 0;i<poly.size();i++) {
@@ -602,12 +612,13 @@ public class QuickMath {
 	
 	private static class IntFactor {//uses a mix of rho and wheel factorization
 		
-		static boolean initializedWheel = false;
-		static long[] initialSet = new long[]{2,3,5,7};
-		static ArrayList<BigInteger> wheelSet = new ArrayList<BigInteger>();
+		static long[] initialSet = new long[]{2,3,5,7};//the wheel initial set that we use to create our base
+		static ArrayList<BigInteger> wheelSet = new ArrayList<BigInteger>();//the full wheel sieve set
 		static BigInteger increase = BigInteger.ONE;
 		static BigInteger maxCheck = BigInteger.TWO.pow(24);//maximum check for wheel factor
 		static int limit = (int)Math.pow(2, 15);//maximum loops for rho
+		
+		static final boolean VERBOSE = false;
 		
 		static boolean isPartOfWheelSet(long l){
 			for(long i:initialSet){
@@ -615,63 +626,61 @@ public class QuickMath {
 			}
 			return true;
 		}
-		static void initWheel(){
-			if(initializedWheel) return;
-			
-			initializedWheel = true;
-			for(Long l:initialSet) increase = increase.multiply(BigInteger.valueOf(l));
+		static {
+			initWheel();
+		}
+		static void initWheel(){//make first ring
+			wheelSet.add(BigInteger.ONE);
+			for(Long l:initialSet) {
+				BigInteger bigL = BigInteger.valueOf(l);
+				wheelSet.add(bigL);
+				increase = increase.multiply(bigL);//product of initial set makes the size of the original ring
+			}
+			//to get to the next ring we simply add the increase
 			int increaseInt = increase.intValue();
-			for(int i = 2;i<increaseInt+2;i++){
+			
+			for(int i = 2;i<increaseInt;i++){
 				if(isPartOfWheelSet(i)){
 					wheelSet.add(BigInteger.valueOf(i));
 				}
 			}
 		}
+		
 		static ArrayList<BigInteger> wheelFactor(BigInteger l){
 			ArrayList<BigInteger> factors = new ArrayList<BigInteger>();
-			if(l.isProbablePrime(1)){
+			if(l.isProbablePrime(1)){//already prime so add self to list
+				if(VERBOSE) System.out.println("alreadyPrime: "+l);
 				factors.add(l);
 				return factors;
 			}
-			if(l.compareTo(BigInteger.TWO) == -1) return factors;
+			if(l.compareTo(BigInteger.TWO) == -1) return factors;//if number less than 2 nothing to do
 			
 			BigInteger sqrtVal = l.sqrt();
-			for(int i = 0;i<initialSet.length;i++){
-				BigInteger test = BigInteger.valueOf(initialSet[i]);
-				if(test.compareTo(sqrtVal)==1){
-					if(!l.equals(BigInteger.ONE)) factors.add(l);
-					return factors;
-				}
-				boolean worked = false;
-				while(l.mod(test).equals(BigInteger.ZERO)){
-					l = l.divide(test);
-					factors.add(test);
-					worked = true;
-				}
-				if(worked) sqrtVal = l.sqrt();
-			}
 			
-			if(l.isProbablePrime(1)){
-				factors.add(l);
-				return factors;
-			}
 			BigInteger i = BigInteger.ZERO;
-			while(true){
-				for(BigInteger test:wheelSet){
+			while(!Thread.currentThread().isInterrupted()){
+				for(BigInteger test:wheelSet){//test is the current wheel set value
 					test = test.add(i.multiply(increase));
-					if(test.compareTo(sqrtVal)==1 || test.compareTo(maxCheck)==1){
-						if(!l.equals(BigInteger.ONE)) factors.add(l);
+					if(test.equals(BigInteger.ONE)) continue;//can't be 1 but might be increase*n+1
+					if(test.compareTo(sqrtVal)==1 || test.compareTo(maxCheck)==1){//done
+						if(!l.equals(BigInteger.ONE)) {
+							if(VERBOSE) System.out.println("wheel set fake prime: "+l);
+							System.err.println("warning could not factor "+l);
+							factors.add(l);
+						}
 						return factors;
 					}
 					boolean worked = false;
 					while(l.mod(test).equals(BigInteger.ZERO)){
 						l = l.divide(test);
+						if(VERBOSE) System.out.println("wheel factor: "+test);
 						factors.add(test);
 						worked = true;
 					}
-					if(worked){
+					if(worked && !l.equals(BigInteger.ONE)){
 						
 						if(l.isProbablePrime(1)){
+							if(VERBOSE) System.out.println("already prime: "+l);
 							factors.add(l);
 							return factors;
 						}
@@ -681,6 +690,7 @@ public class QuickMath {
 				}
 				i = i.add(BigInteger.ONE);
 			}
+			return null;
 		}
 		
 		
@@ -690,12 +700,12 @@ public class QuickMath {
 		
 		static ArrayList<BigInteger> cachedBigPrimes = new ArrayList<BigInteger>();
 		static BigInteger big = BigInteger.valueOf(Short.MAX_VALUE);
-		static void addToCache(BigInteger i){
+		static void addToCache(BigInteger i){//add bug number to cache
 			if(i.compareTo(big)==1 ){
 				if(!cachedBigPrimes.contains(i)) cachedBigPrimes.add(i);
 			}
 		}
-		static void resizeCache(){
+		static void resizeCache(){//shrink cache if it has too many numbers
 			while(cachedBigPrimes.size() > 1024){
 				cachedBigPrimes.remove(0);
 			}
@@ -705,12 +715,12 @@ public class QuickMath {
 			ArrayList<BigInteger> factors = new ArrayList<BigInteger>();
 			if(n.compareTo(BigInteger.TWO) == -1) return factors;
 			
-			if(n.isProbablePrime(1)){
+			if(n.isProbablePrime(1)){//already prime
+				if(VERBOSE) System.out.println("already prime: "+n);
 				factors.add(n);
 				return factors;
 			}
-			initWheel();
-			resizeCache();
+			resizeCache();//shrink cache if it has too many numbers
 			
 			///cached primes
 			if(n.compareTo(big) == 1){
@@ -719,12 +729,14 @@ public class QuickMath {
 					if(n.mod(i).equals(BigInteger.ZERO)){
 						usedCache = true;
 						n = n.divide(i);
+						if(VERBOSE) System.out.println("cached prime: "+i);
 						factors.add(i);
 					}
 				}
 				if(usedCache){
 					if(n.isProbablePrime(1)){
 						addToCache(n);
+						if(VERBOSE) System.out.println("already prime: "+n);
 						factors.add(n);
 						return factors;
 					}
@@ -735,12 +747,14 @@ public class QuickMath {
 			}
 			///
 			
-			while (true) {
+			while (!Thread.currentThread().isInterrupted()) {
 				BigInteger x = BigInteger.TWO,y=x,d = BigInteger.ONE;
 				long counter = 0;
 				while (d.equals(BigInteger.ONE)) {
 					if(counter>limit){
 						addToCache(n);
+						if(VERBOSE) System.out.println("rho factor fake prime: "+n);
+						System.err.println("warning could not factor "+n);
 						factors.add(n);
 						return factors;
 					}
@@ -753,21 +767,25 @@ public class QuickMath {
 				if(subList.size() > 1){
 					for(BigInteger d2:subList){
 						addToCache(d2);
+						if(VERBOSE) System.out.println("adding from wheel factor: "+d2);
 						factors.add(d2);
 						n = n.divide(d2);
 					}
 				
 				}else{
 					addToCache(d);
+					if(VERBOSE) System.out.println("adding rho factor: "+d);
 					factors.add(d);
 					n = n.divide(d);
 					while(n.mod(d).equals(BigInteger.ZERO)){
+						if(VERBOSE) System.out.println("adding rho factor: "+d);
 						factors.add(d);
 						n = n.divide(d);
 					}
 				}
 				if(n.isProbablePrime(1)){
 					addToCache(n);
+					if(VERBOSE) System.out.println("already prime: "+n);
 					factors.add(n);
 					break;
 				}
@@ -862,25 +880,8 @@ public class QuickMath {
 		return null;
 	}
 	
-	public static ArrayList<BigInteger[]> possiblePartitions(BigInteger size,BigInteger groups,BigInteger[] l_current,int currentIndex, ArrayList<BigInteger[]> out){
-		if(out == null) out = new ArrayList<BigInteger[]>();
-		if(l_current == null) l_current = new BigInteger[groups.intValue()];
-		if(groups.equals(BigInteger.ONE)){
-			BigInteger[] l_new = l_current.clone();
-			l_new[currentIndex] = size;
-			out.add(l_new);
-			return out;
-		}
-		for (BigInteger i = BigInteger.ZERO;i.compareTo(size) != 1;i = i.add(BigInteger.ONE)){
-			BigInteger[] l_new = l_current.clone();
-			l_new[currentIndex] = i;
-			possiblePartitions(size.subtract(i),groups.subtract(BigInteger.ONE),l_new,currentIndex+1,out);
-		}
-		return out;
-	}
-	
 	public static Expr trigExpand(Expr e,Settings settings){
-		if(e.containsType(Sin.class)){
+		if(e.containsType("sin")){
 			Expr trigPart = null;
 			Prod coef = new Prod();
 			if(e instanceof Prod){
@@ -916,9 +917,32 @@ public class QuickMath {
 		return e;
 	}
 	
+	
+	/*
+	 * 
+	 * this describes all the possible ways to add up to the 'size' variable
+	 * 
+	 */
+	public static ArrayList<BigInteger[]> possiblePartitions(BigInteger size,BigInteger groups,BigInteger[] l_current,int currentIndex, ArrayList<BigInteger[]> out){
+		if(out == null) out = new ArrayList<BigInteger[]>();
+		if(l_current == null) l_current = new BigInteger[groups.intValue()];
+		if(groups.equals(BigInteger.ONE)){
+			BigInteger[] l_new = l_current.clone();
+			l_new[currentIndex] = size;
+			out.add(l_new);
+			return out;
+		}
+		for (BigInteger i = BigInteger.ZERO;i.compareTo(size) != 1;i = i.add(BigInteger.ONE)){
+			BigInteger[] l_new = l_current.clone();
+			l_new[currentIndex] = i;
+			possiblePartitions(size.subtract(i),groups.subtract(BigInteger.ONE),l_new,currentIndex+1,out);
+		}
+		return out;
+	}
 	public static Expr multinomial(Expr baseSum,Num expo,Settings settings) {//returns the binomial expansion
 		Sum terms = new Sum();
 		ArrayList<BigInteger[]> exponentSets = possiblePartitions(expo.realValue,BigInteger.valueOf(baseSum.size()),null,0,null);
+		//System.out.println(exponentSets);
 		
 		for(BigInteger[] set : exponentSets){
 			Prod term = new Prod();
@@ -991,7 +1015,7 @@ public class QuickMath {
 			}
 		}else if(e instanceof Sum) {
 			for(int i = 0;i<e.size();i++) {
-				if(i!=0)out+=generateMathML(e.get(i).abs(Settings.normal));
+				if(i!=0)out+=generateMathML(e.get(i).strangeAbs(Settings.normal));
 				else out+=generateMathML(e.get(i));
 				if(i!=e.size()-1) {
 					if(e.get(i+1).negative()) out+="-";

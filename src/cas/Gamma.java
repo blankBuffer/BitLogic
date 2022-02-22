@@ -33,7 +33,14 @@ public class Gamma extends Expr{
 	}
 	static Rule fracCase = new Rule("gamma of an n/2",Rule.TRICKY){
 		private static final long serialVersionUID = 1L;
+		
+		Rule halfCase = new Rule("gamma(1/2)->sqrt(pi)","gamma of a half",Rule.EASY);
 
+		@Override
+		public void init(){
+			halfCase.init();
+		}
+		
 		@Override
 		public Expr applyRuleToExpr(Expr e,Settings settings) {
 			Gamma gamma = (Gamma)e;
@@ -61,7 +68,7 @@ public class Gamma extends Expr{
 				}
 				
 			}
-			return gamma;
+			return halfCase.applyRuleToExpr(gamma, settings);
 		}
 	};
 
@@ -72,10 +79,10 @@ public class Gamma extends Expr{
 		return new ComplexFloat(factorial(inner.real),0);
 	}
 	
-	static ExprList ruleSequence = null;
+	static Sequence ruleSequence = null;
 	
 	public static void loadRules(){
-		ruleSequence = exprList(
+		ruleSequence = sequence(
 			integerCase,
 			fracCase
 		);
@@ -83,7 +90,7 @@ public class Gamma extends Expr{
 	}
 	
 	@Override
-	ExprList getRuleSequence() {
+	Sequence getRuleSequence() {
 		return ruleSequence;
 	}
 

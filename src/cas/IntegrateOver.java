@@ -36,7 +36,7 @@ public class IntegrateOver extends Expr {
 			
 			Expr indefInt = integrate(defInt.getExpr(),defInt.getVar()).simplify(settings);
 			
-			if(!indefInt.containsType(Integrate.class)) {
+			if(!indefInt.containsType("integrate")) {
 				return sub(indefInt.replace(equ(  defInt.getVar() , defInt.getMax() )),indefInt.replace(equ(  defInt.getVar() , defInt.getMin() ))).simplify(settings);
 			}
 			
@@ -44,17 +44,17 @@ public class IntegrateOver extends Expr {
 		}
 	};
 	
-	static ExprList ruleSequence = null;
+	static Sequence ruleSequence = null;
 	
 	public static void loadRules(){
-		ruleSequence = exprList(
+		ruleSequence = sequence(
 				definiteIntegral		
 		);
 		Rule.initRules(ruleSequence);
 	}
 	
 	@Override
-	ExprList getRuleSequence() {
+	Sequence getRuleSequence() {
 		return ruleSequence;
 	}
 	

@@ -56,6 +56,10 @@ public class Integrate extends Expr{
 	
 	static Rule arcsinCase = new Rule("integrate(asin(x),x)->x*asin(x)+sqrt(1-x^2)","integral of arcsin",Rule.UNCOMMON);
 	
+	static Rule sinCosProdCase = new Rule("integrate(sin(a)*cos(b),x)->integrate(sin(a+b),x)/2+integrate(sin(a-b),x)/2","integral of sin cos product",Rule.UNCOMMON);
+	static Rule sinSinProdCase = new Rule("integrate(sin(a)*sin(b),x)->integrate(cos(a-b),x)/2-integrate(cos(a+b),x)/2","integral of sin cos product",Rule.UNCOMMON);
+	static Rule cosCosProdCase = new Rule("integrate(cos(a)*cos(b),x)->integrate(cos(a+b),x)/2+integrate(cos(a-b),x)/2","integral of sin cos product",Rule.UNCOMMON);
+	
 	static Rule loopingIntegrals = new Rule("looping integrals",Rule.UNCOMMON) {
 		private static final long serialVersionUID = 1L;
 		
@@ -236,7 +240,7 @@ public class Integrate extends Expr{
 			
 			if(integ.get() instanceof Div && !((Div)integ.get()).getNumer().contains(integ.getVar())) {
 				Expr denom = ((Div)integ.get()).getDenom();
-				ExprList poly = polyExtract(denom, integ.getVar(), settings);
+				Sequence poly = polyExtract(denom, integ.getVar(), settings);
 				if(poly != null && poly.size() == 3) {
 					Expr c = poly.get(0),b = poly.get(1),a = poly.get(2);
 					ExprList subTable = exprList(equ(var("0a"),a),equ(var("0b"),b),equ(var("0c"),c),equ(var("x"),integ.getVar()));
@@ -286,7 +290,7 @@ public class Integrate extends Expr{
 			if(!isPositiveRealNum(denom.getExpo())) return integ;
 			Num n = (Num)denom.getExpo();
 			
-			ExprList coef = polyExtract(denom.getBase() ,integ.getVar(),settings);
+			Sequence coef = polyExtract(denom.getBase() ,integ.getVar(),settings);
 			if(coef == null || coef.size() != 3) return integ;
 			ExprList equs = exprList(  equ(var("a"),coef.get(2)) , equ(var("b"),coef.get(1)) , equ(var("c"),coef.get(0)) , equ(var("n"),n) , equ(var("x"),integ.getVar()) );
 			
@@ -325,7 +329,7 @@ public class Integrate extends Expr{
 		@Override
 		public Expr applyRuleToExpr(Expr e,Settings settings){
 			Integrate integ = (Integrate)e;
-			if(!integ.get().containsType(Integrate.class) && !isPolynomialUnstrict(integ.get(),integ.getVar())) {
+			if(!integ.get().containsType("integrate") && !isPolynomialUnstrict(integ.get(),integ.getVar())) {
 				Div innerDiv = Div.cast(integ.get().copy());
 				Prod innerProd = Prod.cast(innerDiv.getNumer());
 				innerDiv.setNumer(innerProd);
@@ -375,7 +379,7 @@ public class Integrate extends Expr{
 					innerProd.remove(bestIndex);
 					Expr newIntegral = integrate(innerDiv,integ.getVar()).simplify(settings);
 					//newIntegral.println();
-					if(!newIntegral.containsType(Integrate.class)) {
+					if(!newIntegral.containsType("integrate")) {
 						Expr out = sub(prod(newIntegral,best),integrate(prod(newIntegral.copy(),diff(best.copy(),integ.getVar())),integ.getVar()));
 						return out.simplify(settings);
 					}
@@ -392,7 +396,7 @@ public class Integrate extends Expr{
 		@Override
 		public Expr applyRuleToExpr(Expr e,Settings settings){
 			Integrate integ = (Integrate)e;
-			if(integ.get() instanceof Div && !integ.get().containsType(Integrate.class)) {
+			if(integ.get() instanceof Div && !integ.get().containsType("integrate")) {
 				Div innerDiv = (Div)integ.get().copy();
 				if(innerDiv.getDenom() instanceof Power) {
 					Power denomPower = (Power)innerDiv.getDenom();
@@ -475,7 +479,7 @@ public class Integrate extends Expr{
 		public Expr applyRuleToExpr(Expr e,Settings settings){
 			Integrate integ = (Integrate)e;
 			
-			if(integ.contains(uSubVar) || integ.get().containsType(Integrate.class) || isPolynomialUnstrict(integ.get(),integ.getVar())) return integ;
+			if(integ.contains(uSubVar) || integ.get().containsType("integrate") || isPolynomialUnstrict(integ.get(),integ.getVar())) return integ;
 			Expr u = null;
 			if(integ.get() instanceof Prod) {
 				Prod innerProd = (Prod)integ.get();
@@ -517,18 +521,20 @@ public class Integrate extends Expr{
 						Expr newExpr = before.simplify(settings);
 						if(!newExpr.contains(integ.getVar())) {//no solve needed
 							newExpr = integrate(newExpr,uSubVar).simplify(settings);
-							if(!newExpr.containsType(Integrate.class)) {
+							if(!newExpr.containsType("integrate")) {
 								Expr out = newExpr.replace(equ(uSubVar,u));
 								return out.simplify(settings);
 							}
 						}else {//oof we need to solve for x
 							Expr solved = solve(equ(uSubVar,u),integ.getVar()).simplify(settings);
-							if(solved instanceof ExprList) solved = solved.get();
+							if(solved instanceof ExprList) {
+								solved = solved.get(solved.size()-1);//last element is usually positive
+							}
 							if(!(solved instanceof Solve)) {
 								solved = ((Equ)solved).getRightSide();
 								newExpr = integrate(newExpr.replace(equ(integ.getVar(),solved)),uSubVar);
 								newExpr = newExpr.simplify(settings);
-								if(!newExpr.containsType(Integrate.class)) {
+								if(!newExpr.containsType("integrate")) {
 									Expr out = newExpr.replace(equ(uSubVar,u)).simplify(settings);
 									return out;
 								}
@@ -685,7 +691,7 @@ public class Integrate extends Expr{
 		
 	};
 	
-	static Rule sinCosProdCase = new Rule("product of sin and cos powers",Rule.UNCOMMON) {
+	static Rule sinCosProdPowersCase = new Rule("product of sin and cos powers",Rule.UNCOMMON) {
 		private static final long serialVersionUID = 1L;
 		
 		Expr sinPowTemplate,cosPowTemplate;
@@ -716,7 +722,7 @@ public class Integrate extends Expr{
 				boolean check = isPositiveRealNum(cosPow.getExpo()) && isPositiveRealNum(sinPow.getExpo()) && sinPow.getBase().get().equals(cosPow.getBase().get());
 				if(!check) return integ;
 				
-				ExprList polyCoef = polyExtract(sinPow.getBase().get(),integ.getVar(),settings);
+				Sequence polyCoef = polyExtract(sinPow.getBase().get(),integ.getVar(),settings);
 				if(polyCoef == null) return integ;
 				Expr coef = null;
 				if(polyCoef.size() == 2) {
@@ -750,10 +756,66 @@ public class Integrate extends Expr{
 		}
 	};
 	
-	static ExprList ruleSequence = null;
+	static Rule weierstrassSub = new Rule("weierstrass substitution",Rule.TRICKY) {
+		private static final long serialVersionUID = 1L;
+		
+		public Expr getSinOrCosInner(Expr e) {//search tree for inside of sin or cos
+			if(e instanceof Sin || e instanceof Cos) return e.get();
+			for(int i = 0;i<e.size();i++) {
+				Expr inner = getSinOrCosInner(e.get(i));
+				if(inner != null) return inner;
+			}
+			return null;
+		}
+		String[] trigTypes;
+		ExprList subs;
+		Expr addedDeriv;
+		@Override
+		public void init() {
+			trigTypes = new String[] {"sin","cos","tan","asin","acos","atan"};
+			subs = (ExprList)createExpr("[sin(0a)=(2*0t)/(1+0t^2),cos(0a)=(1-0t^2)/(1+0t^2)]");
+			addedDeriv = createExpr("2/(0t^2+1)");
+		}
+		boolean containsTrig(Expr e) {
+			for(String type:trigTypes) {
+				if(e.containsType(type)) return true;
+			}
+			return false;
+		}
+		
+		
+		@Override
+		public Expr applyRuleToExpr(Expr e,Settings settings) {
+			Integrate integ = (Integrate)e;
+			if(!( (integ.containsType("sin") || integ.containsType("cos")) && integ.containsType("sum") )) return integ;//needs sin or cos
+			
+			Expr innerTrig = getSinOrCosInner(integ.get());
+			if(innerTrig == null) return integ;
+			
+			Equ equ = equ(var("0a"),innerTrig);
+			ExprList subs = (ExprList) this.subs.replace(equ);
+			Expr addedDeriv = this.addedDeriv.replace(equ);
+			
+			Expr newInner = div(prod(integ.get().replace(subs),addedDeriv),diff(innerTrig,integ.getVar()));
+			newInner = newInner.simplify(settings);
+			
+			if(newInner.contains(integ.getVar()) || containsTrig(newInner)) return integ;
+			System.out.println(newInner);
+			Expr integRes = integrate(newInner,var("0t")).simplify(settings);
+			if(!integRes.containsType("integrate")) {
+				Expr out = integRes.replace(equ(var("0t"),tan( div(innerTrig,num(2)) ))).simplify(settings);
+				return out;
+			}
+			
+			return integ;
+		}
+		
+	};
+	
+	static Sequence ruleSequence = null;
 	
 	public static void loadRules(){
-		ruleSequence = exprList(
+		ruleSequence = sequence(
 				
 				zeroCase,
 				oneCase,
@@ -779,6 +841,10 @@ public class Integrate extends Expr{
 				tanInvPowerCase,
 				
 				sinCosProdCase,
+				sinSinProdCase,
+				cosCosProdCase,
+				
+				sinCosProdPowersCase,
 				
 				cotCscCase,
 				inverseQuadraticToNReduction,
@@ -793,6 +859,9 @@ public class Integrate extends Expr{
 				compressRoots,
 				recursivePowerOverSqrt,
 				recursiveInvPowerOverSqrt,
+				
+				weierstrassSub,
+				
 				psudoTrigSub,
 				integralForArcsin,
 				
@@ -812,7 +881,7 @@ public class Integrate extends Expr{
 	}
 	
 	@Override
-	public ExprList getRuleSequence(){
+	public Sequence getRuleSequence(){
 		return ruleSequence;
 	}
 	

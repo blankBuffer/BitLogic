@@ -62,10 +62,10 @@ public class Asin extends Expr{
 		add(expr);
 	}
 	
-	static ExprList ruleSequence = null;
+	static Sequence ruleSequence = null;
 	
 	static void loadRules(){
-		ruleSequence = exprList(
+		ruleSequence = sequence(
 				StandardRules.trigCompressInner,
 				StandardRules.oddFunction,
 				arcsinWithSqrt,
@@ -76,7 +76,7 @@ public class Asin extends Expr{
 		Rule.initRules(ruleSequence);
 	}
 	@Override
-	ExprList getRuleSequence() {
+	Sequence getRuleSequence() {
 		return ruleSequence;
 	}
 

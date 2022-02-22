@@ -211,11 +211,11 @@ public class Limit extends Expr{
 				return -1;
 			}
 		
-			ExprList aSep = seperateByVar(a,v);
+			Sequence aSep = seperateByVar(a,v);
 			a=aSep.get(1);
 			Expr aCoef = aSep.get(0);
 			
-			ExprList bSep = seperateByVar(b,v);
+			Sequence bSep = seperateByVar(b,v);
 			b=bSep.get(1);
 			Expr bCoef = bSep.get(0);
 			
@@ -381,7 +381,7 @@ public class Limit extends Expr{
 			}else{
 				return e;
 			}
-			ExprList sep = seperateByVar(lim.getExpr(),lim.getVar());
+			Sequence sep = seperateByVar(lim.getExpr(),lim.getVar());
 			
 			if(!sep.get(0).equals(Num.ONE)){
 				return prod(sep.get(0),limit(sep.get(1),lim.getVar(),lim.getValue())).simplify(settings);
@@ -412,10 +412,10 @@ public class Limit extends Expr{
 						casted.setNumer( SimpleFuncs.fullExpand.applyRuleToExpr(casted.getNumer(), settings) );
 						casted.setDenom( SimpleFuncs.fullExpand.applyRuleToExpr(casted.getDenom(), settings) );
 						
-						ExprList numerPoly = polyExtract(casted.getNumer(),lim.getVar(),settings);
+						Sequence numerPoly = polyExtract(casted.getNumer(),lim.getVar(),settings);
 						Expr numerCoef = numerPoly.get(numerPoly.size()-1);
 						
-						ExprList denomPoly = polyExtract(casted.getDenom(),lim.getVar(),settings);
+						Sequence denomPoly = polyExtract(casted.getDenom(),lim.getVar(),settings);
 						Expr denomCoef = denomPoly.get(denomPoly.size()-1);
 						
 						Expr div = div(numerCoef,denomCoef).simplify(settings);
@@ -424,7 +424,7 @@ public class Limit extends Expr{
 						
 						if(div.negative()){
 							sign = -sign;
-							div = div.abs(settings);
+							div = div.strangeAbs(settings);
 						}
 						
 						if(!positiveInf && (numerPoly.size()+denomPoly.size())%2==1){
@@ -554,10 +554,10 @@ public class Limit extends Expr{
 		
 	};
 	
-	static ExprList ruleSequence = null;
+	static Sequence ruleSequence = null;
 	
 	public static void loadRules(){
-		ruleSequence = exprList(
+		ruleSequence = sequence(
 				StandardRules.pullOutConstants,
 				biggestInSumLimit,
 				divPolyLimit,
@@ -568,7 +568,7 @@ public class Limit extends Expr{
 	}
 	
 	@Override
-	ExprList getRuleSequence() {
+	Sequence getRuleSequence() {
 		return ruleSequence;
 	}
 

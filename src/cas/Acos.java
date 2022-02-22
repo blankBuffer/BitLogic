@@ -19,7 +19,7 @@ public class Acos extends Expr{
 		public Expr applyRuleToExpr(Expr e,Settings settings){
 			Acos acos = (Acos)e;
 			if(acos.get().negative()){
-				Expr result = sum(neg(acos(acos.get().abs(settings))),pi()).simplify(settings);
+				Expr result = sum(neg(acos(acos.get().strangeAbs(settings))),pi()).simplify(settings);
 				return result;
 			}
 			return acos;
@@ -75,10 +75,10 @@ public class Acos extends Expr{
 		}
 	};
 	
-	static ExprList ruleSequence = null;
+	static Sequence ruleSequence = null;
 	
 	static void loadRules() {
-		ruleSequence = exprList(
+		ruleSequence = sequence(
 				StandardRules.trigCompressInner,
 				negativeInner,
 				arccosWithSqrt,
@@ -90,7 +90,7 @@ public class Acos extends Expr{
 	}
 	
 	@Override
-	ExprList getRuleSequence(){
+	Sequence getRuleSequence(){
 		return ruleSequence;
 	}
 

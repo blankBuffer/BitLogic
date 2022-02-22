@@ -24,17 +24,17 @@ public class Approx extends Expr{
 		}
 	};
 	
-	static ExprList ruleSequence = null;
+	static Sequence ruleSequence = null;
 	
 	static void loadRules(){
-		ruleSequence = exprList(
+		ruleSequence = sequence(
 			getFloatExpr	
 		);
 		Rule.initRules(ruleSequence);
 	}
 	
 	@Override
-	ExprList getRuleSequence(){
+	Sequence getRuleSequence(){
 		return ruleSequence;
 	}
 	

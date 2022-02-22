@@ -84,10 +84,10 @@ public class LambertW extends Expr {
 		add(e);
 	}
 	
-	static ExprList ruleSequence = null;
+	static Sequence ruleSequence = null;
 	
 	public static void loadRules(){
-		ruleSequence = exprList(
+		ruleSequence = sequence(
 				hasInverse,
 				isNegOne,
 				productWithLog,
@@ -98,7 +98,7 @@ public class LambertW extends Expr {
 	}
 	
 	@Override
-	ExprList getRuleSequence() {
+	Sequence getRuleSequence() {
 		return ruleSequence;
 	}
 	

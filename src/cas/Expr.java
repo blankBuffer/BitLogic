@@ -40,7 +40,7 @@ public abstract class Expr extends QuickMath implements Comparable<Expr>, Serial
 	private static final long serialVersionUID = -8297916729116741273L;
 	private ArrayList<Expr> subExpr = new ArrayList<Expr>();//many expression types have sub expressions like sums
 	
-	abstract ExprList getRuleSequence();
+	abstract Sequence getRuleSequence();
 	public abstract ComplexFloat convertToFloat(ExprList varDefs);
 	public String typeName() {
 		String name = getClass().getSimpleName();
@@ -99,6 +99,7 @@ public abstract class Expr extends QuickMath implements Comparable<Expr>, Serial
 	static int RECURSION_SAFETY;
 	
 	public Expr simplify(Settings settings){//all expressions will have a simplify call, this is the most important function 
+		if(Thread.currentThread().isInterrupted()) return null;
 		Expr toBeSimplified = copy();
 		if(flags.simple) return toBeSimplified;
 		
@@ -117,7 +118,7 @@ public abstract class Expr extends QuickMath implements Comparable<Expr>, Serial
 		String originalType = toBeSimplified.typeName();
 		if(simplifyChildren) toBeSimplified.simplifyChildren(settings);//simplify sub expressions
 		
-		ExprList ruleSequence = getRuleSequence();
+		Sequence ruleSequence = getRuleSequence();
 		
 		if(ruleSequence != null){
 			
@@ -302,7 +303,16 @@ public abstract class Expr extends QuickMath implements Comparable<Expr>, Serial
 		return false;
 	}
 	
-	public Expr abs(Settings settings) {//Assumes its already simplified
+	/*
+	 * this behaves like an absolute value but numbers sign is based on a special rule to maintain sign
+	 * -2+3*i -> 2-3*i
+	 * -i -> i
+	 * 2-3*i -> 2-3*i
+	 * 
+	 * basically if it has a real and imaginary component, the real value takes precedence otherwise use the imaginary
+	 * component
+	 */
+	public Expr strangeAbs(Settings settings) {//Assumes its already simplified
 		if(this instanceof Num) return ((Num)this).strangeAbs();
 		else if(this instanceof Prod) {
 			for(int i = 0;i<size();i++) {
@@ -316,10 +326,11 @@ public abstract class Expr extends QuickMath implements Comparable<Expr>, Serial
 			}
 		}else if(this instanceof Div) {
 			Div casted = (Div)this;
-			return div(casted.getNumer().abs(settings), casted.getDenom().abs(settings)).simplify(settings);
+			return div(casted.getNumer().strangeAbs(settings), casted.getDenom().strangeAbs(settings)).simplify(settings);
 		}
 		return copy();
 	}
+	
 	
 	public Expr getCoefficient() {//returns numerator coefficient
 		if(this instanceof Prod) {
@@ -393,12 +404,12 @@ public abstract class Expr extends QuickMath implements Comparable<Expr>, Serial
 		return sum;
 	}
 	
-	public boolean containsType(@SuppressWarnings("rawtypes") Class c) {//used for faster processing
-		if(this.getClass().equals(c)) {
+	public boolean containsType(String typeName) {//used for faster processing
+		if(typeName().equals(typeName)) {
 			return true;
 		}
 		for(int i = 0; i< size();i++) {
-			if(get(i).containsType(c)) return true;
+			if(get(i).containsType(typeName)) return true;
 		}
 		return false;
 	}

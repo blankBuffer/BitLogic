@@ -107,10 +107,10 @@ public class Sin extends Expr{
 		return ComplexFloat.sin(get().convertToFloat(varDefs));
 	}
 	
-	static ExprList ruleSequence = null;
+	static Sequence ruleSequence = null;
 	
 	public static void loadRules(){
-		ruleSequence = exprList(
+		ruleSequence = sequence(
 				sinOfArctan,
 				sinOfAsin,
 				sinOfAcos,
@@ -122,7 +122,7 @@ public class Sin extends Expr{
 	}
 	
 	@Override
-	ExprList getRuleSequence() {
+	Sequence getRuleSequence() {
 		return ruleSequence;
 	}
 

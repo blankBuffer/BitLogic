@@ -50,16 +50,21 @@ public class Distr extends Expr{
 					
 				}
 				
+			}else if(expr instanceof Sum) {
+				
+				for(int i = 0;i<expr.size();i++) {
+					expr.set(i, distr(expr.get(i)));
+				}
 			}
 			return expr.simplify(settings);
 		}
 	};
 	
-	static ExprList ruleSequence = null;
+	static Sequence ruleSequence = null;
 	
 	public static void loadRules(){
 		
-		ruleSequence = exprList(
+		ruleSequence = sequence(
 				generalDistr,
 				StandardRules.becomeInner
 		);
@@ -67,7 +72,7 @@ public class Distr extends Expr{
 	}
 	
 	@Override
-	ExprList getRuleSequence() {
+	Sequence getRuleSequence() {
 		return ruleSequence;
 	}
 	@Override

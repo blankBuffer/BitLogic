@@ -36,7 +36,7 @@ public class Script extends Expr{
 	}
 
 	@Override
-	ExprList getRuleSequence() {
+	Sequence getRuleSequence() {
 		return null;
 	}
 }

@@ -1,8 +1,15 @@
 package cas;
 
+/*
+ * the stack editor is a basic calculator interface based on rpn with an algebraic and word based extension
+ * it takes commands as strings and stores an internal state which can be accessed
+ */
+
 public class StackEditor extends QuickMath {
 
 	public static final int QUIT = -1;
+	public static final int INPUT_ERROR = -2;
+	public static final int EDIT_REQUEST = 1;
 	public static final int FINISHED = 0;
 	
 	private static Expr expr = null;
@@ -13,43 +20,51 @@ public class StackEditor extends QuickMath {
 		alerts = "alert: "+string+"\n";
 	}
 
-	void result() {
+	private static final int TIME_LIMIT = 3000;//3 seconds until the compute thread is killed
+	/*
+	 * computes the result of the last item on the stack. It runs on its own thread to prevent freezing
+	 */
+	public void result() {
 		if (last() == null)
 			return;
 		expr = last();
-		Thread compute = new Thread() {
+		Thread compute = new Thread("compute") {
 			@Override
 			public void run() {
+				Expr.RECURSION_SAFETY = 0;
 				long oldTime = System.nanoTime();
 				long startingInstructionCount = Expr.ruleCallCount;
 				expr = expr.replace(currentDefs.getVars()).simplify(currentSettings);// Substitutes the variables and}
-				
 				long delta = System.nanoTime() - oldTime;
 				createAlert("took " + delta / 1000000.0 + " ms to compute, "+(Expr.ruleCallCount-startingInstructionCount)+" intructions called");
 			}
 		};
-		compute.start();
-		Thread stuckCheck = new Thread() {
+		Thread stuckCheck = new Thread("stuck check") {
+			
 			@Override
 			public void run() {
-				try {
-					while (compute.isAlive()) {
-						sleep(1000);
-						if (compute.isAlive())
-							System.out.println("thinking...");
+				compute.start();
+				long oldTime = System.nanoTime();
+				while (compute.isAlive()) {
+					long delta = System.nanoTime() - oldTime;
+					if(delta / 1000000.0 > TIME_LIMIT) {
+						System.err.println("stopping thread: "+compute.getName()+" because took too long to compute");
+						compute.interrupt();
+						return;
 					}
-				} catch (InterruptedException e) {
-					e.printStackTrace();
+					try {
+						Thread.sleep(20);
+					} catch (InterruptedException e) {}
 				}
 			}
 		};
 		stuckCheck.start();
 		try {
-			compute.join();
+			stuckCheck.join();
 		} catch (InterruptedException e) {
+			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
-		
 		if(expr != null) stack.set(size() - 1, expr);
 	}
 
@@ -95,17 +110,17 @@ public class StackEditor extends QuickMath {
 		System.out.print(getStackAsString());
 	}
 
-	void clear() {
+	public void clear() {
 		stack.clear();
 	}
 
-	void negate() {
+	public void negate() {
 		if (last() == null)
 			return;
 		stack.set(size() - 1, neg(last()));
 	}
 
-	void add() {
+	public void add() {
 		if (sLast() == null)
 			return;
 		if (sLast() instanceof Sum) {
@@ -118,7 +133,7 @@ public class StackEditor extends QuickMath {
 		}
 	}
 
-	void subtract() {
+	public void subtract() {
 		if (sLast() == null)
 			return;
 		if (sLast() instanceof Sum) {
@@ -131,7 +146,7 @@ public class StackEditor extends QuickMath {
 		}
 	}
 
-	void multiply() {
+	public void multiply() {
 		if (sLast() == null)
 			return;
 		if (sLast() instanceof Prod) {
@@ -144,7 +159,7 @@ public class StackEditor extends QuickMath {
 		}
 	}
 	
-	void and(){
+	public void and(){
 		if (sLast() == null)
 			return;
 		if (sLast() instanceof And) {
@@ -156,7 +171,7 @@ public class StackEditor extends QuickMath {
 			stack.set(size() - 1, and);
 		}
 	}
-	void or(){
+	public void or(){
 		if (sLast() == null)
 			return;
 		if (sLast() instanceof Or) {
@@ -168,13 +183,13 @@ public class StackEditor extends QuickMath {
 			stack.set(size() - 1, or);
 		}
 	}
-	void not(){
+	public void not(){
 		if (last() == null)
 			return;
 		stack.set(size() - 1, not(last()));
 	}
 
-	void exponent() {
+	public void exponent() {
 		if (sLast() == null)
 			return;
 		Expr pow = pow(sLast(), last());
@@ -182,21 +197,20 @@ public class StackEditor extends QuickMath {
 		stack.set(size() - 1, pow);
 	}
 
-	void pop() {
+	public void pop() {
 		if (last() == null)
 			return;
 		stack.remove(size() - 1);
 	}
 
-	void divide() {
+	public void divide() {
 		if (sLast() == null)
 			return;
 
 		stack.set(size() - 2, div(sLast(), stack.get(size() - 1)));
 		stack.remove(size() - 1);
 	}
-
-	void swap() {
+	public void swap() {
 		if (sLast() == null)
 			return;
 		Expr temp = last();
@@ -204,39 +218,25 @@ public class StackEditor extends QuickMath {
 		stack.set(size() - 2, temp);
 	}
 
-	void equ() {
+	public void equ() {
 		if (sLast() == null)
 			return;
 		stack.set(size() - 2, equ(sLast(), last()));
 		stack.remove(size() - 1);
 	}
-	
-	void greater() {
-		if (sLast() == null)
-			return;
-		stack.set(size() - 2, equGreater(sLast(), last()));
-		stack.remove(size() - 1);
-	}
-	
-	void less() {
-		if (sLast() == null)
-			return;
-		stack.set(size() - 2, equLess(sLast(), last()));
-		stack.remove(size() - 1);
-	}
 
-	void createList() {
+	public void createList() {
 		stack.add(new ExprList());
 	}
 
-	void addToList() {
+	public void addToList() {
 		if (sLast() == null)
 			return;
 		sLast().add(last());
 		stack.remove(size() - 1);
 	}
 
-	void breakApart() {
+	public void breakApart() {
 		if (last() == null)
 			return;
 		Expr temp = last();
@@ -245,13 +245,13 @@ public class StackEditor extends QuickMath {
 			stack.add(temp.get(i));
 	}
 
-	void duplicate() {
+	public void duplicate() {
 		if (last() == null)
 			return;
 		stack.add(last().copy());
 	}
 
-	void roll() {
+	public void roll() {
 		if (last() == null)
 			return;
 		Expr temp = last();
@@ -261,7 +261,7 @@ public class StackEditor extends QuickMath {
 		stack.set(0, temp);
 	}
 	
-	void undo() {
+	public void undo() {
 		ExprList temp = stack;
 		stack = stackOld;
 		stackOld = temp;
@@ -271,7 +271,7 @@ public class StackEditor extends QuickMath {
 
 		if (command.isEmpty()) {
 			createAlert("you typed nothing");
-			return 0;
+			return INPUT_ERROR;
 		}
 		try {
 			if (!command.equals("undo")) {
@@ -308,10 +308,6 @@ public class StackEditor extends QuickMath {
 				swap();
 			} else if (command.equals("=")) {
 				equ();
-			} else if (command.equals(">")) {
-				greater();
-			} else if (command.equals("<")) {
-				less();
 			} else if (command.equals("[")) {
 				createList();
 			} else if (command.equals("]")) {
@@ -324,7 +320,9 @@ public class StackEditor extends QuickMath {
 				duplicate();
 			} else if (command.equals("roll")) {
 				roll();
-			} else if (command.equals("quit") || command.equals("exit") || command.equals("close")) {
+			} else if(command.equals("edit")) {
+				return EDIT_REQUEST;
+			}else if (command.equals("quit") || command.equals("exit") || command.equals("close")) {
 				return QUIT;
 			}else if (command.contains(":") && !command.contains(" ")) {
 				String[] parts = command.split(":");
@@ -388,6 +386,7 @@ public class StackEditor extends QuickMath {
 		} catch (Exception e) {
 			createAlert("An error has occured\nreason: " + e.getMessage());
 			e.printStackTrace();
+			return INPUT_ERROR;
 		}
 		return FINISHED;
 	}

@@ -84,7 +84,7 @@ public class Prod extends Expr{
 	
 	//the following two functions are also used by div
 	static boolean foundProdInTrigInProd(Prod prod){
-		if(prod.containsType(Sin.class)){
+		if(prod.containsType("sin")){
 			for(int i = 0;i < prod.size();i++){
 				if(prod.get(i) instanceof Sin || prod.get(i) instanceof Cos || prod.get(i) instanceof Tan){
 					if(prod.get(i).get() instanceof Prod){
@@ -96,7 +96,7 @@ public class Prod extends Expr{
 		return false;
 	}
 	static boolean foundNonProdInTrigInProd(Prod prod){
-		if(prod.containsType(Sin.class)){
+		if(prod.containsType("sin")){
 			for(int i = 0;i < prod.size();i++){
 				if(prod.get(i) instanceof Sin || prod.get(i) instanceof Cos || prod.get(i) instanceof Tan){
 					if(!(prod.get(i).get() instanceof Prod)){
@@ -605,10 +605,10 @@ public class Prod extends Expr{
 		}
 	};
 	
-	static ExprList ruleSequence = null;
+	static Sequence ruleSequence = null;
 	
 	public static void loadRules(){
-		ruleSequence = exprList(
+		ruleSequence = sequence(
 				factorSubSums,
 				reduceTrigProd,
 				trigExpandElements,
@@ -629,7 +629,7 @@ public class Prod extends Expr{
 	}
 	
 	@Override
-	ExprList getRuleSequence() {
+	Sequence getRuleSequence() {
 		return ruleSequence;
 	}
 	

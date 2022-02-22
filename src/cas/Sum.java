@@ -66,7 +66,7 @@ public class Sum extends Expr{
 		@Override
 		public Expr applyRuleToExpr(Expr e,Settings settings){
 			Sum sum = (Sum)e;
-			if(sum.containsType(Sin.class)){
+			if(sum.containsType("sin")){
 				for(int i = 0;i < sum.size();i++){
 					sum.set(i, trigExpand(sum.get(i),settings));
 				}
@@ -90,11 +90,11 @@ public class Sum extends Expr{
 		public Expr applyRuleToExpr(Expr e,Settings settings){
 			Sum sum = (Sum)e;
 			
-			if(!sum.containsType(Sin.class)) return e;
+			if(!sum.containsType("sin")) return e;
 			
 			outer:for(int i = 0;i<sum.size();i++) {
 				Expr current = sum.get(i);
-				if(!(current.containsType(Sin.class) || current.containsType(Cos.class))) continue;
+				if(!(current.containsType("sin") || current.containsType("cos"))) continue;
 				if(fastSimilarStruct(sinsqr,current)) {
 					Expr var = current.get(0).get(0);
 					for(int j = 0;j<sum.size();j++) {
@@ -288,7 +288,7 @@ public class Sum extends Expr{
 				Expr coef = num(1);//coefficient
 				
 				if(current instanceof Prod || current instanceof Div) {//if its a product
-					ExprList parts = QuickMath.seperateCoef(current);
+					Sequence parts = seperateCoef(current);
 					coef = parts.get(0);
 					current = parts.get(1);
 				}
@@ -302,7 +302,7 @@ public class Sum extends Expr{
 					Expr toCompCoef = num(1);
 					
 					if(toComp instanceof Prod || toComp instanceof Div) {
-						ExprList parts = QuickMath.seperateCoef(toComp);
+						Sequence parts = seperateCoef(toComp);
 						toCompCoef = parts.get(0);
 						toComp = parts.get(1);
 					}
@@ -468,10 +468,10 @@ public class Sum extends Expr{
 		}
 	};
 	
-	static ExprList ruleSequence = null;
+	static Sequence ruleSequence = null;
 	
 	public static void loadRules(){
-		ruleSequence = exprList(
+		ruleSequence = sequence(
 				sumWithInf,
 				distrSubProds,
 				basicPythagIden,//1-sin(x)^2=cos(x)^2 cases
@@ -489,7 +489,7 @@ public class Sum extends Expr{
 	}
 
 	@Override
-	ExprList getRuleSequence() {
+	Sequence getRuleSequence() {
 		return ruleSequence;
 	}
 	

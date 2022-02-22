@@ -5,6 +5,8 @@ import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.MouseEvent;
 import java.awt.event.MouseListener;
+import java.awt.event.WindowEvent;
+import java.awt.event.WindowListener;
 import java.awt.image.BufferedImage;
 import java.io.File;
 import java.io.FileNotFoundException;
@@ -169,9 +171,18 @@ public class MainWindow extends JFrame{
 		ActionListener terminalInPush = new ActionListener() {
 			@Override
 			public void actionPerformed(ActionEvent e) {
-				if(currentStack.command(terminalIn.getText()) == StackEditor.QUIT) closeWindow();
+				String terminalInText = terminalIn.getText();
 				
-				terminalIn.setText("");
+				int stackCode = currentStack.command(terminalInText);
+				if(stackCode == StackEditor.QUIT) closeWindow();
+				else if(stackCode == StackEditor.EDIT_REQUEST) {
+					terminalIn.setText(currentStack.last().toString());
+					currentStack.pop();
+				}
+				else if(stackCode == StackEditor.INPUT_ERROR) {}
+				if(stackCode == StackEditor.FINISHED) {
+					terminalIn.setText("");
+				}
 				terminalOutUpdate.actionPerformed(e);
 			}
 		};
@@ -511,6 +522,25 @@ public class MainWindow extends JFrame{
 		add(createMainContainer());
 		setLocationRelativeTo(null);
 		setVisible(true);
+		this.addWindowListener(new WindowListener() {
+			@Override
+			public void windowOpened(WindowEvent e) {}
+			@Override
+			public void windowClosing(WindowEvent e) {
+				closeWindow();
+			}
+			@Override
+			public void windowClosed(WindowEvent e) {}
+			@Override
+			public void windowIconified(WindowEvent e) {}
+			@Override
+			public void windowDeiconified(WindowEvent e) {}
+			@Override
+			public void windowActivated(WindowEvent e) {}
+			@Override
+			public void windowDeactivated(WindowEvent e) {}
+			
+		});
 		WINDOW_INSTANCE_COUNT++;
 	}
 

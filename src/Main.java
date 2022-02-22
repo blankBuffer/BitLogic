@@ -6,10 +6,6 @@ import ui.UI;
 
 public class Main extends QuickMath{
 	
-	static void mod(Integer a){
-		a++;
-	}
-	
 	public static void runScript(String fileName,boolean verbose) {
 		long startingInstructionCount = Expr.ruleCallCount;
 		long oldTime = System.nanoTime();
@@ -45,7 +41,7 @@ public class Main extends QuickMath{
 	}
 	
 	static void testRegion() {
-		//runScript("bitLogicTest.bl",true);
+		//runScript("bitLogicTest.bl",false);
 	}
 	
 	public static void main(String[] args) {

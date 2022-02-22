@@ -6,7 +6,7 @@ public class Num extends Expr{
 	private static final long serialVersionUID = -8648260475281043831L;
 	public BigInteger realValue,imagValue;
 	
-	public static final Num ZERO = num(0),ONE = num(1),TWO = num(2),I = num(0,1), NEG_ONE = num(-1,0);//be carful not to modify these
+	public static final Num ZERO = num(0),ONE = num(1),TWO = num(2),I = num(0,1), NEG_ONE = num(-1,0), NEG_I = num(0,-1);//be carful not to modify these
 	
 	private void setFlags() {
 		flags.simple = true;
@@ -39,7 +39,7 @@ public class Num extends Expr{
 		setFlags();
 	}
 	
-	public void set(Num other) {
+	public void setValue(Num other) {
 		realValue = other.realValue;
 		imagValue = other.imagValue;
 	}
@@ -131,15 +131,22 @@ public class Num extends Expr{
 		}
 	}
 
+	private BigInteger bigIntNegOne = BigInteger.valueOf(-1);
 	@Override
 	public String toString() {
 		if(!realValue.equals(BigInteger.ZERO) && !imagValue.equals(BigInteger.ZERO)) {
 			if(imagValue.equals(BigInteger.ONE)) {
 				return "("+realValue.toString()+"+i)";
+			}else if(imagValue.equals(bigIntNegOne)) {
+				return "("+realValue.toString()+"-i)";
+			}
+			if(imagValue.signum() == -1) {
+				return "(" +realValue.toString()+"-"+imagValue.negate().toString()+"*i)";
 			}
 			return "(" +realValue.toString()+"+"+imagValue.toString()+"*i)";
 		}else if(realValue.equals(BigInteger.ZERO) && !imagValue.equals(BigInteger.ZERO)) {
 			if(imagValue.equals(BigInteger.ONE)) return "i";
+			else if(equals(Num.NEG_I)) return "-i";
 			return "("+imagValue.toString()+"*i)";
 		}else {
 			return realValue.toString();
@@ -167,7 +174,7 @@ public class Num extends Expr{
 	}
 
 	@Override
-	ExprList getRuleSequence() {
+	Sequence getRuleSequence() {
 		return null;
 	}
 

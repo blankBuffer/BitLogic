@@ -26,7 +26,7 @@ public class Factor extends Expr{
 			Var v = mostCommonVar(expr);
 			if(expr instanceof Sum && v != null && isPlainPolynomial(expr,v )) {
 				
-				ExprList coefs = polyExtract(expr,v,settings);
+				Sequence coefs = polyExtract(expr,v,settings);
 				if(coefs == null) return e;
 				Num degree = num(coefs.size()-1);
 				if(degree.realValue.compareTo(BigInteger.TWO) == -1) return e;
@@ -96,7 +96,7 @@ public class Factor extends Expr{
 			
 			
 			if(expr instanceof Sum) {
-				ExprList coefs = null;
+				Sequence coefs = null;
 				Var x = mostCommonVar(expr);
 				if(x!=null) {
 					coefs = polyExtract(expr, x,settings);
@@ -312,7 +312,7 @@ public class Factor extends Expr{
 			if(expr instanceof Sum && v != null && isPlainPolynomial(expr,v) ) {
 				int degree = degree(expr,v).intValue();
 				if(degree < 2) return e;
-				ExprList poly = polyExtract(expr,v,settings);
+				Sequence poly = polyExtract(expr,v,settings);
 				if(poly == null) return e;
 				for(int i = 0;i<poly.size();i++) if(!(poly.get(i) instanceof Num)) return e;//must be all nums
 				ArrayList<Double> rootsAsFloat = Solve.polySolve(poly);
@@ -320,11 +320,12 @@ public class Factor extends Expr{
 				//System.out.println(expr);
 				//System.out.println(rootsAsFloat);
 				for(double root:rootsAsFloat) {
-					ExprList rootAsPoly = new ExprList();//the polynomial to be divided
+					if(Double.isNaN(root)) return e;
+					Sequence rootAsPoly = sequence();//the polynomial to be divided
 					long[] frac =  toFraction(root);
 					rootAsPoly.add(num(-frac[0]));
 					
-					ExprList[] divided = null;
+					Sequence[] divided = null;//divided[1] is the remainder
 					
 					//System.out.println("r "+root+" "+degree);
 					for(int i = 1;i<Math.min(8, degree);i++) {//this checks other factors like x^3-7, still integer root but a quadratic 
@@ -358,9 +359,9 @@ public class Factor extends Expr{
 		}
 	};
 	
-	static ExprList ruleSequence = null;
+	static Sequence ruleSequence = null;
 	public static void loadRules(){
-		ruleSequence = exprList(
+		ruleSequence = sequence(
 				sumOfCubes,
 				differenceOfCubes,
 				power2Reduction,
@@ -375,7 +376,7 @@ public class Factor extends Expr{
 		Rule.initRules(ruleSequence);
 	}
 	@Override
-	ExprList getRuleSequence() {
+	Sequence getRuleSequence() {
 		return ruleSequence;
 	}
 	

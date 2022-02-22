@@ -44,7 +44,7 @@ public class Equ extends Expr{
 		return getRightSide().convertToFloat(varDefs);//usually the solution is on the right side of the equation
 	}
 	@Override
-	ExprList getRuleSequence() {
+	Sequence getRuleSequence() {
 		return null;
 	}
 	

@@ -165,10 +165,10 @@ public class And extends Expr{
 		}
 	};
 	
-	static ExprList ruleSequence = null;
+	static Sequence ruleSequence = null;
 	
 	public static void loadRules(){
-		ruleSequence = exprList(
+		ruleSequence = sequence(
 				andContainsAnd,
 				removeDuplicates,
 				nullRule,
@@ -181,7 +181,7 @@ public class And extends Expr{
 	}
 
 	@Override
-	ExprList getRuleSequence(){
+	Sequence getRuleSequence(){
 		return ruleSequence;
 	}
 
