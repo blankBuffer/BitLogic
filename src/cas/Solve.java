@@ -46,6 +46,7 @@ public class Solve extends Expr{
 		Rule sinCosSumCase;
 		Rule rootCases;
 		Rule subtractiveZero;
+		Rule absCase;
 		
 		public Expr goThroughEquCases(Expr e,Settings settings,Rule[] cases) {
 			Solve solve = (Solve)e;
@@ -64,6 +65,8 @@ public class Solve extends Expr{
 		
 		@Override
 		public void init() {
+			
+			absCase = new Rule("solve(abs(m)=n,x)->[solve(m=-n,x),solve(m=n,x)]","solving absolute value",Rule.EASY);
 			
 			subtractiveZero = new Rule("subtracting two same functions",Rule.UNCOMMON) {
 				private static final long serialVersionUID = 1L;
@@ -487,6 +490,7 @@ public class Solve extends Expr{
 				moveNonVarPartsInSum,
 				factorLeftSide,
 				moveNonVarPartsInProd,
+				absCase,
 				quadraticCase,
 				powerCase,
 				inverseFunctionCase,

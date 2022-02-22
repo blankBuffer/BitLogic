@@ -8,6 +8,7 @@ import java.util.HashMap;
 public class SimpleFuncs extends QuickMath{
 
 	private static HashMap<String,Func> simpleFuncs = new HashMap<String,Func>();
+	static boolean FUNCTION_UNLOCKED = false;
 	
 	public static Rule fullExpand = new Rule("full expand",Rule.TRICKY){
 		private static final long serialVersionUID = 1L;
@@ -71,7 +72,8 @@ public class SimpleFuncs extends QuickMath{
 	static Func taylor = new Func("taylor",3);
 	static Func gui = new Func("gui",0);
 	static Func params = new Func("params",1);
-	static Func isNum = new Func("isNum",1);
+	static Func isType = new Func("isType",2);
+	static Func contains = new Func("contains",2);
 	
 	public static void loadRules(){
 		tree.simplifyChildren = false;
@@ -368,14 +370,27 @@ public class SimpleFuncs extends QuickMath{
 			}
 		});
 		
-		isNum.ruleSequence.add(new Rule("is it number",Rule.VERY_EASY) {
+		isType.simplifyChildren = false;
+		isType.ruleSequence.add(new Rule("check type",Rule.VERY_EASY) {
 			private static final long serialVersionUID = 1L;
 			
 			@Override
 			public Expr applyRuleToExpr(Expr e,Settings settings) {
 				Func f = (Func)e;
 				
-				return bool(f.get() instanceof Num);
+				return bool(f.get(0).typeName().equals(f.get(1).toString()));
+			}
+		});
+		
+		contains.simplifyChildren = false;
+		contains.ruleSequence.add(new Rule("check if first argument contains the second argument",Rule.VERY_EASY){
+			private static final long serialVersionUID = 1L;
+			
+			@Override
+			public Expr applyRuleToExpr(Expr e,Settings settings) {
+				Func f = (Func)e;
+				
+				return bool(f.get(0).contains(f.get(1)));
 			}
 		});
 	}
@@ -411,7 +426,8 @@ public class SimpleFuncs extends QuickMath{
 		addFunc(taylor);
 		addFunc(gui);
 		addFunc(params);
-		addFunc(isNum);
+		addFunc(isType);
+		addFunc(contains);
 		
 		for(String s:simpleFuncs.keySet()) {
 			functionNames.add(s);
@@ -544,6 +560,7 @@ public class SimpleFuncs extends QuickMath{
 	
 		if(funcName.equals("limit")) return limit(params[0],(Var)params[1],params[2]);
 		
+		if(!FUNCTION_UNLOCKED) throw new Exception("no function by the name: "+funcName);//allow making new functions on the fly
 		
 		func = defs.getFunc(funcName);
 		if(func != null) {

@@ -17,9 +17,9 @@ public class Integrate extends Expr{
 		public void init(){
 			cases = new Rule[]{
 					new Rule("integrate(1/x,x)->ln(x)","integral of inverse",Rule.EASY),
-					new Rule("integrate(1/(b*x),x)->ln(b*x)/b","integral of inverse",Rule.EASY),
-					new Rule("integrate(1/(x+a),x)->ln(x+a)","integral of inverse",Rule.EASY),
-					new Rule("integrate(1/(a+b*x),x)->ln(a+b*x)/b","integral of inverse",Rule.EASY),
+					new Rule("integrate(1/(b*x),x)->ln(b*x)/b","~contains(b,x)","integral of inverse",Rule.EASY),
+					new Rule("integrate(1/(x+a),x)->ln(x+a)","~contains(a,x)","integral of inverse",Rule.EASY),
+					new Rule("integrate(1/(a+b*x),x)->ln(a+b*x)/b","~contains({a,b},x)","integral of inverse",Rule.EASY),
 			};
 			Rule.initRules(cases);
 		}
@@ -35,16 +35,16 @@ public class Integrate extends Expr{
 	static Rule logCase = new Rule("integrate(ln(x),x)->ln(x)*x-x","integral of the log",Rule.UNCOMMON);
 	
 	static Rule cosCase = new Rule("integrate(cos(x),x)->sin(x)","integral of the cosine",Rule.EASY);
-	static Rule cosPowerCase = new Rule("integrate(cos(x)^n,x)->cos(x)^(n-1)*sin(x)/n+(n-1)/n*integrate(cos(x)^(n-2),x)","eval(n>1)","integral of cos to the n",Rule.DIFFICULT);
-	static Rule cosInvPowerCase = new Rule("integrate(1/cos(x)^n,x)->cos(x)^(1-n)*sin(x)/(n-1)+(n-2)*integrate(1/cos(x)^(n-2),x)/(n-1)","eval(n>1)","integral of 1 over cos to the n",Rule.DIFFICULT);
+	static Rule cosPowerCase = new Rule("integrate(cos(x)^n,x)->cos(x)^(n-1)*sin(x)/n+(n-1)/n*integrate(cos(x)^(n-2),x)","eval(n>1)&~contains(n,x)","integral of cos to the n",Rule.DIFFICULT);
+	static Rule cosInvPowerCase = new Rule("integrate(1/cos(x)^n,x)->cos(x)^(1-n)*sin(x)/(n-1)+(n-2)*integrate(1/cos(x)^(n-2),x)/(n-1)","eval(n>1)&~contains(n,x)","integral of 1 over cos to the n",Rule.DIFFICULT);
 	
 	static Rule sinCase = new Rule("integrate(sin(x),x)->-cos(x)","integral of the sin",Rule.EASY);
-	static Rule sinPowerCase = new Rule("integrate(sin(x)^n,x)->-sin(x)^(n-1)*cos(x)/n+(n-1)/n*integrate(sin(x)^(n-2),x)","eval(n>1)","integral of sin to the n",Rule.DIFFICULT);
-	static Rule sinInvPowerCase = new Rule("integrate(1/sin(x)^n,x)->-sin(x)^(1-n)*cos(x)/(n-1)+(n-2)*integrate(1/sin(x)^(n-2),x)/(n-1)","eval(n>1)","integral of 1 over sin to the n",Rule.DIFFICULT);
+	static Rule sinPowerCase = new Rule("integrate(sin(x)^n,x)->-sin(x)^(n-1)*cos(x)/n+(n-1)/n*integrate(sin(x)^(n-2),x)","eval(n>1)&~contains(n,x)","integral of sin to the n",Rule.DIFFICULT);
+	static Rule sinInvPowerCase = new Rule("integrate(1/sin(x)^n,x)->-sin(x)^(1-n)*cos(x)/(n-1)+(n-2)*integrate(1/sin(x)^(n-2),x)/(n-1)","eval(n>1)&~contains(n,x)","integral of 1 over sin to the n",Rule.DIFFICULT);
 	
 	static Rule tanCase = new Rule("integrate(tan(x),x)->-ln(cos(x))","integral of tan",Rule.UNCOMMON);
-	static Rule tanPowerCase = new Rule("integrate(tan(x)^n,x)->tan(x)^(n-1)/(n-1)-integrate(tan(x)^(n-2),x)","eval(n>1)","integral of tan to the n",Rule.DIFFICULT);
-	static Rule tanInvPowerCase = new Rule("integrate(1/tan(x)^n,x)->tan(x)^(1-n)/(1-n)-integrate(1/tan(x)^(n-2),x)","eval(n>1)","integral of 1 over tan to the n",Rule.DIFFICULT);
+	static Rule tanPowerCase = new Rule("integrate(tan(x)^n,x)->tan(x)^(n-1)/(n-1)-integrate(tan(x)^(n-2),x)","eval(n>1)&~contains(n,x)","integral of tan to the n",Rule.DIFFICULT);
+	static Rule tanInvPowerCase = new Rule("integrate(1/tan(x)^n,x)->tan(x)^(1-n)/(1-n)-integrate(1/tan(x)^(n-2),x)","eval(n>1)&~contains(n,x)","integral of 1 over tan to the n",Rule.DIFFICULT);
 	
 	static Rule atanCase = new Rule("integrate(atan(x),x)->x*atan(x)+ln(x^2+1)/-2","integral of arctan",Rule.UNCOMMON);
 	
@@ -67,22 +67,22 @@ public class Integrate extends Expr{
 		@Override
 		public void init(){
 			cases = new Rule[]{
-					new Rule("integrate(sin(a*x)*b^(c*x),x)->c*ln(b)*sin(a*x)*b^(c*x)/(a^2+c^2*ln(b)^2)-a*cos(a*x)*b^(c*x)/(a^2+c^2*ln(b)^2)","integral of looping sine",Rule.UNCOMMON),
-					new Rule("integrate(sin(a*x)*b^x,x)->ln(b)*sin(a*x)*b^x/(a^2+ln(b)^2)-a*cos(a*x)*b^x/(a^2+ln(b)^2)","integral of looping sine",Rule.UNCOMMON),
-					new Rule("integrate(sin(x)*b^(c*x),x)->c*ln(b)*sin(x)*b^(c*x)/(1+c^2*ln(b)^2)-cos(x)*b^(c*x)/(1+c^2*ln(b)^2)","integral of looping sine",Rule.UNCOMMON),
-					new Rule("integrate(sin(x)*b^x,x)->ln(b)*sin(x)*b^x/(1+ln(b)^2)-cos(x)*b^x/(1+ln(b)^2)","integral of looping sine",Rule.UNCOMMON),
+					new Rule("integrate(sin(a*x)*b^(c*x),x)->c*ln(b)*sin(a*x)*b^(c*x)/(a^2+c^2*ln(b)^2)-a*cos(a*x)*b^(c*x)/(a^2+c^2*ln(b)^2)","~contains({a,b,c},x)","integral of looping sine",Rule.UNCOMMON),
+					new Rule("integrate(sin(a*x)*b^x,x)->ln(b)*sin(a*x)*b^x/(a^2+ln(b)^2)-a*cos(a*x)*b^x/(a^2+ln(b)^2)","~contains({a,b},x)","integral of looping sine",Rule.UNCOMMON),
+					new Rule("integrate(sin(x)*b^(c*x),x)->c*ln(b)*sin(x)*b^(c*x)/(1+c^2*ln(b)^2)-cos(x)*b^(c*x)/(1+c^2*ln(b)^2)","~contains({b,c},x)","integral of looping sine",Rule.UNCOMMON),
+					new Rule("integrate(sin(x)*b^x,x)->ln(b)*sin(x)*b^x/(1+ln(b)^2)-cos(x)*b^x/(1+ln(b)^2)","~contains(b,x)","integral of looping sine",Rule.UNCOMMON),
 					
-					new Rule("integrate(sin(x+k)*b^x,x)->ln(b)*sin(x+k)*b^x/(1+ln(b)^2)-cos(x+k)*b^x/(1+ln(b)^2)","integral of looping sine",Rule.UNCOMMON),
-					new Rule("integrate(sin(a*x+k)*b^x,x)->ln(b)*sin(a*x+k)*b^x/(a^2+ln(b)^2)-a*cos(a*x+k)*b^x/(a^2+ln(b)^2)","integral of looping sine",Rule.UNCOMMON),
+					new Rule("integrate(sin(x+k)*b^x,x)->ln(b)*sin(x+k)*b^x/(1+ln(b)^2)-cos(x+k)*b^x/(1+ln(b)^2)","~contains({k,b},x)","integral of looping sine",Rule.UNCOMMON),
+					new Rule("integrate(sin(a*x+k)*b^x,x)->ln(b)*sin(a*x+k)*b^x/(a^2+ln(b)^2)-a*cos(a*x+k)*b^x/(a^2+ln(b)^2)","~contains({a,k,b},x)","integral of looping sine",Rule.UNCOMMON),
 					
 					
-					new Rule("integrate(cos(a*x)*b^(c*x),x)->a*sin(a*x)*b^(c*x)/(a^2+c^2*ln(b)^2)+c*ln(b)*cos(a*x)*b^(c*x)/(a^2+c^2*ln(b)^2)","integral of looping cosine",Rule.UNCOMMON),
-					new Rule("integrate(cos(a*x)*b^x,x)->a*sin(a*x)*b^x/(a^2+ln(b)^2)+ln(b)*cos(a*x)*b^x/(a^2+ln(b)^2)","integral of looping cosine",Rule.UNCOMMON),
-					new Rule("integrate(cos(x)*b^(c*x),x)->sin(x)*b^(c*x)/(1+c^2*ln(b)^2)+c*ln(b)*cos(x)*b^(c*x)/(1+c^2*ln(b)^2)","integral of looping cosine",Rule.UNCOMMON),
-					new Rule("integrate(cos(x)*b^x,x)->sin(x)*b^x/(1+ln(b)^2)+ln(b)*cos(x)*b^x/(1+ln(b)^2)","integral of looping cosine",Rule.UNCOMMON),
+					new Rule("integrate(cos(a*x)*b^(c*x),x)->a*sin(a*x)*b^(c*x)/(a^2+c^2*ln(b)^2)+c*ln(b)*cos(a*x)*b^(c*x)/(a^2+c^2*ln(b)^2)","~contains({a,b,c},x)","integral of looping cosine",Rule.UNCOMMON),
+					new Rule("integrate(cos(a*x)*b^x,x)->a*sin(a*x)*b^x/(a^2+ln(b)^2)+ln(b)*cos(a*x)*b^x/(a^2+ln(b)^2)","~contains({a,b},x)","integral of looping cosine",Rule.UNCOMMON),
+					new Rule("integrate(cos(x)*b^(c*x),x)->sin(x)*b^(c*x)/(1+c^2*ln(b)^2)+c*ln(b)*cos(x)*b^(c*x)/(1+c^2*ln(b)^2)","~contains({b,c},x)","integral of looping cosine",Rule.UNCOMMON),
+					new Rule("integrate(cos(x)*b^x,x)->sin(x)*b^x/(1+ln(b)^2)+ln(b)*cos(x)*b^x/(1+ln(b)^2)","~contains(b,x)","integral of looping cosine",Rule.UNCOMMON),
 					
-					new Rule("integrate(cos(x+k)*b^x,x)->sin(x+k)*b^x/(1+ln(b)^2)+ln(b)*cos(x+k)*b^x/(1+ln(b)^2)","integral of looping cosine",Rule.UNCOMMON),
-					new Rule("integrate(cos(a*x+k)*b^x,x)->a*sin(a*x+k)*b^x/(a^2+ln(b)^2)+ln(b)*cos(a*x+k)*b^x/(a^2+ln(b)^2)","integral of looping cosine",Rule.UNCOMMON),
+					new Rule("integrate(cos(x+k)*b^x,x)->sin(x+k)*b^x/(1+ln(b)^2)+ln(b)*cos(x+k)*b^x/(1+ln(b)^2)","~contains({k,b},x)","integral of looping cosine",Rule.UNCOMMON),
+					new Rule("integrate(cos(a*x+k)*b^x,x)->a*sin(a*x+k)*b^x/(a^2+ln(b)^2)+ln(b)*cos(a*x+k)*b^x/(a^2+ln(b)^2)","~contains({a,k,b},x)","integral of looping cosine",Rule.UNCOMMON),
 			};
 			Rule.initRules(cases);
 		}
@@ -103,10 +103,10 @@ public class Integrate extends Expr{
 		@Override
 		public void init(){
 			cases = new Rule[]{
-					new Rule("integrate(x^n/sqrt(a*x+b),x)->(2*x^n*sqrt(a*x+b))/(a*(2*n+1))-(2*n*b*integrate(x^(n-1)/sqrt(a*x+b),x))/(a*(2*n+1))","power over sqrt",Rule.UNCOMMON),
-					new Rule("integrate(x^n/sqrt(x+b),x)->(2*x^n*sqrt(x+b))/(2*n+1)-(2*n*b*integrate(x^(n-1)/sqrt(x+b),x))/(2*n+1)","power over sqrt",Rule.UNCOMMON),
-					new Rule("integrate(x/sqrt(a*x+b),x)->(2*x*sqrt(a*x+b))/(a*3)-(2*b*integrate(1/sqrt(a*x+b),x))/(a*3)","power over sqrt",Rule.UNCOMMON),
-					new Rule("integrate(x/sqrt(x+b),x)->(2*x*sqrt(x+b))/3-(2*b*integrate(1/sqrt(x+b),x))/3","power over sqrt",Rule.UNCOMMON),
+					new Rule("integrate(x^n/sqrt(a*x+b),x)->(2*x^n*sqrt(a*x+b))/(a*(2*n+1))-(2*n*b*integrate(x^(n-1)/sqrt(a*x+b),x))/(a*(2*n+1))","~contains({n,a,b},x)","power over sqrt",Rule.UNCOMMON),
+					new Rule("integrate(x^n/sqrt(x+b),x)->(2*x^n*sqrt(x+b))/(2*n+1)-(2*n*b*integrate(x^(n-1)/sqrt(x+b),x))/(2*n+1)","~contains({n,b},x)","power over sqrt",Rule.UNCOMMON),
+					new Rule("integrate(x/sqrt(a*x+b),x)->(2*x*sqrt(a*x+b))/(a*3)-(2*b*integrate(1/sqrt(a*x+b),x))/(a*3)","~contains({a,b},x)","power over sqrt",Rule.UNCOMMON),
+					new Rule("integrate(x/sqrt(x+b),x)->(2*x*sqrt(x+b))/3-(2*b*integrate(1/sqrt(x+b),x))/3","~contains(b,x)","power over sqrt",Rule.UNCOMMON),
 			};
 			Rule.initRules(cases);
 		}
@@ -127,10 +127,10 @@ public class Integrate extends Expr{
 		@Override
 		public void init(){
 			cases = new Rule[]{
-					new Rule("integrate(1/(sqrt(a*x+b)*x^n),x)->(-sqrt(a*x+b))/((n-1)*b*x^(n-1))-(a*(2*n-3)*integrate(1/(sqrt(a*x+b)*x^(n-1)),x))/(2*b*(n-1))","power over sqrt",Rule.UNCOMMON),
-					new Rule("integrate(1/(sqrt(a*x+b)*x),x)->ln(1-sqrt(a*x+b)/sqrt(b))/sqrt(b)-ln(1+sqrt(a*x+b)/sqrt(b))/sqrt(b)","power over sqrt",Rule.UNCOMMON),
-					new Rule("integrate(1/(sqrt(x+b)*x^n),x)->(-sqrt(x+b))/((n-1)*b*x^(n-1))-((2*n-3)*integrate(1/(sqrt(x+b)*x^(n-1)),x))/(2*b*(n-1))","power over sqrt",Rule.UNCOMMON),
-					new Rule("integrate(1/(sqrt(x+b)*x),x)->ln(1-sqrt(x+b)/sqrt(b))/sqrt(b)-ln(1+sqrt(x+b)/sqrt(b))/sqrt(b)","power over sqrt",Rule.UNCOMMON),
+					new Rule("integrate(1/(sqrt(a*x+b)*x^n),x)->(-sqrt(a*x+b))/((n-1)*b*x^(n-1))-(a*(2*n-3)*integrate(1/(sqrt(a*x+b)*x^(n-1)),x))/(2*b*(n-1))","~contains({a,b,n},x)","power over sqrt",Rule.UNCOMMON),
+					new Rule("integrate(1/(sqrt(a*x+b)*x),x)->ln(1-sqrt(a*x+b)/sqrt(b))/sqrt(b)-ln(1+sqrt(a*x+b)/sqrt(b))/sqrt(b)","~contains({a,b},x)","power over sqrt",Rule.UNCOMMON),
+					new Rule("integrate(1/(sqrt(x+b)*x^n),x)->(-sqrt(x+b))/((n-1)*b*x^(n-1))-((2*n-3)*integrate(1/(sqrt(x+b)*x^(n-1)),x))/(2*b*(n-1))","~contains({b,n},x)","power over sqrt",Rule.UNCOMMON),
+					new Rule("integrate(1/(sqrt(x+b)*x),x)->ln(1-sqrt(x+b)/sqrt(b))/sqrt(b)-ln(1+sqrt(x+b)/sqrt(b))/sqrt(b)","~contains(b,x)","power over sqrt",Rule.UNCOMMON),
 			};
 			Rule.initRules(cases);
 		}
@@ -153,21 +153,21 @@ public class Integrate extends Expr{
 		
 		@Override
 		public void init(){
-			powerRule = new Rule("integrate(x^n,x)->x^(n+1)/(n+1)","integral of polynomial",Rule.EASY);
+			powerRule = new Rule("integrate(x^n,x)->x^(n+1)/(n+1)","~contains(n,x)","integral of polynomial",Rule.EASY);
 			powerRule.init();
-			powerRule2 = new Rule("integrate((x+a)^n,x)->(x+a)^(n+1)/(n+1)","integral of polynomial",Rule.EASY);
+			powerRule2 = new Rule("integrate((x+a)^n,x)->(x+a)^(n+1)/(n+1)","~contains({a,n},x)","integral of polynomial",Rule.EASY);
 			powerRule2.init();
-			powerRule3 = new Rule("integrate((b*x+a)^n,x)->(b*x+a)^(n+1)/((n+1)*b)","integral of polynomial",Rule.EASY);
+			powerRule3 = new Rule("integrate((b*x+a)^n,x)->(b*x+a)^(n+1)/((n+1)*b)","~contains({a,b,n},x)","integral of polynomial",Rule.EASY);
 			powerRule3.init();
 			
-			inversePowerRule = new Rule("integrate(1/x^n,x)->-1/(x^(n-1)*(n-1))","integral of 1 over a polynomial",Rule.EASY);
+			inversePowerRule = new Rule("integrate(1/x^n,x)->-1/(x^(n-1)*(n-1))","~contains(n,x)","integral of 1 over a polynomial",Rule.EASY);
 			inversePowerRule.init();
-			inversePowerRule2 = new Rule("integrate(1/(x+a)^n,x)->-1/((x+a)^(n-1)*(n-1))","integral of 1 over a polynomial",Rule.EASY);
+			inversePowerRule2 = new Rule("integrate(1/(x+a)^n,x)->-1/((x+a)^(n-1)*(n-1))","~contains({a,n},x)","integral of 1 over a polynomial",Rule.EASY);
 			inversePowerRule2.init();
-			inversePowerRule3 = new Rule("integrate(1/(b*x+a)^n,x)->-1/((b*x+a)^(n-1)*(n-1)*b)","integral of 1 over a polynomial",Rule.EASY);
+			inversePowerRule3 = new Rule("integrate(1/(b*x+a)^n,x)->-1/((b*x+a)^(n-1)*(n-1)*b)","~contains({a,b,n},x)","integral of 1 over a polynomial",Rule.EASY);
 			inversePowerRule3.init();
 			
-			exponentRule = new Rule("integrate(n^x,x)->n^x/ln(n)","integral of exponential",Rule.UNCOMMON);
+			exponentRule = new Rule("integrate(n^x,x)->n^x/ln(n)","~contains(n,x)","integral of exponential",Rule.UNCOMMON);
 			exponentRule.init();
 			
 		}
@@ -176,22 +176,15 @@ public class Integrate extends Expr{
 		public Expr applyRuleToExpr(Expr e,Settings settings){
 			
 			Integrate integ = (Integrate)e;
-			Var v = integ.getVar();
 			
 			if(integ.get() instanceof Power){
-				Power inner = (Power)integ.get();
 				
-				boolean baseHasVar = inner.getBase().contains(v),expoHasVar = inner.getExpo().contains(v);
-				
-				if(baseHasVar && !expoHasVar){
-					Expr out = integ;
-					out = powerRule.applyRuleToExpr(out, settings);
-					out = powerRule2.applyRuleToExpr(out, settings);
-					out = powerRule3.applyRuleToExpr(out, settings);
-					return out;
-				}else if(!baseHasVar && expoHasVar){
-					return exponentRule.applyRuleToExpr(integ, settings);
-				}
+				Expr out = integ;
+				out = powerRule.applyRuleToExpr(out, settings);
+				out = powerRule2.applyRuleToExpr(out, settings);
+				out = powerRule3.applyRuleToExpr(out, settings);
+				out = exponentRule.applyRuleToExpr(out, settings);
+				return out;
 				
 			}
 			if(integ.get() instanceof Div){
@@ -199,18 +192,12 @@ public class Integrate extends Expr{
 				
 				if(innerDiv.getDenom() instanceof Power){
 					
-					Power inner = (Power)innerDiv.getDenom();
-					
-					boolean baseHasVar = inner.getBase().contains(v),expoHasVar = inner.getExpo().contains(v);
-					
-					if(baseHasVar && !expoHasVar){
-						Expr out = integ;
-						out = inversePowerRule.applyRuleToExpr(out, settings);
-						out = inversePowerRule2.applyRuleToExpr(out, settings);
-						out = inversePowerRule3.applyRuleToExpr(out, settings);
-						return out;
-					}
-					
+					Expr out = integ;
+					out = inversePowerRule.applyRuleToExpr(out, settings);
+					out = inversePowerRule2.applyRuleToExpr(out, settings);
+					out = inversePowerRule3.applyRuleToExpr(out, settings);
+					return out;
+						
 				}
 				
 			}
@@ -265,8 +252,8 @@ public class Integrate extends Expr{
 	 * these are the reverse process of diff(atan(x^n),x) -> (n-1)*x^(n-1)/(x^(2*n)+1)
 	 */
 	
-	static Rule inverseQuadraticSimple = new Rule("integrate(x^a/(x^b+c),x)->atan(x^(a+1)/sqrt(c))/((a+1)*sqrt(c))","eval(b/(a+1)=2)&eval(c>0)","inverse quadratic with u sub",Rule.UNCOMMON);
-	static Rule inverseQuadraticSimple2 = new Rule("integrate(x^a/(d*x^b+c),x)->atan((x^(a+1)*sqrt(d))/sqrt(c))/((a+1)*sqrt(d*c))","eval(b/(a+1)=2)&eval(c*d>0)","inverse quadratic with u sub",Rule.UNCOMMON);
+	static Rule inverseQuadraticSimple = new Rule("integrate(x^a/(x^b+c),x)->atan(x^(a+1)/sqrt(c))/((a+1)*sqrt(c))","eval(b/(a+1)=2)&eval(c>0)&~contains({a,b,c},x)","inverse quadratic with u sub",Rule.UNCOMMON);
+	static Rule inverseQuadraticSimple2 = new Rule("integrate(x^a/(d*x^b+c),x)->atan((x^(a+1)*sqrt(d))/sqrt(c))/((a+1)*sqrt(d*c))","eval(b/(a+1)=2)&eval(c*d>0)&~contains({a,b,c,d},x)","inverse quadratic with u sub",Rule.UNCOMMON);
 	
 	static Rule inverseQuadraticToNReduction = new Rule("1 over quadratic to the n",Rule.VERY_DIFFICULT) {
 		private static final long serialVersionUID = 1L;
@@ -307,8 +294,8 @@ public class Integrate extends Expr{
 		@Override
 		public void init(){
 			cases = new Rule[]{
-					new Rule("integrate(1/sqrt(a-x^2),x)->asin(x/sqrt(a))","simple integral leading to arcsin",Rule.EASY),
-					new Rule("integrate(1/sqrt(a+b*x^2),x)->asin((sqrt(-b)*x)/sqrt(a))/sqrt(-b)","eval(b<0)","simple integral leading to arcsin",Rule.EASY),
+					new Rule("integrate(1/sqrt(a-x^2),x)->asin(x/sqrt(a))","~contains(a,x)","simple integral leading to arcsin",Rule.EASY),
+					new Rule("integrate(1/sqrt(a+b*x^2),x)->asin((sqrt(-b)*x)/sqrt(a))/sqrt(-b)","eval(b<0)&~contains({a,b},x)","simple integral leading to arcsin",Rule.EASY),
 			};
 			Rule.initRules(cases);
 		}
@@ -597,23 +584,23 @@ public class Integrate extends Expr{
 		@Override
 		public void init(){
 			cases = new Rule[]{
-					new Rule("integrate(x^2/sqrt(a+b*x^2),x)->a*asin((x*sqrt(-b))/sqrt(a))/(2*(-b)^(3/2))+x*sqrt(a-(-b)*x^2)/(2*b)","eval(b<0)","trig sub",Rule.VERY_DIFFICULT),
+					new Rule("integrate(x^2/sqrt(a+b*x^2),x)->a*asin((x*sqrt(-b))/sqrt(a))/(2*(-b)^(3/2))+x*sqrt(a-(-b)*x^2)/(2*b)","eval(b<0)&~contains({a,b},x)","trig sub",Rule.VERY_DIFFICULT),
 					
-					new Rule("integrate(sqrt(a+b*x^2)/x^2,x)->b*asin(sqrt(-b)*x/sqrt(a))/sqrt(-b)-sqrt(a+b*x^2)/x","eval(b<0)","trig sub",Rule.VERY_DIFFICULT),
+					new Rule("integrate(sqrt(a+b*x^2)/x^2,x)->b*asin(sqrt(-b)*x/sqrt(a))/sqrt(-b)-sqrt(a+b*x^2)/x","eval(b<0)&~contains({a,b},x)","trig sub",Rule.VERY_DIFFICULT),
 					
-					new Rule("integrate(sqrt(a+b*x^2),x)->a*asin(x*sqrt(-b)/sqrt(a))/(2*sqrt(-b))+x*sqrt(a+b*x^2)/2","eval(b<0)","trig sub",Rule.VERY_DIFFICULT),
+					new Rule("integrate(sqrt(a+b*x^2),x)->a*asin(x*sqrt(-b)/sqrt(a))/(2*sqrt(-b))+x*sqrt(a+b*x^2)/2","eval(b<0)&~contains({a,b},x)","trig sub",Rule.VERY_DIFFICULT),
 					
-					new Rule("integrate(sqrt(a+b*x^2),x)->x*sqrt(b)*sqrt(a+b*x^2)/(2*sqrt(b))+a*ln(sqrt(a+b*x^2)+x*sqrt(b))/(2*sqrt(b))","eval(b>0)","trig sub",Rule.CHALLENGING),
-					new Rule("integrate(sqrt(a+x^2),x)->x*sqrt(a+x^2)/2+a*ln(sqrt(a+x^2)+x)/2","eval(b>0)","trig sub",Rule.CHALLENGING),
+					new Rule("integrate(sqrt(a+b*x^2),x)->x*sqrt(b)*sqrt(a+b*x^2)/(2*sqrt(b))+a*ln(sqrt(a+b*x^2)+x*sqrt(b))/(2*sqrt(b))","eval(b>0)&~contains({a,b},x)","trig sub",Rule.CHALLENGING),
+					new Rule("integrate(sqrt(a+x^2),x)->x*sqrt(a+x^2)/2+a*ln(sqrt(a+x^2)+x)/2","eval(b>0)&~contains(a,x)","trig sub",Rule.CHALLENGING),
 					
-					new Rule("integrate(1/sqrt(a+b*x^2),x)->ln(x*sqrt(b)+sqrt(a+b*x^2))/(2*sqrt(b))-ln(sqrt(a+b*x^2)-x*sqrt(b))/(2*sqrt(b))","eval(a>0)&eval(b>0)","trig sub",Rule.CHALLENGING),
-					new Rule("integrate(1/sqrt(a+x^2),x)->ln(x+sqrt(a+x^2))/2-ln(sqrt(a+x^2)-x)/2","eval(a>0)","trig sub",Rule.CHALLENGING),
+					new Rule("integrate(1/sqrt(a+b*x^2),x)->ln(x*sqrt(b)+sqrt(a+b*x^2))/(2*sqrt(b))-ln(sqrt(a+b*x^2)-x*sqrt(b))/(2*sqrt(b))","eval(a>0)&eval(b>0)&~contains({a,b},x)","trig sub",Rule.CHALLENGING),
+					new Rule("integrate(1/sqrt(a+x^2),x)->ln(x+sqrt(a+x^2))/2-ln(sqrt(a+x^2)-x)/2","eval(a>0)&~contains(a,x)","trig sub",Rule.CHALLENGING),
 					
-					new Rule("integrate(sqrt(x^2+a)/x^4,x)->-(x^2+a)^(3/2)/(3*a*x^3)","trig sub",Rule.VERY_DIFFICULT),
-					new Rule("integrate(sqrt(b*x^2+a)/x^4,x)->-(b*x^2+a)^(3/2)/(3*a*x^3)","trig sub",Rule.VERY_DIFFICULT),
+					new Rule("integrate(sqrt(x^2+a)/x^4,x)->-(x^2+a)^(3/2)/(3*a*x^3)","~contains(a,x)","trig sub",Rule.VERY_DIFFICULT),
+					new Rule("integrate(sqrt(b*x^2+a)/x^4,x)->-(b*x^2+a)^(3/2)/(3*a*x^3)","~contains({a,b},x)","trig sub",Rule.VERY_DIFFICULT),
 					
-					new Rule("integrate(sqrt(x^2+a)/x^3,x)->-sqrt(x^2+a)/(2*x^2)+atan(sqrt(x^2+a)/sqrt(-a))/(2*sqrt(-a))","eval(a<0)","trig sub",Rule.VERY_DIFFICULT),
-					new Rule("integrate(sqrt(b*x^2+a)/x^3,x)->-sqrt(b*x^2+a)/(2*x^2)+atan(sqrt(b*x^2+a)/sqrt(-a))/(2*sqrt(-a))","eval(a<0)","trig sub",Rule.VERY_DIFFICULT),
+					new Rule("integrate(sqrt(x^2+a)/x^3,x)->-sqrt(x^2+a)/(2*x^2)+atan(sqrt(x^2+a)/sqrt(-a))/(2*sqrt(-a))","eval(a<0)&~contains(a,x)","trig sub",Rule.VERY_DIFFICULT),
+					new Rule("integrate(sqrt(b*x^2+a)/x^3,x)->-sqrt(b*x^2+a)/(2*x^2)+atan(sqrt(b*x^2+a)/sqrt(-a))/(2*sqrt(-a))","eval(a<0)&~contains({a,b},x)","trig sub",Rule.VERY_DIFFICULT),
 			};
 			Rule.initRules(cases);
 		}

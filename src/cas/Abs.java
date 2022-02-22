@@ -9,6 +9,7 @@ public class Abs extends Expr{
 	}
 	
 	static Rule absOfPower = new Rule("abs(a^b)->abs(a)^b","abs of a power",Rule.EASY);
+	static Rule absOfAbs = new Rule("abs(abs(x))->abs(x)","absolute value of absolute value",Rule.VERY_EASY);
 	
 	static Rule absOfProd = new Rule("contains product",Rule.UNCOMMON) {
 		private static final long serialVersionUID = 1L;
@@ -56,6 +57,7 @@ public class Abs extends Expr{
 	static Sequence ruleSequence;
 	public static void loadRules(){
 		ruleSequence = sequence(
+				absOfAbs,
 				absOfNum,
 				absOfPower,
 				absOfProd,

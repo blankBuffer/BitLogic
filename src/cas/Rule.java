@@ -265,7 +265,7 @@ public class Rule extends Expr{
 			condition = createExpr(conditionStr);
 		}
 	}
-	
+	//calls init of each rule in the list of sequence
 	public static void initRules(Sequence ruleSequence) {
 		for(int i = 0;i<ruleSequence.size();i++) ((Rule)ruleSequence.get(i)).init();
 	}
@@ -368,6 +368,7 @@ public class Rule extends Expr{
 		Solve.loadRules();
 		Ask.loadBasicQuestions();
 		
+		SimpleFuncs.FUNCTION_UNLOCKED = true;
 		System.out.println("done loading Rules!");
 	}
 	

@@ -488,8 +488,8 @@ public class Div extends Expr{
 		}
 	};
 	
-	static Rule rationalize = new Rule("a/b^(m/n)->a*b^((n-m)/n)/b","isNum(b)&isNum(m)","rationalize denom",Rule.VERY_EASY);
-	static Rule rationalize2 = new Rule("a/(k*b^(m/n))->a*b^((n-m)/n)/(k*b)","isNum(b)&isNum(k)&isNum(m)","rationalize denom",Rule.VERY_EASY);
+	static Rule rationalize = new Rule("a/b^(m/n)->a*b^((n-m)/n)/b","isType(b,num)&isType(m,num)","rationalize denom",Rule.VERY_EASY);
+	static Rule rationalize2 = new Rule("a/(k*b^(m/n))->a*b^((n-m)/n)/(k*b)","isType(b,num)&isType(k,num)&isType(m,num)","rationalize denom",Rule.VERY_EASY);
 	
 	static Sequence ruleSequence = null;
 	
