@@ -601,6 +601,7 @@ public class Integrate extends Expr{
 					
 					new Rule("integrate(sqrt(x^2+a)/x^3,x)->-sqrt(x^2+a)/(2*x^2)+atan(sqrt(x^2+a)/sqrt(-a))/(2*sqrt(-a))","eval(a<0)&~contains(a,x)","trig sub",Rule.VERY_DIFFICULT),
 					new Rule("integrate(sqrt(b*x^2+a)/x^3,x)->-sqrt(b*x^2+a)/(2*x^2)+atan(sqrt(b*x^2+a)/sqrt(-a))/(2*sqrt(-a))","eval(a<0)&~contains({a,b},x)","trig sub",Rule.VERY_DIFFICULT),
+					
 			};
 			Rule.initRules(cases);
 		}
@@ -612,6 +613,37 @@ public class Integrate extends Expr{
 			}
 			
 			return e;
+		}
+	};
+	
+	static Rule sqrtOfQuadratic = new Rule("square root has quadratic",Rule.DIFFICULT) {
+		private static final long serialVersionUID = 1L;
+		Expr result;
+		Expr check;
+		
+		@Override
+		public void init() {
+			result = createExpr("(b+2*a*x)*sqrt(a*x^2+b*x+c)/(4*a)+(4*a*c-b^2)*(ln(2*sqrt(a)*sqrt(a*x^2+b*x+c)+2*a*x+b)-ln(2))/(8*a^(3/2))");
+			check = createExpr("eval(a>0)");
+		}
+		
+		@Override
+		public Expr applyRuleToExpr(Expr e,Settings settings){
+			Integrate integ = (Integrate)e;
+			
+			if(Rule.fastSimilarStruct(sqrtObj, integ.get())) {
+				Sequence coefs = polyExtract(e.get().get(),integ.getVar(),settings);
+				
+				if(coefs.size() == 3) {
+					ExprList equs = exprList( equ(var("c"),coefs.get(0)) , equ(var("b"),coefs.get(1)) , equ(var("a"),coefs.get(2)) );
+					if(check.replace(equs).simplify(settings).equals(BoolState.TRUE)) {
+						return result.replace(equs).simplify(settings);
+					}
+				}
+				
+			}
+			
+			return integ;
 		}
 	};
 	
@@ -842,8 +874,10 @@ public class Integrate extends Expr{
 				cscCase,
 				secCase,
 				cotCase,
-				arcsinCase,
+				
 				compressRoots,
+				sqrtOfQuadratic,
+				arcsinCase,
 				recursivePowerOverSqrt,
 				recursiveInvPowerOverSqrt,
 				

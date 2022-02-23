@@ -74,6 +74,7 @@ public class SimpleFuncs extends QuickMath{
 	static Func params = new Func("params",1);
 	static Func isType = new Func("isType",2);
 	static Func contains = new Func("contains",2);
+	static Func result = new Func("result",1);
 	
 	public static void loadRules(){
 		tree.simplifyChildren = false;
@@ -393,6 +394,8 @@ public class SimpleFuncs extends QuickMath{
 				return bool(f.get(0).contains(f.get(1)));
 			}
 		});
+		
+		result.ruleSequence.add(StandardRules.becomeInner);
 	}
 	
 	private static ArrayList<String> functionNames = new ArrayList<String>();
@@ -428,6 +431,7 @@ public class SimpleFuncs extends QuickMath{
 		addFunc(params);
 		addFunc(isType);
 		addFunc(contains);
+		addFunc(result);//override the simplify children bool
 		
 		for(String s:simpleFuncs.keySet()) {
 			functionNames.add(s);
@@ -462,6 +466,7 @@ public class SimpleFuncs extends QuickMath{
 		
 		numberOfParams.put("integrateOver", 4);
 		numberOfParams.put("limit", 3);
+		numberOfParams.put("abs", 1);
 		
 		for(String s:numberOfParams.keySet()) {
 			functionNames.add(s);

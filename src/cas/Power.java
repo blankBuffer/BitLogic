@@ -42,6 +42,7 @@ public class Power extends Expr{
 	private static Rule sqrtOneMinusCos = new Rule("sqrt(1-cos(x))->sqrt(2)*sin(x/2)","sqrt of 1 minus cos",Rule.UNCOMMON);
 	private static Rule sqrtOnePlusSin = new Rule("sqrt(1+sin(x))->sqrt(2)*cos(pi/4-x/2)","sqrt of 1 plus sin",Rule.UNCOMMON);
 	private static Rule sqrtOnePlusCos = new Rule("sqrt(1+cos(x))->sqrt(2)*cos(x/2)","sqrt of 1 plus cos",Rule.UNCOMMON);
+	private static Rule baseOfPowerIsAbsExpoEven = new Rule("abs(a)^b->a^b","~isType(result(b/2),div)","base of power is absolute value and exponent is divisible by 2",Rule.TRICKY);
 	
 	private static Rule oneToExpo = new Rule("base is one",Rule.VERY_EASY){
 		private static final long serialVersionUID = 1L;
@@ -438,6 +439,7 @@ public class Power extends Expr{
 				sqrtOnePlusSin,
 				sqrtOnePlusCos,
 				factorExponent,
+				baseOfPowerIsAbsExpoEven,
 				baseHasPower,
 				negativeExpoToInv,
 				oneToExpo,

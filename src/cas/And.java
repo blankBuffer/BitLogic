@@ -98,8 +98,8 @@ public class And extends Expr{
 					Expr other = and.get(j);
 					
 					if(other.equals(current)){
-						and.remove(i);
-						i--;
+						and.remove(j);
+						j--;
 					}
 				}
 				

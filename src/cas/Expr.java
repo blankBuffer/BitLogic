@@ -116,7 +116,7 @@ public abstract class Expr extends QuickMath implements Comparable<Expr>, Serial
 		}
 		//System.out.println(toBeSimplified);
 		String originalType = toBeSimplified.typeName();
-		if(simplifyChildren) toBeSimplified.simplifyChildren(settings);//simplify sub expressions
+		if(simplifyChildren || get().typeName().equals("result")) toBeSimplified.simplifyChildren(settings);//simplify sub expressions, result function can override this behavior
 		
 		Sequence ruleSequence = getRuleSequence();
 		

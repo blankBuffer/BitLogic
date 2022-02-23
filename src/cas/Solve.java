@@ -294,6 +294,7 @@ public class Solve extends Expr{
 					rootCase = new Rule("m^n=a->m=a^inv(n)","root case for solve",Rule.EASY);
 					rootCase.init();
 					expoCase = new Rule("m^n=a->n=ln(a)/ln(m)","expo case for solve",Rule.EASY);
+					expoCase.init();
 					baseAndExpoHaveVar = new Rule("m^n=a->n*ln(m)=ln(a)","preperation for lambert w solve",Rule.UNCOMMON);
 					baseAndExpoHaveVar.init();
 				}
@@ -623,10 +624,12 @@ public class Solve extends Expr{
 		return guess;
 	}
 	public static ArrayList<Double> polySolve(Sequence poly) {//an algorithm i came up with to solve all roots of a polynomial
+		if(poly.size() == 1) return new ArrayList<Double>();
 		//init polyArray
+		
 		double[] base = new double[poly.size()];
 		for(int i = 0;i<poly.size();i++) {
-			base[i] = ((Num)poly.get(i)).realValue.doubleValue();
+			base[i] = poly.get(i).convertToFloat(exprList()).real;
 		}
 		double[][] table = new double[poly.size()-1][];
 		
@@ -648,6 +651,7 @@ public class Solve extends Expr{
 		//recursive solving through the table
 		
 		for(int i = table.length-2;i>=0;i--) {
+			
 			double[] currentPoly = table[i];
 			int currentDegree = currentPoly.length-1;
 			bounds = solutions;
@@ -672,7 +676,7 @@ public class Solve extends Expr{
 			//find the outer bound lines
 			if(hasLeftSolution) {
 				double search = bounds.get(0);
-				double step = 1.0;
+				double step = 0.75;
 				int count = 0;
 				while((int)Math.signum(polyOut( currentPoly,search)) == leftSign && count < LOOP_LIMIT) {
 					search -= step;
@@ -683,7 +687,7 @@ public class Solve extends Expr{
 			}
 			if(hasRightSolution) {
 				double search = bounds.get(bounds.size()-1);
-				double step = 1.0;
+				double step = 0.75;
 				int count = 0;
 				while((int)Math.signum(polyOut( currentPoly,search)) == rightSign && count < LOOP_LIMIT) {
 					search += step;
@@ -693,7 +697,6 @@ public class Solve extends Expr{
 				bounds.add(search);
 			}
 			//
-			
 			for(int j = 0;j<bounds.size()-1;j++) {
 				double leftBound = bounds.get(j);
 				double rightBound = bounds.get(j+1);

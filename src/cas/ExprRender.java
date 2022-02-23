@@ -236,8 +236,31 @@ public class ExprRender extends QuickMath{//sort of a wrap of the image type but
 				firstElImg.makeExpr(e.get(0));
 				imgs.add(firstElImg);
 				for(int i = 1;i<e.size();i++) {
-					boolean negative = e.get(i).negative();
-					Expr absElement = e.get(i).strangeAbs(Settings.normal);
+					boolean negative = false;
+					Expr absElement = e.get(i).copy();
+					if(absElement instanceof Num) {
+						Num innerNum = (Num)absElement;
+						if(!innerNum.isComplex() && innerNum.negative()) {
+							absElement = innerNum.negate();
+							negative = true;
+						}
+					}else if(absElement instanceof Prod) {
+						for(int j = 0;j<absElement.size();j++) {
+							if(absElement.get(j) instanceof Num) {
+								Num innerNum = (Num)absElement.get(j);
+								
+								if(!innerNum.isComplex() && innerNum.negative()) {
+									absElement.set(j, innerNum.negate());
+									negative = true;
+									if(absElement.get(j).equals(Num.ONE)) {
+										absElement.remove(j);
+									}
+								}
+								
+								break;
+							}
+						}
+					}
 					if(negative) {
 						imgs.add(minusImg);
 					}else {
