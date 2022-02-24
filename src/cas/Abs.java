@@ -47,11 +47,19 @@ public class Abs extends Expr{
 			basicCosProd = createExpr("a*cos(x)");
 			
 			cases = new Rule[] {
-					new Rule("abs(sin(x)+x^n-x)->sin(x)+x^n-x","isType(result(n/2),num)","special case of abs",Rule.UNCOMMON),
-					new Rule("abs(-sin(x)-x^n+x)->sin(x)+x^n-x","isType(result(n/2),num)","special case of abs",Rule.UNCOMMON),
+					new Rule("abs(sin(x)+x^2-x)->sin(x)+x^2-x","special case of abs",Rule.UNCOMMON),
+					new Rule("abs(-sin(x)-x^2+x)->sin(x)+x2n-x","special case of abs",Rule.UNCOMMON),
 					
-					new Rule("abs(a*sin(x)+x^n+b*x)->a*sin(x)+x^n-a*x","isType(result(n/2),num)&eval(a=-b)&eval(a>-pi)&eval(a<pi)","special case of abs",Rule.UNCOMMON),
-					new Rule("abs(a*sin(x)-x^n+b*x)->-a*sin(x)+x^n+a*x","isType(result(n/2),num)&eval(a=-b)&eval(a>-pi)&eval(a<pi)","special case of abs",Rule.UNCOMMON),
+					new Rule("abs(cos(x)+x^2)->cos(x)+x^2","special case of abs",Rule.UNCOMMON),
+					new Rule("abs(a*cos(x)+a*x^2)->abs(a)*cos(x)+abs(a)*x^2","special case of abs",Rule.UNCOMMON),
+					
+					new Rule("abs(cos(x)+x^2-x)->cos(x)+x^2-x","special case of abs",Rule.UNCOMMON),
+					new Rule("abs(cos(x)+x^2+x)->cos(x)+x^2+x","special case of abs",Rule.UNCOMMON),
+					new Rule("abs(-cos(x)-x^2-x)->cos(x)+x^2+x","special case of abs",Rule.UNCOMMON),
+					new Rule("abs(-cos(x)-x^2+x)->cos(x)+x^2-x","special case of abs",Rule.UNCOMMON),
+					
+					new Rule("abs(a*sin(x)+x^2+b*x)->a*sin(x)+x^2-a*x","eval(a=-b)&eval(a>-pi)&eval(a<pi)","special case of abs",Rule.UNCOMMON),
+					new Rule("abs(a*sin(x)-x^2+b*x)->-a*sin(x)+x^2+a*x","eval(a=-b)&eval(a>-pi)&eval(a<pi)","special case of abs",Rule.UNCOMMON),
 			};
 			Rule.initRules(cases);
 		}
@@ -86,6 +94,8 @@ public class Abs extends Expr{
 					polynomialSum.add(current);
 				}else if(current instanceof Acos) {
 					theoryMax.add(pi());
+				}else if(current instanceof LambertW) {
+					theoryMin.add(num(-1));
 				}else if(current instanceof Sin || current instanceof Cos) {
 					theoryMin.add(num(-1));
 					theoryMax.add(num(1));
@@ -95,8 +105,8 @@ public class Abs extends Expr{
 					Expr x = Rule.getExprByName(equs, "x");
 					
 					if(x.contains(v)) {
-						theoryMin.add(neg(a));
-						theoryMax.add(a);
+						theoryMin.add(neg(abs(a)));
+						theoryMax.add(abs(a));
 					}else return abs;
 				}else if(Rule.fastSimilarStruct(basicCosProd, current)) {
 					ExprList equs = Rule.getEqusFromTemplate(basicCosProd, current);
@@ -104,8 +114,8 @@ public class Abs extends Expr{
 					Expr x = Rule.getExprByName(equs, "x");
 					
 					if(x.contains(v)) {
-						theoryMin.add(neg(a));
-						theoryMax.add(a);
+						theoryMin.add(neg(abs(a)));
+						theoryMax.add(abs(a));
 					}else return abs;
 				}else {
 					return abs;
@@ -187,10 +197,25 @@ public class Abs extends Expr{
 			return abs;
 		}
 	};
+	
+	static Rule allowAbsRule = new Rule("allow abs rule",Rule.VERY_EASY) {
+		private static final long serialVersionUID = 1L;
+		
+		@Override
+		public Expr applyRuleToExpr(Expr e,Settings settings) {
+			Abs abs = (Abs)e;
+			
+			if(!settings.allowAbs) return abs.get();
+			
+			return abs;
+		}
+	};
 
 	static Sequence ruleSequence;
 	public static void loadRules(){
 		ruleSequence = sequence(
+				allowAbsRule,
+				StandardRules.factorInner,
 				absOfAbs,
 				alwaysPositive,
 				absOfNum,

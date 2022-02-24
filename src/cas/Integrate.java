@@ -34,6 +34,8 @@ public class Integrate extends Expr{
 	};
 	static Rule logCase = new Rule("integrate(ln(x),x)->ln(x)*x-x","integral of the log",Rule.UNCOMMON);
 	
+	static Rule absCase = new Rule("integrate(abs(x),x)->x*abs(x)/2","integral of the absolute value",Rule.UNCOMMON);
+	
 	static Rule cosCase = new Rule("integrate(cos(x),x)->sin(x)","integral of the cosine",Rule.EASY);
 	static Rule cosPowerCase = new Rule("integrate(cos(x)^n,x)->cos(x)^(n-1)*sin(x)/n+(n-1)/n*integrate(cos(x)^(n-2),x)","eval(n>1)&~contains(n,x)","integral of cos to the n",Rule.DIFFICULT);
 	static Rule cosInvPowerCase = new Rule("integrate(1/cos(x)^n,x)->cos(x)^(1-n)*sin(x)/(n-1)+(n-2)*integrate(1/cos(x)^(n-2),x)/(n-1)","eval(n>1)&~contains(n,x)","integral of 1 over cos to the n",Rule.DIFFICULT);
@@ -83,6 +85,10 @@ public class Integrate extends Expr{
 					
 					new Rule("integrate(cos(x+k)*b^x,x)->sin(x+k)*b^x/(1+ln(b)^2)+ln(b)*cos(x+k)*b^x/(1+ln(b)^2)","~contains({k,b},x)","integral of looping cosine",Rule.UNCOMMON),
 					new Rule("integrate(cos(a*x+k)*b^x,x)->a*sin(a*x+k)*b^x/(a^2+ln(b)^2)+ln(b)*cos(a*x+k)*b^x/(a^2+ln(b)^2)","~contains({a,k,b},x)","integral of looping cosine",Rule.UNCOMMON),
+					
+					
+					
+					new Rule("integrate(x*abs(x),x)->abs(x)*x^2/3","signed quadratic integral",Rule.UNCOMMON),
 			};
 			Rule.initRules(cases);
 		}
@@ -503,6 +509,8 @@ public class Integrate extends Expr{
 					if(!u.equals(integ.getVar())) {
 						Equ eq = equ(u,uSubVar);//im calling it 0u since variables normally can't start with number
 						Expr diffObj = diff(u,(Var)integ.getVar().copy()).simplify(settings);
+						if(diffObj.containsType("diff")) return integ;
+						
 						diffObj = diffObj.replace(eq);//it is possible for derivative to contain u
 						Expr before = div(integ.get().replace(eq),diffObj);
 						Expr newExpr = before.simplify(settings);
@@ -846,6 +854,7 @@ public class Integrate extends Expr{
 				inverseQuadraticSimple,
 				inverseQuadraticSimple2,
 				logCase,
+				absCase,
 				
 				cosCase,
 				cosPowerCase,
@@ -918,7 +927,7 @@ public class Integrate extends Expr{
 	}
 	
 	
-	final private double smallRandNum = Math.sqrt(2);//just a random number thats small
+	final private double smallRandNum = Math.sqrt(1.9276182763);//just a random number thats small
 	@Override
 	public ComplexFloat convertToFloat(ExprList varDefs) {
 		return integrateOver(floatExpr(smallRandNum),getVar(),get(),getVar()).convertToFloat(varDefs);

@@ -488,6 +488,41 @@ public class Div extends Expr{
 		}
 	};
 	
+	/*
+	 * x/abs(x) -> abs(x)/x
+	 */
+	static Rule absInDenom = new Rule("denominator has an absolute value",Rule.EASY) {
+		private static final long serialVersionUID = 1L;
+		
+		@Override
+		public Expr applyRuleToExpr(Expr e,Settings settings){
+			Div div = (Div)e;
+			
+			Prod numerProd = Prod.cast( div.getNumer() );
+			Prod denomProd = Prod.cast( div.getDenom() );
+			
+			outer:for(int i = 0;i < denomProd.size();i++) {
+				if(denomProd.get(i) instanceof Abs) {
+					Expr inner = denomProd.get(i).get();
+					for(int j = 0;j<numerProd.size();j++) {
+						if(numerProd.get(j).equals(inner)) {
+							
+							denomProd.set(i, inner);
+							numerProd.set(j, abs(numerProd.get(j)));
+							continue outer;
+							
+						}
+					}
+				}
+			}
+			
+			div.setNumer(Prod.unCast(numerProd));
+			div.setDenom(Prod.unCast(denomProd));
+			
+			return div;
+		}
+	};
+	
 	static Rule rationalize = new Rule("a/b^(m/n)->a*b^((n-m)/n)/b","isType(b,num)&isType(m,num)","rationalize denom",Rule.VERY_EASY);
 	static Rule rationalize2 = new Rule("a/(k*b^(m/n))->a*b^((n-m)/n)/(k*b)","isType(b,num)&isType(k,num)&isType(m,num)","rationalize denom",Rule.VERY_EASY);
 	
@@ -500,6 +535,7 @@ public class Div extends Expr{
 				trigExpandElements,
 				reduceTrigFraction,
 				divContainsDiv,
+				absInDenom,
 				cancelOutTerms,
 				rationalize,
 				rationalize2,

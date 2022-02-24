@@ -167,7 +167,6 @@ public class MainWindow extends JFrame{
 				terminalOutUpdate.actionPerformed(null);
 			}
 		};
-		JButton pushButton = new JButton("push");
 		ActionListener terminalInPush = new ActionListener() {
 			@Override
 			public void actionPerformed(ActionEvent e) {
@@ -193,7 +192,6 @@ public class MainWindow extends JFrame{
 			allComponents.add(terminalOut);
 			allComponents.add(terminalIn);
 			allComponents.add(resultButton);
-			allComponents.add(pushButton);
 			allComponents.add(resultAndPushButtons);
 			allComponents.add(terminalInWithButtons);
 			
@@ -209,7 +207,6 @@ public class MainWindow extends JFrame{
 			
 			terminalIn.addActionListener(terminalInPush);
 			resultButton.addActionListener(resultButtonUpdate);
-			pushButton.addActionListener(terminalInPush);
 			
 			imgExprPanel.addMouseListener(imageToClipBoard);
 			
@@ -217,7 +214,6 @@ public class MainWindow extends JFrame{
 			terminalOutWithImg.add(imgExprPanel,BorderLayout.SOUTH);
 			terminalInWithButtons.add(terminalIn,BorderLayout.CENTER);
 			resultAndPushButtons.add(resultButton);
-			resultAndPushButtons.add(pushButton);
 			terminalInWithButtons.add(resultAndPushButtons,BorderLayout.EAST);
 			
 			add(terminalOutWithImg,BorderLayout.CENTER);
@@ -381,7 +377,40 @@ public class MainWindow extends JFrame{
 		}
 	}
 	
-	class SettingsPanel extends JPanel{
+	class CASSettingsPanel extends JPanel {
+		private static final long serialVersionUID = -1314093096812714908L;
+		
+		JCheckBox allowComplexNumbersCheckBox = new JCheckBox("allow complex numbers",currentStack.currentSettings.allowComplexNumbers);
+		ActionListener allowComplexNumbersUpdate = new ActionListener() {
+			@Override
+			public void actionPerformed(ActionEvent e) {
+				currentStack.currentSettings.allowComplexNumbers = allowComplexNumbersCheckBox.isSelected();
+			}
+		};
+		JCheckBox allowAbsCheckBox = new JCheckBox("allow abs(x) (turn off for integration)",currentStack.currentSettings.allowAbs);
+		ActionListener allowAbsUpdate = new ActionListener() {
+			@Override
+			public void actionPerformed(ActionEvent e) {
+				currentStack.currentSettings.allowAbs = allowAbsCheckBox.isSelected();
+			}
+		};
+		
+		CASSettingsPanel(){
+			allComponents.add(this);
+			allComponents.add(allowComplexNumbersCheckBox);
+			allComponents.add(allowAbsCheckBox);
+			
+			allowComplexNumbersCheckBox.addActionListener(allowComplexNumbersUpdate);
+			allowAbsCheckBox.addActionListener(allowAbsUpdate);
+			
+			add(allowComplexNumbersCheckBox);
+			add(allowAbsCheckBox);
+		}
+		
+		
+	}
+	
+	class UISettingsPanel extends JPanel{
 		private static final long serialVersionUID = -4037663936986002307L;
 		
 		JCheckBox keepOnTopCheckBox = new JCheckBox("window on top",KEEP_WINDOW_ON_TOP_DEFAULT);
@@ -427,7 +456,7 @@ public class MainWindow extends JFrame{
 			}
 		};
 		
-		SettingsPanel() {
+		UISettingsPanel() {
 			allComponents.add(this);
 			allComponents.add(keepOnTopCheckBox);
 			allComponents.add(clearTerminalCheckBox);
@@ -472,7 +501,8 @@ public class MainWindow extends JFrame{
 		
 		tabs.addTab("main view",mainViewPanel);
 		tabs.addTab("graphics", new GraphicsPanel());
-		tabs.addTab("settings", new SettingsPanel());
+		tabs.addTab("CAS settings", new CASSettingsPanel());
+		tabs.addTab("UI settings", new UISettingsPanel());//keep last
 		
 		return mainContainer;
 	}

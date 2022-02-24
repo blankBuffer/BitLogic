@@ -105,9 +105,13 @@ public class Plot extends JPanel{
 			ExprList varDefs = new ExprList();
 			varDefs.add(varDef);
 			
+			double x = convertToInternalPositionX(0,plotWindowParams,windowSize);
+			((FloatExpr)varDef.getRightSide()).value.set(new ComplexFloat(x,0));
+			beforeY = convertToExternalPositionY(expr.convertToFloat(varDefs).real ,plotWindowParams,windowSize);
+			
 			g.setColor(randomColor(expr.hashCode()));
 			for(int i = 0;i<windowSize.getWidth();i+=2) {
-				double x = convertToInternalPositionX(i,plotWindowParams,windowSize);
+				x = convertToInternalPositionX(i,plotWindowParams,windowSize);
 				((FloatExpr)varDef.getRightSide()).value.set(new ComplexFloat(x,0));
 				double y = convertToExternalPositionY(expr.convertToFloat(varDefs).real ,plotWindowParams,windowSize);
 				g.drawLine(i-1, (int)beforeY, i, (int)y);

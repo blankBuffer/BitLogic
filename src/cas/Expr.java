@@ -47,8 +47,39 @@ public abstract class Expr extends QuickMath implements Comparable<Expr>, Serial
 		return Character.toLowerCase(name.charAt(0))+name.substring(1);
 	}
 	
-	public static HashMap<Expr,Expr> cached = new HashMap<Expr,Expr>();
-	public static ArrayList<Expr> cachedKeys = new ArrayList<Expr>();
+	private static class ExprAndSettings {//used for caching, saves the settings used for the compute
+		Expr expr;
+		Settings settings;
+		int hash = 0;
+		
+		ExprAndSettings(Expr expr,Settings settings){
+			this.expr = expr;
+			this.settings = settings;
+			hash = expr.hashCode()+87623846*settings.hashCode();
+		}
+		
+		@Override
+		public boolean equals(Object o) {
+			if(o instanceof ExprAndSettings) {
+				ExprAndSettings other = (ExprAndSettings)o;
+				return other.settings.equals(settings) && other.expr.equals(expr);
+			}
+			return false;
+		}
+		
+		@Override
+		public int hashCode() {
+			return hash;
+		}
+		
+		@Override
+		public String toString() {
+			return this.getClass().getSimpleName()+" "+expr+" "+settings;
+		}
+	}
+	
+	public static HashMap<ExprAndSettings,Expr> cached = new HashMap<ExprAndSettings,Expr>();
+	public static ArrayList<ExprAndSettings> cachedKeys = new ArrayList<ExprAndSettings>();
 	public static void clearCache() {
 		cached.clear();
 		cachedKeys.clear();
@@ -104,7 +135,8 @@ public abstract class Expr extends QuickMath implements Comparable<Expr>, Serial
 		if(flags.simple) return toBeSimplified;
 		
 		if(USE_CACHE && !(this instanceof Func)) {
-			Expr cacheOut = cached.get(this);
+			ExprAndSettings thisWithSettings = new ExprAndSettings(this,settings);
+			Expr cacheOut = cached.get(thisWithSettings);
 			if(cacheOut != null){
 				return cacheOut.copy();
 			}
@@ -138,8 +170,9 @@ public abstract class Expr extends QuickMath implements Comparable<Expr>, Serial
 			if(cached.size()<CACHE_SIZE){
 				if(!(this instanceof Func)) {
 					Expr original = copy();
-					cached.put(original, toBeSimplified.copy());
-					cachedKeys.add(original);
+					ExprAndSettings cache = new ExprAndSettings( original,settings);
+					cached.put(cache, toBeSimplified.copy());
+					cachedKeys.add( cache );
 				}
 			}else{
 				//remove a random 1024 items from cache
@@ -147,9 +180,9 @@ public abstract class Expr extends QuickMath implements Comparable<Expr>, Serial
 				if(random == null) random = new Random(761234897);
 				for(int i = 0;i<CACHE_SIZE/4;i++){
 					int randomIndex = random.nextInt(cachedKeys.size());
-					Expr expr = cachedKeys.get(randomIndex);
+					ExprAndSettings cache = cachedKeys.get(randomIndex);
 					cachedKeys.remove(randomIndex);
-					cached.remove(expr);
+					cached.remove(cache);
 				}
 			}
 		}

@@ -299,7 +299,6 @@ public class Rule extends Expr{
 			
 			if(condition != null) {
 				Expr condition = this.condition.replace(equs);
-				System.out.println(condition);
 				condition = condition.simplify(settings);
 				if(condition.simplify(settings).equals(BoolState.FALSE)) return expr;
 			}

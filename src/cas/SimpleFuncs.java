@@ -75,6 +75,8 @@ public class SimpleFuncs extends QuickMath{
 	static Func isType = new Func("isType",2);
 	static Func contains = new Func("contains",2);
 	static Func result = new Func("result",1);
+	static Func allowAbs = new Func("allowAbs",0);
+	static Func allowComplexNumbers = new Func("allowComplexNumbers",0);
 	
 	public static void loadRules(){
 		tree.simplifyChildren = false;
@@ -396,6 +398,24 @@ public class SimpleFuncs extends QuickMath{
 		});
 		
 		result.ruleSequence.add(StandardRules.becomeInner);
+		
+		allowAbs.ruleSequence.add(new Rule("are we allowing absolute values",Rule.VERY_EASY) {
+			private static final long serialVersionUID = 1L;
+			
+			@Override
+			public Expr applyRuleToExpr(Expr e,Settings settings) {
+				return bool(settings.allowAbs);
+			}
+		});
+		
+		allowComplexNumbers.ruleSequence.add(new Rule("are we allowing absolute values",Rule.VERY_EASY) {
+			private static final long serialVersionUID = 1L;
+			
+			@Override
+			public Expr applyRuleToExpr(Expr e,Settings settings) {
+				return bool(settings.allowComplexNumbers);
+			}
+		});
 	}
 	
 	private static ArrayList<String> functionNames = new ArrayList<String>();
@@ -432,6 +452,8 @@ public class SimpleFuncs extends QuickMath{
 		addFunc(isType);
 		addFunc(contains);
 		addFunc(result);//override the simplify children bool
+		addFunc(allowAbs);
+		addFunc(allowComplexNumbers);
 		
 		for(String s:simpleFuncs.keySet()) {
 			functionNames.add(s);

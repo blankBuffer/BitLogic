@@ -47,7 +47,7 @@ public class ExprRender extends QuickMath{//sort of a wrap of the image type but
 		static HashMap<String,String> nameExchange = new HashMap<String,String>();//use cooler symbols
 		static {
 			nameExchange.put("~","¬");
-			nameExchange.put("|","∨");
+			nameExchange.put("or","∨");
 			nameExchange.put("&", "∧");
 			nameExchange.put("pi", "π");
 			nameExchange.put("mu", "µ");
@@ -66,6 +66,7 @@ public class ExprRender extends QuickMath{//sort of a wrap of the image type but
 			nameExchange.put("integrate", "∫");
 			nameExchange.put("integrateOver", "∫");
 			nameExchange.put("diff", "∂");
+			nameExchange.put("->", "→");
 		}
 		public void makeString(String s) {//creates basic text image
 			s = s.replace('*', '·');
@@ -166,16 +167,16 @@ public class ExprRender extends QuickMath{//sort of a wrap of the image type but
 					
 					setWidth(sqrtImg.getWidth()+baseImg.getWidth());
 					int smallShift = oldGraphics.getFont().getSize()/6;
-					setHeight(baseImg.getHeight()+smallShift);
-					setFractionBar(baseImg.getFractionBar()+smallShift);
+					setHeight(baseImg.getHeight()+smallShift*2);
+					setFractionBar(baseImg.getFractionBar()+smallShift*2);
 					
 					int overBarHeight = oldGraphics.getFont().getSize()/12;
 					
 					initImg();
 					
 					graphics.drawImage(sqrtImg.getImage(),0,0,sqrtImg.getWidth(),getHeight(),null);
-					graphics.drawImage(baseImg.getImage(),sqrtImg.getWidth(),smallShift,baseImg.getWidth(),baseImg.getHeight(),null);
-					graphics.fillRect(sqrtImg.getWidth(),0,getWidth(),overBarHeight);
+					graphics.drawImage(baseImg.getImage(),sqrtImg.getWidth(),smallShift*2,baseImg.getWidth(),baseImg.getHeight(),null);
+					graphics.fillRect(sqrtImg.getWidth(),smallShift,getWidth(),overBarHeight);
 				}else {
 					if(pow.getBase() instanceof Prod || pow.getBase() instanceof Sum || pow.getBase() instanceof Div || pow.getBase() instanceof Power || (pow.getBase() instanceof Num && pow.getBase().negative()) ) {
 						baseImg.makeParen(pow.getBase());
@@ -217,7 +218,10 @@ public class ExprRender extends QuickMath{//sort of a wrap of the image type but
 				Equ equ = (Equ)e;
 				
 				ExprImg equImg = newExprImg();
-				equImg.makeString("=");
+				if(equ.type == Equ.EQUALS)equImg.makeString("=");
+				if(equ.type == Equ.GREATER)equImg.makeString(">");
+				if(equ.type == Equ.LESS)equImg.makeString("<");
+				
 				ExprImg leftImg = newExprImg();
 				leftImg.makeExpr(equ.getLeftSide());
 				ExprImg rightImg = newExprImg();
@@ -315,11 +319,16 @@ public class ExprRender extends QuickMath{//sort of a wrap of the image type but
 				for(int i = 0;i<imgs.size();i++)exprImgs[i] = imgs.get(i);
 						
 				makeImgSeries(exprImgs);
-			}else if(e instanceof ExprList) {
+			}else if(e instanceof ExprList || e instanceof Sequence) {
 				ExprImg leftBrac = newExprImg();
-				leftBrac.makeString("[");
 				ExprImg rightBrac = newExprImg();
-				rightBrac.makeString("]");
+				if(e instanceof ExprList) {
+					leftBrac.makeString("[");
+					rightBrac.makeString("]");
+				}else {
+					leftBrac.makeString("{");
+					rightBrac.makeString("}");
+				}
 				
 				ExprImg parameters = newExprImg();
 				parameters.makeCommaList(e);
@@ -356,7 +365,7 @@ public class ExprRender extends QuickMath{//sort of a wrap of the image type but
 				makeImgSeries(exprImgs);
 			}else if(e instanceof Or) {
 				ExprImg orImg = newExprImg();
-				orImg.makeString("|");
+				orImg.makeString("or");
 				
 				
 				ArrayList<ExprImg> imgs = new ArrayList<ExprImg>();
@@ -384,6 +393,157 @@ public class ExprRender extends QuickMath{//sort of a wrap of the image type but
 				else exprImg.makeParen(e.get());
 				
 				makeImgSeries(new ExprImg[] {notImg,exprImg});
+			}else if(e instanceof Abs) {
+				ExprImg eImg = newExprImg();
+				eImg.makeExpr(e.get());
+				
+				ExprImg verticleBar = newExprImg();
+				verticleBar.makeString("|");
+				
+				setWidth(verticleBar.getWidth()*2+eImg.getWidth());
+				setHeight(eImg.getHeight());
+				setFractionBar(eImg.getFractionBar());
+				
+				initImg();
+				
+				graphics.drawImage(verticleBar.getImage(),0,0,verticleBar.getWidth(),getHeight(),null);
+				graphics.drawImage(eImg.getImage(),verticleBar.getWidth(),0,eImg.getWidth(),getHeight(),null);
+				graphics.drawImage(verticleBar.getImage(),getWidth()-verticleBar.getWidth(),0,verticleBar.getWidth(),getHeight(),null);
+			}else if(e instanceof Integrate) {
+				ExprImg integralImg = newExprImg();
+				integralImg.makeString("integrate");
+				ExprImg diffImg = newExprImg();
+				diffImg.makeString("diff");
+				
+				ExprImg leftBracket = newExprImg();
+				leftBracket.makeString("[");
+				ExprImg rightBracket = newExprImg();
+				rightBracket.makeString("]");
+				
+				Integrate integ = (Integrate)e;
+				
+				ExprImg varImg = newExprImg();
+				varImg.makeString(integ.getVar().toString());
+				
+				ExprImg eImg = newExprImg();
+				eImg.makeExpr(integ.get());
+				
+				setWidth(integralImg.getWidth()+leftBracket.getWidth()+eImg.getWidth()+rightBracket.getWidth()+diffImg.getWidth()+varImg.getWidth());
+				setHeight(eImg.getHeight());
+				setFractionBar(eImg.getFractionBar());
+				
+				initImg();
+				int currentX = 0;
+				graphics.drawImage(integralImg.getImage(),currentX,0,integralImg.getWidth(),getHeight(),null);
+				currentX+=integralImg.getWidth();
+				graphics.drawImage(leftBracket.getImage(),currentX,0,leftBracket.getWidth(),getHeight(),null);
+				currentX+=leftBracket.getWidth();
+				
+				graphics.drawImage(eImg.getImage(),currentX,0,eImg.getWidth(),getHeight(),null);
+				currentX+=eImg.getWidth();
+				graphics.drawImage(rightBracket.getImage(),currentX,0,rightBracket.getWidth(),getHeight(),null);
+				currentX+=rightBracket.getWidth();
+				
+				graphics.drawImage(diffImg.getImage(),currentX,getFractionBar()-diffImg.getHeight(),diffImg.getWidth(),diffImg.getHeight(),null);
+				currentX+=diffImg.getWidth();
+				graphics.drawImage(varImg.getImage(),currentX,getFractionBar()-varImg.getHeight(),varImg.getWidth(),varImg.getHeight(),null);
+				
+			}else if(e instanceof IntegrateOver) {
+				ExprImg integralImg = newExprImg();
+				integralImg.makeString("integrateOver");
+				ExprImg diffImg = newExprImg();
+				diffImg.makeString("diff");
+				
+				ExprImg leftBracket = newExprImg();
+				leftBracket.makeString("[");
+				ExprImg rightBracket = newExprImg();
+				rightBracket.makeString("]");
+				
+				IntegrateOver integ = (IntegrateOver)e;
+				
+				ExprImg varImg = newExprImg();
+				varImg.makeString(integ.getVar().toString());
+				
+				ExprImg eImg = newExprImg();
+				eImg.makeExpr(integ.getExpr());
+				
+				ExprImg minImg = newExprImg();
+				minImg.makeExpr(integ.getMin());
+				
+				ExprImg maxImg = newExprImg();
+				maxImg.makeExpr(integ.getMax());
+				
+				setHeight(Math.max(eImg.getHeight(),minImg.getHeight()*3/4+maxImg.getHeight()*3/4)+oldGraphics.getFont().getSize());
+				setWidth(getHeight()/3+Math.max(maxImg.getWidth()*3/4,minImg.getWidth()*3/4)+leftBracket.getWidth()+eImg.getWidth()+rightBracket.getWidth()+diffImg.getWidth()+varImg.getWidth());
+				
+				setFractionBar(getHeight()-eImg.getBelowFractionBar());
+				
+				initImg();
+				int currentX = 0;
+				graphics.drawImage(integralImg.getImage(),currentX,0,getHeight()/3,getHeight(),null);
+				currentX+=getHeight()/3;
+				
+				
+				graphics.drawImage(minImg.getImage(),currentX,getHeight()-minImg.getHeight()*3/4,minImg.getWidth()*3/4,minImg.getHeight()*3/4,null);
+				graphics.drawImage(maxImg.getImage(),currentX,0,maxImg.getWidth()*3/4,maxImg.getHeight()*3/4,null);
+				currentX+=Math.max(maxImg.getWidth()*3/4,minImg.getWidth()*3/4);
+				
+				
+				graphics.drawImage(leftBracket.getImage(),currentX,0,leftBracket.getWidth(),getHeight(),null);
+				currentX+=leftBracket.getWidth();
+				
+				graphics.drawImage(eImg.getImage(),currentX,getHeight()-eImg.getHeight(),eImg.getWidth(),eImg.getHeight(),null);
+				currentX+=eImg.getWidth();
+				graphics.drawImage(rightBracket.getImage(),currentX,0,rightBracket.getWidth(),getHeight(),null);
+				currentX+=rightBracket.getWidth();
+				
+				graphics.drawImage(diffImg.getImage(),currentX,getFractionBar()-diffImg.getHeight(),diffImg.getWidth(),diffImg.getHeight(),null);
+				currentX+=diffImg.getWidth();
+				graphics.drawImage(varImg.getImage(),currentX,getFractionBar()-varImg.getHeight(),varImg.getWidth(),varImg.getHeight(),null);
+				
+			}else if(e instanceof Becomes) {
+				Becomes becomes = (Becomes)e;
+				
+				ExprImg leftSide = newExprImg();
+				leftSide.makeExpr(becomes.getLeftSide());
+				ExprImg rightSide = newExprImg();
+				rightSide.makeExpr(becomes.getRightSide());
+				
+				ExprImg arrowImg = newExprImg();
+				arrowImg.makeString("->");
+				
+				makeImgSeries(new ExprImg[] {leftSide,arrowImg,rightSide  });
+			}else if(e instanceof Diff) {
+				ExprImg diffImg = newExprImg();
+				diffImg.makeExpr( div(var("∂"),var("∂"+nameExchange.getOrDefault(e.getVar().toString(), e.getVar().toString()))) );
+				
+				ExprImg leftBracket = newExprImg();
+				leftBracket.makeString("[");
+				ExprImg rightBracket = newExprImg();
+				rightBracket.makeString("]");
+				
+				ExprImg eImg = newExprImg();
+				
+				eImg.makeExpr(e.get());
+				
+				int fractionBar = Math.max(eImg.getFractionBar(),diffImg.getFractionBar());
+				int belowFractionBar = Math.max(eImg.getBelowFractionBar(), diffImg.getBelowFractionBar());
+				
+				setHeight(fractionBar+belowFractionBar);
+				setWidth(diffImg.getWidth()+leftBracket.getWidth()+eImg.getWidth()+rightBracket.getWidth());
+				setFractionBar(fractionBar);
+				
+				initImg();
+				
+				int currentX = 0;
+				graphics.drawImage(diffImg.getImage(), currentX, getFractionBar()-diffImg.getFractionBar(), diffImg.getWidth(), diffImg.getHeight(), null);
+				currentX+=diffImg.getWidth();
+				graphics.drawImage(leftBracket.getImage(),currentX,0,leftBracket.getWidth(),getHeight(),null);
+				currentX+=leftBracket.getWidth();
+				graphics.drawImage(eImg.getImage(),currentX,getFractionBar()-eImg.getFractionBar(),eImg.getWidth(),eImg.getHeight(),null);
+				currentX+=eImg.getWidth();
+				graphics.drawImage(rightBracket.getImage(),currentX,0,rightBracket.getWidth(),getHeight(),null);
+				
 			}else {
 				ExprImg functionName = newExprImg();
 				functionName.makeString(e.typeName());
@@ -442,6 +602,10 @@ public class ExprRender extends QuickMath{//sort of a wrap of the image type but
 		
 		g.setFont(new Font("courier new",0,48));
 		
+		if(e instanceof Var && e.toString().contains("\n")) {
+			return defaultImageSize.getSubimage(0, 0, 32, 32);
+		}
+		
 		ExprImg exprImgObj = new ExprImg(g);
 		exprImgObj.makeExpr(e);
 		BufferedImage exprImg = exprImgObj.getImage();
@@ -471,6 +635,10 @@ public class ExprRender extends QuickMath{//sort of a wrap of the image type but
 		g.setColor(background);
 		g.fillRect(0, 0, imageSize.width, imageSize.height);
 		g.setColor(text);
+		
+		if(e instanceof Var && e.toString().contains("\n")) {
+			return image;
+		}
 		
 		g.setRenderingHints(new RenderingHints(RenderingHints.KEY_INTERPOLATION, RenderingHints.VALUE_INTERPOLATION_BILINEAR));
 		

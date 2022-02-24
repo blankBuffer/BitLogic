@@ -12,6 +12,9 @@ public class StackEditor extends QuickMath {
 	public static final int EDIT_REQUEST = 1;
 	public static final int FINISHED = 0;
 	
+	public Settings currentSettings = new Settings();
+	public Defs currentDefs = new Defs();
+	
 	private static Expr expr = null;
 	private String alerts = "";
 	
@@ -67,9 +70,6 @@ public class StackEditor extends QuickMath {
 		}
 		if(expr != null) stack.set(size() - 1, expr);
 	}
-
-	Settings currentSettings = new Settings();
-	public Defs currentDefs = new Defs();
 
 	public ExprList stack = new ExprList();
 	public ExprList stackOld = new ExprList();
@@ -210,6 +210,15 @@ public class StackEditor extends QuickMath {
 		stack.set(size() - 2, div(sLast(), stack.get(size() - 1)));
 		stack.remove(size() - 1);
 	}
+	
+	public void becomes() {
+		if (sLast() == null)
+			return;
+
+		stack.set(size() - 2, becomes(sLast(), stack.get(size() - 1)));
+		stack.remove(size() - 1);
+	}
+	
 	public void swap() {
 		if (sLast() == null)
 			return;
@@ -308,6 +317,8 @@ public class StackEditor extends QuickMath {
 				swap();
 			} else if (command.equals("=")) {
 				equ();
+			} else if (command.equals("->")) {
+				becomes();
 			} else if (command.equals("[")) {
 				createList();
 			} else if (command.equals("]")) {

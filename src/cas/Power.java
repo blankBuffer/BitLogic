@@ -28,8 +28,11 @@ public class Power extends Expr{
 		add(expo);
 	}
 	
-	private static Rule baseHasPower = new Rule("(a^b)^c->a^(b*c)","base has power",Rule.EASY);
+	private static Rule baseHasPower = new Rule("(a^b)^c->a^(b*c)","~(isType(result(b/2),num)&allowAbs())","base has power",Rule.EASY);
+	private static Rule baseHasPowerAbs = new Rule("(a^b)^c->abs(a)^(b*c)","isType(result(b/2),num)&allowAbs()","base has power",Rule.EASY);
+	
 	private static Rule expoOfZero = new Rule("a^0->1","~eval(a=0)","exponent is zero",Rule.VERY_EASY);
+	private static Rule isI = new Rule("sqrt(-1)->i","allowComplexNumbers()","is equal to i",Rule.EASY);
 	private static Rule eToLn = new Rule("e^ln(a)->a","e to ln",Rule.EASY);
 	private static Rule eToFracLn = new Rule("e^(ln(a)/b)->a^(1/b)","e to fraction with ln",Rule.UNCOMMON);
 	private static Rule zeroToExpo = new Rule("0^x->0","~eval(x=0)","base is zero",Rule.VERY_EASY);
@@ -433,14 +436,16 @@ public class Power extends Expr{
 	
 	public static void loadRules(){
 		ruleSequence = sequence(
+				isI,
 				powersWithEpsilonOrInf,
 				sqrtOneMinusSin,
 				sqrtOneMinusCos,
 				sqrtOnePlusSin,
 				sqrtOnePlusCos,
 				factorExponent,
-				baseOfPowerIsAbsExpoEven,
 				baseHasPower,
+				baseHasPowerAbs,
+				baseOfPowerIsAbsExpoEven,
 				negativeExpoToInv,
 				oneToExpo,
 				logInExpoProdToBase,
