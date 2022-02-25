@@ -77,6 +77,15 @@ public class SimpleFuncs extends QuickMath{
 	static Func result = new Func("result",1);
 	static Func allowAbs = new Func("allowAbs",0);
 	static Func allowComplexNumbers = new Func("allowComplexNumbers",0);
+	static Func sign = new Func("sign",1);
+	
+	static Func sinh = new Func("sinh",1);
+	static Func cosh = new Func("cosh",1);
+	static Func tanh = new Func("tanh",1);
+	
+	static Func sec = new Func("sec",1);
+	static Func csc = new Func("csc",1);
+	static Func cot = new Func("cot",1);
 	
 	public static void loadRules(){
 		tree.simplifyChildren = false;
@@ -101,6 +110,14 @@ public class SimpleFuncs extends QuickMath{
 				return num(f.get().size());
 			}
 		});
+		size.toFloatFunc = new Func.FloatFunc() {
+			private static final long serialVersionUID = 1L;
+			
+			@Override
+			ComplexFloat convertToFloat(ExprList varDefs, Func owner) {
+				return new ComplexFloat(owner.get().size(),0);
+			}
+		};
 		
 		get.simplifyChildren = false;
 		get.ruleSequence.add(new Rule("get sub expression",Rule.VERY_EASY){
@@ -109,13 +126,21 @@ public class SimpleFuncs extends QuickMath{
 				@Override
 				public Expr applyRuleToExpr(Expr e,Settings settings){
 					Func f = (Func)e;
-					
-					return f.get().get( ((Num)f.get(1)).realValue.intValue() );
+					int index = ((Num)f.get(1)).realValue.intValue();
+					return f.get().get( index );
 				}
 		});
+		get.toFloatFunc = new Func.FloatFunc() {
+			private static final long serialVersionUID = 1L;
+			
+			@Override
+			ComplexFloat convertToFloat(ExprList varDefs, Func owner) {
+				int index = ((Num)owner.get(1)).realValue.intValue();
+				return owner.get().get(index).convertToFloat(varDefs);
+			}
+		};
 		
 		choose.ruleSequence.add(new Rule("choose formula",Rule.UNCOMMON){
-			
 			private static final long serialVersionUID = 1L;
 
 			@Override
@@ -131,6 +156,16 @@ public class SimpleFuncs extends QuickMath{
 				return e;
 			}
 		});
+		choose.toFloatFunc = new Func.FloatFunc() {
+			private static final long serialVersionUID = 1L;
+			
+			@Override
+			ComplexFloat convertToFloat(ExprList varDefs, Func owner) {
+				double n = owner.get(0).convertToFloat(varDefs).real;
+				double k = owner.get(1).convertToFloat(varDefs).real;
+				return new ComplexFloat( factorial(n)/(factorial(k)*factorial(n-k)) ,0);
+			}
+		};
 		
 		primeFactor.ruleSequence.add(new Rule("prime factor an integer",Rule.EASY){
 			private static final long serialVersionUID = 1L;
@@ -141,6 +176,7 @@ public class SimpleFuncs extends QuickMath{
 				return primeFactor((Num)f.get());
 			}
 		});
+		primeFactor.toFloatFunc = Func.nothingFunc;
 		
 		partialFrac.ruleSequence.add(new Rule("break apart polynomial ratio into a sum of inverse linear terms",Rule.VERY_EASY){
 			private static final long serialVersionUID = 1L;
@@ -153,6 +189,7 @@ public class SimpleFuncs extends QuickMath{
 				return partialFrac(inner,var,settings);
 			}
 		});
+		partialFrac.toFloatFunc = Func.nothingFunc;
 		
 		polyDiv.ruleSequence.add(new Rule("polynomial division",Rule.EASY) {
 			private static final long serialVersionUID = 1L;
@@ -164,6 +201,7 @@ public class SimpleFuncs extends QuickMath{
 				return polyDiv(f.get(), v, settings);
 			}
 		});
+		polyDiv.toFloatFunc = Func.nothingFunc;
 		
 		polyCoef.ruleSequence.add(new Rule("get the coefficients of a polynomial as a list",Rule.VERY_EASY){
 			private static final long serialVersionUID = 1L;
@@ -322,6 +360,7 @@ public class SimpleFuncs extends QuickMath{
 				return fullExpand.applyRuleToExpr(f.get(), settings);
 			}
 		});
+		expand.toFloatFunc = Func.nothingFunc;
 		
 		taylor.ruleSequence.add(new Rule("taylor series",Rule.TRICKY){
 			private static final long serialVersionUID = 1L;
@@ -362,7 +401,7 @@ public class SimpleFuncs extends QuickMath{
 			}
 		});
 		
-		params.ruleSequence.add(new Rule("expected number paramters",Rule.VERY_EASY) {
+		params.ruleSequence.add(new Rule("expected number of paramters",Rule.VERY_EASY) {
 			private static final long serialVersionUID = 1L;
 			
 			@Override
@@ -416,6 +455,126 @@ public class SimpleFuncs extends QuickMath{
 				return bool(settings.allowComplexNumbers);
 			}
 		});
+		
+		sign.ruleSequence.add(new Rule("get sign of expression",Rule.VERY_EASY) {
+			private static final long serialVersionUID = 1L;
+			
+			@Override
+			public Expr applyRuleToExpr(Expr e,Settings settings) {
+				return e.get().negative() ? num(-1) : num(1);
+			}
+		});
+		sign.toFloatFunc = new Func.FloatFunc() {
+			private static final long serialVersionUID = 1L;
+
+			@Override
+			ComplexFloat convertToFloat(ExprList varDefs, Func owner) {
+				return owner.get().convertToFloat(varDefs).real < 0 ? new ComplexFloat(-1,0) : new ComplexFloat(1,0);
+			}
+		};
+		
+		sinh.ruleSequence.add(new Rule("sinh function",Rule.EASY) {
+			private static final long serialVersionUID = 1L;
+			
+			@Override
+			public Expr applyRuleToExpr(Expr e,Settings settings) {
+				return div(sub(exp(prod(num(2),e.get())),num(1)),prod(num(2),exp(e.get()))).simplify(settings);
+			}
+		});
+		sinh.toFloatFunc = new Func.FloatFunc() {
+			private static final long serialVersionUID = 1L;
+
+			@Override
+			ComplexFloat convertToFloat(ExprList varDefs, Func owner) {
+				return ComplexFloat.mult(ComplexFloat.sub(ComplexFloat.exp(owner.get().convertToFloat(varDefs)),ComplexFloat.exp(ComplexFloat.neg(owner.get().convertToFloat(varDefs)))),new ComplexFloat(0.5,0));
+			}
+		};
+		
+		cosh.ruleSequence.add(new Rule("cosh function",Rule.EASY) {
+			private static final long serialVersionUID = 1L;
+			
+			@Override
+			public Expr applyRuleToExpr(Expr e,Settings settings) {
+				return div(sum(exp(prod(num(2),e.get())),num(1)),prod(num(2),exp(e.get()))).simplify(settings);
+			}
+		});
+		cosh.toFloatFunc = new Func.FloatFunc() {
+			private static final long serialVersionUID = 1L;
+
+			@Override
+			ComplexFloat convertToFloat(ExprList varDefs, Func owner) {
+				return ComplexFloat.mult(ComplexFloat.add(ComplexFloat.exp(owner.get().convertToFloat(varDefs)),ComplexFloat.exp(ComplexFloat.neg(owner.get().convertToFloat(varDefs)))),new ComplexFloat(0.5,0));
+			}
+		};
+		
+		tanh.ruleSequence.add(new Rule("tanh function",Rule.EASY) {
+			private static final long serialVersionUID = 1L;
+			
+			@Override
+			public Expr applyRuleToExpr(Expr e,Settings settings) {
+				return div( sub(exp(prod(num(2),e.get())),num(1)) , sum(exp(prod(num(2),e.get())),num(1)) ).simplify(settings);
+			}
+		});
+		tanh.toFloatFunc = new Func.FloatFunc() {
+			private static final long serialVersionUID = 1L;
+
+			@Override
+			ComplexFloat convertToFloat(ExprList varDefs, Func owner) {
+				ComplexFloat expSquared = ComplexFloat.exp( ComplexFloat.mult(ComplexFloat.TWO, owner.get().convertToFloat(varDefs) ) );
+				return ComplexFloat.div( ComplexFloat.sub(expSquared, ComplexFloat.ONE) ,  ComplexFloat.add(expSquared, ComplexFloat.ONE) );
+			}
+		};
+		
+		sec.ruleSequence.add(new Rule("replace sec with one over cos",Rule.EASY){
+			private static final long serialVersionUID = 1L;
+			
+			@Override
+			public Expr applyRuleToExpr(Expr e,Settings settings) {
+				return inv(cos(e.get())).simplify(settings);
+			}
+		});
+		sec.toFloatFunc = new Func.FloatFunc() {
+			private static final long serialVersionUID = 1L;
+
+			@Override
+			ComplexFloat convertToFloat(ExprList varDefs, Func owner) {
+				return ComplexFloat.div(ComplexFloat.ONE, ComplexFloat.cos(owner.get().convertToFloat(varDefs)));
+			}
+		};
+		
+		csc.ruleSequence.add(new Rule("replace csc with one over sin",Rule.EASY){
+			private static final long serialVersionUID = 1L;
+			
+			@Override
+			public Expr applyRuleToExpr(Expr e,Settings settings) {
+				return inv(sin(e.get())).simplify(settings);
+			}
+		});
+		csc.toFloatFunc = new Func.FloatFunc() {
+			private static final long serialVersionUID = 1L;
+
+			@Override
+			ComplexFloat convertToFloat(ExprList varDefs, Func owner) {
+				return ComplexFloat.div(ComplexFloat.ONE, ComplexFloat.sin(owner.get().convertToFloat(varDefs)));
+			}
+		};
+		
+		cot.ruleSequence.add(new Rule("replace cot with one over tan",Rule.EASY){
+			private static final long serialVersionUID = 1L;
+			
+			@Override
+			public Expr applyRuleToExpr(Expr e,Settings settings) {
+				return inv(tan(e.get())).simplify(settings);
+			}
+		});
+		cot.toFloatFunc = new Func.FloatFunc() {
+			private static final long serialVersionUID = 1L;
+
+			@Override
+			ComplexFloat convertToFloat(ExprList varDefs, Func owner) {
+				return ComplexFloat.div(ComplexFloat.ONE, ComplexFloat.tan(owner.get().convertToFloat(varDefs)));
+			}
+		};
 	}
 	
 	private static ArrayList<String> functionNames = new ArrayList<String>();
@@ -454,6 +613,15 @@ public class SimpleFuncs extends QuickMath{
 		addFunc(result);//override the simplify children bool
 		addFunc(allowAbs);
 		addFunc(allowComplexNumbers);
+		addFunc(sign);
+		
+		addFunc(sinh);
+		addFunc(cosh);
+		addFunc(tanh);
+		
+		addFunc(sec);
+		addFunc(csc);
+		addFunc(cot);
 		
 		for(String s:simpleFuncs.keySet()) {
 			functionNames.add(s);
@@ -476,9 +644,11 @@ public class SimpleFuncs extends QuickMath{
 		numberOfParams.put("distr", 1);
 		numberOfParams.put("exp", 1);
 		numberOfParams.put("inv", 1);
+		
 		numberOfParams.put("sinh", 1);
 		numberOfParams.put("cosh", 1);
 		numberOfParams.put("tanh", 1);
+		
 		numberOfParams.put("lambertW", 1);
 		
 		numberOfParams.put("solve", 2);
@@ -573,9 +743,6 @@ public class SimpleFuncs extends QuickMath{
 		if(funcName.equals("distr")) return distr(params[0]);
 		if(funcName.equals("exp")) return exp(params[0]);
 		if(funcName.equals("inv")) return inv(params[0]);
-		if(funcName.equals("sinh")) return sinh(params[0]);
-		if(funcName.equals("cosh")) return cosh(params[0]);
-		if(funcName.equals("tanh")) return tanh(params[0]);
 		if(funcName.equals("lambertW")) return lambertW(params[0]);
 		if(funcName.equals("abs")) return abs(params[0]);
 		

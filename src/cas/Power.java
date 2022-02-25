@@ -432,6 +432,8 @@ public class Power extends Expr{
 		}
 	};
 	
+	static Rule sqrtOfSqrtSum = new Rule("sqrt(k*sqrt(b)+a)->sqrt((a+sqrt(a^2-b*k^2))/2)+sqrt((a-sqrt(a^2-b*k^2))/2)*sign(k)","isType(result(sqrt(a^2-b*k^2)),num)","square root of a square root sum",Rule.UNCOMMON);
+	
 	static Sequence ruleSequence = null;
 	
 	public static void loadRules(){
@@ -442,6 +444,7 @@ public class Power extends Expr{
 				sqrtOneMinusCos,
 				sqrtOnePlusSin,
 				sqrtOnePlusCos,
+				sqrtOfSqrtSum,
 				factorExponent,
 				baseHasPower,
 				baseHasPowerAbs,

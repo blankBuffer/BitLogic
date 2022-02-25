@@ -1,5 +1,7 @@
 package cas;
 
+import java.io.Serializable;
+
 public class Func extends Expr{
 
 	private static final long serialVersionUID = -3146654431684411030L;
@@ -36,6 +38,8 @@ public class Func extends Expr{
 		return out;
 	}
 	public Sequence ruleSequence = sequence();
+	public FloatFunc toFloatFunc = null;
+	
 	@Override
 	public Expr copy() {
 		Func out = new Func(name);
@@ -46,11 +50,30 @@ public class Func extends Expr{
 		out.ruleSequence = ruleSequence;
 		out.numberOfParams = numberOfParams;
 		out.flags.set(flags);
+		out.toFloatFunc = toFloatFunc;
 		return out;
 	}
 	
+	static abstract class FloatFunc implements Serializable{
+		private static final long serialVersionUID = 7831115405347619209L;
+
+		abstract ComplexFloat convertToFloat(ExprList varDefs,Func owner);
+	}
+	
+	static FloatFunc nothingFunc = new Func.FloatFunc() {//return whatever is inside
+		private static final long serialVersionUID = 1L;
+
+		@Override
+		ComplexFloat convertToFloat(ExprList varDefs, Func owner) {
+			return owner.get().convertToFloat(varDefs);
+		}
+	};
+	
 	@Override
 	public ComplexFloat convertToFloat(ExprList varDefs) {
+		if(toFloatFunc != null) {
+			return toFloatFunc.convertToFloat(varDefs,this);
+		}
 		return new ComplexFloat(0,0);
 	}
 	@Override

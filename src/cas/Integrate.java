@@ -35,6 +35,8 @@ public class Integrate extends Expr{
 	static Rule logCase = new Rule("integrate(ln(x),x)->ln(x)*x-x","integral of the log",Rule.UNCOMMON);
 	
 	static Rule absCase = new Rule("integrate(abs(x),x)->x*abs(x)/2","integral of the absolute value",Rule.UNCOMMON);
+	static Rule absProdCase = new Rule("integrate(abs(x)*x,x)->x^2*abs(x)/3","integral of product with the absolute value",Rule.UNCOMMON);
+	static Rule absPowerCase = new Rule("integrate(abs(x)*x^n,x)->(x^(n+1)*abs(x))/(n+2)","~contains(n,x)","integral of the power of absolute value",Rule.UNCOMMON);
 	
 	static Rule cosCase = new Rule("integrate(cos(x),x)->sin(x)","integral of the cosine",Rule.EASY);
 	static Rule cosPowerCase = new Rule("integrate(cos(x)^n,x)->cos(x)^(n-1)*sin(x)/n+(n-1)/n*integrate(cos(x)^(n-2),x)","eval(n>1)&~contains(n,x)","integral of cos to the n",Rule.DIFFICULT);
@@ -85,10 +87,6 @@ public class Integrate extends Expr{
 					
 					new Rule("integrate(cos(x+k)*b^x,x)->sin(x+k)*b^x/(1+ln(b)^2)+ln(b)*cos(x+k)*b^x/(1+ln(b)^2)","~contains({k,b},x)","integral of looping cosine",Rule.UNCOMMON),
 					new Rule("integrate(cos(a*x+k)*b^x,x)->a*sin(a*x+k)*b^x/(a^2+ln(b)^2)+ln(b)*cos(a*x+k)*b^x/(a^2+ln(b)^2)","~contains({a,k,b},x)","integral of looping cosine",Rule.UNCOMMON),
-					
-					
-					
-					new Rule("integrate(x*abs(x),x)->abs(x)*x^2/3","signed quadratic integral",Rule.UNCOMMON),
 			};
 			Rule.initRules(cases);
 		}
@@ -641,7 +639,7 @@ public class Integrate extends Expr{
 			
 			if(Rule.fastSimilarStruct(sqrtObj, integ.get())) {
 				Sequence coefs = polyExtract(e.get().get(),integ.getVar(),settings);
-				
+				if(coefs == null) return integ;
 				if(coefs.size() == 3) {
 					ExprList equs = exprList( equ(var("c"),coefs.get(0)) , equ(var("b"),coefs.get(1)) , equ(var("a"),coefs.get(2)) );
 					if(check.replace(equs).simplify(settings).equals(BoolState.TRUE)) {
@@ -814,7 +812,7 @@ public class Integrate extends Expr{
 		@Override
 		public Expr applyRuleToExpr(Expr e,Settings settings) {
 			Integrate integ = (Integrate)e;
-			if(!( (integ.containsType("sin") || integ.containsType("cos")) && integ.containsType("sum") )) return integ;//needs sin or cos
+			if(!( (integ.containsType("sin") || integ.containsType("cos")) && integ.containsType("sum") && !(integ.get() instanceof Sum) )) return integ;//needs sin or cos
 			
 			Expr innerTrig = getSinOrCosInner(integ.get());
 			if(innerTrig == null) return integ;
@@ -827,7 +825,7 @@ public class Integrate extends Expr{
 			newInner = newInner.simplify(settings);
 			
 			if(newInner.contains(integ.getVar()) || containsTrig(newInner)) return integ;
-			System.out.println(newInner);
+			
 			Expr integRes = integrate(newInner,var("0t")).simplify(settings);
 			if(!integRes.containsType("integrate")) {
 				Expr out = integRes.replace(equ(var("0t"),tan( div(innerTrig,num(2)) ))).simplify(settings);
@@ -854,7 +852,10 @@ public class Integrate extends Expr{
 				inverseQuadraticSimple,
 				inverseQuadraticSimple2,
 				logCase,
+				
 				absCase,
+				absProdCase,
+				absPowerCase,
 				
 				cosCase,
 				cosPowerCase,

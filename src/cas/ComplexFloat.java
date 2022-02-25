@@ -7,6 +7,7 @@ public class ComplexFloat implements Serializable{
 	
 	public double real = 0.0,imag = 0.0;
 	public static ComplexFloat ONE = new ComplexFloat(1,0);
+	public static ComplexFloat TWO = new ComplexFloat(2,0);
 	public static ComplexFloat ZERO = new ComplexFloat(0,0);
 	public static ComplexFloat I = new ComplexFloat(0,1);
 	
@@ -90,5 +91,8 @@ public class ComplexFloat implements Serializable{
 		
 		return div(ln(add(in, mult(I,pow(oneMinusXSquared,new ComplexFloat(0.5,0)) ))),I);
 		
+	}
+	public static ComplexFloat neg(ComplexFloat in) {
+		return new ComplexFloat(-in.real,-in.imag);
 	}
 }

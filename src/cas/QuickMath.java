@@ -197,15 +197,6 @@ public class QuickMath {
 	public static Tan tan(Expr expr) {
 		return new Tan(expr);
 	}
-	public static Div sinh(Expr expr) {
-		return div(sub(exp(expr),exp(neg(expr))),num(2));
-	}
-	public static Div cosh(Expr expr) {
-		return div(sum(exp(expr),exp(neg(expr))),num(2));
-	}
-	public static Div tanh(Expr expr) {
-		return div(sub(exp(expr),exp(neg(expr))),sum(exp(expr),exp(neg(expr))));
-	}
 	public static Atan atan(Expr expr) {
 		return new Atan(expr);
 	}
