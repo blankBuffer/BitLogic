@@ -48,7 +48,7 @@
 		
 		<h2>Getting Started</h2>
 		
-		<a href="bitLogicArch_1.5.11.zip" download>Download BitLogic version 1.5.11</a>
+		<a href="bitLogicArch_1.5.13.zip" download>Download BitLogic version 1.5.13</a>
 		<br><br>
 		<a href="https://www.youtube.com/watch?v=wxWfP2_URYQ">youtube video</a>
 		<br><br>
@@ -102,6 +102,9 @@
 			<li>'^' -- second to last element to the power of the last element</li>
 			<li>'/' -- second to last element divided by the last element</li>
 			<li>'=' -- sets the last two elements equal to each other</li>
+			<li>'&gt;' -- sets the last two elements compared to each other</li>
+			<li>'&lt;' -- sets the last two elements compared to each other</li>
+			<li>'->' -- becomes operator</li>
 			<li>'[' -- add a empty list to the stack</li>
 			<li>']' -- add last element to the list. The list should be in the second to last position</li>
 			<li>'inv' -- take the inverse of the last element</li>
@@ -113,6 +116,9 @@
 			<li>sin(angle) -- takes the sine</li>
 			<li>cos(angle) -- takes the cosine</li>
 			<li>tan(angle) -- takes the tangent</li>
+			<li>csc(angle) -- takes the cosecant</li>
+			<li>sec(angle) -- takes the secant</li>
+			<li>cot(angle) -- takes the cotangent</li>
 			<li>asin(ratio) -- takes the inverse sine</li>
 			<li>acos(ratio) -- takes the inverse cosine</li>
 			<li>atan(slope) -- takes the inverse tangent</li>
@@ -140,11 +146,20 @@
 			<li>taylor(function,variable=center,degree) -- makes a taylor polynomial</li>
 			<li>polyCoef(polynomial,var) -- returns a list of the coefficients</li>
 			<li>params(funcName) -- returns the expected number of parameters of a function</li>
-			<li>isNum(expression) -- returns if the given expression is a number</li>
+			<li>isType(expression,typeName) -- returns if the given expression is of a type</li>
 			<li>partialFrac(expression,var) -- returns the partial fraction of the expression</li>
 			<li>polyDiv(expression,var) -- returns the polynomial division of the expression</li>
 			<li>gui() -- creates a new window instance</li>
-			
+			<li>contains(expression,search) -- returns true if the search expression is in the expression</li>
+			<li>result(expression) -- forces argument to be simplified</li>
+			<li>allowAbs() -- returns if absolute values are allowed</li>
+			<li>allowComplexNumbers() -- returns if complex numbers are allowed</li>
+			<li>sign(expression) -- returns the sign of an expression. Note its not if the expression &lt; 0 its if there is a negative number. sign(-x) -> -1 because it contains a negative</li>
+			<li>sinh(expr) -- hyperbolic sine</li>
+			<li>cosh(expr) -- hyperbolic cosine</li>
+			<li>tanh(expr) -- hyperbolic tangent</li>
+			<li>save(expression,fileName) -- saves the expression as a serialized binary onto the disk. The name cannot have spaces</li>
+			<li>open(fileName) -- opens binary saved expression</li>
 		</ul>
 		
 		<p></p>
