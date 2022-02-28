@@ -4,44 +4,13 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
 
-import cas.bool.And;
-import cas.bool.BoolState;
-import cas.bool.Not;
-import cas.bool.Or;
-import cas.calculus.Diff;
-import cas.calculus.Integrate;
-import cas.calculus.IntegrateOver;
-import cas.calculus.Limit;
-import cas.lang.Interpreter;
-import cas.matrix.Dot;
-import cas.matrix.Mat;
-import cas.matrix.Transpose;
-import cas.primitive.Abs;
-import cas.primitive.Approx;
-import cas.primitive.Becomes;
-import cas.primitive.Distr;
-import cas.primitive.Div;
-import cas.primitive.Equ;
-import cas.primitive.ExprList;
-import cas.primitive.Factor;
-import cas.primitive.FloatExpr;
-import cas.primitive.Func;
-import cas.primitive.Ln;
-import cas.primitive.Num;
-import cas.primitive.Power;
-import cas.primitive.Prod;
-import cas.primitive.Sequence;
-import cas.primitive.Solve;
-import cas.primitive.Sum;
-import cas.primitive.Var;
-import cas.special.Gamma;
-import cas.special.LambertW;
-import cas.trig.Acos;
-import cas.trig.Asin;
-import cas.trig.Atan;
-import cas.trig.Cos;
-import cas.trig.Sin;
-import cas.trig.Tan;
+import cas.bool.*;
+import cas.special.*;
+import cas.primitive.*;
+import cas.trig.*;
+import cas.calculus.*;
+import cas.lang.*;
+import cas.matrix.*;
 
 
 public class QuickMath {
@@ -287,6 +256,9 @@ public class QuickMath {
 	}
 	public static Transpose transpose(Expr e) {
 		return new Transpose(e);
+	}
+	public static Next next(Sequence s) {
+		return new Next(s);
 	}
 	public static Sequence sequence(Expr... exprs) {
 		Sequence out = new Sequence();

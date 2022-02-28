@@ -16,15 +16,7 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.Random;
 
-import cas.primitive.Div;
-import cas.primitive.Equ;
-import cas.primitive.ExprList;
-import cas.primitive.Func;
-import cas.primitive.Num;
-import cas.primitive.Prod;
-import cas.primitive.Sequence;
-import cas.primitive.Sum;
-import cas.primitive.Var;
+import cas.primitive.*;
 
 /*
  * The Expr class is a description of what an expression is
@@ -601,7 +593,7 @@ public abstract class Expr extends QuickMath implements Comparable<Expr>, Serial
 		if(tab>0) tabStr+="--->";
 		else tabStr+=">";
 		out+=(tabStr+ typeName() +" hash: "+hashCode());
-		if(this instanceof Num || this instanceof Var) out+=(" name: "+this);
+		if(this instanceof Num || this instanceof Var || this instanceof FloatExpr) out+=(" name: "+this);
 		out+="\n";
 		if(this instanceof Func) {
 			out+="rules: "+((Func)this).getRuleSequence();

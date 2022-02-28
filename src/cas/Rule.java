@@ -30,6 +30,7 @@ import cas.matrix.Transpose;
 import cas.primitive.*;
 import cas.special.Gamma;
 import cas.special.LambertW;
+import cas.special.Next;
 import cas.trig.*;
 
 public class Rule extends Expr{
@@ -344,6 +345,7 @@ public class Rule extends Expr{
 	 */
 	public static void loadRules(){
 		System.out.println("loading CAS rules...");
+		long startTime = System.nanoTime();
 		
 		StandardRules.loadRules();
 		
@@ -372,6 +374,7 @@ public class Rule extends Expr{
 		Ln.loadRules();
 		Mat.loadRules();
 		
+		Next.loadRules();
 		Not.loadRules();
 		Or.loadRules();
 		Power.loadRules();
@@ -385,10 +388,12 @@ public class Rule extends Expr{
 		
 		SimpleFuncs.loadRules();
 		
-		Ask.loadBasicQuestions();
-		
 		SimpleFuncs.FUNCTION_UNLOCKED = true;
-		System.out.println("done loading Rules!");
+		
+		long endTime = System.nanoTime();
+		System.out.println("done loading Rules! took "+((endTime-startTime)/1000000.0)+" ms");
+		
+		Ask.loadBasicQuestions();
 	}
 	
 	@Override

@@ -78,11 +78,39 @@ public class Interpreter extends QuickMath{
 		//System.out.println("recieved: "+tokens);
 		errors(tokens);
 		
+		if(tokens.contains(".")) {
+			for(int i = 0;i<tokens.size()-2;i++){//floating point reading
+				if(i+6<tokens.size()+1 && tokens.get(i).equals("-") && tokens.get(i+1).matches("([0-9])+") && tokens.get(i+2).equals(".") && tokens.get(i+3).matches("([0-9])*(e|E)") && tokens.get(i+4).equals("-") && tokens.get(i+5).matches("([0-9])+")) {
+					String newToken = "-"+tokens.get(i+1)+"."+tokens.get(i+3)+tokens.get(i+4)+tokens.get(i+5);
+					for(int j = 1;j<6;j++) tokens.remove(i);
+					tokens.set(i, newToken);
+				}
+				if(i+5<tokens.size()+1 && tokens.get(i).matches("([0-9])+") && tokens.get(i+1).equals(".") && tokens.get(i+2).matches("([0-9])*(e|E)") && tokens.get(i+3).equals("-") && tokens.get(i+4).matches("([0-9])+")) {
+					String newToken = tokens.get(i)+"."+tokens.get(i+2)+tokens.get(i+3)+tokens.get(i+4);
+					for(int j = 1;j<5;j++) tokens.remove(i);
+					tokens.set(i, newToken);
+				}
+				if(i+4<tokens.size()+1 && tokens.get(i).equals("-") && tokens.get(i+1).matches("([0-9])+") && tokens.get(i+2).equals(".") && tokens.get(i+3).matches("([0-9])*(e|E)?([0-9])*")) {
+					String newToken = "-"+tokens.get(i+1)+"."+tokens.get(i+3);
+					for(int j = 1;j<4;j++) tokens.remove(i);
+					tokens.set(i, newToken);
+				}
+				if(i+3<tokens.size()+1 && tokens.get(i).matches("([0-9])+") && tokens.get(i+1).equals(".") && tokens.get(i+2).matches("([0-9])*(e|E)?([0-9])*")) {
+					String newToken = tokens.get(i)+"."+tokens.get(i+2);
+					for(int j = 1;j<3;j++) tokens.remove(i);
+					tokens.set(i, newToken);
+				}
+					
+			}
+		}
+		
 		if(tokens.size() == 1) {
 			String string = tokens.get(0);
 			
 			if(string.matches("[0-9]+")){
 				return num(string);
+			}else if(string.matches("[\\-]?[0-9]+((.[0-9]+)|(.[0-9]+[e|E][\\-]?[0-9]+))")) {
+				return floatExpr(string);
 			}else if(!containsOperators(string)){
 				String lowered = string.toLowerCase();
 				if(string.equals("i")) return num(0,1);
@@ -168,21 +196,6 @@ public class Interpreter extends QuickMath{
 					return f;
 				}
 				
-			}
-		}
-		
-		{//floating point reading
-			if(tokens.size() == 3 && tokens.get(0).matches("([0-9])+") && tokens.get(1).equals(".") && tokens.get(2).matches("([0-9])*(e|E)?([0-9])*")) {
-				return floatExpr(tokens.get(0)+"."+tokens.get(2));
-			}
-			if(tokens.size() == 4 && tokens.get(1).matches("([0-9])+") && tokens.get(2).equals(".") && tokens.get(3).matches("([0-9])*(e|E)?([0-9])*")) {
-				return floatExpr("-"+tokens.get(1)+"."+tokens.get(3));
-			}
-			if(tokens.size() == 5 && tokens.get(0).matches("([0-9])+") && tokens.get(1).equals(".") && tokens.get(2).matches("([0-9])*(e|E)") && tokens.get(3).equals("-") && tokens.get(4).matches("([0-9])+")) {
-				return floatExpr(tokens.get(0)+"."+tokens.get(2)+tokens.get(3)+tokens.get(4));
-			}
-			if(tokens.size() == 6 && tokens.get(0).equals("-") && tokens.get(1).matches("([0-9])+") && tokens.get(2).equals(".") && tokens.get(3).matches("([0-9])*(e|E)") && tokens.get(4).equals("-") && tokens.get(5).matches("([0-9])+")) {
-				return floatExpr("-"+tokens.get(1)+"."+tokens.get(3)+tokens.get(4)+tokens.get(5));
 			}
 		}
 		
