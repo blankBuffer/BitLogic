@@ -1,0 +1,10 @@
+clear_terminal:true
+keep_window_on_top:true
+show_plot:true
+plot_mode:0
+background_red:64
+background_green:64
+background_blue:64
+foreground_red:255
+foreground_green:255
+foreground_blue:255
