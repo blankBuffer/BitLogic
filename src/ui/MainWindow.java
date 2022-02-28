@@ -516,7 +516,7 @@ public class MainWindow extends JFrame{
 	
 	void loadPrefs() {
 		try {
-			Scanner defsReader = new Scanner(new File("prefs.txt"));
+			Scanner defsReader = new Scanner(new File("resources/prefs.txt"));
 			
 			clearTerminal = getBoolInLine(defsReader.nextLine());
 			KEEP_WINDOW_ON_TOP_DEFAULT = getBoolInLine(defsReader.nextLine());

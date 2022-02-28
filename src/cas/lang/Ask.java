@@ -64,7 +64,7 @@ public class Ask extends QuickMath{
 	
 	public static void loadBasicQuestions() {
 		try {
-			Scanner scanner = new Scanner(new File("QnA.txt"));
+			Scanner scanner = new Scanner(new File("resources/QnA.txt"));
 			System.out.println("loading questions...");
 			int questionsLoadedCount = 0;
 			while(scanner.hasNextLine()) {
