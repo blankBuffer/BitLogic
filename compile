@@ -1,3 +1,4 @@
+
 cd "$( dirname "${BASH_SOURCE[0]}" )"
 
-javac -cp src src/*.java src/cas/*.java -d bin
+javac -cp src src/*.java src/cas/*.java src/cas/bool/*.java src/cas/calculus/*.java src/cas/graphics/*.java src/cas/lang/*.java src/cas/matrix/*.java src/cas/primitive/*.java src/cas/programming/*.java src/cas/special/*.java src/cas/trig/*.java src/ui/*.java -d bin

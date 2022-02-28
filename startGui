@@ -1,2 +1,2 @@
-cd "$( dirname "${BASH_SOURCE[0]}" )"/bin
-java Main gui
+cd "$( dirname "${BASH_SOURCE[0]}" )"
+java -cp bin Main gui

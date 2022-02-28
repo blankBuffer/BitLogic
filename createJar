@@ -1,10 +1,9 @@
 cd "$( dirname "${BASH_SOURCE[0]}" )"
 
-bash compile
+./compile
 
 cd bin
 
-jar -cfe BitLogic.jar Main *.class cas/*.class
+jar -cfe BitLogic.jar Main *.class cas/*.class cas/bool/*.class cas/calculus/*.class cas/graphics/*.class cas/lang/*.class cas/matrix/*.class cas/primitive/*.class cas/programming/*.class cas/special/*.class cas/trig/*.class ui/*.class
 
 mv BitLogic.jar ..
-

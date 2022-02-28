@@ -1,0 +1,8 @@
+cd "$( dirname "${BASH_SOURCE[0]}" )"
+./createJar_jdk_11
+mkdir bitLogicArch
+mkdir bitLogicArch/saves
+cp BitLogic.jar bitLogicArch/
+cp -R resources BitLogicArch/
+cp bitLogicTest.bl BitLogicArch/
+zip -r bitLogicArch.zip bitLogicArch/
