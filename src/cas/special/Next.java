@@ -2,7 +2,6 @@ package cas.special;
 
 import cas.*;
 import cas.primitive.*;
-import cas.bool.*;
 
 /*
  * tries to predict the next element in a sequence
@@ -13,12 +12,17 @@ public class Next extends Expr{
 	
 	public Next() {}//
 	
-	public Next(Sequence sequence) {
+	public Next(Sequence sequence,Num steps) {
 		add(sequence);
+		add(steps);
 	}
 	
 	public Sequence getSequence() {
 		return (Sequence)get();
+	}
+	
+	public Num getNum() {//number of new terms we want to generate
+		return (Num)get(1);
 	}
 	
 	static Rule isFibonacci = new Rule("is the fibonacci sequence",Rule.EASY) {
@@ -29,41 +33,59 @@ public class Next extends Expr{
 			Next next = (Next)e;
 			Sequence s = next.getSequence();
 			
-			if(s.size()>=3) {
+			if(s.size()>=4) {
 				Expr first = s.get(0);
 				Expr second = s.get(1);
 				for(int i = 2;i<s.size();i++) {
 					Expr expected = sum(first,second).simplify(settings);
 					if(s.get(i).equals(expected)) {
 						first = second;
-						second = s.get(i);
+						second = expected;
 						
 					}else return next;
-				}	
-				return sum(first,second).simplify(settings);
+				}
+				Sequence newSeq = new Sequence();
+				for(int i = 0;i<next.getNum().realValue.intValue();i++) {
+					Expr expected = sum(first,second).simplify(settings);
+					newSeq.add(expected);
+					first = second;
+					second = expected;
+				}
+				return newSeq;
 			}
 			return next;
 		}
 		
 	};
 	
+	static boolean USED_GEO = false;
 	static Rule geometric = new Rule("is a geometric series",Rule.EASY) {
 		private static final long serialVersionUID = 1L;
 		
 		@Override
 		public Expr applyRuleToExpr(Expr e,Settings settings) {
+			if(USED_GEO) return e;
 			Next next = (Next)e;
 			Sequence s = next.getSequence();
-			if(s.size()>=3) {
-				Expr ratio = div(s.get(1),s.get(0)).simplify(settings);
-				
+			if(s.size()>=4) {
+				Sequence ratioSequence = new Sequence();
 				for(int i = 1;i<s.size();i++) {
-					Expr otherRatio = div(s.get(i),s.get(i-1)).simplify(settings);
-					
-					if(!otherRatio.equals(ratio)) return next;
-					
+					Expr ratio = div(s.get(i),s.get(i-1)).simplify(settings);
+					ratioSequence.add(ratio);
 				}
-				return prod(s.get(s.size()-1),ratio).simplify(settings);
+				USED_GEO = true;
+				Expr nextRatios = next(ratioSequence,next.getNum()).simplify(settings);
+				USED_GEO = false;
+				
+				if(nextRatios instanceof Next) return next;
+				
+				Sequence newSeq = new Sequence();
+				Expr last = s.get(s.size()-1);
+				for(int i = 0;i<next.getNum().realValue.intValue();i++) {
+					last = prod(last,nextRatios.get(i)).simplify(settings);
+					newSeq.add(last);
+				}
+				return newSeq;
 			}
 			return next;
 		}
@@ -77,52 +99,90 @@ public class Next extends Expr{
 			Next next = (Next)e;
 			Sequence s = next.getSequence();
 			
-			if(s.size()>1) {
-				Expr start = s.get(0);
-				
-				outer:for(int loopSize = 1;loopSize<s.size();loopSize++) {
-					if(s.get(loopSize).equals(start)) {
-						
-						for(int i = loopSize;i<s.size();i++) {
-							if(!s.get(i).equals(s.get(i%loopSize))) continue outer;
-						}
-						return s.get( s.size()%loopSize );
-						
+			Expr start = s.get(0);
+			outer:for(int loopSize = 1;loopSize<s.size()/2+1;loopSize++) {
+				if(s.get(loopSize).equals(start)) {
+					for(int i = loopSize;i<s.size();i++) {
+						if(!s.get(i).equals(s.get(i%loopSize))) continue outer;
 					}
+					Sequence newSeq = new Sequence();
+					for(int i = 0;i<next.getNum().realValue.intValue();i++) newSeq.add(s.get( (s.size()+i)%loopSize ));
+					return newSeq;
 				}
-				
-			}
+			}	
 			
 			return next;
 		}
 	};
 	
-	static Rule occilation2 = new Rule("occilation of size 2",Rule.EASY) {
+	static boolean USED_STEP = false;
+	static Rule steppedPattern = new Rule("stepped/interlaced patterns",Rule.EASY) {//basically like sequences interlaced
 		private static final long serialVersionUID = 1L;
 		
 		@Override
 		public Expr applyRuleToExpr(Expr e,Settings settings) {
+			if(USED_STEP || USED_GEO || USED_COEF) return e;
 			Next next = (Next)e;
 			Sequence s = next.getSequence();
 			
-			if(s.size()>=3) {
-				boolean firstComp = ((BoolState)eval(equLess(s.get(0),s.get(1))).simplify(settings)).state;
-				boolean secondComp = ((BoolState)eval(equLess(s.get(1),s.get(2))).simplify(settings)).state;
+			outer:for(int step = 2;step<=6 && s.size()/step>=3;step++) {//limit to 6 and number of cycles >= 3
+				//System.out.println("str:"+step+" "+e);
 				
-				if(firstComp != secondComp) {
-					if(s.size()%2 == 0) {
-						Sequence oddTerms = new Sequence();
-						for(int i = 0;i<s.size();i+=2) oddTerms.add(s.get(i));
-						
-						return next(oddTerms).simplify(settings);
-						
-					}//else
-					
-					Sequence evenTerms = new Sequence();
-					for(int i = 1;i<s.size();i+=2) evenTerms.add(s.get(i));
-					
-					return next(evenTerms).simplify(settings);
+				Sequence[] subSequences = new Sequence[step];
+				for(int i = 0;i<subSequences.length;i++) subSequences[i] = new Sequence();
+				
+				for(int i = 0;i<s.size();i++) {
+					subSequences[i%step].add(s.get(i));
 				}
+				
+				//for(int i = 0;i<subSequences.length;i++) System.out.println(subSequences[i]);
+				
+				int startingPoint = s.size()%step;
+				int remain = next.getNum().realValue.intValue();
+				
+				int maxChunkSize = remain/step;
+				//System.out.println("max chunk size:"+maxChunkSize+" remain:"+remain);
+				int[] chunkSizes = new int[step];
+				
+				for(int i = startingPoint;remain>=0;i++) {
+					int j = i%step;
+					
+					if(remain>=maxChunkSize) {
+						chunkSizes[j] += maxChunkSize;
+						remain-=maxChunkSize;
+					}
+					else {
+						chunkSizes[j]++;
+						remain--;
+					}
+					
+				}
+				
+				//for(int i = 0;i<step;i++) System.out.println("cz:"+chunkSizes[i]);
+				
+				Expr[] contSequences = new Expr[step];
+				for(int i = 0;i<contSequences.length;i++) {
+					USED_STEP = true;
+					contSequences[i] = next(subSequences[i],num(chunkSizes[i])).simplify(settings);
+					USED_STEP = false;
+					if(contSequences[i] instanceof Next) continue outer;
+				}
+				
+				remain = next.getNum().realValue.intValue();
+				
+				int[] indexTracker = new int[step];
+				
+				Sequence out = new Sequence();
+				for(int i = startingPoint;i<startingPoint+remain;i++) {
+					int j = i%step;
+					if(chunkSizes[j]>0) {
+						out.add(contSequences[j].get(indexTracker[j]));
+						indexTracker[j]++;
+						chunkSizes[j]--;
+					}
+				}
+				System.out.println(step);
+				return out;
 				
 			}
 			
@@ -131,11 +191,14 @@ public class Next extends Expr{
 			
 	};
 	
+	static boolean USED_COEF = false;
 	static Rule coefPredict = new Rule("predict seperatly the coefficinet and the variable component",Rule.EASY) {
 		private static final long serialVersionUID = 1L;
 		
 		@Override
 		public Expr applyRuleToExpr(Expr e,Settings settings) {
+			if(USED_COEF) return e;
+			
 			Next next = (Next)e;
 			Sequence s = next.getSequence();
 			
@@ -150,11 +213,18 @@ public class Next extends Expr{
 				coefs.add(part.get(0));
 				exprs.add(part.get(1));
 			}
+			USED_COEF = true;
+			Expr nextCoefs = next(coefs,next.getNum()).simplify(settings);
+			Expr nextExprs = next(exprs,next.getNum()).simplify(settings);
+			USED_COEF = false;
 			
-			Expr nextCoef = next(coefs).simplify(settings);
-			Expr nextExpr = next(exprs).simplify(settings);
+			if(nextCoefs instanceof Next || nextExprs instanceof Next) return next;
 			
-			return prod(nextCoef,nextExpr).simplify(settings);
+			Sequence newSeq = new Sequence();
+			for(int i = 0;i<next.getNum().realValue.intValue();i++) {
+				newSeq.add(prod(nextCoefs.get(i),nextExprs.get(i)).simplify(settings));
+			}
+			return newSeq;
 		}
 	};
 	
@@ -178,10 +248,16 @@ public class Next extends Expr{
 					denomS.add(div.getDenom());
 				}
 				
-				Expr nextNumer = next(numerS).simplify(settings);
-				Expr nextDenom = next(denomS).simplify(settings);
+				Expr nextNumers = next(numerS,next.getNum()).simplify(settings);
+				Expr nextDenoms = next(denomS,next.getNum()).simplify(settings);
 				
-				return div(nextNumer,nextDenom).simplify(settings);
+				if(nextNumers instanceof Next || nextDenoms instanceof Next) return next;
+				
+				Sequence newSeq = new Sequence();
+				for(int i = 0;i<next.getNum().realValue.intValue();i++) {
+					newSeq.add(div(nextNumers.get(i),nextDenoms.get(i)).simplify(settings));
+				}
+				return newSeq;
 				
 			}
 			
@@ -207,24 +283,57 @@ public class Next extends Expr{
 			return newSequence;
 		}
 		
-		Expr getNext(Sequence s,Settings settings) {
+		Sequence getNext(Sequence s,Settings settings,int size,int num) {
+			if(size == 0) return null;
+			Sequence newSeq = new Sequence();
 			if(allSame(s)) {
-				return s.get(0);
+				for(int i = 0;i<num;i++) {
+					newSeq.add(s.get(0));
+				}
+				return newSeq;
 			}
-			
 			Sequence difference = getDifferenceSequence(s,settings);
 			
-			Expr n = getNext(difference,settings);
+			Sequence deltas = getNext(difference,settings,size-1,num);
+			if(deltas == null) return null;
 			
+			newSeq.add( sum(s.get(s.size()-1),deltas.get(0)).simplify(settings) );
+			for(int i = 1;newSeq.size()<num;i++) {
+				newSeq.add( sum(newSeq.get(newSeq.size()-1),deltas.get(i)).simplify(settings) );
+			}
 			
-			return sum(s.get(s.size()-1),n).simplify(settings);
+			return newSeq;
 		}
 		
 		@Override
 		public Expr applyRuleToExpr(Expr e,Settings settings) {
 			Next next = (Next)e;
 			Sequence s = next.getSequence();
-			return getNext(s,settings);
+			Expr expected = getNext(s,settings,s.size()/2+1,next.getNum().realValue.intValue());
+			
+			if(expected != null) {
+				return expected;
+			}
+			
+			return next;
+		}
+	};
+	
+	static Rule nothingCase = new Rule("nothing case for sequence prediction",Rule.VERY_EASY) {
+		private static final long serialVersionUID = 1L;
+		
+		@Override
+		public Expr applyRuleToExpr(Expr e,Settings settings) {
+			Next next = (Next)e;
+			if(next.getNum().equals(Num.ZERO)) return new Sequence();
+			else if(next.getSequence().size() == 1) {
+				Sequence out = new Sequence();
+				for(int i = 0;i<next.getNum().realValue.intValue();i++) {
+					out.add(next.getSequence().get());
+				}
+				return out;
+			}
+			return next;
 		}
 	};
 	
@@ -232,13 +341,14 @@ public class Next extends Expr{
 	
 	public static void loadRules() {
 		ruleSequence = sequence(
+				nothingCase,
+				polynomial,
 				isFibonacci,
-				geometric,
 				looping,
-				occilation2,
-				coefPredict,
+				geometric,
 				fracPredict,
-				polynomial
+				coefPredict,
+				steppedPattern
 		);
 	}
 	

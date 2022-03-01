@@ -257,8 +257,8 @@ public class QuickMath {
 	public static Transpose transpose(Expr e) {
 		return new Transpose(e);
 	}
-	public static Next next(Sequence s) {
-		return new Next(s);
+	public static Next next(Sequence s,Num num) {
+		return new Next(s,num);
 	}
 	public static Sequence sequence(Expr... exprs) {
 		Sequence out = new Sequence();

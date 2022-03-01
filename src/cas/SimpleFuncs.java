@@ -667,7 +667,7 @@ public class SimpleFuncs extends QuickMath{
 		numberOfParams.put("abs", 1);
 		numberOfParams.put("mat", 1);
 		numberOfParams.put("transpose", 1);
-		numberOfParams.put("next", 1);
+		numberOfParams.put("next", 2);
 		
 		for(String s:numberOfParams.keySet()) {
 			functionNames.add(s);
@@ -756,7 +756,7 @@ public class SimpleFuncs extends QuickMath{
 		if(funcName.equals("abs")) return abs(params[0]);
 		if(funcName.equals("mat")) return mat((Sequence)params[0]);
 		if(funcName.equals("transpose")) return transpose(params[0]);
-		if(funcName.equals("next")) return next((Sequence)params[0]);
+		if(funcName.equals("next")) return next((Sequence)params[0],(Num)params[1]);
 		
 		if(funcName.equals("solve")) return solve((Equ)params[0],(Var)params[1]);
 		if(funcName.equals("diff")) return diff(params[0],(Var)params[1]);
