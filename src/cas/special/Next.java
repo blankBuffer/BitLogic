@@ -70,6 +70,8 @@ public class Next extends Expr{
 			if(s.size()>=4) {
 				Sequence ratioSequence = new Sequence();
 				for(int i = 1;i<s.size();i++) {
+					if(s.get(i-1).equals(Num.ZERO)) return next;//cant divide by zero
+					
 					Expr ratio = div(s.get(i),s.get(i-1)).simplify(settings);
 					ratioSequence.add(ratio);
 				}
@@ -265,6 +267,43 @@ public class Next extends Expr{
 		}
 	};
 	
+	static Rule powPredict = new Rule("predict next power",Rule.EASY) {
+		private static final long serialVersionUID = 1L;
+		
+		@Override
+		public Expr applyRuleToExpr(Expr e,Settings settings) {
+			Next next = (Next)e;
+			Sequence s = next.getSequence();
+			
+			if(s.get(0) instanceof Power || s.get(1) instanceof Power || s.get(s.size()-1) instanceof Power || s.get(s.size()-2) instanceof Power) {
+				
+				Sequence baseS = new Sequence();
+				Sequence expoS = new Sequence();
+				
+				for(int i = 0;i<s.size();i++) {
+					Power pow = Power.cast(s.get(i));
+					
+					baseS.add(pow.getBase());
+					expoS.add(pow.getExpo());
+				}
+				
+				Expr nextBases = next(baseS,next.getNum()).simplify(settings);
+				Expr nextExpos = next(expoS,next.getNum()).simplify(settings);
+				
+				if(nextBases instanceof Next || nextExpos instanceof Next) return next;
+				
+				Sequence newSeq = new Sequence();
+				for(int i = 0;i<next.getNum().realValue.intValue();i++) {
+					newSeq.add(pow(nextBases.get(i),nextExpos.get(i)).simplify(settings));
+				}
+				return newSeq;
+				
+			}
+			
+			return next;
+		}
+	};
+	
 	static Rule polynomial = new Rule("is a polynomial sequence",Rule.TRICKY) {
 		private static final long serialVersionUID = 1L;
 		
@@ -337,6 +376,33 @@ public class Next extends Expr{
 		}
 	};
 	
+	static Rule funcPredict = new Rule("expression layout prediction",Rule.TRICKY) {
+		private static final long serialVersionUID = 1L;
+		
+		@Override
+		public Expr applyRuleToExpr(Expr e,Settings settings) {
+			Next next = (Next)e;
+			Sequence s = next.getSequence();
+			
+			String firstTypeName = s.get(0).typeName();
+			if(SimpleFuncs.isFunc(firstTypeName) && s.get(0).size() == 1) {
+				for(int i = 1;i<s.size();i++) if(!(s.get(i).typeName().equals(firstTypeName)&& s.get(i).size() == 1)) return next;
+				Sequence subSequence = new Sequence();
+				for(int i = 0;i<s.size();i++) subSequence.add(s.get(i).get());
+				
+				Expr expectedInner = next(subSequence,next.getNum()).simplify(settings);
+				
+				if(expectedInner instanceof Next) return next;
+				
+				for(int i = 0;i<expectedInner.size();i++) {
+					expectedInner.set(i, SimpleFuncs.getFuncByName(firstTypeName, expectedInner.get(i)) );
+				}
+				return expectedInner.simplify(settings);
+			}
+			return next;
+		}
+	};
+	
 	static Sequence ruleSequence;
 	
 	public static void loadRules() {
@@ -347,6 +413,8 @@ public class Next extends Expr{
 				looping,
 				geometric,
 				fracPredict,
+				powPredict,
+				funcPredict,
 				coefPredict,
 				steppedPattern
 		);

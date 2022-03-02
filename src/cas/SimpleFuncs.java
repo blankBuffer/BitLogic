@@ -7,6 +7,7 @@ import java.util.HashMap;
 
 import cas.lang.*;
 import cas.primitive.*;
+import cas.special.*;
 import cas.bool.*;
 import cas.calculus.*;
 
@@ -91,6 +92,12 @@ public class SimpleFuncs extends QuickMath{
 	static Func sec = new Func("sec",1);
 	static Func csc = new Func("csc",1);
 	static Func cot = new Func("cot",1);
+	
+	static Func extSeq = new Func("extSeq",2);
+	static Func truncSeq = new Func("truncSeq",2);
+	static Func subSeq = new Func("subSeq",3);
+	static Func revSeq = new Func("revSeq",1);
+	static Func sumSeq = new Func("sumSeq",1);
 	
 	public static void loadRules(){
 		tree.simplifyChildren = false;
@@ -581,6 +588,88 @@ public class SimpleFuncs extends QuickMath{
 			}
 		};
 		
+		
+		extSeq.ruleSequence.add(new Rule("extend the sequence",Rule.EASY){
+			private static final long serialVersionUID = 1L;
+			
+			@Override
+			public Expr applyRuleToExpr(Expr e,Settings settings) {
+				
+				int needed = ((Num)e.get(1)).realValue.intValue()-e.get().size();
+				
+				Expr extended = next( (Sequence)e.get() , num(needed) ).simplify(settings);
+				
+				if(extended instanceof Next) {
+					for(int i = 0;i<needed;i++) {
+						e.get().add( e.get(0).get(i%e.get(0).size()) );
+					}
+				}else {
+					for(int i = 0;i<needed;i++) {
+						e.get().add(extended.get(i));
+					}
+				}
+				
+				return e.get();
+			}
+		});
+		truncSeq.ruleSequence.add(new Rule("truncate the sequence",Rule.EASY) {
+			private static final long serialVersionUID = 1L;
+			
+			@Override
+			public Expr applyRuleToExpr(Expr e,Settings settings) {
+				int newSize = ((Num)e.get(1)).realValue.intValue();
+				
+				Sequence truncated = new Sequence();
+				for(int i = 0;i<newSize;i++) {
+					truncated.add(e.get(0).get(i));
+				}
+				return truncated;
+			}
+		});
+		subSeq.ruleSequence.add(new Rule("get the sub sequence from start to end, end is non inclusive",Rule.EASY) {
+			private static final long serialVersionUID = 1L;
+			
+			@Override
+			public Expr applyRuleToExpr(Expr e,Settings settings) {
+				int start = ((Num)e.get(1)).realValue.intValue();
+				int end = ((Num)e.get(2)).realValue.intValue();
+				
+				Sequence truncated = new Sequence();
+				for(int i = start;i<end;i++) {
+					truncated.add(e.get(0).get(i));
+				}
+				return truncated;
+			}
+		});
+		revSeq.ruleSequence.add(new Rule("revserse the sequence",Rule.EASY) {
+			private static final long serialVersionUID = 1L;
+			
+			@Override
+			public Expr applyRuleToExpr(Expr e,Settings settings) {
+				Sequence oldSeq = (Sequence)e.get(0);
+				Sequence newSeq = new Sequence();
+				
+				for(int i = oldSeq.size()-1;i>=0;i--) {
+					newSeq.add(oldSeq.get(i));
+				}
+				
+				return newSeq;
+			}
+		});
+		sumSeq.ruleSequence.add(new Rule("add elements of sequence",Rule.EASY){
+			private static final long serialVersionUID = 1L;
+			
+			@Override
+			public Expr applyRuleToExpr(Expr e,Settings settings) {
+				Sequence seq = (Sequence)e.get();
+				Sum sum = new Sum();
+				for(int i = 0;i<seq.size();i++) {
+					sum.add(seq.get(i));
+				}
+				return sum.simplify(settings);
+			}
+		});
+		
 	}
 	
 	private static ArrayList<String> functionNames = new ArrayList<String>();
@@ -628,6 +717,12 @@ public class SimpleFuncs extends QuickMath{
 		addFunc(sec);
 		addFunc(csc);
 		addFunc(cot);
+		
+		addFunc(extSeq);
+		addFunc(truncSeq);
+		addFunc(subSeq);
+		addFunc(revSeq);
+		addFunc(sumSeq);
 		
 		for(String s:simpleFuncs.keySet()) {
 			functionNames.add(s);
@@ -709,6 +804,15 @@ public class SimpleFuncs extends QuickMath{
 		}
 		
 		return 0;
+	}
+	
+	public static Expr getFuncByName(String funcName,Expr... params){
+		try {
+			return getFuncByName(funcName,Defs.blank,params);
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+		return null;
 	}
 	
 	public static Expr getFuncByName(String funcName,Defs defs,Expr... params) throws Exception {

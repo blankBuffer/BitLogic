@@ -6,7 +6,7 @@ import java.util.regex.Pattern;
 import cas.*;
 import cas.bool.*;
 import cas.primitive.*;
-import cas.programming.Script;
+import cas.programming.*;
 import cas.matrix.*;
 
 public class Interpreter extends QuickMath{
@@ -55,495 +55,22 @@ public class Interpreter extends QuickMath{
 		if(lastToken.equals("+") || lastToken.equals("-") || lastToken.equals("*") || lastToken.equals("/") || lastToken.equals("^") || lastToken.equals(",")) throw new Exception("ending with invalid token");//should not end with any of these
 		
 	}
-	static Pattern isOperatorPattern = Pattern.compile("[+\\-*^/,=><!;:\\~\\&\\|\\[\\]\\{\\}\\(\\)\\.]");
+	static Pattern isOperatorPattern = Pattern.compile("[+\\-*^/,=><!;:\\~\\&\\|\\[\\]\\{\\}\\(\\)\\.\\?]");
 	public static boolean isOperator(String string) {
 		Matcher m = isOperatorPattern.matcher(string);
 		return m.matches();
 	}
 	
-	static Pattern isProbablyExprPattern = Pattern.compile("pi|i|e|.*[(0-9)(+\\-*^/,=><!;:\\~\\&\\|\\[\\]\\{\\}\\(\\)\\.].*");
+	static Pattern isProbablyExprPattern = Pattern.compile("pi|i|e|.*[(0-9)(+\\-*^/,=><!;:\\~\\&\\|\\[\\]\\{\\}\\(\\)\\.\\?].*");
 	public static boolean isProbablyExpr(String string) {
 		Matcher m = isProbablyExprPattern.matcher(string);
 		return m.matches();
 	}
 	
-	static Pattern containsOperatorsPattern = Pattern.compile(".*[+\\-*/^,=><!;:\\~\\&\\|\\[\\]\\{\\}\\(\\)\\.].*");
+	static Pattern containsOperatorsPattern = Pattern.compile(".*[+\\-*/^,=><!;:\\~\\&\\|\\[\\]\\{\\}\\(\\)\\.\\?].*");
 	public static boolean containsOperators(String string) {
 		Matcher m = containsOperatorsPattern.matcher(string);
 		return m.matches();
-	}
-	
-	static Expr createExprFromTokens(ArrayList<String> tokens,Defs defs,Settings settings) throws Exception{
-		if(tokens.size() == 0) return null;
-		//System.out.println("recieved: "+tokens);
-		errors(tokens);
-		
-		if(tokens.contains(".")) {
-			for(int i = 0;i<tokens.size()-2;i++){//floating point reading
-				if(i+6<tokens.size()+1 && tokens.get(i).equals("-") && tokens.get(i+1).matches("([0-9])+") && tokens.get(i+2).equals(".") && tokens.get(i+3).matches("([0-9])*(e|E)") && tokens.get(i+4).equals("-") && tokens.get(i+5).matches("([0-9])+")) {
-					String newToken = "-"+tokens.get(i+1)+"."+tokens.get(i+3)+tokens.get(i+4)+tokens.get(i+5);
-					for(int j = 1;j<6;j++) tokens.remove(i);
-					tokens.set(i, newToken);
-				}
-				if(i+5<tokens.size()+1 && tokens.get(i).matches("([0-9])+") && tokens.get(i+1).equals(".") && tokens.get(i+2).matches("([0-9])*(e|E)") && tokens.get(i+3).equals("-") && tokens.get(i+4).matches("([0-9])+")) {
-					String newToken = tokens.get(i)+"."+tokens.get(i+2)+tokens.get(i+3)+tokens.get(i+4);
-					for(int j = 1;j<5;j++) tokens.remove(i);
-					tokens.set(i, newToken);
-				}
-				if(i+4<tokens.size()+1 && tokens.get(i).equals("-") && tokens.get(i+1).matches("([0-9])+") && tokens.get(i+2).equals(".") && tokens.get(i+3).matches("([0-9])*(e|E)?([0-9])*")) {
-					String newToken = "-"+tokens.get(i+1)+"."+tokens.get(i+3);
-					for(int j = 1;j<4;j++) tokens.remove(i);
-					tokens.set(i, newToken);
-				}
-				if(i+3<tokens.size()+1 && tokens.get(i).matches("([0-9])+") && tokens.get(i+1).equals(".") && tokens.get(i+2).matches("([0-9])*(e|E)?([0-9])*")) {
-					String newToken = tokens.get(i)+"."+tokens.get(i+2);
-					for(int j = 1;j<3;j++) tokens.remove(i);
-					tokens.set(i, newToken);
-				}
-					
-			}
-		}
-		
-		if(tokens.size() == 1) {
-			String string = tokens.get(0);
-			
-			if(string.matches("[0-9]+")){
-				return num(string);
-			}else if(string.matches("[\\-]?[0-9]+((.[0-9]+)|(.[0-9]+[e|E][\\-]?[0-9]+))")) {
-				return floatExpr(string);
-			}else if(!containsOperators(string)){
-				String lowered = string.toLowerCase();
-				if(string.equals("i")) return num(0,1);
-				else if(lowered.equals("true")) return bool(true);
-				else if(lowered.equals("false")) return bool(false);
-				else if(lowered.equals("degree")) return div(pi(),num(180));
-				else{//variables
-					return var(string);
-				}
-			}else {
-				
-				if( isBracket(string.charAt(0)) ) {
-					
-					String subPart = string.substring(1,string.length()-1);
-					
-					ArrayList<String> subTokens = generateTokens(subPart);
-					Expr outExpr = createExprFromTokens(subTokens,defs,settings);
-					
-					if(string.startsWith("(")) {
-						return outExpr;
-					}else if(string.startsWith("{")){
-						if(outExpr instanceof Params) return Sequence.cast(outExpr);
-						else if(outExpr == null) return sequence();
-						return sequence(outExpr);
-					}else if(string.startsWith("[")){
-						if(outExpr instanceof Params) return ExprList.cast(outExpr);
-						else if(outExpr == null) return exprList();
-						return exprList(outExpr);
-					}
-					
-				}
-				
-			}
-		}else if(tokens.size() == 2) {
-			if(tokens.get(0).equals("-")) {//negate
-				Expr expr = createExpr(tokens.get(1));
-				if(expr instanceof Num) return ((Num) expr).negate();
-				return neg(createExpr(tokens.get(1),defs,settings));
-			}else if(!tokens.get(1).equals("!")){//functional notation
-				String op = tokens.get(0);
-				if(op.isBlank()) throw new Exception("confusing parenthesis");
-				Expr params = Params.cast( createExprFromToken(tokens.get(1),defs,settings));
-				
-				if(op.equals("define")) {
-					Expr def = params.get(0);
-					
-					if(def instanceof Becomes && ((Becomes)def).getLeftSide() instanceof Func) {
-						Func f = (Func)((Becomes)def).getLeftSide().copy();
-						f.ruleSequence.add(new Rule(((Becomes)def),"function definition",Rule.EASY));
-						System.out.println(f.getRuleSequence());
-						
-						f.clear();
-						defs.addFunc(f);
-					}else {
-						defs.addVar((Equ)def);
-					}
-					
-					return var("done");
-				}
-				if(op.equals("delete")) {
-					if(params.get(0) instanceof Func) {
-						defs.removeFunc(params.get(0).typeName());
-					}else {
-						defs.removeVar(params.get(0).toString());
-					}
-					
-					return var("done");
-				}
-				
-				if(op.equals("defs")) {
-					return var(defs.toString());
-				}
-				
-				if(!op.equals("~")){
-					Expr[] paramsArray = new Expr[params.size()];
-					
-					for(int i = 0;i<params.size();i++) {
-						paramsArray[i] = params.get(i);
-					}
-					
-					
-					Expr f = SimpleFuncs.getFuncByName(op,defs,paramsArray);
-					return f;
-				}
-				
-			}
-		}
-		
-		boolean isSum = false,
-				isProdAndOrDiv = false,
-				isParams = false,
-				isFactorial = false,
-				isScript = false,
-				isAnd = false,
-				isOr = false,
-				isNot = false,
-				isEqu = false,
-				isArrow = false,
-				isDot = false;
-		
-		int indexOfPowToken = -1,equCount = 0;
-		boolean lastWasOperator = false;
-		for(int i = 0;i<tokens.size();i++) {
-			String token = tokens.get(i);
-			
-			if(token.equals(",")) {
-				isParams = true;
-				lastWasOperator = true;
-			}else if(token.equals("=") || token.equals(">") || token.equals("<")) {
-				isEqu = true;
-				equCount++;
-				lastWasOperator = true;
-			}else if(token.equals("+") || (token.equals("-") && !lastWasOperator)) {//the last operator check avoids error of misinterpreting x*-2*5 as a sum
-				isSum = true;
-				lastWasOperator = true;
-			}else if(token.equals("*") || token.equals("/")) {
-				isProdAndOrDiv = true;
-				lastWasOperator = true;
-			}else if(token.equals(".")) {
-				isDot = true;
-				lastWasOperator = true;
-			}else if(token.equals("^")) {
-				if(indexOfPowToken == -1) indexOfPowToken = i;
-				lastWasOperator = true;
-			}else if(token.equals("!")) {
-				isFactorial = true;
-				lastWasOperator = true;
-			}else if(token.equals(";")) {
-				isScript = true;
-				lastWasOperator = true;
-			}else if(token.equals("&")){
-				isAnd = true;
-				lastWasOperator = true;
-			}else if(token.equals("|")){
-				isOr = true;
-				lastWasOperator = true;
-			}else if(token.equals("~")){
-				isNot = true;
-				lastWasOperator = true;
-			}else if(token.equals("->")) {
-				isArrow = true;
-				lastWasOperator = true;
-			}else {
-				lastWasOperator = false;
-			}
-		}
-		
-		if(isScript) {
-			
-			Script scr = new Script();
-			int indexOfLastComma = 0;
-			
-			for(int i = 0;i<tokens.size();i++) {
-				String token = tokens.get(i);
-				if(token.equals(";")) {
-					
-					ArrayList<String> tokenSet = new ArrayList<String>();
-					for(int j = indexOfLastComma;j<i;j++)  tokenSet.add(tokens.get(j));
-					scr.add(createExprFromTokens(tokenSet,defs,settings));
-					indexOfLastComma = i+1;
-				}
-			}
-			
-			return scr;
-			
-		}else if(isParams) {
-			tokens.add(",");
-			Params params = new Params();
-			int indexOfLastComma = 0;
-			
-			for(int i = 0;i<tokens.size();i++) {
-				String token = tokens.get(i);
-				if(token.equals(",")) {
-					
-					ArrayList<String> tokenSet = new ArrayList<String>();
-					for(int j = indexOfLastComma;j<i;j++)  tokenSet.add(tokens.get(j));
-					params.add(createExprFromTokens(tokenSet,defs,settings));
-					indexOfLastComma = i+1;
-				}
-			}
-			
-			return params;
-			
-		}else if(isArrow) {
-			int indexOfArrowToken = tokens.indexOf("->");
-			ArrayList<String> leftSideTokens = new ArrayList<String>();
-			for(int i = 0;i<indexOfArrowToken;i++) {
-				leftSideTokens.add(tokens.get(i));
-			}
-			ArrayList<String> rightSideTokens = new ArrayList<String>();
-			for(int i = indexOfArrowToken+1;i<tokens.size();i++) {
-				rightSideTokens.add(tokens.get(i));
-			}
-			
-			Expr leftSide = createExprFromTokens(leftSideTokens,defs,settings);
-			Expr rightSide = createExprFromTokens(rightSideTokens,defs,settings);
-			
-			return becomes(leftSide,rightSide);
-		}else if(isEqu) {//is equation
-			
-			int indexOfEquToken = 0;
-			int currentCount = 0;
-			
-			for(int i = 0; i < tokens.size();i++) {
-				String token = tokens.get(i);
-				if(token.equals("=") || token.equals(">") || token.equals("<")) {
-					currentCount++;
-				}
-				if(currentCount == equCount/2+1 ) {
-					indexOfEquToken = i;
-					break;
-				}
-			}
-			
-			ArrayList<String> leftSideTokens = new ArrayList<String>();
-			for(int i = 0;i<indexOfEquToken;i++) {
-				leftSideTokens.add(tokens.get(i));
-			}
-			ArrayList<String> rightSideTokens = new ArrayList<String>();
-			for(int i = indexOfEquToken+1;i<tokens.size();i++) {
-				rightSideTokens.add(tokens.get(i));
-			}
-			char symbol = tokens.get(indexOfEquToken).charAt(0);
-			
-			Expr leftSide = createExprFromTokens(leftSideTokens,defs,settings);
-			Expr rightSide = createExprFromTokens(rightSideTokens,defs,settings);
-			
-			if(symbol == '=') return equ(leftSide,rightSide);
-			if(symbol == '>') return equGreater(leftSide,rightSide);
-			if(symbol == '<') return equLess(leftSide,rightSide);
-			
-		}else if(isOr){
-			tokens.add("|");
-			Or or = new Or();
-			int indexOfLastOr = 0;
-			
-			for(int i = 0;i<tokens.size();i++) {
-				String token = tokens.get(i);
-				if(token.equals("|")) {
-					
-					ArrayList<String> tokenSet = new ArrayList<String>();
-					for(int j = indexOfLastOr;j<i;j++)  tokenSet.add(tokens.get(j));
-					or.add(createExprFromTokens(tokenSet,defs,settings));
-					indexOfLastOr = i+1;
-				}
-			}
-			
-			return or;
-			
-		}else if(isAnd){
-			tokens.add("&");
-			And and = new And();
-			int indexOfLastAnd = 0;
-			
-			for(int i = 0;i<tokens.size();i++) {
-				String token = tokens.get(i);
-				if(token.equals("&")) {
-					
-					ArrayList<String> tokenSet = new ArrayList<String>();
-					for(int j = indexOfLastAnd;j<i;j++)  tokenSet.add(tokens.get(j));
-					and.add(createExprFromTokens(tokenSet,defs,settings));
-					indexOfLastAnd = i+1;
-				}
-			}
-			
-			return and;
-			
-		}else if(isNot){
-			tokens.remove(0);
-			return not(createExprFromTokens(tokens,defs,settings));
-		}else if(isSum) {
-			tokens.add("+");
-			Expr sum = new Sum();
-			int indexOfLastAdd = 0;
-			boolean nextIsSub = false;
-			for(int i = 0;i<tokens.size();i++) {
-				String token = tokens.get(i);
-				if(token.equals("+") || token.equals("-")) {
-					if(i != 0) {
-						if(tokens.get(i-1).equals("^") || tokens.get(i-1).equals("/") || tokens.get(i-1).equals("*")) continue;//avoids error created by e^-x+x where the negative is actually in the exponent same things with x+y/-2
-						ArrayList<String> tokenSet = new ArrayList<String>();
-						for(int j = indexOfLastAdd;j<i;j++) {
-							tokenSet.add(tokens.get(j));
-						}
-						if(nextIsSub) {
-							Expr toBeAdded = createExprFromTokens(tokenSet,defs,settings);
-							if(toBeAdded instanceof Prod) {
-								boolean foundNum = false;
-								for(int k = 0;k<toBeAdded.size();k++) {
-									if(toBeAdded.get(k) instanceof Num) {
-										Num negatedVersion = ((Num)toBeAdded.get(k)).negate();
-										toBeAdded.set(k, negatedVersion);
-										foundNum = true;
-										break;
-									}
-								}
-								if(!foundNum) {
-									toBeAdded.add(num(-1));
-								}
-								sum.add(toBeAdded);
-							}else if(toBeAdded instanceof Num) {
-								sum.add( ((Num)toBeAdded).negate() );
-							}else sum.add(neg(toBeAdded));
-						}
-						else {
-							sum.add(createExprFromTokens(tokenSet,defs,settings));
-						}
-					}
-					indexOfLastAdd = i;
-					nextIsSub = false;
-					boolean goingThroughOperators = true;
-					for (int j = i;goingThroughOperators&&j<tokens.size();j++) {
-						if(tokens.get(j).equals("-")) {
-							nextIsSub=!nextIsSub;
-						}
-						if(j+1<tokens.size()) {
-							if(!(tokens.get(j+1).equals("-") || tokens.get(j+1).equals("+"))) {
-								goingThroughOperators = false;
-							}
-						}
-						tokens.remove(j);
-						j--;
-					}
-				}
-			}
-			if(sum.size() == 1) return sum.get();
-			return sum;
-		}else if(isDot) {
-			tokens.add(".");
-			Dot dot = new Dot();
-			int indexOfLastAnd = 0;
-			
-			for(int i = 0;i<tokens.size();i++) {
-				String token = tokens.get(i);
-				if(token.equals(".")) {
-					
-					ArrayList<String> tokenSet = new ArrayList<String>();
-					for(int j = indexOfLastAnd;j<i;j++)  tokenSet.add(tokens.get(j));
-					dot.add(createExprFromTokens(tokenSet,defs,settings));
-					indexOfLastAnd = i+1;
-				}
-			}
-			
-			return dot;
-		}else if(isProdAndOrDiv) {
-			tokens.add("*");
-			Expr numerProd = new Prod();
-			Expr denomProd = new Prod();
-			int indexOfLastProd = 0;
-			boolean nextDiv = false;
-			for(int i = 0;i<tokens.size();i++) {
-				String token = tokens.get(i);
-				if(token.equals("*") || token.equals("/")) {
-					ArrayList<String> tokenSet = new ArrayList<String>();
-					for(int j = indexOfLastProd;j<i;j++) {
-						tokenSet.add(tokens.get(j));
-					}
-					if(nextDiv) denomProd.add(createExprFromTokens(tokenSet,defs,settings));
-					else numerProd.add(createExprFromTokens(tokenSet,defs,settings));
-					if(token.equals("/")) nextDiv = true;
-					else nextDiv = false;
-					
-					indexOfLastProd = i+1;
-				}
-			}
-			
-			
-			if(numerProd.size() == 1) numerProd = numerProd.get();
-			if(denomProd.size() == 1) denomProd = denomProd.get();
-			
-			if(denomProd instanceof Prod && denomProd.size() == 0) {
-				return numerProd;
-			}
-			return div(numerProd,denomProd);
-		}else if(indexOfPowToken != -1) {
-			ArrayList<String> baseTokens = new ArrayList<String>();
-			for(int i = 0;i<indexOfPowToken;i++) baseTokens.add(tokens.get(i));
-			Expr base = createExprFromTokens(baseTokens,defs,settings);
-			
-			ArrayList<String> expoTokens = new ArrayList<String>();
-			for(int i = indexOfPowToken+1;i<tokens.size();i++) expoTokens.add(tokens.get(i));
-			Expr expo = createExprFromTokens(expoTokens,defs,settings);
-			
-			return pow(base,expo);
-		}else if(isFactorial) {
-			Expr out = createExpr(tokens.get(0),defs,settings);
-			for(int i = tokens.size()-1;i>=1;i--){
-				if(tokens.get(i).equals("!")){
-					out = gamma(sum(out,num(1)));
-				}
-			}
-			return out;
-		}
-		throw new Exception("unrecognized format:"+tokens);
-	}
-	
-	
-	private static char[] basicOperators = new char[] {
-		'*','+','-','^','/',',','=','!',':',';','&','|','~','<','>','.'
-	};
-	private static boolean isBasicOperator(char c) {
-		for(char o:basicOperators) {
-			if(o == c) return true;
-		}
-		return false;
-	}
-	
-	private static ArrayList<String> multiSymbolOperators = new ArrayList<String>();
-	static {
-		multiSymbolOperators.add("->");
-	}
-	private static void makeMultiSymbolOperators(ArrayList<String> tokens) {
-		for(int i = 0;i < tokens.size();i++) {
-			String fullToken = tokens.get(i);
-			if(fullToken.isBlank() || fullToken.length()>1) continue; 
-			
-			char token = fullToken.charAt(0);
-			if(!isBasicOperator(token)) continue;
-			symbolLoop:for(String multiSymbol:multiSymbolOperators) {
-				if(multiSymbol.charAt(0) == token) {
-					for(int j = 1;j<multiSymbol.length();j++) {
-						if(!(tokens.get(i+j).length() == 1 && multiSymbol.charAt(j) == tokens.get(i+j).charAt(0))) continue symbolLoop;
-					}
-					
-					for(int j = i+multiSymbol.length()-1;j>i;j--) {
-						tokens.remove(j);
-					}
-					tokens.set(i, multiSymbol);
-					
-				}
-			}
-			
-		}
 	}
 	
 	public static boolean isBracket(char ch) {
@@ -577,6 +104,399 @@ public class Interpreter extends QuickMath{
 		return result;
 	}
 	
+	static ArrayList<String> groupTokens(ArrayList<String> tokens,int startIndex,int endIndex){//end index not included
+		ArrayList<String> out = new ArrayList<String>();
+		for(int i = startIndex;i<endIndex;i++) out.add(tokens.get(i));
+		return out;
+	}
+	
+	static int findToken(ArrayList<String> tokens,String token,int startPoint) {
+		for(int i = startPoint;i<tokens.size();i++) if(tokens.get(i).equals(token)) return i;
+		return -1;
+	}
+	
+	static ArrayList<ArrayList<String>> splitTokensIntoGroups(ArrayList<String> tokens,String splitterToken){
+		ArrayList<ArrayList<String>> groups = new ArrayList<ArrayList<String>>();
+		
+		int indexOfLastSplitterToken = -1;
+		
+		while(indexOfLastSplitterToken != tokens.size()) {
+			int indexOfNextSplitterToken = findToken(tokens,splitterToken,indexOfLastSplitterToken+1);
+			if(indexOfNextSplitterToken == -1) indexOfNextSplitterToken = tokens.size();
+			
+			groups.add( groupTokens(tokens,indexOfLastSplitterToken+1,indexOfNextSplitterToken) );
+			indexOfLastSplitterToken = indexOfNextSplitterToken;
+		}
+		
+		return groups;
+	}
+	
+	static String combineTokensIntoString(ArrayList<String> tokens,int startIndex,int endIndex) {
+		String out = "";
+		for(int i = startIndex;i<endIndex;i++) {
+			out+=tokens.get(i);
+		}
+		return out;
+	}
+	
+	public static void removeTokens(ArrayList<String> tokens,int startIndex,int endIndex) {
+		for(int i = endIndex-1;i>=startIndex;i--) {
+			tokens.remove(i);
+		}
+	}
+	
+	public static void combineTokens(ArrayList<String> tokens,int startIndex,int endIndex) {
+		String newToken = combineTokensIntoString(tokens,startIndex,endIndex);
+		removeTokens(tokens,startIndex+1,endIndex);
+		tokens.set(startIndex, newToken);
+	}
+	
+	public static void groupFloatingPointTokens(ArrayList<String> tokens) {
+		if(tokens.contains(".")) {
+			for(int i = 0;i<tokens.size()-2;i++){//floating point reading
+				if(i+6<tokens.size()+1 && tokens.get(i).equals("-") && tokens.get(i+1).matches("([0-9])+") && tokens.get(i+2).equals(".") && tokens.get(i+3).matches("([0-9])*(e|E)") && tokens.get(i+4).equals("-") && tokens.get(i+5).matches("([0-9])+")) {
+					combineTokens(tokens,i,i+6);
+				}
+				if(i+5<tokens.size()+1 && tokens.get(i).matches("([0-9])+") && tokens.get(i+1).equals(".") && tokens.get(i+2).matches("([0-9])*(e|E)") && tokens.get(i+3).equals("-") && tokens.get(i+4).matches("([0-9])+")) {
+					combineTokens(tokens,i,i+5);
+				}
+				if(i+4<tokens.size()+1 && tokens.get(i).equals("-") && tokens.get(i+1).matches("([0-9])+") && tokens.get(i+2).equals(".") && tokens.get(i+3).matches("([0-9])*(e|E)?([0-9])*")) {
+					combineTokens(tokens,i,i+4);
+				}
+				if(i+3<tokens.size()+1 && tokens.get(i).matches("([0-9])+") && tokens.get(i+1).equals(".") && tokens.get(i+2).matches("([0-9])*(e|E)?([0-9])*")) {
+					combineTokens(tokens,i,i+3);
+				}
+			}
+		}
+	}
+	
+	private static ArrayList<String> multiSymbolOperators = new ArrayList<String>();
+	static {
+		multiSymbolOperators.add("->");
+	}
+	private static void makeMultiSymbolOperators(ArrayList<String> tokens) {
+		for(int i = 0;i < tokens.size();i++) {
+			String fullToken = tokens.get(i);
+			if(fullToken.isBlank() || fullToken.length()>1) continue; 
+			
+			char token = fullToken.charAt(0);
+			if(!isBasicOperator(token)) continue;
+			symbolLoop:for(String multiSymbol:multiSymbolOperators) {
+				if(multiSymbol.charAt(0) == token) {
+					for(int j = 1;j<multiSymbol.length();j++) {
+						if(!(tokens.get(i+j).length() == 1 && multiSymbol.charAt(j) == tokens.get(i+j).charAt(0))) continue symbolLoop;
+					}
+					
+					for(int j = i+multiSymbol.length()-1;j>i;j--) {
+						tokens.remove(j);
+					}
+					tokens.set(i, multiSymbol);
+					
+				}
+			}
+			
+		}
+	}
+	
+	static Expr createExprFromTokens(ArrayList<String> tokens,Defs defs,Settings settings) throws Exception{
+		if(tokens.size() == 0) return null;
+		//System.out.println("Received: "+tokens);
+		errors(tokens);
+		
+		makeMultiSymbolOperators(tokens);
+		groupFloatingPointTokens(tokens);
+		
+		if(tokens.size() == 1) {//reading basics
+			String string = tokens.get(0);
+			
+			if(string.matches("[0-9]+")){
+				return num(string);
+			}
+			if(string.matches("[\\-]?[0-9]+((.[0-9]+)|(.[0-9]+[e|E][\\-]?[0-9]+))")) {
+				return floatExpr(string);
+			}
+			if(!containsOperators(string)){//variable
+				String lowered = string.toLowerCase();
+				if(string.equals("i")) return num(0,1);
+				else if(lowered.equals("true")) return bool(true);
+				else if(lowered.equals("false")) return bool(false);
+				else if(lowered.equals("degree")) return div(pi(),num(180));
+				else{//variables
+					return var(string);
+				}
+			}
+			if( isBracket(string.charAt(0)) ) {//token is in brackets
+				
+				String subPart = string.substring(1,string.length()-1);
+				
+				ArrayList<String> subTokens = generateTokens(subPart);
+				Expr outExpr = createExprFromTokens(subTokens,defs,settings);
+				
+				if(string.startsWith("(")) {
+					return outExpr;
+				}else if(string.startsWith("{")){
+					if(outExpr instanceof Params) return Sequence.cast(outExpr);
+					else if(outExpr == null) return sequence();
+					return sequence(outExpr);
+				}else if(string.startsWith("[")){
+					if(outExpr instanceof Params) return ExprList.cast(outExpr);
+					else if(outExpr == null) return exprList();
+					return exprList(outExpr);
+				}
+				
+			}
+		}
+		if(tokens.size() == 2) {//reading functions	
+			String op = tokens.get(0);
+			if(op.matches("[a-zA-Z]+")) {
+				if(op.isBlank()) throw new Exception("confusing parenthesis");
+				Expr params = Params.cast( createExprFromToken(tokens.get(1),defs,settings));
+				
+				if(op.equals("define")) {
+					Expr def = params.get(0);
+					
+					if(def instanceof Becomes && ((Becomes)def).getLeftSide() instanceof Func) {
+						Func f = (Func)((Becomes)def).getLeftSide().copy();
+						f.ruleSequence.add(new Rule(((Becomes)def),"function definition",Rule.EASY));
+						System.out.println(f.getRuleSequence());
+						
+						f.clear();
+						defs.addFunc(f);
+					}else {
+						defs.addVar((Equ)def);
+					}
+					
+					return SUCCESS;
+				}
+				if(op.equals("delete")) {
+					if(params.get(0) instanceof Func) {
+						defs.removeFunc(params.get(0).typeName());
+					}else {
+						defs.removeVar(params.get(0).toString());
+					}
+					
+					return SUCCESS;
+				}
+				
+				if(op.equals("defs")) {
+					return var(defs.toString());
+				}
+				
+				
+				Expr[] paramsArray = new Expr[params.size()];
+				
+				for(int i = 0;i<params.size();i++) {
+					paramsArray[i] = params.get(i);
+				}
+				
+				
+				Expr f = SimpleFuncs.getFuncByName(op,defs,paramsArray);
+				return f;
+			}
+			
+		}
+		
+		if(tokens.contains(";")) {
+			Script scr = new Script();
+			int indexOfLastComma = 0;
+			
+			for(int i = 0;i<tokens.size();i++) {
+				String token = tokens.get(i);
+				if(token.equals(";")) {
+					
+					ArrayList<String> tokenSet = new ArrayList<String>();
+					for(int j = indexOfLastComma;j<i;j++)  tokenSet.add(tokens.get(j));
+					scr.add(createExprFromTokens(tokenSet,defs,settings));
+					indexOfLastComma = i+1;
+				}
+			}
+			
+			return scr;
+			
+		}
+		if(tokens.contains(",")) {
+			Params params = new Params();
+			ArrayList<ArrayList<String>> tokenGroups = splitTokensIntoGroups(tokens,",");
+			for(ArrayList<String> group:tokenGroups) params.add( createExprFromTokens(group,defs,settings) );
+			return params;
+			
+		}
+		if(tokens.contains("->")) {
+			ArrayList<ArrayList<String>> tokenGroups = splitTokensIntoGroups(tokens,"->");
+			Expr leftSide = createExprFromTokens(tokenGroups.get(0),defs,settings);
+			Expr rightSide = createExprFromTokens(tokenGroups.get(1),defs,settings);
+			return becomes(leftSide,rightSide);
+		}
+		
+		if(tokens.contains("=") || tokens.contains(">") || tokens.contains("<")) {//is equation
+			
+			int indexOfEq = tokens.indexOf("=");
+			int indexOfGreater = tokens.indexOf(">");
+			int indexOfLess = tokens.indexOf("<");
+			int indexOfEquToken = Math.max(Math.max(indexOfEq, indexOfLess),indexOfGreater);
+			
+			char symbol = tokens.get(indexOfEquToken).charAt(0);
+			Expr leftSide = createExprFromTokens(groupTokens(tokens,0,indexOfEquToken),defs,settings);
+			Expr rightSide = createExprFromTokens(groupTokens(tokens,indexOfEquToken+1,tokens.size()),defs,settings);
+			
+			if(symbol == '=') return equ(leftSide,rightSide);
+			if(symbol == '>') return equGreater(leftSide,rightSide);
+			if(symbol == '<') return equLess(leftSide,rightSide);
+			
+		}
+		
+		if(tokens.contains("?") && tokens.contains(":")) {//ternary case
+			
+			int questionMarkIndex = tokens.indexOf("?");
+			ArrayList<String> toBeEvaled = groupTokens(tokens,0,questionMarkIndex);
+			int colonIndex = tokens.indexOf(":");
+			ArrayList<String> ifTrue = groupTokens(tokens,questionMarkIndex+1,colonIndex);
+			ArrayList<String> ifFalse = groupTokens(tokens,colonIndex+1,tokens.size());
+			return new Ternary( createExprFromTokens(toBeEvaled ,defs,settings),createExprFromTokens(ifTrue ,defs,settings),createExprFromTokens(ifFalse ,defs,settings) );
+		}
+		
+		if(tokens.contains("|")){
+			Or or = new Or();
+			ArrayList<ArrayList<String>> tokenGroups = splitTokensIntoGroups(tokens,"|");
+			for(ArrayList<String> group:tokenGroups) or.add( createExprFromTokens(group,defs,settings) );
+			return or;
+		}
+		if(tokens.contains("&")){
+			And and = new And();
+			ArrayList<ArrayList<String>> tokenGroups = splitTokensIntoGroups(tokens,"&");
+			for(ArrayList<String> group:tokenGroups) and.add( createExprFromTokens(group,defs,settings) );
+			return and;
+		}
+		if(tokens.get(0).equals("~")){
+			tokens.remove(0);
+			return not(createExprFromTokens(tokens,defs,settings));
+		}
+		
+		boolean isSum = false;
+		for(int i = 0;i<tokens.size();i++) {
+			String token = tokens.get(i);
+			if(token.equals("+") || token.equals("-")  &&   (i==0 ? true : ! (tokens.get(i-1).equals("*")||tokens.get(i-1).equals("/")||tokens.get(i-1).equals("^")) )   ) {//avoids error of misinterpreting x*-2*5 as a sum
+				isSum = true;
+				break;
+			}
+		}
+		if(isSum) {
+			tokens.add("+");
+			Expr sum = new Sum();
+			int indexOfLastAdd = 0;
+			boolean nextIsSub = false;
+			for(int i = 0;i<tokens.size();i++) {
+				String token = tokens.get(i);
+				if(token.equals("+") || token.equals("-")) {
+					if(i != 0) {
+						if(tokens.get(i-1).equals("^") || tokens.get(i-1).equals("/") || tokens.get(i-1).equals("*")) continue;//avoids error created by e^-x+x where the negative is actually in the exponent same things with x+y/-2
+						ArrayList<String> tokenSet = groupTokens(tokens,indexOfLastAdd,i);
+						
+						if(nextIsSub) {
+							Expr toBeAdded = createExprFromTokens(tokenSet,defs,settings);
+							if(toBeAdded instanceof Prod) {
+								boolean foundNum = false;
+								for(int k = 0;k<toBeAdded.size();k++) {
+									if(toBeAdded.get(k) instanceof Num) {
+										Num negatedVersion = ((Num)toBeAdded.get(k)).negate();
+										toBeAdded.set(k, negatedVersion);
+										foundNum = true;
+										break;
+									}
+								}
+								if(!foundNum) {
+									toBeAdded.add(num(-1));
+								}
+								sum.add(toBeAdded);
+							}else if(toBeAdded instanceof Num) {
+								sum.add( ((Num)toBeAdded).negate() );
+							}else sum.add(neg(toBeAdded));
+						}else {
+							sum.add(createExprFromTokens(tokenSet,defs,settings));
+						}
+					}
+					indexOfLastAdd = i;
+					nextIsSub = false;
+					boolean goingThroughOperators = true;
+					for (int j = i;goingThroughOperators&&j<tokens.size();j++) {
+						if(tokens.get(j).equals("-")) {
+							nextIsSub=!nextIsSub;
+						}
+						if(j+1<tokens.size()) {
+							if(!(tokens.get(j+1).equals("-") || tokens.get(j+1).equals("+"))) {
+								goingThroughOperators = false;
+							}
+						}
+						tokens.remove(j);
+						j--;
+					}
+				}
+			}
+			if(sum.size() == 1) return sum.get();
+			return sum;
+		}
+		
+		if(tokens.contains(".")) {
+			Dot dot = new Dot();
+			ArrayList<ArrayList<String>> tokenGroups = splitTokensIntoGroups(tokens,".");
+			for(ArrayList<String> group:tokenGroups) dot.add( createExprFromTokens(group,defs,settings) );
+			return dot;
+		}
+		
+		if(tokens.contains("*") || tokens.contains("/")) {
+			tokens.add("*");
+			Expr numerProd = new Prod();
+			Expr denomProd = new Prod();
+			int indexOfLastProd = 0;
+			boolean nextDiv = false;
+			for(int i = 0;i<tokens.size();i++) {
+				String token = tokens.get(i);
+				if(token.equals("*") || token.equals("/")) {
+					ArrayList<String> tokenSet = groupTokens(tokens,indexOfLastProd,i);
+					
+					if(nextDiv) denomProd.add(createExprFromTokens(tokenSet,defs,settings));
+					else numerProd.add(createExprFromTokens(tokenSet,defs,settings));
+					if(token.equals("/")) nextDiv = true;
+					else nextDiv = false;
+					
+					indexOfLastProd = i+1;
+				}
+			}
+			
+			
+			if(numerProd.size() == 1) numerProd = numerProd.get();
+			if(denomProd.size() == 1) denomProd = denomProd.get();
+			
+			if(denomProd instanceof Prod && denomProd.size() == 0) {
+				return numerProd;
+			}
+			return div(numerProd,denomProd);
+		}
+		if(tokens.contains("^")) {
+			int indexOfPowToken = tokens.indexOf("^");
+			Expr base = createExprFromTokens(groupTokens(tokens,0,indexOfPowToken),defs,settings);
+			Expr expo = createExprFromTokens(groupTokens(tokens,indexOfPowToken+1,tokens.size()),defs,settings);
+			
+			return pow(base,expo);
+		}
+		if(tokens.get(tokens.size()-1).equals("!")) {
+			return gamma( sum(createExprFromTokens(groupTokens(tokens,0,tokens.size()-1),defs,settings),num(1)) );
+		}
+		
+		throw new Exception("unrecognized format:"+tokens);
+	}
+	
+	
+	private static char[] basicOperators = new char[] {
+		'*','+','-','^','/',',','=','!',':',';','&','|','~','<','>','.','?'
+	};
+	private static boolean isBasicOperator(char c) {
+		for(char o:basicOperators) {
+			if(o == c) return true;
+		}
+		return false;
+	}
+	
 	static ArrayList<String> generateTokens(String string) throws Exception{//splits up a string into its relevant subsections and removes parentheses	
 		ArrayList<String> tokens = new ArrayList<String>();
 		//split apart
@@ -598,16 +518,6 @@ public class Interpreter extends QuickMath{
 			}
 		}
 		if(!currentToken.isEmpty()) tokens.add(currentToken);
-		//combine multi-token operators
-		makeMultiSymbolOperators(tokens);
-		
-		/*
-		for(String s:tokens) {
-			System.out.print(s);
-			System.out.print(" ");
-		}
-		System.out.println();
-		*/
 		
 		return tokens;
 	}

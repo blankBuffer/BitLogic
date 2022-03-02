@@ -663,7 +663,7 @@ public class ExprRender extends QuickMath{//sort of a wrap of the image type but
 	}
 	
 	public static BufferedImage createImg(Expr e,Color background,Color text) {//this returns the image with the expression fitting the space as best as possible
-		BufferedImage defaultImageSize = new BufferedImage(256*4,256,BufferedImage.TYPE_INT_RGB);
+		BufferedImage defaultImageSize = new BufferedImage(256*8,256,BufferedImage.TYPE_INT_RGB);//equations tend to be wide so thats we do height times 8
 		Graphics2D g = defaultImageSize.createGraphics();
 		g.setColor(background);
 		g.fillRect(0, 0, defaultImageSize.getWidth(), defaultImageSize.getHeight());

@@ -19,18 +19,12 @@ import java.util.ArrayList;
  */
 
 import cas.bool.*;
-import cas.calculus.Diff;
-import cas.calculus.Integrate;
-import cas.calculus.IntegrateOver;
-import cas.calculus.Limit;
+import cas.calculus.*;
 import cas.lang.Ask;
-import cas.matrix.Dot;
-import cas.matrix.Mat;
-import cas.matrix.Transpose;
+import cas.matrix.*;
 import cas.primitive.*;
-import cas.special.Gamma;
-import cas.special.LambertW;
-import cas.special.Next;
+import cas.programming.*;
+import cas.special.*;
 import cas.trig.*;
 
 public class Rule extends Expr{
@@ -384,6 +378,7 @@ public class Rule extends Expr{
 		Solve.loadRules();
 		Sum.loadRules();
 		Tan.loadRules();
+		Ternary.loadRules();
 		Transpose.loadRules();
 		
 		SimpleFuncs.loadRules();

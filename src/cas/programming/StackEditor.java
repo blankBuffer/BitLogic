@@ -387,7 +387,7 @@ public class StackEditor extends QuickMath {
 				multAll();
 			}else if (command.equals("quit") || command.equals("exit") || command.equals("close")) {
 				return QUIT;
-			}else if (command.contains(":") && !command.contains(" ")) {
+			}else if (command.matches("[a-zA-Z]+(:)((true|false)|([0-9]+))")) {
 				String[] parts = command.split(":");
 				command = parts[0];
 				boolean isNum = parts[1].matches("[0-9]+");

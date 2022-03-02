@@ -1,9 +1,6 @@
 package cas.graphics;
 import cas.*;
-import cas.primitive.Equ;
-import cas.primitive.ExprList;
-import cas.primitive.FloatExpr;
-import cas.primitive.Var;
+import cas.primitive.*;
 import cas.programming.StackEditor;
 
 import java.awt.*;
@@ -183,7 +180,7 @@ public class Plot extends JPanel{
 				}else {
 					equPlot2D(g,casted,4,plotWindowParams,windowSize);
 				}
-			}else if(expr instanceof ExprList){
+			}else if(expr instanceof ExprList || expr instanceof Sequence){
 				ExprList subList = new ExprList();
 				for(int j = 0;j<expr.size();j++) {
 					subList.add( expr.get(j));
