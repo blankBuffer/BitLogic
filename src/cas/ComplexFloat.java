@@ -19,11 +19,15 @@ public class ComplexFloat implements Serializable{
 		this.real = other.real;
 		this.imag = other.imag;
 	}
-	private static boolean closeToZero(double a){
+	public static boolean closeToZero(double a){
 		return Math.abs(a)<1.0E-12;
 	}
 	public boolean closeToZero(){
 		return closeToZero(real) && closeToZero(imag);
+	}
+	
+	public boolean positiveAndReal() {
+		return real>0 && closeToZero(imag);
 	}
 	@Override
 	public String toString(){

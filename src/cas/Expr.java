@@ -43,6 +43,11 @@ public abstract class Expr extends QuickMath implements Comparable<Expr>, Serial
 	private ArrayList<Expr> subExpr = new ArrayList<Expr>();//many expression types have sub expressions like sums
 	
 	public abstract Sequence getRuleSequence();
+	@SuppressWarnings("static-method")
+	public Rule getDoneRule() {//post processing rule
+		return null;
+	}
+	
 	public abstract ComplexFloat convertToFloat(ExprList varDefs);
 	public String typeName() {
 		String name = getClass().getSimpleName();
@@ -125,6 +130,8 @@ public abstract class Expr extends QuickMath implements Comparable<Expr>, Serial
 		}
 	}
 	
+	public static boolean USE_RECUSION_SAFTEY = false;
+	
 	public static long ruleCallCount = 0;
 	public static int RECURSION_SAFETY;
 	
@@ -141,7 +148,7 @@ public abstract class Expr extends QuickMath implements Comparable<Expr>, Serial
 			}
 		}
 		RECURSION_SAFETY++;
-		if(RECURSION_SAFETY>256) {
+		if(USE_RECUSION_SAFTEY && RECURSION_SAFETY>256) {
 			System.err.println("RECURSION DETECTED");
 			return toBeSimplified;
 		}
@@ -162,6 +169,9 @@ public abstract class Expr extends QuickMath implements Comparable<Expr>, Serial
 				if(!toBeSimplified.typeName().equals(originalType)) break;
 			}
 		}
+		
+		Rule doneRule = getDoneRule();
+		if(doneRule != null) toBeSimplified = doneRule.applyRuleToExpr(toBeSimplified, settings);
 		
 		toBeSimplified.flags.simple = true;//result is simplified and should not be simplified again
 		

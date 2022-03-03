@@ -137,9 +137,9 @@ public class Integrate extends Expr{
 		public void init(){
 			cases = new Rule[]{
 					new Rule("integrate(1/(sqrt(a*x+b)*x^n),x)->(-sqrt(a*x+b))/((n-1)*b*x^(n-1))-(a*(2*n-3)*integrate(1/(sqrt(a*x+b)*x^(n-1)),x))/(2*b*(n-1))","~contains({a,b,n},x)","power over sqrt",Rule.UNCOMMON),
-					new Rule("integrate(1/(sqrt(a*x+b)*x),x)->ln(1-sqrt(a*x+b)/sqrt(b))/sqrt(b)-ln(1+sqrt(a*x+b)/sqrt(b))/sqrt(b)","~contains({a,b},x)","power over sqrt",Rule.UNCOMMON),
+					new Rule("integrate(1/(sqrt(a*x+b)*x),x)->ln(1-sqrt(a*x+b)/sqrt(b))/sqrt(b)-ln(1+sqrt(a*x+b)/sqrt(b))/sqrt(b)","~contains({a,b},x)&(eval(b>0)|allowComplexNumbers())","power over sqrt",Rule.UNCOMMON),
 					new Rule("integrate(1/(sqrt(x+b)*x^n),x)->(-sqrt(x+b))/((n-1)*b*x^(n-1))-((2*n-3)*integrate(1/(sqrt(x+b)*x^(n-1)),x))/(2*b*(n-1))","~contains({b,n},x)","power over sqrt",Rule.UNCOMMON),
-					new Rule("integrate(1/(sqrt(x+b)*x),x)->ln(1-sqrt(x+b)/sqrt(b))/sqrt(b)-ln(1+sqrt(x+b)/sqrt(b))/sqrt(b)","~contains(b,x)","power over sqrt",Rule.UNCOMMON),
+					new Rule("integrate(1/(sqrt(x+b)*x),x)->ln(1-sqrt(x+b)/sqrt(b))/sqrt(b)-ln(1+sqrt(x+b)/sqrt(b))/sqrt(b)","~contains(b,x)&(eval(b>0)|allowComplexNumbers())","power over sqrt",Rule.UNCOMMON),
 			};
 			Rule.initRules(cases);
 		}
@@ -261,8 +261,8 @@ public class Integrate extends Expr{
 	 * these are the reverse process of diff(atan(x^n),x) -> (n-1)*x^(n-1)/(x^(2*n)+1)
 	 */
 	
-	static Rule inverseQuadraticSimple = new Rule("integrate(x^a/(x^b+c),x)->atan(x^(a+1)/sqrt(c))/((a+1)*sqrt(c))","eval(b/(a+1)=2)&eval(c>0)&~contains({a,b,c},x)","inverse quadratic with u sub",Rule.UNCOMMON);
-	static Rule inverseQuadraticSimple2 = new Rule("integrate(x^a/(d*x^b+c),x)->atan((x^(a+1)*sqrt(d))/sqrt(c))/((a+1)*sqrt(d*c))","eval(b/(a+1)=2)&eval(c*d>0)&~contains({a,b,c,d},x)","inverse quadratic with u sub",Rule.UNCOMMON);
+	static Rule inverseQuadraticSimple = new Rule("integrate(x^a/(x^b+c),x)->atan(x^(a+1)/sqrt(c))/((a+1)*sqrt(c))","eval(b/(a+1)=2)&(eval(c>0)|allowComplexNumbers())&~contains({a,b,c},x)","inverse quadratic with u sub",Rule.UNCOMMON);
+	static Rule inverseQuadraticSimple2 = new Rule("integrate(x^a/(d*x^b+c),x)->atan((x^(a+1)*sqrt(d))/sqrt(c))/((a+1)*sqrt(d*c))","eval(b/(a+1)=2)&(eval(c*d>0)||allowComplexNumbers())&~contains({a,b,c,d},x)","inverse quadratic with u sub",Rule.UNCOMMON);
 	
 	static Rule inverseQuadraticToNReduction = new Rule("1 over quadratic to the n",Rule.VERY_DIFFICULT) {
 		private static final long serialVersionUID = 1L;
@@ -304,7 +304,7 @@ public class Integrate extends Expr{
 		public void init(){
 			cases = new Rule[]{
 					new Rule("integrate(1/sqrt(a-x^2),x)->asin(x/sqrt(a))","~contains(a,x)","simple integral leading to arcsin",Rule.EASY),
-					new Rule("integrate(1/sqrt(a+b*x^2),x)->asin((sqrt(-b)*x)/sqrt(a))/sqrt(-b)","eval(b<0)&~contains({a,b},x)","simple integral leading to arcsin",Rule.EASY),
+					new Rule("integrate(1/sqrt(a+b*x^2),x)->asin((sqrt(-b)*x)/sqrt(a))/sqrt(-b)","(eval(b<0)|allowComplexNumbers())&~contains({a,b},x)","simple integral leading to arcsin",Rule.EASY),
 			};
 			Rule.initRules(cases);
 		}
@@ -595,23 +595,23 @@ public class Integrate extends Expr{
 		@Override
 		public void init(){
 			cases = new Rule[]{
-					new Rule("integrate(x^2/sqrt(a+b*x^2),x)->a*asin((x*sqrt(-b))/sqrt(a))/(2*(-b)^(3/2))+x*sqrt(a-(-b)*x^2)/(2*b)","eval(b<0)&~contains({a,b},x)","trig sub",Rule.VERY_DIFFICULT),
+					new Rule("integrate(x^2/sqrt(a+b*x^2),x)->a*asin((x*sqrt(-b))/sqrt(a))/(2*(-b)^(3/2))+x*sqrt(a-(-b)*x^2)/(2*b)","(eval(b<0)|allowComplexNumbers())&~contains({a,b},x)","trig sub",Rule.VERY_DIFFICULT),
 					
-					new Rule("integrate(sqrt(a+b*x^2)/x^2,x)->b*asin(sqrt(-b)*x/sqrt(a))/sqrt(-b)-sqrt(a+b*x^2)/x","eval(b<0)&~contains({a,b},x)","trig sub",Rule.VERY_DIFFICULT),
+					new Rule("integrate(sqrt(a+b*x^2)/x^2,x)->b*asin(sqrt(-b)*x/sqrt(a))/sqrt(-b)-sqrt(a+b*x^2)/x","(eval(b<0)|allowComplexNumbers())&~contains({a,b},x)","trig sub",Rule.VERY_DIFFICULT),
 					
-					new Rule("integrate(sqrt(a+b*x^2),x)->a*asin(x*sqrt(-b)/sqrt(a))/(2*sqrt(-b))+x*sqrt(a+b*x^2)/2","eval(b<0)&~contains({a,b},x)","trig sub",Rule.VERY_DIFFICULT),
+					new Rule("integrate(sqrt(a+b*x^2),x)->a*asin(x*sqrt(-b)/sqrt(a))/(2*sqrt(-b))+x*sqrt(a+b*x^2)/2","(eval(b<0)|allowComplexNumbers())&~contains({a,b},x)","trig sub",Rule.VERY_DIFFICULT),
 					
-					new Rule("integrate(sqrt(a+b*x^2),x)->x*sqrt(b)*sqrt(a+b*x^2)/(2*sqrt(b))+a*ln(sqrt(a+b*x^2)+x*sqrt(b))/(2*sqrt(b))","eval(b>0)&~contains({a,b},x)","trig sub",Rule.CHALLENGING),
-					new Rule("integrate(sqrt(a+x^2),x)->x*sqrt(a+x^2)/2+a*ln(sqrt(a+x^2)+x)/2","eval(b>0)&~contains(a,x)","trig sub",Rule.CHALLENGING),
+					new Rule("integrate(sqrt(a+b*x^2),x)->x*sqrt(b)*sqrt(a+b*x^2)/(2*sqrt(b))+a*ln(sqrt(a+b*x^2)+x*sqrt(b))/(2*sqrt(b))","(eval(b>0)|allowComplexNumbers())&~contains({a,b},x)","trig sub",Rule.CHALLENGING),
+					new Rule("integrate(sqrt(a+x^2),x)->x*sqrt(a+x^2)/2+a*ln(sqrt(a+x^2)+x)/2","(eval(b>0)|allowComplexNumbers())&~contains(a,x)","trig sub",Rule.CHALLENGING),
 					
-					new Rule("integrate(1/sqrt(a+b*x^2),x)->ln(x*sqrt(b)+sqrt(a+b*x^2))/(2*sqrt(b))-ln(sqrt(a+b*x^2)-x*sqrt(b))/(2*sqrt(b))","eval(a>0)&eval(b>0)&~contains({a,b},x)","trig sub",Rule.CHALLENGING),
-					new Rule("integrate(1/sqrt(a+x^2),x)->ln(x+sqrt(a+x^2))/2-ln(sqrt(a+x^2)-x)/2","eval(a>0)&~contains(a,x)","trig sub",Rule.CHALLENGING),
+					new Rule("integrate(1/sqrt(a+b*x^2),x)->ln(x*sqrt(b)+sqrt(a+b*x^2))/(2*sqrt(b))-ln(sqrt(a+b*x^2)-x*sqrt(b))/(2*sqrt(b))","(eval(a>0)&eval(b>0)|allowComplexNumbers())&~contains({a,b},x)","trig sub",Rule.CHALLENGING),
+					new Rule("integrate(1/sqrt(a+x^2),x)->ln(x+sqrt(a+x^2))/2-ln(sqrt(a+x^2)-x)/2","(eval(a>0)|allowComplexNumbers())&~contains(a,x)","trig sub",Rule.CHALLENGING),
 					
 					new Rule("integrate(sqrt(x^2+a)/x^4,x)->-(x^2+a)^(3/2)/(3*a*x^3)","~contains(a,x)","trig sub",Rule.VERY_DIFFICULT),
 					new Rule("integrate(sqrt(b*x^2+a)/x^4,x)->-(b*x^2+a)^(3/2)/(3*a*x^3)","~contains({a,b},x)","trig sub",Rule.VERY_DIFFICULT),
 					
-					new Rule("integrate(sqrt(x^2+a)/x^3,x)->-sqrt(x^2+a)/(2*x^2)+atan(sqrt(x^2+a)/sqrt(-a))/(2*sqrt(-a))","eval(a<0)&~contains(a,x)","trig sub",Rule.VERY_DIFFICULT),
-					new Rule("integrate(sqrt(b*x^2+a)/x^3,x)->-sqrt(b*x^2+a)/(2*x^2)+atan(sqrt(b*x^2+a)/sqrt(-a))/(2*sqrt(-a))","eval(a<0)&~contains({a,b},x)","trig sub",Rule.VERY_DIFFICULT),
+					new Rule("integrate(sqrt(x^2+a)/x^3,x)->-sqrt(x^2+a)/(2*x^2)+atan(sqrt(x^2+a)/sqrt(-a))/(2*sqrt(-a))","(eval(a<0)|allowComplexNumbers())&~contains(a,x)","trig sub",Rule.VERY_DIFFICULT),
+					new Rule("integrate(sqrt(b*x^2+a)/x^3,x)->-sqrt(b*x^2+a)/(2*x^2)+atan(sqrt(b*x^2+a)/sqrt(-a))/(2*sqrt(-a))","(eval(a<0)|allowComplexNumbers())&~contains({a,b},x)","trig sub",Rule.VERY_DIFFICULT),
 					
 			};
 			Rule.initRules(cases);
@@ -629,12 +629,13 @@ public class Integrate extends Expr{
 	
 	static Rule sqrtOfQuadratic = new Rule("square root has quadratic",Rule.DIFFICULT) {
 		private static final long serialVersionUID = 1L;
-		Expr result;
+		Expr resultPos,resultNeg;
 		Expr check;
 		
 		@Override
 		public void init() {
-			result = createExpr("(b+2*a*x)*sqrt(a*x^2+b*x+c)/(4*a)+(4*a*c-b^2)*(ln(2*sqrt(a)*sqrt(a*x^2+b*x+c)+2*a*x+b)-ln(2))/(8*a^(3/2))");
+			resultPos = createExpr("(b+2*a*x)*sqrt(a*x^2+b*x+c)/(4*a)+(4*a*c-b^2)*(ln(2*sqrt(a)*sqrt(a*x^2+b*x+c)+2*a*x+b)-ln(2))/(8*a^(3/2))");
+			resultNeg = createExpr("(b+2*a*x)*sqrt(a*x^2+b*x+c)/(4*a)+(4*a*c-b^2)*asin((2*a*x+b)/sqrt(b^2-4*a*c))/(8*(-a)^(3/2))");
 			check = createExpr("eval(a>0)");
 		}
 		
@@ -647,9 +648,11 @@ public class Integrate extends Expr{
 				if(coefs == null) return integ;
 				if(coefs.size() == 3) {
 					ExprList equs = exprList( equ(var("c"),coefs.get(0)) , equ(var("b"),coefs.get(1)) , equ(var("a"),coefs.get(2)) );
-					if(check.replace(equs).simplify(settings).equals(BoolState.TRUE)) {
-						return result.replace(equs).simplify(settings);
+					boolean aPositive = check.replace(equs).simplify(settings).equals(BoolState.TRUE);
+					if(aPositive) {
+						return resultPos.replace(equs).simplify(settings);
 					}
+					return resultNeg.replace(equs).simplify(settings);
 				}
 				
 			}
@@ -919,6 +922,45 @@ public class Integrate extends Expr{
 	@Override
 	public Sequence getRuleSequence(){
 		return ruleSequence;
+	}
+	
+	static Rule postProcessing = new Rule("after integration cleanup",Rule.EASY) {
+		private static final long serialVersionUID = 1L;
+		
+		Expr applyAbs(Expr e,Settings settings) {
+			if(e instanceof Ln && !(e.get() instanceof Abs)) return ln(abs(e.get())).simplify(settings);
+			for(int i = 0;i<e.size();i++) {
+				e.set(i,applyAbs(e.get(i),settings));
+			}
+			return e;
+		}
+		
+		@Override
+		public Expr applyRuleToExpr(Expr e,Settings settings) {
+			if(e.containsType("integrate") || e.contains(var("0u"))) return e;//obviously in the middle of processing if you encounter u
+			
+			if(!settings.allowComplexNumbers) {
+				e = applyAbs(e,settings);
+			}
+			
+			e = distr(e).simplify(settings);
+			
+			if(e instanceof Sum) {//remove any trailing constants
+				for(int i = 0;i<e.size();i++) {
+					if(!e.get(i).containsVars()) {
+						e.remove(i);
+						i--;
+					}
+				}
+			}
+			
+			return e;
+		}
+	};
+	
+	@Override
+	public Rule getDoneRule() {
+		return postProcessing;
 	}
 	
 	public Integrate(){}//

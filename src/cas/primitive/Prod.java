@@ -570,29 +570,30 @@ public class Prod extends Expr{
 			Prod prod = (Prod)e;
 			
 			for(int i = 0;i<prod.size();i++) {
-				if(prod.get(i) instanceof Sum && prod.get(i).size() == 2) {
-					Sum current = (Sum)prod.get(i);
+				Power currentCasted = Power.cast(prod.get(i));
+				if( currentCasted.getBase() instanceof Sum && currentCasted.getBase().size() == 2 ) {
+					Sum currentSum = (Sum)currentCasted.getBase();
 					Num num = null;
 					Expr other = null;
 					
-					for(int j = 0;j<current.size();j++) {
-						if(current.get(j) instanceof Num) num = (Num)current.get(j);
-						else if(Rule.fastSimilarStruct(sqrtObjExtended, current.get(j)) || Rule.fastSimilarStruct(sqrtObjExtended2, current.get(j))) {
-							other = current.get(j);
+					for(int j = 0;j<currentSum.size();j++) {
+						if(currentSum.get(j) instanceof Num) num = (Num)currentSum.get(j);
+						else if(Rule.fastSimilarStruct(sqrtObjExtended, currentSum.get(j)) || Rule.fastSimilarStruct(sqrtObjExtended2, currentSum.get(j))) {
+							other = currentSum.get(j);
 						}
 					}
 					
 					if(!(num != null && other != null)) continue;
 					
-					Sum conj = sum(other,num.negate());//Variant 1
-					Expr conj2 = sum(neg(other).simplify(settings),num);//Variant 2
+					Expr conj = Power.unCast( pow(sum(other,num.negate()),currentCasted.getExpo()) );//Variant 1
+					Expr conj2 = Power.unCast( pow(sum(neg(other).simplify(settings),num),currentCasted.getExpo()) );//Variant 2
 					
 					for(int j = i+1;j<prod.size();j++) {
 						Expr out = null;
 						if(prod.get(j).equals(conj)) {
-							out = factor(sub(pow(other,num(2)),num.pow(BigInteger.TWO))).simplify(settings);
+							out = pow(factor(sub(pow(other,num(2)),num.pow(BigInteger.TWO))),currentCasted.getExpo()).simplify(settings);
 						}else if(prod.get(j).equals(conj2)) {
-							out = factor(sub(num.pow(BigInteger.TWO),pow(other,num(2)))).simplify(settings);
+							out = pow(factor(sub(num.pow(BigInteger.TWO),pow(other,num(2)))),currentCasted.getExpo()).simplify(settings);
 						}
 						
 						if(out != null) {

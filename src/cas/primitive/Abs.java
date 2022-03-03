@@ -227,6 +227,25 @@ public class Abs extends Expr{
 			return abs;
 		}
 	};
+	
+	static Rule absOfNegConst = new Rule("abs of negative constant",Rule.VERY_EASY) {
+		private static final long serialVersionUID = 1L;
+		
+		@Override
+		public Expr applyRuleToExpr(Expr e,Settings settings) {
+			Abs abs = (Abs)e;
+			if(!abs.get().containsVars()) {
+				ComplexFloat approx = abs.get().convertToFloat(exprList());
+				if(ComplexFloat.closeToZero(approx.imag)) {
+					if(approx.real<0) {
+						return neg(abs.get()).simplify(settings);
+					}
+					return abs.get();
+				}
+			}
+			return abs;
+		}
+	};
 
 	static Sequence ruleSequence;
 	public static void loadRules(){
@@ -236,6 +255,7 @@ public class Abs extends Expr{
 				absOfAbs,
 				alwaysPositive,
 				absOfNum,
+				absOfNegConst,
 				absOfPower,
 				absOfProd,
 				absOfDiv

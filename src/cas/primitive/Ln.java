@@ -98,15 +98,19 @@ public class Ln extends Expr{
 				Prod prodDenom = Prod.cast(div.getDenom());
 				
 				for(int i = 0;i<prodNumer.size();i++) {
-					if(prodNumer.get(i) instanceof Sum || prodNumer.get(i) instanceof Power && ((Power)prodNumer.get(i)).getBase() instanceof Sum) {
-						out.add(ln(prodNumer.get(i)));
+					Expr current = prodNumer.get(i);
+					if(current instanceof Sum || current instanceof Power && ((Power)current).getBase() instanceof Sum) {
+						if(!current.containsVars() && !current.convertToFloat(exprList()).positiveAndReal()) continue;
+						out.add(ln(current));
 						prodNumer.remove(i);
 						i--;
 					}
 				}
 				for(int i = 0;i<prodDenom.size();i++) {
-					if(prodDenom.get(i) instanceof Sum || prodDenom.get(i) instanceof Power && ((Power)prodDenom.get(i)).getBase() instanceof Sum) {
-						out.add(neg(ln(prodNumer.get(i))));
+					Expr current = prodDenom.get(i);
+					if(current instanceof Sum || current instanceof Power && ((Power)current).getBase() instanceof Sum) {
+						if(!current.containsVars() && !current.convertToFloat(exprList()).positiveAndReal()) continue;
+						out.add(neg(ln(current)));
 						prodDenom.remove(i);
 						i--;
 					}
