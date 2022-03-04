@@ -2,7 +2,7 @@ package cas.bool;
 
 import cas.ComplexFloat;
 import cas.Expr;
-import cas.Settings;
+import cas.CasInfo;
 import cas.primitive.ExprList;
 import cas.primitive.Sequence;
 
@@ -19,7 +19,7 @@ public class BoolState extends Expr{
 	}
 	
 	@Override
-	public Expr simplify(Settings settings) {
+	public Expr simplify(CasInfo casInfo) {
 		return copy();
 	}
 

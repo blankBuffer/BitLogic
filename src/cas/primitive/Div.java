@@ -5,7 +5,7 @@ import java.math.BigInteger;
 import cas.ComplexFloat;
 import cas.Expr;
 import cas.Rule;
-import cas.Settings;
+import cas.CasInfo;
 import cas.calculus.Limit;
 import cas.matrix.Mat;
 import cas.trig.Cos;
@@ -43,7 +43,7 @@ public class Div extends Expr{
 		private static final long serialVersionUID = 1L;
 
 		@Override
-		public Expr applyRuleToExpr(Expr e,Settings settings){
+		public Expr applyRuleToExpr(Expr e,CasInfo casInfo){
 			Div div = null;
 			if(e instanceof Div){
 				div = (Div)e;
@@ -85,7 +85,7 @@ public class Div extends Expr{
 		private static final long serialVersionUID = 1L;
 
 		@Override
-		public Expr applyRuleToExpr(Expr e,Settings settings){
+		public Expr applyRuleToExpr(Expr e,CasInfo casInfo){
 			Div div = null;
 			if(e instanceof Div){
 				div = (Div)e;
@@ -118,8 +118,8 @@ public class Div extends Expr{
 			
 			if(prodInTrig && nonProdInTrig){
 				
-				div.setNumer(trigExpand(div.getNumer(),settings));
-				div.setDenom(trigExpand(div.getDenom(),settings));
+				div.setNumer(trigExpand(div.getNumer(),casInfo));
+				div.setDenom(trigExpand(div.getDenom(),casInfo));
 			}
 			
 			return div;
@@ -129,7 +129,7 @@ public class Div extends Expr{
 		private static final long serialVersionUID = 1L;
 
 		@Override
-		public Expr applyRuleToExpr(Expr e,Settings settings){
+		public Expr applyRuleToExpr(Expr e,CasInfo casInfo){
 			Div div = (Div)e;
 			
 			Prod numerProd = Prod.cast(div.getNumer()), denomProd = Prod.cast(div.getDenom());
@@ -157,23 +157,23 @@ public class Div extends Expr{
 					Power denomPower =  Power.cast(denomTerm);
 					
 					if(numerPower.getBase().equals(denomPower.getBase())) {//both bases are the same x^2/x^3
-						Expr newExpo = sub(numerPower.getExpo(),denomPower.getExpo()).simplify(settings);
+						Expr newExpo = sub(numerPower.getExpo(),denomPower.getExpo()).simplify(casInfo);
 						if(newExpo.negative()) {
-							newExpo = neg(newExpo).simplify(settings);//flip it
+							newExpo = neg(newExpo).simplify(casInfo);//flip it
 							denomPower.setExpo(newExpo);
-							denomProd.set(j, denomPower.simplify(settings));
+							denomProd.set(j, denomPower.simplify(casInfo));
 							numerProd.remove(i);
 							i--;
 							continue outer;
 						}
 						numerPower.setExpo(newExpo);
-						numerProd.set(i, numerPower.simplify(settings));
+						numerProd.set(i, numerPower.simplify(casInfo));
 						denomProd.remove(j);
 						j--;
 						continue inner;
 						
 					}else if(numerPower.getExpo().equals(denomPower.getExpo()) && numerPower.getBase() instanceof Num && denomPower.getBase() instanceof Num){//both denoms are the same
-						Expr resTest = div(numerPower.getBase(),denomPower.getBase()).simplify(settings);
+						Expr resTest = div(numerPower.getBase(),denomPower.getBase()).simplify(casInfo);
 						if(resTest instanceof Num) {//10^x/2^x -> 5^x
 							numerProd.set(i, pow(resTest,numerPower.getExpo()));
 							denomProd.remove(j);
@@ -205,7 +205,7 @@ public class Div extends Expr{
 		private static final long serialVersionUID = 1L;
 
 		@Override
-		public Expr applyRuleToExpr(Expr e,Settings settings){
+		public Expr applyRuleToExpr(Expr e,CasInfo casInfo){
 			Div div = (Div)e;
 			boolean numerIsDiv = div.getNumer() instanceof Div;
 			boolean denomIsDiv = div.getDenom() instanceof Div;
@@ -218,16 +218,16 @@ public class Div extends Expr{
 				Expr newDenom = prod(numerDiv.getDenom(), denomDiv.getNumer());
 				
 				
-				div.setNumer(newNumer.simplify(settings));
-				div.setDenom(newDenom.simplify(settings));
+				div.setNumer(newNumer.simplify(casInfo));
+				div.setDenom(newDenom.simplify(casInfo));
 			}else if(numerIsDiv) {
 				Div numerDiv = (Div)div.getNumer();
 				
 				Expr newDenom = prod(numerDiv.getDenom(),div.getDenom());
 				Expr newNumer = numerDiv.getNumer();
 				
-				div.setNumer(newNumer.simplify(settings));
-				div.setDenom(newDenom.simplify(settings));
+				div.setNumer(newNumer.simplify(casInfo));
+				div.setDenom(newDenom.simplify(casInfo));
 			}else if(denomIsDiv) {
 				
 				Div denomDiv = (Div)div.getDenom();
@@ -235,8 +235,8 @@ public class Div extends Expr{
 				Expr newNumer = prod(div.getNumer(),denomDiv.getDenom());
 				Expr newDenom = denomDiv.getNumer();
 				
-				div.setNumer(newNumer.simplify(settings));
-				div.setDenom(newDenom.simplify(settings));
+				div.setNumer(newNumer.simplify(casInfo));
+				div.setDenom(newDenom.simplify(casInfo));
 			}
 			return div;
 		}
@@ -245,7 +245,7 @@ public class Div extends Expr{
 		private static final long serialVersionUID = 1L;
 
 		@Override
-		public Expr applyRuleToExpr(Expr e,Settings settings){
+		public Expr applyRuleToExpr(Expr e,CasInfo casInfo){
 			Div div = (Div)e;
 			
 			//get numerator
@@ -365,9 +365,9 @@ public class Div extends Expr{
 		private static final long serialVersionUID = 1L;
 		
 		@Override
-		public Expr applyRuleToExpr(Expr e,Settings settings){
+		public Expr applyRuleToExpr(Expr e,CasInfo casInfo){
 			for(int i = 0;i<e.size();i++){
-				e.set(i, factor(e.get(i)).simplify(settings));
+				e.set(i, factor(e.get(i)).simplify(casInfo));
 			}
 			return e;
 		}
@@ -377,7 +377,7 @@ public class Div extends Expr{
 		private static final long serialVersionUID = 1L;
 		
 		@Override
-		public Expr applyRuleToExpr(Expr e,Settings settings){
+		public Expr applyRuleToExpr(Expr e,CasInfo casInfo){
 			Div div = (Div)e;
 			
 			Prod numerProd = Prod.cast(div.getNumer());
@@ -505,7 +505,7 @@ public class Div extends Expr{
 		private static final long serialVersionUID = 1L;
 		
 		@Override
-		public Expr applyRuleToExpr(Expr e,Settings settings){
+		public Expr applyRuleToExpr(Expr e,CasInfo casInfo){
 			Div div = (Div)e;
 			
 			Prod numerProd = Prod.cast( div.getNumer() );
@@ -540,7 +540,7 @@ public class Div extends Expr{
 		private static final long serialVersionUID = 1L;
 		
 		@Override
-		public Expr applyRuleToExpr(Expr e,Settings settings){
+		public Expr applyRuleToExpr(Expr e,CasInfo casInfo){
 			Div div = (Div)e;
 			
 			boolean numerIsMat = div.getNumer() instanceof Mat;
@@ -558,7 +558,7 @@ public class Div extends Expr{
 					}
 				}
 				
-				return nMat.simplify(settings);
+				return nMat.simplify(casInfo);
 			}else if(numerIsMat) {
 				Mat nMat = (Mat)div.getNumer();
 				
@@ -570,7 +570,7 @@ public class Div extends Expr{
 					}
 				}
 				
-				return nMat.simplify(settings);
+				return nMat.simplify(casInfo);
 			}else if(denomIsMat) {
 				Mat dMat = (Mat)div.getDenom();
 				
@@ -582,7 +582,7 @@ public class Div extends Expr{
 					}
 				}
 				
-				return dMat.simplify(settings);
+				return dMat.simplify(casInfo);
 			}
 			
 			return div;

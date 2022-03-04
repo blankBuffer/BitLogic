@@ -13,35 +13,27 @@ public class Interpreter extends QuickMath{
 	
 	public static Expr SUCCESS = var("done!");
 	
-	public static Expr createExpr(String string,Defs defs,Settings settings){
+	public static Expr createExpr(String string){
 		string = string.replaceAll(" ", "");//remove spaces
 		try {
 			ArrayList<String> tokens = generateTokens(string);
-			return createExprFromTokens(tokens,defs,settings);
+			return createExprFromTokens(tokens);
 		}catch(Exception e) {
 			e.printStackTrace();
 			return null;
 		}
 	}
 	
-	public static Expr createExprWithThrow(String string,Defs defs,Settings settings) throws Exception{
+	public static Expr createExprWithThrow(String string) throws Exception{
 		string = string.replaceAll(" ", "");//remove spaces
 		ArrayList<String> tokens = generateTokens(string);
-		return createExprFromTokens(tokens,defs,settings);
+		return createExprFromTokens(tokens);
 	}
 	
-	public static Expr createExprWithThrow(String string) throws Exception {
-		return createExprWithThrow(string,Defs.blank,Settings.normal);
-	}
-	
-	public static Expr createExpr(String string) {
-		return createExpr(string,Defs.blank,Settings.normal);
-	}
-	
-	static Expr createExprFromToken(String token,Defs defs,Settings settings) throws Exception {
+	static Expr createExprFromToken(String token) throws Exception {
 		ArrayList<String> tokens = new ArrayList<String>();
 		tokens.add(token);
-		return createExprFromTokens(tokens,defs,settings);
+		return createExprFromTokens(tokens);
 	}
 	
 	static void errors(ArrayList<String> tokens) throws Exception {
@@ -173,6 +165,7 @@ public class Interpreter extends QuickMath{
 	private static ArrayList<String> multiSymbolOperators = new ArrayList<String>();
 	static {
 		multiSymbolOperators.add("->");
+		multiSymbolOperators.add(":=");
 	}
 	private static void makeMultiSymbolOperators(ArrayList<String> tokens) {
 		for(int i = 0;i < tokens.size();i++) {
@@ -198,7 +191,7 @@ public class Interpreter extends QuickMath{
 		}
 	}
 	
-	static Expr createExprFromTokens(ArrayList<String> tokens,Defs defs,Settings settings) throws Exception{
+	static Expr createExprFromTokens(ArrayList<String> tokens) throws Exception{
 		if(tokens.size() == 0) return null;
 		//System.out.println("Received: "+tokens);
 		errors(tokens);
@@ -230,7 +223,7 @@ public class Interpreter extends QuickMath{
 				String subPart = string.substring(1,string.length()-1);
 				
 				ArrayList<String> subTokens = generateTokens(subPart);
-				Expr outExpr = createExprFromTokens(subTokens,defs,settings);
+				Expr outExpr = createExprFromTokens(subTokens);
 				
 				if(string.startsWith("(")) {
 					return outExpr;
@@ -250,37 +243,7 @@ public class Interpreter extends QuickMath{
 			String op = tokens.get(0);
 			if(op.matches("[a-zA-Z]+")) {
 				if(op.isBlank()) throw new Exception("confusing parenthesis");
-				Expr params = Params.cast( createExprFromToken(tokens.get(1),defs,settings));
-				
-				if(op.equals("define")) {
-					Expr def = params.get(0);
-					
-					if(def instanceof Becomes && ((Becomes)def).getLeftSide() instanceof Func) {
-						Func f = (Func)((Becomes)def).getLeftSide().copy();
-						f.ruleSequence.add(new Rule(((Becomes)def),"function definition",Rule.EASY));
-						System.out.println(f.getRuleSequence());
-						
-						f.clear();
-						defs.addFunc(f);
-					}else {
-						defs.addVar((Equ)def);
-					}
-					
-					return SUCCESS;
-				}
-				if(op.equals("delete")) {
-					if(params.get(0) instanceof Func) {
-						defs.removeFunc(params.get(0).typeName());
-					}else {
-						defs.removeVar(params.get(0).toString());
-					}
-					
-					return SUCCESS;
-				}
-				
-				if(op.equals("defs")) {
-					return var(defs.toString());
-				}
+				Expr params = Params.cast( createExprFromToken(tokens.get(1)));
 				
 				
 				Expr[] paramsArray = new Expr[params.size()];
@@ -290,7 +253,7 @@ public class Interpreter extends QuickMath{
 				}
 				
 				
-				Expr f = SimpleFuncs.getFuncByName(op,defs,paramsArray);
+				Expr f = SimpleFuncs.getFuncByName(op,paramsArray);
 				return f;
 			}
 			
@@ -306,7 +269,7 @@ public class Interpreter extends QuickMath{
 					
 					ArrayList<String> tokenSet = new ArrayList<String>();
 					for(int j = indexOfLastComma;j<i;j++)  tokenSet.add(tokens.get(j));
-					scr.add(createExprFromTokens(tokenSet,defs,settings));
+					scr.add(createExprFromTokens(tokenSet));
 					indexOfLastComma = i+1;
 				}
 			}
@@ -314,17 +277,25 @@ public class Interpreter extends QuickMath{
 			return scr;
 			
 		}
+		if(tokens.contains(":=")) {
+			int indexOfAssign = tokens.indexOf(":=");
+			ArrayList<String> leftSide = groupTokens(tokens,0,indexOfAssign);
+			ArrayList<String> rightSide = groupTokens(tokens,indexOfAssign+1,tokens.size());
+			
+			return define(createExprFromTokens(leftSide),createExprFromTokens(rightSide));
+			
+		}
 		if(tokens.contains(",")) {
 			Params params = new Params();
 			ArrayList<ArrayList<String>> tokenGroups = splitTokensIntoGroups(tokens,",");
-			for(ArrayList<String> group:tokenGroups) params.add( createExprFromTokens(group,defs,settings) );
+			for(ArrayList<String> group:tokenGroups) params.add( createExprFromTokens(group) );
 			return params;
 			
 		}
 		if(tokens.contains("->")) {
 			ArrayList<ArrayList<String>> tokenGroups = splitTokensIntoGroups(tokens,"->");
-			Expr leftSide = createExprFromTokens(tokenGroups.get(0),defs,settings);
-			Expr rightSide = createExprFromTokens(tokenGroups.get(1),defs,settings);
+			Expr leftSide = createExprFromTokens(tokenGroups.get(0));
+			Expr rightSide = createExprFromTokens(tokenGroups.get(1));
 			return becomes(leftSide,rightSide);
 		}
 		
@@ -336,8 +307,8 @@ public class Interpreter extends QuickMath{
 			int indexOfEquToken = Math.max(Math.max(indexOfEq, indexOfLess),indexOfGreater);
 			
 			char symbol = tokens.get(indexOfEquToken).charAt(0);
-			Expr leftSide = createExprFromTokens(groupTokens(tokens,0,indexOfEquToken),defs,settings);
-			Expr rightSide = createExprFromTokens(groupTokens(tokens,indexOfEquToken+1,tokens.size()),defs,settings);
+			Expr leftSide = createExprFromTokens(groupTokens(tokens,0,indexOfEquToken));
+			Expr rightSide = createExprFromTokens(groupTokens(tokens,indexOfEquToken+1,tokens.size()));
 			
 			if(symbol == '=') return equ(leftSide,rightSide);
 			if(symbol == '>') return equGreater(leftSide,rightSide);
@@ -352,24 +323,24 @@ public class Interpreter extends QuickMath{
 			int colonIndex = tokens.indexOf(":");
 			ArrayList<String> ifTrue = groupTokens(tokens,questionMarkIndex+1,colonIndex);
 			ArrayList<String> ifFalse = groupTokens(tokens,colonIndex+1,tokens.size());
-			return new Ternary( createExprFromTokens(toBeEvaled ,defs,settings),createExprFromTokens(ifTrue ,defs,settings),createExprFromTokens(ifFalse ,defs,settings) );
+			return ternary( createExprFromTokens(toBeEvaled),createExprFromTokens(ifTrue),createExprFromTokens(ifFalse) );
 		}
 		
 		if(tokens.contains("|")){
 			Or or = new Or();
 			ArrayList<ArrayList<String>> tokenGroups = splitTokensIntoGroups(tokens,"|");
-			for(ArrayList<String> group:tokenGroups) or.add( createExprFromTokens(group,defs,settings) );
+			for(ArrayList<String> group:tokenGroups) or.add( createExprFromTokens(group) );
 			return or;
 		}
 		if(tokens.contains("&")){
 			And and = new And();
 			ArrayList<ArrayList<String>> tokenGroups = splitTokensIntoGroups(tokens,"&");
-			for(ArrayList<String> group:tokenGroups) and.add( createExprFromTokens(group,defs,settings) );
+			for(ArrayList<String> group:tokenGroups) and.add( createExprFromTokens(group) );
 			return and;
 		}
 		if(tokens.get(0).equals("~")){
 			tokens.remove(0);
-			return not(createExprFromTokens(tokens,defs,settings));
+			return not(createExprFromTokens(tokens));
 		}
 		
 		boolean isSum = false;
@@ -393,7 +364,7 @@ public class Interpreter extends QuickMath{
 						ArrayList<String> tokenSet = groupTokens(tokens,indexOfLastAdd,i);
 						
 						if(nextIsSub) {
-							Expr toBeAdded = createExprFromTokens(tokenSet,defs,settings);
+							Expr toBeAdded = createExprFromTokens(tokenSet);
 							if(toBeAdded instanceof Prod) {
 								boolean foundNum = false;
 								for(int k = 0;k<toBeAdded.size();k++) {
@@ -412,7 +383,7 @@ public class Interpreter extends QuickMath{
 								sum.add( ((Num)toBeAdded).negate() );
 							}else sum.add(neg(toBeAdded));
 						}else {
-							sum.add(createExprFromTokens(tokenSet,defs,settings));
+							sum.add(createExprFromTokens(tokenSet));
 						}
 					}
 					indexOfLastAdd = i;
@@ -439,7 +410,7 @@ public class Interpreter extends QuickMath{
 		if(tokens.contains(".")) {
 			Dot dot = new Dot();
 			ArrayList<ArrayList<String>> tokenGroups = splitTokensIntoGroups(tokens,".");
-			for(ArrayList<String> group:tokenGroups) dot.add( createExprFromTokens(group,defs,settings) );
+			for(ArrayList<String> group:tokenGroups) dot.add( createExprFromTokens(group) );
 			return dot;
 		}
 		
@@ -454,8 +425,8 @@ public class Interpreter extends QuickMath{
 				if(token.equals("*") || token.equals("/")) {
 					ArrayList<String> tokenSet = groupTokens(tokens,indexOfLastProd,i);
 					
-					if(nextDiv) denomProd.add(createExprFromTokens(tokenSet,defs,settings));
-					else numerProd.add(createExprFromTokens(tokenSet,defs,settings));
+					if(nextDiv) denomProd.add(createExprFromTokens(tokenSet));
+					else numerProd.add(createExprFromTokens(tokenSet));
 					if(token.equals("/")) nextDiv = true;
 					else nextDiv = false;
 					
@@ -474,13 +445,13 @@ public class Interpreter extends QuickMath{
 		}
 		if(tokens.contains("^")) {
 			int indexOfPowToken = tokens.indexOf("^");
-			Expr base = createExprFromTokens(groupTokens(tokens,0,indexOfPowToken),defs,settings);
-			Expr expo = createExprFromTokens(groupTokens(tokens,indexOfPowToken+1,tokens.size()),defs,settings);
+			Expr base = createExprFromTokens(groupTokens(tokens,0,indexOfPowToken));
+			Expr expo = createExprFromTokens(groupTokens(tokens,indexOfPowToken+1,tokens.size()));
 			
 			return pow(base,expo);
 		}
 		if(tokens.get(tokens.size()-1).equals("!")) {
-			return gamma( sum(createExprFromTokens(groupTokens(tokens,0,tokens.size()-1),defs,settings),num(1)) );
+			return gamma( sum(createExprFromTokens(groupTokens(tokens,0,tokens.size()-1)),num(1)) );
 		}
 		
 		throw new Exception("unrecognized format:"+tokens);

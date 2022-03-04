@@ -1,9 +1,8 @@
 package cas.programming;
 
-import cas.Defs;
 import cas.Expr;
 import cas.QuickMath;
-import cas.Settings;
+import cas.CasInfo;
 import cas.SimpleFuncs;
 import cas.bool.And;
 import cas.bool.Or;
@@ -25,8 +24,7 @@ public class StackEditor extends QuickMath {
 	public static final int EDIT_REQUEST = 1;
 	public static final int FINISHED = 0;
 	
-	public Settings currentSettings = new Settings();
-	public Defs currentDefs = new Defs();
+	public CasInfo currentCasInfo = new CasInfo();
 	
 	private static Expr expr = null;
 	private String alerts = "";
@@ -36,7 +34,7 @@ public class StackEditor extends QuickMath {
 		alerts = "alert: "+string+"\n";
 	}
 
-	private static final int TIME_LIMIT = 3000;//3 seconds until the compute thread is killed
+	private static final int TIME_LIMIT = 8000;//3 seconds until the compute thread is killed
 	/*
 	 * computes the result of the last item on the stack. It runs on its own thread to prevent freezing
 	 */
@@ -50,7 +48,7 @@ public class StackEditor extends QuickMath {
 				Expr.RECURSION_SAFETY = 0;
 				long oldTime = System.nanoTime();
 				long startingInstructionCount = Expr.ruleCallCount;
-				expr = expr.replace(currentDefs.getVars()).simplify(currentSettings);// Substitutes the variables and}
+				expr = expr.simplify(currentCasInfo);// Substitutes the variables and}
 				long delta = System.nanoTime() - oldTime;
 				createAlert("took " + delta / 1000000.0 + " ms to compute, "+(Expr.ruleCallCount-startingInstructionCount)+" intructions called");
 			}
@@ -112,7 +110,7 @@ public class StackEditor extends QuickMath {
 		out+="STACK\n";
 		out+="▛▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▜\n";
 		for (int i = 0; i < size(); i++) {
-			out+=(i + 1) + ": "+stack.get(i)+"  --->  "+stack.get(i).convertToFloat(currentDefs.getVars())+"\n";
+			out+=(i + 1) + ": "+stack.get(i)+"  --->  "+stack.get(i).convertToFloat(exprList())+"\n";
 		}
 		out+="▙▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▟\n";
 		out+=alerts;
@@ -259,6 +257,18 @@ public class StackEditor extends QuickMath {
 		stack.set(size() - 2, equ(sLast(), last()));
 		stack.remove(size() - 1);
 	}
+	public void equGreater() {
+		if (sLast() == null)
+			return;
+		stack.set(size() - 2, equGreater(sLast(), last()));
+		stack.remove(size() - 1);
+	}
+	public void equLess() {
+		if (sLast() == null)
+			return;
+		stack.set(size() - 2, equLess(sLast(), last()));
+		stack.remove(size() - 1);
+	}
 
 	public void createList() {
 		stack.add(new ExprList());
@@ -365,6 +375,10 @@ public class StackEditor extends QuickMath {
 				swap();
 			} else if (command.equals("=")) {
 				equ();
+			} else if (command.equals(">")) {
+				equGreater();
+			} else if (command.equals("<")) {
+				equLess();
 			} else if (command.equals("->")) {
 				becomes();
 			} else if (command.equals("[")) {
@@ -421,14 +435,14 @@ public class StackEditor extends QuickMath {
 						for(int i = 0;i<val;i++) roll();
 					} else createAlert("need more elements");
 				}else if(command.equals("allowAbs")) {
-					currentSettings.allowAbs = bool;
+					currentCasInfo.allowAbs = bool;
 					createAlert("allowAbs="+bool);
 				}else if(command.equals("allowComplexNumbers")) {
-					currentSettings.allowComplexNumbers = bool;
+					currentCasInfo.allowComplexNumbers = bool;
 					createAlert("allowComplexNumbers="+bool);
 				}
 			}else if(SimpleFuncs.isFunc(command)) {
-				int numberOfParams = SimpleFuncs.getExpectectedParams(command, currentDefs);
+				int numberOfParams = SimpleFuncs.getExpectectedParams(command);
 				if(stack.size() >= numberOfParams) {
 					Expr[] paramsList = new Expr[numberOfParams];
 					int startPoint = stack.size()-numberOfParams;
@@ -436,7 +450,7 @@ public class StackEditor extends QuickMath {
 						paramsList[i-startPoint] = stack.get(i);
 					}
 					
-					Expr newStackItem = SimpleFuncs.getFuncByName(command, currentDefs, paramsList);
+					Expr newStackItem = SimpleFuncs.getFuncByName(command, paramsList);
 					
 					for(int i = stack.size()-1;i>=startPoint;i--) {
 						stack.remove(i);
@@ -447,7 +461,7 @@ public class StackEditor extends QuickMath {
 			}else {
 			
 				long oldTime = System.nanoTime();
-				Expr convertedQ = Ask.ask(command, currentDefs, currentSettings);
+				Expr convertedQ = Ask.ask(command);
 
 				long delta = System.nanoTime() - oldTime;
 				System.out.println("took " + delta / 1000000.0 + " ms to understand");

@@ -4,11 +4,12 @@ import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
 
+import cas.Rule;
 import cas.programming.StackEditor;
 
 public class UI {
 	
-	public static final String VERSION = "1.6.4";
+	public static final String VERSION = "1.6.5";
 	
 	public static final String fancyIntro() {
 		String img = ""
@@ -28,6 +29,7 @@ public class UI {
 	
 	public static void startCommandLineInterface(boolean clearTerm) {
 		System.out.println(UI.fancyIntro());
+		Rule.loadRules();
 		StackEditor editor = new StackEditor();
 		BufferedReader bf = new BufferedReader(new
 		        InputStreamReader(System.in));

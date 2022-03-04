@@ -19,7 +19,7 @@ public class Or extends Expr{
 		private static final long serialVersionUID = 1L;
 
 		@Override
-		public Expr applyRuleToExpr(Expr e,Settings settings){
+		public Expr applyRuleToExpr(Expr e,CasInfo casInfo){
 			Or or = null;
 			if(e instanceof Or){
 				or = (Or)e;
@@ -45,7 +45,7 @@ public class Or extends Expr{
 		private static final long serialVersionUID = 1L;
 
 		@Override
-		public Expr applyRuleToExpr(Expr e,Settings settings){
+		public Expr applyRuleToExpr(Expr e,CasInfo casInfo){
 			Or or = null;
 			if(e instanceof Or){
 				or = (Or)e;
@@ -66,7 +66,7 @@ public class Or extends Expr{
 		private static final long serialVersionUID = 1L;
 
 		@Override
-		public Expr applyRuleToExpr(Expr e,Settings settings){
+		public Expr applyRuleToExpr(Expr e,CasInfo casInfo){
 			Or or = null;
 			if(e instanceof Or){
 				or = (Or)e;
@@ -87,7 +87,7 @@ public class Or extends Expr{
 		private static final long serialVersionUID = 1L;
 
 		@Override
-		public Expr applyRuleToExpr(Expr e,Settings settings){
+		public Expr applyRuleToExpr(Expr e,CasInfo casInfo){
 			Or or = null;
 			if(e instanceof Or){
 				or = (Or)e;
@@ -96,7 +96,7 @@ public class Or extends Expr{
 			}
 			for(int i = 0;i<or.size();i++){
 				Expr current = or.get(i);
-				Expr complement = not(current).simplify(settings);
+				Expr complement = not(current).simplify(casInfo);
 				
 				if(complement instanceof Or){//trickier case a&b|~a|~b=true
 					boolean hasAll = true;
@@ -141,7 +141,7 @@ public class Or extends Expr{
 		private static final long serialVersionUID = 1L;
 
 		@Override
-		public Expr applyRuleToExpr(Expr e,Settings settings){
+		public Expr applyRuleToExpr(Expr e,CasInfo casInfo){
 			Or or = null;
 			if(e instanceof Or){
 				or = (Or)e;
@@ -169,7 +169,7 @@ public class Or extends Expr{
 		private static final long serialVersionUID = 1L;
 
 		@Override
-		public Expr applyRuleToExpr(Expr e,Settings settings){
+		public Expr applyRuleToExpr(Expr e,CasInfo casInfo){
 			Or or = null;
 			if(e instanceof Or){
 				or = (Or)e;
@@ -217,7 +217,7 @@ public class Or extends Expr{
 		private static final long serialVersionUID = 1L;
 
 		@Override
-		public Expr applyRuleToExpr(Expr e,Settings settings){
+		public Expr applyRuleToExpr(Expr e,CasInfo casInfo){
 			Or or = null;
 			if(e instanceof Or){
 				or = (Or)e;
@@ -271,7 +271,7 @@ public class Or extends Expr{
 			}
 		}
 		@Override
-		public Expr applyRuleToExpr(Expr e,Settings settings){//this is very hard to explain
+		public Expr applyRuleToExpr(Expr e,CasInfo casInfo){//this is very hard to explain
 			Or or = null;
 			if(e instanceof Or){
 				or = (Or)e;
@@ -333,7 +333,7 @@ public class Or extends Expr{
 					or.remove(j);
 				}
 				for(Expr expr:toBeAdded){
-					or.add(expr.simplify(settings));
+					or.add(expr.simplify(casInfo));
 				}
 			}
 			return or;
@@ -344,7 +344,7 @@ public class Or extends Expr{
 		private static final long serialVersionUID = 1L;
 
 		@Override
-		public Expr applyRuleToExpr(Expr e,Settings settings){
+		public Expr applyRuleToExpr(Expr e,CasInfo casInfo){
 			Or or = null;
 			if(e instanceof Or){
 				or = (Or)e;
@@ -416,7 +416,7 @@ public class Or extends Expr{
 		}
 		
 		@Override
-		public Expr applyRuleToExpr(Expr e,Settings settings){
+		public Expr applyRuleToExpr(Expr e,CasInfo casInfo){
 			//now try with factored components
 			
 			if(e instanceof Or){
@@ -443,12 +443,12 @@ public class Or extends Expr{
 							or.remove(j);
 							j--;
 							
-							factoredOutOr.add(currentAndFactoredOut.simplify(settings));
+							factoredOutOr.add(currentAndFactoredOut.simplify(casInfo));
 							
 						}
 						
 					}
-					Or factoredOutOrNew = Or.cast(this.applyRuleToExpr(factoredOutOr.copy(), settings) );
+					Or factoredOutOrNew = Or.cast(this.applyRuleToExpr(factoredOutOr.copy(), casInfo) );
 					if(!factoredOutOrNew.equals(factoredOutOr)){//re calculate to waste lest time
 						i=-1;
 						allFactorableVars = allFactorableVars(or);
@@ -456,16 +456,16 @@ public class Or extends Expr{
 					for(int j = 0;j<factoredOutOrNew.size();j++){
 						And current = And.cast(factoredOutOrNew.get(j));
 						current.add(var);
-						or.add(current.simplify(settings));
+						or.add(current.simplify(casInfo));
 					}
 				}
 				
 			}
 			
 			{//apply plain
-				e = complement.applyRuleToExpr(e, settings);
-				e = redundance.applyRuleToExpr(e, settings);
-				e = consensus.applyRuleToExpr(e, settings);
+				e = complement.applyRuleToExpr(e, casInfo);
+				e = redundance.applyRuleToExpr(e, casInfo);
+				e = consensus.applyRuleToExpr(e, casInfo);
 			}
 			
 			return e;

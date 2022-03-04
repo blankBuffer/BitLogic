@@ -3,7 +3,7 @@ package cas.matrix;
 import cas.ComplexFloat;
 import cas.Expr;
 import cas.Rule;
-import cas.Settings;
+import cas.CasInfo;
 import cas.primitive.ExprList;
 import cas.primitive.Sequence;
 
@@ -72,7 +72,7 @@ public class Mat extends Expr{
 		private static final long serialVersionUID = 1L;
 		
 		@Override
-		public Expr applyRuleToExpr(Expr e,Settings settings) {
+		public Expr applyRuleToExpr(Expr e,CasInfo casInfo) {
 			Mat mat = (Mat)e;
 			Sequence inner = Sequence.cast( mat.get() );
 			

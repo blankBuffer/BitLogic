@@ -19,7 +19,7 @@ public class Approx extends Expr{
 		private static final long serialVersionUID = 1L;
 		
 		@Override
-		public Expr applyRuleToExpr(Expr e,Settings settings){
+		public Expr applyRuleToExpr(Expr e,CasInfo casInfo){
 			Approx approx = (Approx)e;
 			Expr out = floatExpr(approx.get().convertToFloat((ExprList)approx.get(1)));
 			return out;

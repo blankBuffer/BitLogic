@@ -2,7 +2,7 @@ package cas.primitive;
 
 import cas.ComplexFloat;
 import cas.Expr;
-import cas.Settings;
+import cas.CasInfo;
 
 public class FloatExpr extends Expr{
 	
@@ -30,7 +30,7 @@ public class FloatExpr extends Expr{
 	}
 
 	@Override
-	public Expr simplify(Settings settings) {
+	public Expr simplify(CasInfo casInfo) {
 		return copy();
 	}
 

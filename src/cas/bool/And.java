@@ -3,7 +3,7 @@ package cas.bool;
 import cas.ComplexFloat;
 import cas.Expr;
 import cas.Rule;
-import cas.Settings;
+import cas.CasInfo;
 import cas.primitive.ExprList;
 import cas.primitive.Sequence;
 
@@ -19,7 +19,7 @@ public class And extends Expr{
 		private static final long serialVersionUID = 1L;
 		
 		@Override
-		public Expr applyRuleToExpr(Expr e,Settings settings){
+		public Expr applyRuleToExpr(Expr e,CasInfo casInfo){
 			And and = (And)e;
 			for(int i = 0;i<and.size();i++){
 				if(and.get(i) instanceof And){
@@ -40,7 +40,7 @@ public class And extends Expr{
 		private static final long serialVersionUID = 1L;
 		
 		@Override
-		public Expr applyRuleToExpr(Expr e,Settings settings){
+		public Expr applyRuleToExpr(Expr e,CasInfo casInfo){
 			And and = (And)e;
 			for(int i = 0;i<and.size();i++){
 				if(and.get(i).equals(BoolState.FALSE)){
@@ -56,7 +56,7 @@ public class And extends Expr{
 		private static final long serialVersionUID = 1L;
 		
 		@Override
-		public Expr applyRuleToExpr(Expr e,Settings settings){
+		public Expr applyRuleToExpr(Expr e,CasInfo casInfo){
 			And and = (And)e;
 			for(int i = 0;i<and.size();i++){
 				if(and.get(i).equals(BoolState.TRUE)){
@@ -72,7 +72,7 @@ public class And extends Expr{
 		private static final long serialVersionUID = 1L;
 		
 		@Override
-		public Expr applyRuleToExpr(Expr e,Settings settings){
+		public Expr applyRuleToExpr(Expr e,CasInfo casInfo){
 			And and = (And)e;
 			for(int i = 0;i<and.size();i++){
 				Expr current = and.get(i);
@@ -96,7 +96,7 @@ public class And extends Expr{
 		private static final long serialVersionUID = 1L;
 		
 		@Override
-		public Expr applyRuleToExpr(Expr e,Settings settings){
+		public Expr applyRuleToExpr(Expr e,CasInfo casInfo){
 			And and = (And)e;
 			for(int i = 0;i<and.size();i++){
 				Expr current = and.get(i);
@@ -119,7 +119,7 @@ public class And extends Expr{
 		private static final long serialVersionUID = 1L;
 		
 		@Override
-		public Expr applyRuleToExpr(Expr e,Settings settings){
+		public Expr applyRuleToExpr(Expr e,CasInfo casInfo){
 			And and = (And)e;
 			for(int i = 0;i<and.size();i++){
 				if(and.get(i) instanceof Or){
@@ -145,7 +145,7 @@ public class And extends Expr{
 						
 					}
 					
-					Expr result = subOr.simplify(settings);
+					Expr result = subOr.simplify(casInfo);
 					return result;
 				}
 			}
@@ -157,7 +157,7 @@ public class And extends Expr{
 		private static final long serialVersionUID = 1L;
 		
 		@Override
-		public Expr applyRuleToExpr(Expr e,Settings settings){
+		public Expr applyRuleToExpr(Expr e,CasInfo casInfo){
 			And and = (And)e;
 			Expr result = null;
 			if(and.size() == 0){

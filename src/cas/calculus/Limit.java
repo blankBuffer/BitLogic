@@ -3,7 +3,7 @@ package cas.calculus;
 import cas.ComplexFloat;
 import cas.Expr;
 import cas.Rule;
-import cas.Settings;
+import cas.CasInfo;
 import cas.SimpleFuncs;
 import cas.StandardRules;
 import cas.primitive.Div;
@@ -355,7 +355,7 @@ public class Limit extends Expr{
 		private static final long serialVersionUID = 1L;
 
 		@Override
-		public Expr applyRuleToExpr(Expr e,Settings settings){
+		public Expr applyRuleToExpr(Expr e,CasInfo casInfo){
 			Limit lim = null;
 			if(e instanceof Limit){
 				lim = (Limit)e;
@@ -393,7 +393,7 @@ public class Limit extends Expr{
 		private static final long serialVersionUID = 1L;
 
 		@Override
-		public Expr applyRuleToExpr(Expr e,Settings settings){
+		public Expr applyRuleToExpr(Expr e,CasInfo casInfo){
 			Limit lim = null;
 			if(e instanceof Limit){
 				lim = (Limit)e;
@@ -403,7 +403,7 @@ public class Limit extends Expr{
 			Sequence sep = seperateByVar(lim.getExpr(),lim.getVar());
 			
 			if(!sep.get(0).equals(Num.ONE)){
-				return prod(sep.get(0),limit(sep.get(1),lim.getVar(),lim.getValue())).simplify(settings);
+				return prod(sep.get(0),limit(sep.get(1),lim.getVar(),lim.getValue())).simplify(casInfo);
 			}
 			
 			return lim;
@@ -414,7 +414,7 @@ public class Limit extends Expr{
 		private static final long serialVersionUID = 1L;
 
 		@Override
-		public Expr applyRuleToExpr(Expr e,Settings settings){
+		public Expr applyRuleToExpr(Expr e,CasInfo casInfo){
 			Limit lim = null;
 			if(e instanceof Limit){
 				lim = (Limit)e;
@@ -428,22 +428,22 @@ public class Limit extends Expr{
 				Div casted = (Div)lim.getExpr();
 				if(isPolynomialUnstrict(casted.getNumer(),lim.getVar()) && isPolynomialUnstrict(casted.getDenom(),lim.getVar())){
 					if(hasInf){
-						casted.setNumer( SimpleFuncs.fullExpand.applyRuleToExpr(casted.getNumer(), settings) );
-						casted.setDenom( SimpleFuncs.fullExpand.applyRuleToExpr(casted.getDenom(), settings) );
+						casted.setNumer( SimpleFuncs.fullExpand.applyRuleToExpr(casted.getNumer(), casInfo) );
+						casted.setDenom( SimpleFuncs.fullExpand.applyRuleToExpr(casted.getDenom(), casInfo) );
 						
-						Sequence numerPoly = polyExtract(casted.getNumer(),lim.getVar(),settings);
+						Sequence numerPoly = polyExtract(casted.getNumer(),lim.getVar(),casInfo);
 						Expr numerCoef = numerPoly.get(numerPoly.size()-1);
 						
-						Sequence denomPoly = polyExtract(casted.getDenom(),lim.getVar(),settings);
+						Sequence denomPoly = polyExtract(casted.getDenom(),lim.getVar(),casInfo);
 						Expr denomCoef = denomPoly.get(denomPoly.size()-1);
 						
-						Expr div = div(numerCoef,denomCoef).simplify(settings);
+						Expr div = div(numerCoef,denomCoef).simplify(casInfo);
 						
 						int sign = 1;
 						
 						if(div.negative()){
 							sign = -sign;
-							div = div.strangeAbs(settings);
+							div = div.strangeAbs(casInfo);
 						}
 						
 						if(!positiveInf && (numerPoly.size()+denomPoly.size())%2==1){
@@ -459,7 +459,7 @@ public class Limit extends Expr{
 							out = prod(num(sign),epsilon());
 						}
 						
-						return out.simplify(settings);
+						return out.simplify(casInfo);
 							
 					}
 					
@@ -474,7 +474,7 @@ public class Limit extends Expr{
 		private static final long serialVersionUID = 1L;
 
 		@Override
-		public Expr applyRuleToExpr(Expr e,Settings settings){
+		public Expr applyRuleToExpr(Expr e,CasInfo casInfo){
 			Limit lim = null;
 			if(e instanceof Limit){
 				lim = (Limit)e;
@@ -483,7 +483,7 @@ public class Limit extends Expr{
 			}
 			
 			
-			return lim.getExpr().replace(equ(lim.getVar(),lim.getValue())).simplify(settings);
+			return lim.getExpr().replace(equ(lim.getVar(),lim.getValue())).simplify(casInfo);
 		}
 	};
 	
@@ -505,7 +505,7 @@ public class Limit extends Expr{
 		}
 		
 		@Override
-		public Expr applyRuleToExpr(Expr e,Settings settings){
+		public Expr applyRuleToExpr(Expr e,CasInfo casInfo){
 			Limit lim = null;
 			if(e instanceof Limit){
 				lim = (Limit)e;
@@ -517,10 +517,10 @@ public class Limit extends Expr{
 				Div inner = (Div)lim.getExpr();
 				
 				if(containsReducablePart(inner.getNumer(),lim.getVar()) || containsReducablePart(inner.getDenom(),lim.getVar())){
-					Div computed = div( limit(inner.getNumer(),lim.getVar(),lim.getValue()).simplify(settings) ,  limit(inner.getDenom(),lim.getVar(),lim.getValue()).simplify(settings) );
+					Div computed = div( limit(inner.getNumer(),lim.getVar(),lim.getValue()).simplify(casInfo) ,  limit(inner.getDenom(),lim.getVar(),lim.getValue()).simplify(casInfo) );
 					
 					if( (zeroOrEpsilon(computed.getNumer()) && zeroOrEpsilon(computed.getDenom())) || (isInf(computed.getNumer()) && isInf(computed.getDenom()))){
-						Expr newInner = div( diff(inner.getNumer(),lim.getVar()), diff(inner.getDenom(),lim.getVar()) ).simplify(settings);
+						Expr newInner = div( diff(inner.getNumer(),lim.getVar()), diff(inner.getDenom(),lim.getVar()) ).simplify(casInfo);
 						lim.setExpr(newInner);
 					}
 				}
@@ -529,11 +529,11 @@ public class Limit extends Expr{
 				Power inner = (Power)lim.getExpr();
 				
 				if(containsReducablePart(inner.getBase(),lim.getVar()) || containsReducablePart(inner.getExpo(),lim.getVar())){
-					Power computed = pow(limit(inner.getBase(),lim.getVar(),lim.getValue()).simplify(settings) ,  limit(inner.getExpo(),lim.getVar(),lim.getValue()).simplify(settings) );
+					Power computed = pow(limit(inner.getBase(),lim.getVar(),lim.getValue()).simplify(casInfo) ,  limit(inner.getExpo(),lim.getVar(),lim.getValue()).simplify(casInfo) );
 					
 					if( (zeroOrEpsilon(computed.getBase()) && zeroOrEpsilon(computed.getExpo())) || (stripDirection(computed.getBase()).equals(Num.ONE) && computed.getExpo().equals(inf()) ) ){
 						Expr out = exp( limit( div( diff(ln(inner.getBase()),lim.getVar()) , diff(inv(inner.getExpo()),lim.getVar()) ) ,lim.getVar(),lim.getValue()) );
-						return out.simplify(settings);
+						return out.simplify(casInfo);
 					}
 					
 				}
@@ -549,7 +549,7 @@ public class Limit extends Expr{
 				Expr negInf = neg(inf());
 				
 				for(int i = 0;i<inner.size();i++){
-					Expr currentComputed = limit(inner.get(i),lim.getVar(),lim.getValue()).simplify(settings);
+					Expr currentComputed = limit(inner.get(i),lim.getVar(),lim.getValue()).simplify(casInfo);
 					
 					if(currentComputed.equals(inf)){
 						posInfParts.add(inner.get(i));
@@ -561,9 +561,9 @@ public class Limit extends Expr{
 					
 				}
 				if(negInfParts.size()>0 && posInfParts.size()>0){
-					Expr out = limit(div(diff(  sub( inv(negInfParts),inv(posInfParts) )  ,lim.getVar()),diff(  inv(prod(posInfParts,negInfParts))  ,lim.getVar())).simplify(settings) ,lim.getVar(),lim.getValue());
+					Expr out = limit(div(diff(  sub( inv(negInfParts),inv(posInfParts) )  ,lim.getVar()),diff(  inv(prod(posInfParts,negInfParts))  ,lim.getVar())).simplify(casInfo) ,lim.getVar(),lim.getValue());
 					finiteParts.add(out);
-					return finiteParts.simplify(settings);
+					return finiteParts.simplify(casInfo);
 				}
 				
 			}

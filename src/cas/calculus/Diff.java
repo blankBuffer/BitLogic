@@ -3,7 +3,7 @@ package cas.calculus;
 import cas.ComplexFloat;
 import cas.Expr;
 import cas.Rule;
-import cas.Settings;
+import cas.CasInfo;
 import cas.StandardRules;
 import cas.primitive.Equ;
 import cas.primitive.ExprList;
@@ -34,7 +34,7 @@ public class Diff extends Expr{
 		private static final long serialVersionUID = 1L;
 		
 		@Override
-		public Expr applyRuleToExpr(Expr e,Settings settings){
+		public Expr applyRuleToExpr(Expr e,CasInfo casInfo){
 			Diff d = (Diff)e;
 			if(!d.get().contains(d.getVar())){
 				Expr out = num(0);
@@ -48,7 +48,7 @@ public class Diff extends Expr{
 		private static final long serialVersionUID = 1L;
 
 		@Override
-		public Expr applyRuleToExpr(Expr e,Settings settings){
+		public Expr applyRuleToExpr(Expr e,CasInfo casInfo){
 			Diff d = (Diff)e;
 			if(d.get() instanceof Prod){
 				Prod inner = (Prod)d.get();
@@ -59,7 +59,7 @@ public class Diff extends Expr{
 					copy.set(i, diff(copy.get(i),d.getVar()));
 					out.add(copy);
 				}
-				return out.simplify(settings);
+				return out.simplify(casInfo);
 				
 			}
 			return d;

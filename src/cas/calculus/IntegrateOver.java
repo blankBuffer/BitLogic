@@ -3,7 +3,7 @@ package cas.calculus;
 import cas.ComplexFloat;
 import cas.Expr;
 import cas.Rule;
-import cas.Settings;
+import cas.CasInfo;
 import cas.primitive.Equ;
 import cas.primitive.ExprList;
 import cas.primitive.FloatExpr;
@@ -41,13 +41,13 @@ public class IntegrateOver extends Expr {
 		private static final long serialVersionUID = 1L;
 
 		@Override
-		public Expr applyRuleToExpr(Expr e,Settings settings){
+		public Expr applyRuleToExpr(Expr e,CasInfo casInfo){
 			IntegrateOver defInt = (IntegrateOver)e;
 			
-			Expr indefInt = integrate(defInt.getExpr(),defInt.getVar()).simplify(settings);
+			Expr indefInt = integrate(defInt.getExpr(),defInt.getVar()).simplify(casInfo);
 			
 			if(!indefInt.containsType("integrate")) {
-				return sub(indefInt.replace(equ(  defInt.getVar() , defInt.getMax() )),indefInt.replace(equ(  defInt.getVar() , defInt.getMin() ))).simplify(settings);
+				return sub(indefInt.replace(equ(  defInt.getVar() , defInt.getMax() )),indefInt.replace(equ(  defInt.getVar() , defInt.getMin() ))).simplify(casInfo);
 			}
 			
 			return defInt;

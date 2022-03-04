@@ -3,7 +3,7 @@ import java.math.BigInteger;
 
 import cas.ComplexFloat;
 import cas.Expr;
-import cas.Settings;
+import cas.CasInfo;
 
 public class Num extends Expr{
 	
@@ -49,7 +49,7 @@ public class Num extends Expr{
 	}
 	
 	@Override
-	public Expr simplify(Settings settings) {//nothing to be simplified
+	public Expr simplify(CasInfo casInfo) {//nothing to be simplified
 		return copy();
 	}
 	

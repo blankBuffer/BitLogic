@@ -8,8 +8,21 @@ import cas.primitive.Sequence;
 public class Script extends Expr{
 
 	private static final long serialVersionUID = -3385077575450663182L;
+	int addedVariables = 0;
 	
 	public Script(){}//
+	
+	@Override
+	public Expr copy() {
+		Script out = new Script();
+		
+		for(int i = 0;i<size();i++) {
+			out.add(get(i).copy());
+		}
+		out.addedVariables = addedVariables;
+		out.flags.set(flags);
+		return out;
+	}
 
 	@Override
 	public String toString() {
@@ -34,7 +47,7 @@ public class Script extends Expr{
 	@Override
 	public ComplexFloat convertToFloat(ExprList varDefs) {
 		// TODO Auto-generated method stub
-		return null;
+		return new ComplexFloat(0,0);
 	}
 
 	@Override

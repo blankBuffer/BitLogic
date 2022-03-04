@@ -4,7 +4,7 @@ import java.math.BigInteger;
 import cas.ComplexFloat;
 import cas.Expr;
 import cas.Rule;
-import cas.Settings;
+import cas.CasInfo;
 import cas.matrix.Mat;
 import cas.trig.Cos;
 import cas.trig.Sin;
@@ -46,7 +46,7 @@ public class Prod extends Expr{
 		private static final long serialVersionUID = 1L;
 
 		@Override
-		public Expr applyRuleToExpr(Expr e,Settings settings){
+		public Expr applyRuleToExpr(Expr e,CasInfo casInfo){
 			Prod prod = (Prod)e;
 			
 			Expr epsilon = epsilon();
@@ -121,12 +121,12 @@ public class Prod extends Expr{
 		private static final long serialVersionUID = 1L;
 
 		@Override
-		public Expr applyRuleToExpr(Expr e,Settings settings){
+		public Expr applyRuleToExpr(Expr e,CasInfo casInfo){
 			Prod prod = (Prod)e;
 			if(foundProdInTrigInProd(prod) && foundNonProdInTrigInProd(prod)){
 				
 				for(int i = 0;i < prod.size();i++){
-					prod.set(i, trigExpand(prod.get(i),settings));
+					prod.set(i, trigExpand(prod.get(i),casInfo));
 				}
 			}
 			return prod;
@@ -137,7 +137,7 @@ public class Prod extends Expr{
 		private static final long serialVersionUID = 1L;
 
 		@Override
-		public Expr applyRuleToExpr(Expr e,Settings settings){
+		public Expr applyRuleToExpr(Expr e,CasInfo casInfo){
 			Prod prod = (Prod)e;
 			
 			int indexOfDiv = -1;
@@ -169,7 +169,7 @@ public class Prod extends Expr{
 					
 				}
 				
-				return div(prodNumer,prodDenom).simplify(settings);
+				return div(prodNumer,prodDenom).simplify(casInfo);
 			}
 			
 			return prod;
@@ -181,9 +181,9 @@ public class Prod extends Expr{
 		private static final long serialVersionUID = 1L;
 
 		@Override
-		public Expr applyRuleToExpr(Expr e,Settings settings){
+		public Expr applyRuleToExpr(Expr e,CasInfo casInfo){
 			Prod prod = (Prod)e;
-			for(int i = 0;i<prod.size();i++) if(prod.get(i) instanceof Sum) prod.set(i,  factor(prod.get(i)).simplify(settings));
+			for(int i = 0;i<prod.size();i++) if(prod.get(i) instanceof Sum) prod.set(i,  factor(prod.get(i)).simplify(casInfo));
 			return prod;
 		}
 	};
@@ -192,7 +192,7 @@ public class Prod extends Expr{
 		private static final long serialVersionUID = 1L;
 
 		@Override
-		public Expr applyRuleToExpr(Expr e,Settings settings){
+		public Expr applyRuleToExpr(Expr e,CasInfo casInfo){
 			Prod prod = (Prod)e;
 			for(int i = 0;i<prod.size();i++) {
 				Expr current = prod.get(i);
@@ -200,7 +200,7 @@ public class Prod extends Expr{
 					Power currentPower = (Power)current;
 					if(currentPower.getBase() instanceof Num) {
 						
-						prod.set(i, currentPower.simplify(settings));
+						prod.set(i, currentPower.simplify(casInfo));
 						
 					}
 				}
@@ -214,7 +214,7 @@ public class Prod extends Expr{
 		private static final long serialVersionUID = 1L;
 
 		@Override
-		public Expr applyRuleToExpr(Expr e,Settings settings){
+		public Expr applyRuleToExpr(Expr e,CasInfo casInfo){
 			Prod prod = (Prod)e;
 			
 			for(int i = 0;i<prod.size();i++) {
@@ -234,7 +234,7 @@ public class Prod extends Expr{
 		private static final long serialVersionUID = 1L;
 
 		@Override
-		public Expr applyRuleToExpr(Expr e,Settings settings){
+		public Expr applyRuleToExpr(Expr e,CasInfo casInfo){
 			Prod prod = (Prod)e;
 			
 			for(int i = 0;i<prod.size();i++) {
@@ -253,7 +253,7 @@ public class Prod extends Expr{
 								BigInteger newBase = ((Num)currentPower.getBase()).realValue.pow(num.realValue.intValue());
 								
 								currentPower.setBase( num(newBase) );
-								currentPower.setExpo(expoProd.simplify(settings));
+								currentPower.setExpo(expoProd.simplify(casInfo));
 								
 							}
 						}
@@ -272,7 +272,7 @@ public class Prod extends Expr{
 		private static final long serialVersionUID = 1L;
 
 		@Override
-		public Expr applyRuleToExpr(Expr e,Settings settings){
+		public Expr applyRuleToExpr(Expr e,CasInfo casInfo){
 			Prod prod = (Prod)e;
 			
 			for(int i = 0;i<prod.size();i++) {
@@ -315,7 +315,7 @@ public class Prod extends Expr{
 		private static final long serialVersionUID = 1L;
 		
 		@Override
-		public Expr applyRuleToExpr(Expr e,Settings settings){
+		public Expr applyRuleToExpr(Expr e,CasInfo casInfo){
 			Prod prod = (Prod)e;
 			
 			for(int i = 0;i<prod.size();i++) {
@@ -338,9 +338,9 @@ public class Prod extends Expr{
 							}else {
 								if(currentPower.getExpo() instanceof Prod) {
 									currentPower.getExpo().add(factor.getExpo());
-									prod.add(pow(factor.getBase(),currentPower.getExpo().simplify(settings)));
+									prod.add(pow(factor.getBase(),currentPower.getExpo().simplify(casInfo)));
 								}else {
-									prod.add(pow(factor.getBase(),prod(currentPower.getExpo().copy(),factor.getExpo()).simplify(settings)));
+									prod.add(pow(factor.getBase(),prod(currentPower.getExpo().copy(),factor.getExpo()).simplify(casInfo)));
 								}
 								
 							}
@@ -363,7 +363,7 @@ public class Prod extends Expr{
 		private static final long serialVersionUID = 1L;
 		
 		@Override
-		public Expr applyRuleToExpr(Expr e,Settings settings){
+		public Expr applyRuleToExpr(Expr e,CasInfo casInfo){
 			Prod prod = (Prod)e;
 			
 			for(int i = 0;i < prod.size();i++) {
@@ -396,7 +396,7 @@ public class Prod extends Expr{
 				
 				if(found) {
 					Expr repl = new Power(current,expo);//replacement
-					prod.set(i,repl.simplify(settings));//modify the element with the replacement
+					prod.set(i,repl.simplify(casInfo));//modify the element with the replacement
 				}
 				
 			}
@@ -409,7 +409,7 @@ public class Prod extends Expr{
 		private static final long serialVersionUID = 1L;
 		
 		@Override
-		public Expr applyRuleToExpr(Expr e,Settings settings){
+		public Expr applyRuleToExpr(Expr e,CasInfo casInfo){
 			Prod prod = (Prod)e;
 			
 			boolean foundZero = false;
@@ -434,7 +434,7 @@ public class Prod extends Expr{
 		private static final long serialVersionUID = 1L;
 		
 		@Override
-		public Expr applyRuleToExpr(Expr e,Settings settings){
+		public Expr applyRuleToExpr(Expr e,CasInfo casInfo){
 			Prod prod = (Prod)e;
 			
 			Num total = Num.ONE;
@@ -460,7 +460,7 @@ public class Prod extends Expr{
 		private static final long serialVersionUID = 1L;
 		
 		@Override
-		public Expr applyRuleToExpr(Expr e,Settings settings){
+		public Expr applyRuleToExpr(Expr e,CasInfo casInfo){
 			Prod prod = (Prod)e;
 			
 			Prod newNumerProd = new Prod();
@@ -550,7 +550,7 @@ public class Prod extends Expr{
 		private static final long serialVersionUID = 1L;
 		
 		@Override
-		public Expr applyRuleToExpr(Expr e,Settings settings){
+		public Expr applyRuleToExpr(Expr e,CasInfo casInfo){
 			return Prod.unCast(e);
 		}
 	};
@@ -566,7 +566,7 @@ public class Prod extends Expr{
 		}
 		
 		@Override
-		public Expr applyRuleToExpr(Expr e,Settings settings){
+		public Expr applyRuleToExpr(Expr e,CasInfo casInfo){
 			Prod prod = (Prod)e;
 			
 			for(int i = 0;i<prod.size();i++) {
@@ -586,14 +586,14 @@ public class Prod extends Expr{
 					if(!(num != null && other != null)) continue;
 					
 					Expr conj = Power.unCast( pow(sum(other,num.negate()),currentCasted.getExpo()) );//Variant 1
-					Expr conj2 = Power.unCast( pow(sum(neg(other).simplify(settings),num),currentCasted.getExpo()) );//Variant 2
+					Expr conj2 = Power.unCast( pow(sum(neg(other).simplify(casInfo),num),currentCasted.getExpo()) );//Variant 2
 					
 					for(int j = i+1;j<prod.size();j++) {
 						Expr out = null;
 						if(prod.get(j).equals(conj)) {
-							out = pow(factor(sub(pow(other,num(2)),num.pow(BigInteger.TWO))),currentCasted.getExpo()).simplify(settings);
+							out = pow(factor(sub(pow(other,num(2)),num.pow(BigInteger.TWO))),currentCasted.getExpo()).simplify(casInfo);
 						}else if(prod.get(j).equals(conj2)) {
-							out = pow(factor(sub(num.pow(BigInteger.TWO),pow(other,num(2)))),currentCasted.getExpo()).simplify(settings);
+							out = pow(factor(sub(num.pow(BigInteger.TWO),pow(other,num(2)))),currentCasted.getExpo()).simplify(casInfo);
 						}
 						
 						if(out != null) {
@@ -619,7 +619,7 @@ public class Prod extends Expr{
 		private static final long serialVersionUID = 1L;
 		
 		@Override
-		public Expr applyRuleToExpr(Expr e,Settings settings){
+		public Expr applyRuleToExpr(Expr e,CasInfo casInfo){
 			Prod prod = (Prod)e;
 			if(prod.containsType("mat")) {
 				Prod matricies = new Prod();
@@ -663,7 +663,7 @@ public class Prod extends Expr{
 						
 					}
 					
-					return total.simplify(settings);
+					return total.simplify(casInfo);
 				}
 			}
 			return prod;

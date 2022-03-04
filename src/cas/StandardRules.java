@@ -10,13 +10,13 @@ public class StandardRules extends QuickMath{
 		private static final long serialVersionUID = 1L;
 		
 		@Override
-		public Expr applyRuleToExpr(Expr e,Settings settings){
-			e.set(0,factor(e.get()).simplify(settings));
+		public Expr applyRuleToExpr(Expr e,CasInfo casInfo){
+			e.set(0,factor(e.get()).simplify(casInfo));
 			if(e.get().negative()) {
-				Expr newInner = neg(e.get()).simplify(settings);
+				Expr newInner = neg(e.get()).simplify(casInfo);
 				e.set(0, newInner);
 				Expr out = neg(e);
-				return out.simplify(settings);
+				return out.simplify(casInfo);
 			}
 			
 			return e;
@@ -27,14 +27,14 @@ public class StandardRules extends QuickMath{
 		private static final long serialVersionUID = 1L;
 		
 		@Override
-		public Expr applyRuleToExpr(Expr e,Settings settings){
+		public Expr applyRuleToExpr(Expr e,CasInfo casInfo){
 			
-			e.set(0,factor(e.get()).simplify(settings));
+			e.set(0,factor(e.get()).simplify(casInfo));
 			if(e.get().negative()) {
-				Expr newInner = neg(e.get()).simplify(settings);
+				Expr newInner = neg(e.get()).simplify(casInfo);
 				e.set(0, newInner);
 				
-				return e.simplify(settings);
+				return e.simplify(casInfo);
 			}
 			
 			return e;
@@ -58,11 +58,11 @@ public class StandardRules extends QuickMath{
 		}
 		
 		@Override
-		public Expr applyRuleToExpr(Expr e,Settings settings){
+		public Expr applyRuleToExpr(Expr e,CasInfo casInfo){
 			Expr inner = e.get();
 			
 			for(Rule r:cases){
-				inner = r.applyRuleToExpr(inner, settings);
+				inner = r.applyRuleToExpr(inner, casInfo);
 			}
 			
 			e.set(0, inner);
@@ -75,7 +75,7 @@ public class StandardRules extends QuickMath{
 		private static final long serialVersionUID = 1L;
 		
 		@Override
-		public Expr applyRuleToExpr(Expr e,Settings settings){
+		public Expr applyRuleToExpr(Expr e,CasInfo casInfo){
 			Expr expr = e.get();
 			if(expr instanceof Sum){
 				Expr depletedExpr = e.copy();
@@ -88,7 +88,7 @@ public class StandardRules extends QuickMath{
 					current.set(0,expr.get(i));
 					out.add(current);
 				}
-				return out.simplify(settings);
+				return out.simplify(casInfo);
 			}
 			return e;
 		}
@@ -98,14 +98,14 @@ public class StandardRules extends QuickMath{
 		private static final long serialVersionUID = 1L;
 		
 		@Override
-		public Expr applyRuleToExpr(Expr e,Settings settings){
+		public Expr applyRuleToExpr(Expr e,CasInfo casInfo){
 			Expr expr = e.get();
 			Var v = e.getVar();
 			
 			Sequence res = seperateByVar(expr,v);
 			if(!res.get(0).equals(Num.ONE)) {
 				e.set(0, res.get(1));
-				return prod(res.get(0),e).simplify(settings);
+				return prod(res.get(0),e).simplify(casInfo);
 			}
 			
 			return e;
@@ -116,7 +116,7 @@ public class StandardRules extends QuickMath{
 		private static final long serialVersionUID = 1L;
 		
 		@Override
-		public Expr applyRuleToExpr(Expr e,Settings settings){
+		public Expr applyRuleToExpr(Expr e,CasInfo casInfo){
 			return e.get();
 		}
 	};
@@ -125,8 +125,8 @@ public class StandardRules extends QuickMath{
 		private static final long serialVersionUID = 1L;
 		
 		@Override
-		public Expr applyRuleToExpr(Expr e,Settings settings){
-			e.set(0, distr(e.get()).simplify(settings));
+		public Expr applyRuleToExpr(Expr e,CasInfo casInfo){
+			e.set(0, distr(e.get()).simplify(casInfo));
 			return e;
 		}
 		
@@ -136,8 +136,8 @@ public class StandardRules extends QuickMath{
 		private static final long serialVersionUID = 1L;
 		
 		@Override
-		public Expr applyRuleToExpr(Expr e,Settings settings){
-			e.set(0, factor(e.get()).simplify(settings));
+		public Expr applyRuleToExpr(Expr e,CasInfo casInfo){
+			e.set(0, factor(e.get()).simplify(casInfo));
 			return e;
 		}
 		
@@ -147,7 +147,7 @@ public class StandardRules extends QuickMath{
 		private static final long serialVersionUID = 1L;
 		
 		@Override
-		public Expr applyRuleToExpr(Expr e,Settings settings){
+		public Expr applyRuleToExpr(Expr e,CasInfo casInfo){
 			System.out.println(e);
 			return e;
 		}

@@ -3,7 +3,7 @@ package cas.primitive;
 import cas.ComplexFloat;
 import cas.Expr;
 import cas.Rule;
-import cas.Settings;
+import cas.CasInfo;
 import cas.StandardRules;
 
 public class Distr extends Expr{
@@ -23,7 +23,7 @@ public class Distr extends Expr{
 		private static final long serialVersionUID = 1L;
 
 		@Override
-		public Expr applyRuleToExpr(Expr e,Settings settings) {//2*(x+y) -> 2*x+2*y
+		public Expr applyRuleToExpr(Expr e,CasInfo casInfo) {//2*(x+y) -> 2*x+2*y
 			Distr distr = (Distr)e;
 			
 			Expr expr = distr.get().copy();
@@ -43,16 +43,16 @@ public class Distr extends Expr{
 					for(int i = 0;i<theSum.size();i++) {
 						theSum.set(i, distr(Prod.combine(prod,theSum.get(i))));
 					}
-					return theSum.simplify(settings);
+					return theSum.simplify(casInfo);
 				}
 			}else if(expr instanceof Div) {//(x+y)/3 -> x/3+y/3
 				Div casted = (Div)expr;
-				casted.setNumer(distr(casted.getNumer()).simplify(settings));
+				casted.setNumer(distr(casted.getNumer()).simplify(casInfo));
 				if(casted.getNumer() instanceof Sum) {
 					for (int i = 0;i < casted.getNumer().size();i++) {
 						casted.getNumer().set(i, div(casted.getNumer().get(i),casted.getDenom().copy()));
 					}
-					return casted.getNumer().simplify(settings);
+					return casted.getNumer().simplify(casInfo);
 					
 				}
 				
@@ -62,7 +62,7 @@ public class Distr extends Expr{
 					expr.set(i, distr(expr.get(i)));
 				}
 			}
-			return expr.simplify(settings);
+			return expr.simplify(casInfo);
 		}
 	};
 	

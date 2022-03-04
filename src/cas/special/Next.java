@@ -29,7 +29,7 @@ public class Next extends Expr{
 		private static final long serialVersionUID = 1L;
 		
 		@Override
-		public Expr applyRuleToExpr(Expr e,Settings settings) {
+		public Expr applyRuleToExpr(Expr e,CasInfo casInfo) {
 			Next next = (Next)e;
 			Sequence s = next.getSequence();
 			
@@ -37,7 +37,7 @@ public class Next extends Expr{
 				Expr first = s.get(0);
 				Expr second = s.get(1);
 				for(int i = 2;i<s.size();i++) {
-					Expr expected = sum(first,second).simplify(settings);
+					Expr expected = sum(first,second).simplify(casInfo);
 					if(s.get(i).equals(expected)) {
 						first = second;
 						second = expected;
@@ -46,7 +46,7 @@ public class Next extends Expr{
 				}
 				Sequence newSeq = new Sequence();
 				for(int i = 0;i<next.getNum().realValue.intValue();i++) {
-					Expr expected = sum(first,second).simplify(settings);
+					Expr expected = sum(first,second).simplify(casInfo);
 					newSeq.add(expected);
 					first = second;
 					second = expected;
@@ -63,7 +63,7 @@ public class Next extends Expr{
 		private static final long serialVersionUID = 1L;
 		
 		@Override
-		public Expr applyRuleToExpr(Expr e,Settings settings) {
+		public Expr applyRuleToExpr(Expr e,CasInfo casInfo) {
 			if(USED_GEO) return e;
 			Next next = (Next)e;
 			Sequence s = next.getSequence();
@@ -72,11 +72,11 @@ public class Next extends Expr{
 				for(int i = 1;i<s.size();i++) {
 					if(s.get(i-1).equals(Num.ZERO)) return next;//cant divide by zero
 					
-					Expr ratio = div(s.get(i),s.get(i-1)).simplify(settings);
+					Expr ratio = div(s.get(i),s.get(i-1)).simplify(casInfo);
 					ratioSequence.add(ratio);
 				}
 				USED_GEO = true;
-				Expr nextRatios = next(ratioSequence,next.getNum()).simplify(settings);
+				Expr nextRatios = next(ratioSequence,next.getNum()).simplify(casInfo);
 				USED_GEO = false;
 				
 				if(nextRatios instanceof Next) return next;
@@ -84,7 +84,7 @@ public class Next extends Expr{
 				Sequence newSeq = new Sequence();
 				Expr last = s.get(s.size()-1);
 				for(int i = 0;i<next.getNum().realValue.intValue();i++) {
-					last = prod(last,nextRatios.get(i)).simplify(settings);
+					last = prod(last,nextRatios.get(i)).simplify(casInfo);
 					newSeq.add(last);
 				}
 				return newSeq;
@@ -97,7 +97,7 @@ public class Next extends Expr{
 		private static final long serialVersionUID = 1L;
 		
 		@Override
-		public Expr applyRuleToExpr(Expr e,Settings settings) {
+		public Expr applyRuleToExpr(Expr e,CasInfo casInfo) {
 			Next next = (Next)e;
 			Sequence s = next.getSequence();
 			
@@ -122,7 +122,7 @@ public class Next extends Expr{
 		private static final long serialVersionUID = 1L;
 		
 		@Override
-		public Expr applyRuleToExpr(Expr e,Settings settings) {
+		public Expr applyRuleToExpr(Expr e,CasInfo casInfo) {
 			if(USED_STEP || USED_GEO || USED_COEF) return e;
 			Next next = (Next)e;
 			Sequence s = next.getSequence();
@@ -165,7 +165,7 @@ public class Next extends Expr{
 				Expr[] contSequences = new Expr[step];
 				for(int i = 0;i<contSequences.length;i++) {
 					USED_STEP = true;
-					contSequences[i] = next(subSequences[i],num(chunkSizes[i])).simplify(settings);
+					contSequences[i] = next(subSequences[i],num(chunkSizes[i])).simplify(casInfo);
 					USED_STEP = false;
 					if(contSequences[i] instanceof Next) continue outer;
 				}
@@ -198,7 +198,7 @@ public class Next extends Expr{
 		private static final long serialVersionUID = 1L;
 		
 		@Override
-		public Expr applyRuleToExpr(Expr e,Settings settings) {
+		public Expr applyRuleToExpr(Expr e,CasInfo casInfo) {
 			if(USED_COEF) return e;
 			
 			Next next = (Next)e;
@@ -216,15 +216,15 @@ public class Next extends Expr{
 				exprs.add(part.get(1));
 			}
 			USED_COEF = true;
-			Expr nextCoefs = next(coefs,next.getNum()).simplify(settings);
-			Expr nextExprs = next(exprs,next.getNum()).simplify(settings);
+			Expr nextCoefs = next(coefs,next.getNum()).simplify(casInfo);
+			Expr nextExprs = next(exprs,next.getNum()).simplify(casInfo);
 			USED_COEF = false;
 			
 			if(nextCoefs instanceof Next || nextExprs instanceof Next) return next;
 			
 			Sequence newSeq = new Sequence();
 			for(int i = 0;i<next.getNum().realValue.intValue();i++) {
-				newSeq.add(prod(nextCoefs.get(i),nextExprs.get(i)).simplify(settings));
+				newSeq.add(prod(nextCoefs.get(i),nextExprs.get(i)).simplify(casInfo));
 			}
 			return newSeq;
 		}
@@ -234,7 +234,7 @@ public class Next extends Expr{
 		private static final long serialVersionUID = 1L;
 		
 		@Override
-		public Expr applyRuleToExpr(Expr e,Settings settings) {
+		public Expr applyRuleToExpr(Expr e,CasInfo casInfo) {
 			Next next = (Next)e;
 			Sequence s = next.getSequence();
 			
@@ -250,14 +250,14 @@ public class Next extends Expr{
 					denomS.add(div.getDenom());
 				}
 				
-				Expr nextNumers = next(numerS,next.getNum()).simplify(settings);
-				Expr nextDenoms = next(denomS,next.getNum()).simplify(settings);
+				Expr nextNumers = next(numerS,next.getNum()).simplify(casInfo);
+				Expr nextDenoms = next(denomS,next.getNum()).simplify(casInfo);
 				
 				if(nextNumers instanceof Next || nextDenoms instanceof Next) return next;
 				
 				Sequence newSeq = new Sequence();
 				for(int i = 0;i<next.getNum().realValue.intValue();i++) {
-					newSeq.add(div(nextNumers.get(i),nextDenoms.get(i)).simplify(settings));
+					newSeq.add(div(nextNumers.get(i),nextDenoms.get(i)).simplify(casInfo));
 				}
 				return newSeq;
 				
@@ -271,7 +271,7 @@ public class Next extends Expr{
 		private static final long serialVersionUID = 1L;
 		
 		@Override
-		public Expr applyRuleToExpr(Expr e,Settings settings) {
+		public Expr applyRuleToExpr(Expr e,CasInfo casInfo) {
 			Next next = (Next)e;
 			Sequence s = next.getSequence();
 			
@@ -287,14 +287,14 @@ public class Next extends Expr{
 					expoS.add(pow.getExpo());
 				}
 				
-				Expr nextBases = next(baseS,next.getNum()).simplify(settings);
-				Expr nextExpos = next(expoS,next.getNum()).simplify(settings);
+				Expr nextBases = next(baseS,next.getNum()).simplify(casInfo);
+				Expr nextExpos = next(expoS,next.getNum()).simplify(casInfo);
 				
 				if(nextBases instanceof Next || nextExpos instanceof Next) return next;
 				
 				Sequence newSeq = new Sequence();
 				for(int i = 0;i<next.getNum().realValue.intValue();i++) {
-					newSeq.add(pow(nextBases.get(i),nextExpos.get(i)).simplify(settings));
+					newSeq.add(pow(nextBases.get(i),nextExpos.get(i)).simplify(casInfo));
 				}
 				return newSeq;
 				
@@ -314,15 +314,15 @@ public class Next extends Expr{
 			return true;
 		}
 		
-		Sequence getDifferenceSequence(Sequence original,Settings settings) {
+		Sequence getDifferenceSequence(Sequence original,CasInfo casInfo) {
 			Sequence newSequence = new Sequence();
 			for(int i = 0;i<original.size()-1;i++) {
-				newSequence.add( sub(original.get(i+1),original.get(i)).simplify(settings) );
+				newSequence.add( sub(original.get(i+1),original.get(i)).simplify(casInfo) );
 			}
 			return newSequence;
 		}
 		
-		Sequence getNext(Sequence s,Settings settings,int size,int num) {
+		Sequence getNext(Sequence s,CasInfo casInfo,int size,int num) {
 			if(size == 0) return null;
 			Sequence newSeq = new Sequence();
 			if(allSame(s)) {
@@ -331,24 +331,24 @@ public class Next extends Expr{
 				}
 				return newSeq;
 			}
-			Sequence difference = getDifferenceSequence(s,settings);
+			Sequence difference = getDifferenceSequence(s,casInfo);
 			
-			Sequence deltas = getNext(difference,settings,size-1,num);
+			Sequence deltas = getNext(difference,casInfo,size-1,num);
 			if(deltas == null) return null;
 			
-			newSeq.add( sum(s.get(s.size()-1),deltas.get(0)).simplify(settings) );
+			newSeq.add( sum(s.get(s.size()-1),deltas.get(0)).simplify(casInfo) );
 			for(int i = 1;newSeq.size()<num;i++) {
-				newSeq.add( sum(newSeq.get(newSeq.size()-1),deltas.get(i)).simplify(settings) );
+				newSeq.add( sum(newSeq.get(newSeq.size()-1),deltas.get(i)).simplify(casInfo) );
 			}
 			
 			return newSeq;
 		}
 		
 		@Override
-		public Expr applyRuleToExpr(Expr e,Settings settings) {
+		public Expr applyRuleToExpr(Expr e,CasInfo casInfo) {
 			Next next = (Next)e;
 			Sequence s = next.getSequence();
-			Expr expected = getNext(s,settings,s.size()/2+1,next.getNum().realValue.intValue());
+			Expr expected = getNext(s,casInfo,s.size()/2+1,next.getNum().realValue.intValue());
 			
 			if(expected != null) {
 				return expected;
@@ -362,7 +362,7 @@ public class Next extends Expr{
 		private static final long serialVersionUID = 1L;
 		
 		@Override
-		public Expr applyRuleToExpr(Expr e,Settings settings) {
+		public Expr applyRuleToExpr(Expr e,CasInfo casInfo) {
 			Next next = (Next)e;
 			if(next.getNum().equals(Num.ZERO)) return new Sequence();
 			else if(next.getSequence().size() == 1) {
@@ -380,7 +380,7 @@ public class Next extends Expr{
 		private static final long serialVersionUID = 1L;
 		
 		@Override
-		public Expr applyRuleToExpr(Expr e,Settings settings) {
+		public Expr applyRuleToExpr(Expr e,CasInfo casInfo) {
 			Next next = (Next)e;
 			Sequence s = next.getSequence();
 			
@@ -390,14 +390,18 @@ public class Next extends Expr{
 				Sequence subSequence = new Sequence();
 				for(int i = 0;i<s.size();i++) subSequence.add(s.get(i).get());
 				
-				Expr expectedInner = next(subSequence,next.getNum()).simplify(settings);
+				Expr expectedInner = next(subSequence,next.getNum()).simplify(casInfo);
 				
 				if(expectedInner instanceof Next) return next;
 				
 				for(int i = 0;i<expectedInner.size();i++) {
-					expectedInner.set(i, SimpleFuncs.getFuncByName(firstTypeName, expectedInner.get(i)) );
+					try {
+						expectedInner.set(i, SimpleFuncs.getFuncByName(firstTypeName, expectedInner.get(i)) );
+					} catch (Exception e1) {
+						e1.printStackTrace();
+					}
 				}
-				return expectedInner.simplify(settings);
+				return expectedInner.simplify(casInfo);
 			}
 			return next;
 		}

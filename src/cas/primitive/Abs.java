@@ -27,7 +27,7 @@ public class Abs extends Expr{
 	static Rule alwaysPositive = new Rule("expression is always positive",Rule.UNCOMMON) {
 		private static final long serialVersionUID = 1L;
 		
-		Expr computeResult(Abs abs,Expr theoryMin,Expr theoryMax,Settings settings) {
+		Expr computeResult(Abs abs,Expr theoryMin,Expr theoryMax,CasInfo casInfo) {
 			boolean minPos = theoryMin.convertToFloat(exprList()).real>=0 || theoryMin.equals(Num.ZERO);
 			boolean minNeg = theoryMin.convertToFloat(exprList()).real<=0 || theoryMin.equals(Num.ZERO);
 			
@@ -37,7 +37,7 @@ public class Abs extends Expr{
 			if(minPos && maxPos) {
 				return abs.get();
 			}else if(minNeg && maxNeg) {
-				return neg(abs.get()).simplify(settings);
+				return neg(abs.get()).simplify(casInfo);
 			}
 			
 			return abs;
@@ -71,11 +71,11 @@ public class Abs extends Expr{
 		}
 		
 		@Override
-		public Expr applyRuleToExpr(Expr e,Settings settings) {
+		public Expr applyRuleToExpr(Expr e,CasInfo casInfo) {
 			Abs abs = (Abs)e;
 			
 			for(Rule rule:cases) {
-				e = rule.applyRuleToExpr(abs, settings);
+				e = rule.applyRuleToExpr(abs, casInfo);
 				if(!(e instanceof Abs)) return e;
 			}
 			
@@ -128,7 +128,7 @@ public class Abs extends Expr{
 					Expr a = Rule.getExprByName(equs, "a");
 					
 					if(!a.contains(v)) {
-						if( eval(equGreater(a,num(0))).simplify(settings).equals(BoolState.TRUE) ) {
+						if( eval(equGreater(a,num(0))).simplify(casInfo).equals(BoolState.TRUE) ) {
 							theoryMax.add(inf());
 						}else {
 							theoryMin.add(neg(inf()));
@@ -138,23 +138,23 @@ public class Abs extends Expr{
 					return abs;
 				}
 			}
-			theoryMin = theoryMin.simplify(settings);
-			theoryMax = theoryMax.simplify(settings);
+			theoryMin = theoryMin.simplify(casInfo);
+			theoryMax = theoryMax.simplify(casInfo);
 			
 			if(polynomialSum.size()==0) {
-				return computeResult(abs,theoryMin,theoryMax,settings);
+				return computeResult(abs,theoryMin,theoryMax,casInfo);
 			}
 			
 			BigInteger degree = degree(polynomialSum,v);
 			
 			if(degree.mod(BigInteger.TWO).equals(BigInteger.ONE)) return abs;
 
-			Sequence poly = polyExtract(polynomialSum,v,settings);
+			Sequence poly = polyExtract(polynomialSum,v,casInfo);
 			boolean positive = poly.get(poly.size()-1).convertToFloat(exprList()).real>0;
 			if(positive) theoryMax = inf();
 			else theoryMin = neg(inf());
 			
-			ArrayList<Double> derivPolySols = Solve.polySolve( polyExtract(diff(polynomialSum,v).simplify(settings),v,settings) );
+			ArrayList<Double> derivPolySols = Solve.polySolve( polyExtract(diff(polynomialSum,v).simplify(casInfo),v,casInfo) );
 			double polyMin = 0.0;
 			double polyMax = 0.0;
 			for(double solution:derivPolySols) {
@@ -168,7 +168,7 @@ public class Abs extends Expr{
 			if(positive) theoryMin = floatExpr(sum(theoryMin,floatExpr(polyMin)).convertToFloat(exprList()));
 			else floatExpr(sum(theoryMax,floatExpr(polyMax)).convertToFloat(exprList()));
 			
-			return computeResult(abs,theoryMin,theoryMax,settings);
+			return computeResult(abs,theoryMin,theoryMax,casInfo);
 		}
 	};
 	
@@ -176,7 +176,7 @@ public class Abs extends Expr{
 		private static final long serialVersionUID = 1L;
 		
 		@Override
-		public Expr applyRuleToExpr(Expr e,Settings settings) {
+		public Expr applyRuleToExpr(Expr e,CasInfo casInfo) {
 			Abs abs = (Abs)e;
 			
 			if(abs.get() instanceof Prod) {
@@ -186,7 +186,7 @@ public class Abs extends Expr{
 					innerProd.set(i, abs(innerProd.get(i)) );
 				}
 				
-				return innerProd.simplify(settings);
+				return innerProd.simplify(casInfo);
 			}
 			
 			return abs;
@@ -199,14 +199,14 @@ public class Abs extends Expr{
 		private static final long serialVersionUID = 1L;
 		
 		@Override
-		public Expr applyRuleToExpr(Expr e,Settings settings) {
+		public Expr applyRuleToExpr(Expr e,CasInfo casInfo) {
 			Abs abs = (Abs)e;
 			
 			if(abs.get() instanceof Num) {
 				Num num = (Num)abs.get();
 				
 				if(num.isComplex()) {
-					return sqrt( num(  num.realValue.pow(2).add(num.imagValue.pow(2))  ) ).simplify(settings);
+					return sqrt( num(  num.realValue.pow(2).add(num.imagValue.pow(2))  ) ).simplify(casInfo);
 				}
 				return num(num.realValue.abs());
 			}
@@ -219,10 +219,10 @@ public class Abs extends Expr{
 		private static final long serialVersionUID = 1L;
 		
 		@Override
-		public Expr applyRuleToExpr(Expr e,Settings settings) {
+		public Expr applyRuleToExpr(Expr e,CasInfo casInfo) {
 			Abs abs = (Abs)e;
 			
-			if(!settings.allowAbs) return abs.get();
+			if(!casInfo.allowAbs) return abs.get();
 			
 			return abs;
 		}
@@ -232,13 +232,13 @@ public class Abs extends Expr{
 		private static final long serialVersionUID = 1L;
 		
 		@Override
-		public Expr applyRuleToExpr(Expr e,Settings settings) {
+		public Expr applyRuleToExpr(Expr e,CasInfo casInfo) {
 			Abs abs = (Abs)e;
 			if(!abs.get().containsVars()) {
 				ComplexFloat approx = abs.get().convertToFloat(exprList());
 				if(ComplexFloat.closeToZero(approx.imag)) {
 					if(approx.real<0) {
-						return neg(abs.get()).simplify(settings);
+						return neg(abs.get()).simplify(casInfo);
 					}
 					return abs.get();
 				}

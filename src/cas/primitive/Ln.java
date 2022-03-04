@@ -19,7 +19,7 @@ public class Ln extends Expr{
 		private static final long serialVersionUID = 1L;
 
 		@Override
-		public Expr applyRuleToExpr(Expr e,Settings settings){
+		public Expr applyRuleToExpr(Expr e,CasInfo casInfo){
 			Ln ln = null;
 			if(e instanceof Ln){
 				ln = (Ln)e;
@@ -51,7 +51,7 @@ public class Ln extends Expr{
 		private static final long serialVersionUID = 1L;
 
 		@Override
-		public Expr applyRuleToExpr(Expr e,Settings settings) {
+		public Expr applyRuleToExpr(Expr e,CasInfo casInfo) {
 			Ln log = (Ln)e;
 			
 			if(log.get() instanceof Num) {// example log(25) -> 2*ln(5)
@@ -86,7 +86,7 @@ public class Ln extends Expr{
 		private static final long serialVersionUID = 1L;
 		
 		@Override
-		public Expr applyRuleToExpr(Expr e,Settings settings) {
+		public Expr applyRuleToExpr(Expr e,CasInfo casInfo) {
 			Ln log = (Ln)e;
 			
 			if(log.get() instanceof Prod || log.get() instanceof Div) {
@@ -123,7 +123,7 @@ public class Ln extends Expr{
 					log.set(0, div);
 					
 					out.add(log);
-					return out.simplify(settings);
+					return out.simplify(casInfo);
 				}
 			}
 			

@@ -18,7 +18,7 @@ public class Gamma extends Expr{
 		private static final long serialVersionUID = 1L;
 
 		@Override
-		public Expr applyRuleToExpr(Expr e,Settings settings) {
+		public Expr applyRuleToExpr(Expr e,CasInfo casInfo) {
 			Gamma gamma = (Gamma)e;
 			if(gamma.get() instanceof Num && !((Num)gamma.get()).isComplex() && ((Num)gamma.get()).realValue.compareTo(BigInteger.ZERO) == 1) {
 				return num(factorial(((Num)gamma.get()).realValue.subtract(BigInteger.ONE)));
@@ -45,7 +45,7 @@ public class Gamma extends Expr{
 		}
 		
 		@Override
-		public Expr applyRuleToExpr(Expr e,Settings settings) {
+		public Expr applyRuleToExpr(Expr e,CasInfo casInfo) {
 			Gamma gamma = (Gamma)e;
 			
 			if(gamma.get() instanceof Div && ((Div)gamma.get()).isNumericalAndReal() ) {
@@ -66,12 +66,12 @@ public class Gamma extends Expr{
 					numer = numer.divide(gcd);
 					denom = denom.divide(gcd);
 					
-					return div(prod(num(numer),sqrt(pi())),num(denom)).simplify(settings);
+					return div(prod(num(numer),sqrt(pi())),num(denom)).simplify(casInfo);
 					
 				}
 				
 			}
-			return halfCase.applyRuleToExpr(gamma, settings);
+			return halfCase.applyRuleToExpr(gamma, casInfo);
 		}
 	};
 

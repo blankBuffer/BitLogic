@@ -25,11 +25,11 @@ public class Becomes extends Expr{
 		return get(1);
 	}
 	
-	void setLeftSide(Expr expr) {
+	public void setLeftSide(Expr expr) {
 		flags.simple = false;
 		set(0,expr);
 	}
-	void setRightSide(Expr expr) {
+	public void setRightSide(Expr expr) {
 		flags.simple = false;
 		set(1,expr);
 	}

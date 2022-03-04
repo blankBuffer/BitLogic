@@ -51,16 +51,16 @@ public class Solve extends Expr{
 		Rule subtractiveZero;
 		Rule absCase;
 		
-		public Expr goThroughEquCases(Expr e,Settings settings,Rule[] cases) {
+		public Expr goThroughEquCases(Expr e,CasInfo casInfo,Rule[] cases) {
 			Solve solve = (Solve)e;
 			Var v = solve.getVar();
 			for(Rule rule:cases) {
-				Expr result = rule.applyRuleToExpr(solve.getEqu(), settings);
+				Expr result = rule.applyRuleToExpr(solve.getEqu(), casInfo);
 				if(result instanceof Equ) {
 					solve.setEqu( (Equ)result );
 				}else if(result instanceof ExprList) {
 					for(int i = 0;i<result.size();i++) result.set(i, solve((Equ)result.get(i),v)  );
-					return result.simplify(settings);
+					return result.simplify(casInfo);
 				}
 			}
 			return solve;
@@ -93,8 +93,8 @@ public class Solve extends Expr{
 				}
 				
 				@Override
-				public Expr applyRuleToExpr(Expr e,Settings settings){
-					return goThroughEquCases(e,settings,cases);
+				public Expr applyRuleToExpr(Expr e,CasInfo casInfo){
+					return goThroughEquCases(e,casInfo,cases);
 				}
 			};
 			
@@ -126,8 +126,8 @@ public class Solve extends Expr{
 				}
 				
 				@Override
-				public Expr applyRuleToExpr(Expr e,Settings settings){
-					return goThroughEquCases(e,settings,cases);
+				public Expr applyRuleToExpr(Expr e,CasInfo casInfo){
+					return goThroughEquCases(e,casInfo,cases);
 				}
 				
 			};
@@ -148,8 +148,8 @@ public class Solve extends Expr{
 				}
 				
 				@Override
-				public Expr applyRuleToExpr(Expr e,Settings settings){
-					return goThroughEquCases(e,settings,cases);
+				public Expr applyRuleToExpr(Expr e,CasInfo casInfo){
+					return goThroughEquCases(e,casInfo,cases);
 				}
 			};
 			
@@ -172,8 +172,8 @@ public class Solve extends Expr{
 				}
 				
 				@Override
-				public Expr applyRuleToExpr(Expr e,Settings settings){
-					return goThroughEquCases(e,settings,cases);
+				public Expr applyRuleToExpr(Expr e,CasInfo casInfo){
+					return goThroughEquCases(e,casInfo,cases);
 				}
 			};
 			
@@ -187,7 +187,7 @@ public class Solve extends Expr{
 				}
 				
 				@Override
-				public Expr applyRuleToExpr(Expr e,Settings settings){
+				public Expr applyRuleToExpr(Expr e,CasInfo casInfo){
 					Solve solve = (Solve)e;
 					
 					Equ equ = solve.getEqu();
@@ -213,7 +213,7 @@ public class Solve extends Expr{
 							
 							for(int i = 0;i<sumPart.size();i++) {
 								if(sumPart.get(i).contains(varPart)) {
-									Expr test = div(sumPart.get(i),varPart).simplify(settings);
+									Expr test = div(sumPart.get(i),varPart).simplify(casInfo);
 									if(test.contains(varPart)) return solve;
 									variableParts.add(test);
 								}else {
@@ -236,7 +236,7 @@ public class Solve extends Expr{
 								answer.set(i, solve( (Equ)answer.get(i) ,v));
 							}
 							
-							return answer.simplify(settings);
+							return answer.simplify(casInfo);
 						}
 					}
 					
@@ -254,9 +254,9 @@ public class Solve extends Expr{
 					mainCase.init();
 				}
 				@Override
-				public Expr applyRuleToExpr(Expr e,Settings settings){
+				public Expr applyRuleToExpr(Expr e,CasInfo casInfo){
 					Solve solve = (Solve)e;
-					solve.setEqu( (Equ)mainCase.applyRuleToExpr(solve.getEqu(), settings) );
+					solve.setEqu( (Equ)mainCase.applyRuleToExpr(solve.getEqu(), casInfo) );
 					return solve;
 				}
 			};
@@ -282,8 +282,8 @@ public class Solve extends Expr{
 					Rule.initRules(cases);
 				}
 				@Override
-				public Expr applyRuleToExpr(Expr e,Settings settings){
-					return goThroughEquCases(e,settings,cases);
+				public Expr applyRuleToExpr(Expr e,CasInfo casInfo){
+					return goThroughEquCases(e,casInfo,cases);
 				}
 			};
 			
@@ -303,7 +303,7 @@ public class Solve extends Expr{
 				}
 				
 				@Override
-				public Expr applyRuleToExpr(Expr e,Settings settings){
+				public Expr applyRuleToExpr(Expr e,CasInfo casInfo){
 					Solve solve = (Solve)e;
 					
 					Var v = solve.getVar();
@@ -319,18 +319,18 @@ public class Solve extends Expr{
 							
 							boolean plusMinus = frac.isNumericalAndReal() && ((Num)frac.getNumer()).realValue.mod(BigInteger.TWO).equals(BigInteger.ZERO);
 							
-							Equ newEqu = (Equ)rootCase.applyRuleToExpr(solve.getEqu(), settings);
+							Equ newEqu = (Equ)rootCase.applyRuleToExpr(solve.getEqu(), casInfo);
 							
 							if(plusMinus) {
 								Equ newEquNeg = (Equ)newEqu.copy();
 								newEquNeg.setRightSide(neg(newEquNeg.getRightSide()));
-								return exprList( solve(newEquNeg,v), solve(newEqu,v) ).simplify(settings);
+								return exprList( solve(newEquNeg,v), solve(newEqu,v) ).simplify(casInfo);
 							}
 							solve.setEqu(newEqu);
 						}else if(!baseHasVar && expoHasVar) {
-							solve.setEqu((Equ)expoCase.applyRuleToExpr(solve.getEqu(), settings));
+							solve.setEqu((Equ)expoCase.applyRuleToExpr(solve.getEqu(), casInfo));
 						}else if(baseHasVar && expoHasVar) {
-							solve.setEqu((Equ)baseAndExpoHaveVar.applyRuleToExpr(solve.getEqu(), settings));
+							solve.setEqu((Equ)baseAndExpoHaveVar.applyRuleToExpr(solve.getEqu(), casInfo));
 						}
 						
 					}
@@ -343,10 +343,10 @@ public class Solve extends Expr{
 				private static final long serialVersionUID = 1L;
 				
 				@Override
-				public Expr applyRuleToExpr(Expr e,Settings settings){
+				public Expr applyRuleToExpr(Expr e,CasInfo casInfo){
 					Solve solve = (Solve)e;
 					if(solve.getEqu().getLeftSide() instanceof Sum) {
-						solve.getEqu().setLeftSide(factor(solve.getEqu().getLeftSide()).simplify(settings));
+						solve.getEqu().setLeftSide(factor(solve.getEqu().getLeftSide()).simplify(casInfo));
 					}
 					return solve;
 				}
@@ -356,7 +356,7 @@ public class Solve extends Expr{
 				private static final long serialVersionUID = 1L;
 				
 				@Override
-				public Expr applyRuleToExpr(Expr e,Settings settings){
+				public Expr applyRuleToExpr(Expr e,CasInfo casInfo){
 					Solve solve = (Solve)e;
 					
 					Var v = solve.getVar();
@@ -368,7 +368,7 @@ public class Solve extends Expr{
 						for(int i = 0;i<leftSide.size();i++) {
 							Expr current = leftSide.get(i);
 							if(current.contains(v)) {
-								Expr solution = solve( equ(current,num(0)), v).simplify(settings);
+								Expr solution = solve( equ(current,num(0)), v).simplify(casInfo);
 								if(!(solution instanceof Solve)) {
 									solutions.add(solution);
 								}
@@ -387,11 +387,11 @@ public class Solve extends Expr{
 				private static final long serialVersionUID = 1L;
 				
 				@Override
-				public Expr applyRuleToExpr(Expr e,Settings settings){
+				public Expr applyRuleToExpr(Expr e,CasInfo casInfo){
 					Solve solve = (Solve)e;
 					
 					if(solve.getEqu().getLeftSide() instanceof Prod) {
-						solve.getEqu().setLeftSide(distr(solve.getEqu().getLeftSide()).simplify(settings));
+						solve.getEqu().setLeftSide(distr(solve.getEqu().getLeftSide()).simplify(casInfo));
 					}
 					
 					return solve;
@@ -414,8 +414,8 @@ public class Solve extends Expr{
 				}
 				
 				@Override
-				public Expr applyRuleToExpr(Expr e,Settings settings){
-					return goThroughEquCases(e,settings,cases);
+				public Expr applyRuleToExpr(Expr e,CasInfo casInfo){
+					return goThroughEquCases(e,casInfo,cases);
 				}
 				
 			};
@@ -424,7 +424,7 @@ public class Solve extends Expr{
 				private static final long serialVersionUID = 1L;
 
 				@Override
-				public Expr applyRuleToExpr(Expr e,Settings settings){
+				public Expr applyRuleToExpr(Expr e,CasInfo casInfo){
 					Solve solve = (Solve)e;
 					
 					Var v = solve.getVar();
@@ -438,7 +438,7 @@ public class Solve extends Expr{
 								Expr temp = leftSide.get(i);
 								
 								if(!temp.containsVars()) {
-									if(eval(equLess(temp,num(0))).simplify(settings).equals(BoolState.TRUE)) {
+									if(eval(equLess(temp,num(0))).simplify(casInfo).equals(BoolState.TRUE)) {
 										solve.getEqu().type = -solve.getEqu().type;
 									}
 								}
@@ -450,7 +450,7 @@ public class Solve extends Expr{
 						}
 						
 						solve.getEqu().setLeftSide(Prod.unCast(leftSide));
-						solve.getEqu().setRightSide(rightSide.simplify(settings));
+						solve.getEqu().setRightSide(rightSide.simplify(casInfo));
 					}
 					
 					return solve;
@@ -461,7 +461,7 @@ public class Solve extends Expr{
 				private static final long serialVersionUID = 1L;
 
 				@Override
-				public Expr applyRuleToExpr(Expr e,Settings settings){
+				public Expr applyRuleToExpr(Expr e,CasInfo casInfo){
 					Solve solve = (Solve)e;
 					
 					Var v = solve.getVar();
@@ -480,7 +480,7 @@ public class Solve extends Expr{
 						}
 						
 						solve.getEqu().setLeftSide(Sum.unCast(leftSide));
-						solve.getEqu().setRightSide(rightSide.simplify(settings));
+						solve.getEqu().setRightSide(rightSide.simplify(casInfo));
 					}
 					
 					return solve;
@@ -508,13 +508,13 @@ public class Solve extends Expr{
 		}
 		
 		@Override
-		public Expr applyRuleToExpr(Expr e,Settings settings){
+		public Expr applyRuleToExpr(Expr e,CasInfo casInfo){
 			Expr oldState = null;
 			Solve solve = (Solve)e;
 			while(!solve.getEqu().equals(oldState)) {
 				oldState = solve.getEqu().copy();
 				for(int i = 0;i<loopedSequence.size();i++) {
-					e = ((Rule)loopedSequence.get(i)).applyRuleToExpr(solve, settings);
+					e = ((Rule)loopedSequence.get(i)).applyRuleToExpr(solve, casInfo);
 					if(!(e instanceof Solve)) break;
 					solve = (Solve)e;
 				}

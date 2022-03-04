@@ -5,7 +5,7 @@ import java.math.BigInteger;
 import cas.ComplexFloat;
 import cas.Expr;
 import cas.Rule;
-import cas.Settings;
+import cas.CasInfo;
 import cas.StandardRules;
 import cas.primitive.Div;
 import cas.primitive.ExprList;
@@ -31,7 +31,7 @@ public class Sin extends Expr{
 		private static final long serialVersionUID = 1L;
 		
 		@Override
-		public Expr applyRuleToExpr(Expr e,Settings settings){
+		public Expr applyRuleToExpr(Expr e,CasInfo casInfo){
 			Sin sin = (Sin)e;
 			
 			Var pi = pi();
@@ -68,9 +68,9 @@ public class Sin extends Expr{
 					else if(numer.equals(BigInteger.ZERO)) return num(0);
 					else {
 						if(negate == -1) {
-							return neg(sin(div(prod(pi(),num(numer)),num(denom)).simplify(Settings.normal)));
+							return neg(sin(div(prod(pi(),num(numer)),num(denom)).simplify(CasInfo.normal)));
 						}
-						return sin(div(prod(pi(),num(numer)),num(denom)).simplify(Settings.normal));
+						return sin(div(prod(pi(),num(numer)),num(denom)).simplify(CasInfo.normal));
 					}
 					
 					
@@ -94,14 +94,14 @@ public class Sin extends Expr{
 							
 							if(numer.equals(BigInteger.ONE) && denom.equals(BigInteger.TWO)) {//sin(x+pi/2) = cos(x)
 								innerExpr.remove(i);
-								return cos(innerExpr).simplify(Settings.normal);
+								return cos(innerExpr).simplify(CasInfo.normal);
 							}else if(numer.equals(three) && denom.equals(BigInteger.TWO)) {
 								innerExpr.remove(i);
-								return neg(cos(innerExpr.simplify(Settings.normal)));
+								return neg(cos(innerExpr.simplify(CasInfo.normal)));
 							}
 							
 							innerExpr.set(i,  div(prod(num(numer),pi()),num(denom)) );
-							sin.set(0, innerExpr.simplify(Settings.normal));
+							sin.set(0, innerExpr.simplify(CasInfo.normal));
 							
 						}
 						

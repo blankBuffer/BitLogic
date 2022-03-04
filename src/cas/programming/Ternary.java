@@ -30,13 +30,13 @@ public class Ternary extends Expr{
 		private static final long serialVersionUID = 1L;
 		
 		@Override
-		public Expr applyRuleToExpr(Expr e,Settings settings) {
+		public Expr applyRuleToExpr(Expr e,CasInfo casInfo) {
 			Ternary tern = (Ternary)e;
 			
-			if(tern.get().simplify(settings).equals(BoolState.TRUE)) {
-				return tern.ifTrue().simplify(settings);
+			if(tern.get().simplify(casInfo).equals(BoolState.TRUE)) {
+				return tern.ifTrue().simplify(casInfo);
 			}
-			return tern.ifFalse().simplify(settings);
+			return tern.ifFalse().simplify(casInfo);
 		}
 		
 	};

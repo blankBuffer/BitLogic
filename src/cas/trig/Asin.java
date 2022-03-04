@@ -3,7 +3,7 @@ package cas.trig;
 import cas.ComplexFloat;
 import cas.Expr;
 import cas.Rule;
-import cas.Settings;
+import cas.CasInfo;
 import cas.StandardRules;
 import cas.primitive.ExprList;
 import cas.primitive.Sequence;
@@ -32,9 +32,9 @@ public class Asin extends Expr{
 		}
 		
 		@Override
-		public Expr applyRuleToExpr(Expr e,Settings settings){
+		public Expr applyRuleToExpr(Expr e,CasInfo casInfo){
 			for(Rule r:cases){
-				e = r.applyRuleToExpr(e, settings);
+				e = r.applyRuleToExpr(e, casInfo);
 			}
 			return e;
 		}
@@ -57,9 +57,9 @@ public class Asin extends Expr{
 		}
 		
 		@Override
-		public Expr applyRuleToExpr(Expr e,Settings settings){
+		public Expr applyRuleToExpr(Expr e,CasInfo casInfo){
 			for(Rule r:cases){
-				e = r.applyRuleToExpr(e, settings);
+				e = r.applyRuleToExpr(e, casInfo);
 			}
 			return e;
 		}

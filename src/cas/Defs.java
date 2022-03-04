@@ -1,81 +1,63 @@
 package cas;
 
 import java.io.Serializable;
-import java.util.ArrayList;
 import java.util.HashMap;
 
+import cas.primitive.Becomes;
 import cas.primitive.Equ;
-import cas.primitive.ExprList;
 import cas.primitive.Func;
 
 public class Defs extends QuickMath implements Serializable{
 	private static final long serialVersionUID = 4654953050013809971L;
-	public ArrayList<Func> funcsArrayList = new ArrayList<Func>();//just for printing purposes
-	public ArrayList<Equ> varsArrayList = new ArrayList<Equ>();//just for printing purposes
 	
+	int hash = 987192123;
 	
-	HashMap<String,Func> functions = new HashMap<String,Func>();
-	HashMap<String,Equ> varDefs = new HashMap<String,Equ>();
+	HashMap<String,Rule> functionsRule = new HashMap<String,Rule>();//stores the rule for a function name
+	HashMap<String,Expr> varDefs = new HashMap<String,Expr>();
 	
-	public ExprList getVars() {
-		ExprList list = new ExprList();
-		for(int i = 0;i<varsArrayList.size();i++) {
-			list.add(varsArrayList.get(i));
-		}
-		return list;
-	}
-	
-	public void addVar(Equ def) {
+	public void defineVar(Equ def) {
 		String varName = def.getLeftSide().toString();
-		removeVar(varName);
-		varDefs.put(varName, def);
-		varsArrayList.add(def);
+		if(!varDefs.containsKey(varName)) varDefs.put(varName, def.getRightSide());
+		else varDefs.replace(varName, def.getRightSide());
+		hash = Expr.random.nextInt();
 	}
 	
-	public void addFunc(Func f) {
-		String name = f.name;
-		removeFunc(name);
-		functions.put(name, f);
-		funcsArrayList.add(f);
+	public void addFuncRule(Becomes def) {
+		String name = ((Func)def.getLeftSide()).name;
+		Rule r = new Rule(def, "function definition", Rule.EASY);
+		if(!functionsRule.containsKey(name)) functionsRule.put(name, r);
+		else functionsRule.replace(name, r);
+		functionsRule.put(name, r);
+		hash = Expr.random.nextInt();
 	}
 	
-	public Func getFunc(String name) {
-		Func out = functions.get(name);
-		if(out != null) return out;
-		return null;
+	public Rule getFuncRule(String name) {
+		return functionsRule.get(name);
 	}
 	
 	public Expr getVar(String s) {
-		Equ out = varDefs.get(s);
-		if(out != null) return out.getRightSide().copy();
-		return null;
+		return varDefs.getOrDefault(s, var(s));
 	}
 	
 	public void removeVar(String name) {
-		Equ equ = varDefs.get(name);
 		varDefs.remove(name);
-		varsArrayList.remove(equ);
+		hash = Expr.random.nextInt();
 	}
 	public void removeFunc(String name) {
-		Func f = functions.get(name);
-		functions.remove(name);
-		funcsArrayList.remove(f);
+		functionsRule.remove(name);
+		hash = Expr.random.nextInt();
 	}
 	public void clear() {
 		varDefs.clear();
-		functions.clear();
-		funcsArrayList.clear();
-		varsArrayList.clear();
+		functionsRule.clear();
+		hash = Expr.random.nextInt();
 	}
 	
-	public static Defs blank = new Defs();
+	public static Defs blank = new Defs();//careful
 	
 	@Override
-	public String toString() {
-		String out = "";
-		out+="funcs: "+funcsArrayList;
-		out+="vars: "+varsArrayList;
-		return out;
+	public int hashCode() {
+		return hash;
 	}
 	
 }

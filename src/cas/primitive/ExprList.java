@@ -3,7 +3,7 @@ package cas.primitive;
 import cas.ComplexFloat;
 import cas.Expr;
 import cas.Rule;
-import cas.Settings;
+import cas.CasInfo;
 
 /*
  * this is a list where the order does not matter and will remove repeats of elements when simplified
@@ -19,7 +19,7 @@ public class ExprList extends Expr{
 		private static final long serialVersionUID = 1L;
 
 		@Override
-		public Expr applyRuleToExpr(Expr e,Settings settings) {
+		public Expr applyRuleToExpr(Expr e,CasInfo casInfo) {
 			ExprList list = (ExprList)e;
 			
 			for(int i = 0;i<list.size();i++) {
@@ -38,7 +38,7 @@ public class ExprList extends Expr{
 		private static final long serialVersionUID = 1L;
 		
 		@Override
-		public Expr applyRuleToExpr(Expr e,Settings settings){
+		public Expr applyRuleToExpr(Expr e,CasInfo casInfo){
 			ExprList list = (ExprList)e;
 			if(list.size() == 1) {//if its only one element 
 				return list.get(0);
@@ -54,7 +54,7 @@ public class ExprList extends Expr{
 		private static final long serialVersionUID = 1L;
 		
 		@Override
-		public Expr applyRuleToExpr(Expr e,Settings settings){
+		public Expr applyRuleToExpr(Expr e,CasInfo casInfo){
 			ExprList list = (ExprList)e;
 			
 			ExprList outList = new ExprList();

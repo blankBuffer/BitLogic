@@ -3,7 +3,7 @@ package cas.special;
 import cas.ComplexFloat;
 import cas.Expr;
 import cas.Rule;
-import cas.Settings;
+import cas.CasInfo;
 import cas.primitive.ExprList;
 import cas.primitive.FloatExpr;
 import cas.primitive.Sequence;
@@ -31,7 +31,7 @@ public class LambertW extends Expr {
 		}
 		
 		@Override
-		public Expr applyRuleToExpr(Expr e,Settings settings){
+		public Expr applyRuleToExpr(Expr e,CasInfo casInfo){
 			LambertW lam = (LambertW)e;
 			
 			Expr originalExpr = lam.get();
@@ -76,9 +76,9 @@ public class LambertW extends Expr {
 				Expr testExpr = div(prod(v,ln(b),pow(b,div(v,n))),n);
 					
 				Expr test = factor(sub(originalExpr,testExpr));
-				test = test.simplify(settings);
+				test = test.simplify(casInfo);
 				if(test.equals(num(0))){
-					return div(prod(v,ln(b)),n).simplify(settings);
+					return div(prod(v,ln(b)),n).simplify(casInfo);
 				}
 				
 			}

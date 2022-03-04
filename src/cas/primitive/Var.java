@@ -2,7 +2,6 @@ package cas.primitive;
 
 import cas.ComplexFloat;
 import cas.Expr;
-import cas.Settings;
 
 public class Var extends Expr{
 	
@@ -26,23 +25,12 @@ public class Var extends Expr{
 			generic = false;
 		}
 		this.name = name;
-		flags.simple = true;//variable is as simple as it gets
 		flags.sorted = true;
-	}
-	
-	@Override
-	public Expr simplify(Settings settings) {//nothing to simplify
-		return copy();
 	}
 
 	@Override
 	public Expr copy() {
-		Var out = new Var(name);
-		out.valuef = valuef;
-		out.generic = generic;
-		flags.simple = true;
-		flags.sorted = true;
-		return out;
+		return new Var(name);
 	}
 
 	@Override

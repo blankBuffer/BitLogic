@@ -3,7 +3,7 @@ package cas.bool;
 import cas.ComplexFloat;
 import cas.Expr;
 import cas.Rule;
-import cas.Settings;
+import cas.CasInfo;
 import cas.primitive.ExprList;
 import cas.primitive.Sequence;
 import cas.primitive.Var;
@@ -24,7 +24,7 @@ public class Not extends Expr{
 		private static final long serialVersionUID = 1L;
 
 		@Override
-		public Expr applyRuleToExpr(Expr e,Settings settings){
+		public Expr applyRuleToExpr(Expr e,CasInfo casInfo){
 			Not not = null;
 			if(e instanceof Not){
 				not = (Not)e;
@@ -37,7 +37,7 @@ public class Not extends Expr{
 				for(int i = 0;i<not.get().size();i++){
 					result.add(not(not.get().get(i)));
 				}
-				result = result.simplify(settings);
+				result = result.simplify(casInfo);
 				return result;
 			}
 			return not;

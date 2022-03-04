@@ -631,9 +631,9 @@ public class Ask extends QuickMath{
 		return null;
 	}
 	
-	public static Expr ask(String question,Defs defs,Settings settings) throws Exception {
+	public static Expr ask(String question) throws Exception {
 		
-		if(!question.contains(" ")) return Interpreter.createExprWithThrow(question,defs,settings);
+		if(!question.contains(" ")) return Interpreter.createExprWithThrow(question);
 		
 		boolean endsInQuestionMark = question.charAt(question.length()-1) == '?';
 		
@@ -666,7 +666,7 @@ public class Ask extends QuickMath{
 		if(tokens.contains("add") || tokens.contains("sum")) {
 			Sum out = new Sum();
 			for (int i:indexes) {
-				Expr toBeAdded = Interpreter.createExprWithThrow(tokens.get(i),defs,settings);
+				Expr toBeAdded = Interpreter.createExprWithThrow(tokens.get(i));
 				if(toBeAdded instanceof ExprList) {
 					for (int j = 0;j<toBeAdded.size();j++) {
 						out.add(toBeAdded.get(j));
@@ -681,7 +681,7 @@ public class Ask extends QuickMath{
 		if(tokens.contains("multiply") || tokens.contains("product")) {
 			Prod out = new Prod();
 			for (int i:indexes) {
-				Expr toBeAdded = Interpreter.createExprWithThrow(tokens.get(i),defs,settings);
+				Expr toBeAdded = Interpreter.createExprWithThrow(tokens.get(i));
 				if(toBeAdded instanceof ExprList) {
 					for (int j = 0;j<toBeAdded.size();j++) {
 						out.add(toBeAdded.get(j));
@@ -699,12 +699,12 @@ public class Ask extends QuickMath{
 		}
 		
 		if(tokens.size() == 1) {
-			return Interpreter.createExprWithThrow(tokens.get(0),defs,settings);
+			return Interpreter.createExprWithThrow(tokens.get(0));
 		}
 		
 		//last resort
 		if(indexes.size() == 1) {
-			return Interpreter.createExprWithThrow(tokens.get(indexes.get(0)),defs,settings);
+			return Interpreter.createExprWithThrow(tokens.get(indexes.get(0)));
 		}
 		if(tokens.contains("why")) {
 			return var("I don't know, 'why' questions are not my thing");

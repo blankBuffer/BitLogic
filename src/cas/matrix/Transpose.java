@@ -3,7 +3,7 @@ package cas.matrix;
 import cas.ComplexFloat;
 import cas.Expr;
 import cas.Rule;
-import cas.Settings;
+import cas.CasInfo;
 import cas.primitive.ExprList;
 import cas.primitive.Prod;
 import cas.primitive.Sequence;
@@ -22,7 +22,7 @@ public class Transpose extends Expr{
 		private static final long serialVersionUID = 1L;
 		
 		@Override
-		public Expr applyRuleToExpr(Expr e,Settings settings) {
+		public Expr applyRuleToExpr(Expr e,CasInfo casInfo) {
 			if(e.get() instanceof Transpose) {
 				return e.get().get();
 			}
@@ -33,13 +33,13 @@ public class Transpose extends Expr{
 		private static final long serialVersionUID = 1L;
 		
 		@Override
-		public Expr applyRuleToExpr(Expr e,Settings settings) {
+		public Expr applyRuleToExpr(Expr e,CasInfo casInfo) {
 			if(e.get() instanceof Sum) {
 				Sum innerSum = (Sum)e.get();
 				for(int i = 0;i<innerSum.size();i++) {
 					innerSum.set(i, transpose(innerSum.get(i)) );
 				}
-				return innerSum.simplify(settings);
+				return innerSum.simplify(casInfo);
 			}
 			return e;
 		}
@@ -48,13 +48,13 @@ public class Transpose extends Expr{
 		private static final long serialVersionUID = 1L;
 		
 		@Override
-		public Expr applyRuleToExpr(Expr e,Settings settings) {
+		public Expr applyRuleToExpr(Expr e,CasInfo casInfo) {
 			if(e.get() instanceof Prod) {
 				Prod innerProd = (Prod)e.get();
 				for(int i = 0;i<innerProd.size();i++) {
 					innerProd.set(i, transpose(innerProd.get(i)) );
 				}
-				return innerProd.simplify(settings);
+				return innerProd.simplify(casInfo);
 			}
 			return e;
 		}
@@ -63,14 +63,14 @@ public class Transpose extends Expr{
 		private static final long serialVersionUID = 1L;
 		
 		@Override
-		public Expr applyRuleToExpr(Expr e,Settings settings) {
+		public Expr applyRuleToExpr(Expr e,CasInfo casInfo) {
 			if(e.get() instanceof Dot) {
 				Dot innerDotMult = (Dot)e.get();
 				Dot out = new Dot();
 				for(int i = innerDotMult.size()-1;i>=0;i--) {
 					out.add(transpose(innerDotMult.get(i)) );
 				}
-				return out.simplify(settings);
+				return out.simplify(casInfo);
 			}
 			return e;
 		}
@@ -79,7 +79,7 @@ public class Transpose extends Expr{
 		private static final long serialVersionUID = 1L;
 		
 		@Override
-		public Expr applyRuleToExpr(Expr e,Settings settings) {
+		public Expr applyRuleToExpr(Expr e,CasInfo casInfo) {
 			if(e.get() instanceof Mat) {
 				Mat mat = (Mat)e.get();
 				

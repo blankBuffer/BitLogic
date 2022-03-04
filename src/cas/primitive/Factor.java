@@ -22,14 +22,14 @@ public class Factor extends Expr{
 		private static final long serialVersionUID = 1L;
 
 		@Override
-		public Expr applyRuleToExpr(Expr e,Settings settings) {
+		public Expr applyRuleToExpr(Expr e,CasInfo casInfo) {
 			Factor factor = (Factor)e;
 			Expr expr = factor.get();
 			
 			Var v = mostCommonVar(expr);
 			if(expr instanceof Sum && v != null && isPlainPolynomial(expr,v )) {
 				
-				Sequence coefs = polyExtract(expr,v,settings);
+				Sequence coefs = polyExtract(expr,v,casInfo);
 				if(coefs == null) return e;
 				Num degree = num(coefs.size()-1);
 				if(degree.realValue.compareTo(BigInteger.TWO) == -1) return e;
@@ -37,14 +37,14 @@ public class Factor extends Expr{
 				Expr highestDegreeCoef = coefs.get(coefs.size()-1);
 				Expr lowestDegreeCoef = coefs.get(0);
 				
-				Expr m = pow(highestDegreeCoef ,inv(degree)).simplify(settings);
-				Expr b = pow(lowestDegreeCoef ,inv(degree)).simplify(settings);
+				Expr m = pow(highestDegreeCoef ,inv(degree)).simplify(casInfo);
+				Expr b = pow(lowestDegreeCoef ,inv(degree)).simplify(casInfo);
 				
-				if(multinomial(sum(prod(m,v),b),degree,settings).equals(expr) ) {
-					Expr result = pow(sum(prod(m,v),b),degree).simplify(settings);
+				if(multinomial(sum(prod(m,v),b),degree,casInfo).equals(expr) ) {
+					Expr result = pow(sum(prod(m,v),b),degree).simplify(casInfo);
 					return result;
-				}else if(multinomial(sum(prod(m,v),neg(b)),degree,settings).equals(expr)) {//try the negative variant
-					Expr result = pow(sub(prod(m,v),b),degree).simplify(settings);
+				}else if(multinomial(sum(prod(m,v),neg(b)),degree,casInfo).equals(expr)) {//try the negative variant
+					Expr result = pow(sub(prod(m,v),b),degree).simplify(casInfo);
 					return result;
 				}
 				
@@ -57,7 +57,7 @@ public class Factor extends Expr{
 		private static final long serialVersionUID = 1L;
 
 		@Override
-		public Expr applyRuleToExpr(Expr e,Settings settings) {
+		public Expr applyRuleToExpr(Expr e,CasInfo casInfo) {
 			Factor factor = (Factor)e;
 			Expr expr = factor.get();
 			Var v = mostCommonVar(expr);
@@ -74,12 +74,12 @@ public class Factor extends Expr{
 				
 				
 				if(pow != null && other != null && other.negative() && isPositiveRealNum(pow.getExpo()) && ((Num)pow.getExpo()).realValue.mod(BigInteger.TWO).equals(BigInteger.ZERO) ) {
-					Expr newPow = sqrt(pow).simplify(settings);
-					Expr newOther = sqrt(neg(other)).simplify(settings);
+					Expr newPow = sqrt(pow).simplify(casInfo);
+					Expr newOther = sqrt(neg(other)).simplify(casInfo);
 					
 					if(!(newOther instanceof Power || newOther instanceof Prod)) {
 						
-						return prod(sum(newPow,newOther),sum(newPow,neg(newOther))).simplify(settings);
+						return prod(sum(newPow,newOther),sum(newPow,neg(newOther))).simplify(casInfo);
 						
 					}
 					
@@ -93,7 +93,7 @@ public class Factor extends Expr{
 		private static final long serialVersionUID = 1L;
 
 		@Override
-		public Expr applyRuleToExpr(Expr e,Settings settings) {
+		public Expr applyRuleToExpr(Expr e,CasInfo casInfo) {
 			Factor factor = (Factor)e;
 			Expr expr = factor.get();
 			
@@ -102,7 +102,7 @@ public class Factor extends Expr{
 				Sequence coefs = null;
 				Var x = mostCommonVar(expr);
 				if(x!=null) {
-					coefs = polyExtract(expr, x,settings);
+					coefs = polyExtract(expr, x,casInfo);
 				}
 				
 				if(coefs != null) {
@@ -136,7 +136,7 @@ public class Factor extends Expr{
 							out.add(inv(num(4)));
 							out.add(inv(a.copy()));
 							
-							return out.simplify(settings);
+							return out.simplify(casInfo);
 						}
 							
 						
@@ -169,7 +169,7 @@ public class Factor extends Expr{
 		}
 
 		@Override
-		public Expr applyRuleToExpr(Expr e,Settings settings) {
+		public Expr applyRuleToExpr(Expr e,CasInfo casInfo) {
 			Factor factor = (Factor)e;
 			Expr expr = factor.get();
 		
@@ -187,7 +187,7 @@ public class Factor extends Expr{
 						Div current = Div.cast(expr.get(i));
 						sum = Div.addFracs(sum, current);
 					}
-					return sum.simplify(settings);
+					return sum.simplify(casInfo);
 				}
 				Prod leadingTerm = Prod.cast(expr.get(0));
 				Num leadingTermCoef = (Num)leadingTerm.getCoefficient();
@@ -264,11 +264,11 @@ public class Factor extends Expr{
 					//System.out.println(expr+" "+factors);
 					
 					for(int i = 0;i<expr.size();i++) {
-						expr.set(i, div(expr.get(i),factors).simplify(settings));
+						expr.set(i, div(expr.get(i),factors).simplify(casInfo));
 					}
 					//System.out.println(expr);
 					//
-					expr = Prod.combine(factors, factor(expr).simplify(settings));
+					expr = Prod.combine(factors, factor(expr).simplify(casInfo));
 					
 					return expr;
 				}
@@ -283,7 +283,7 @@ public class Factor extends Expr{
 		private static final long serialVersionUID = 1L;
 		
 		@Override
-		public Expr applyRuleToExpr(Expr e,Settings settings) {
+		public Expr applyRuleToExpr(Expr e,CasInfo casInfo) {
 			Factor factor = (Factor)e;
 			Expr expr = factor.get();
 			
@@ -293,7 +293,7 @@ public class Factor extends Expr{
 					if(expr.get(i) instanceof Sum) {
 						Expr subSum = expr.get(i);
 						subSum.flags.simple = false;
-						expr.set(i, subSum.simplify(settings));
+						expr.set(i, subSum.simplify(casInfo));
 					}
 				}
 			}
@@ -306,7 +306,7 @@ public class Factor extends Expr{
 		private static final long serialVersionUID = 1L;
 		
 		@Override
-		public Expr applyRuleToExpr(Expr e,Settings settings) {
+		public Expr applyRuleToExpr(Expr e,CasInfo casInfo) {
 			Factor factor = (Factor)e;
 			Expr expr = factor.get();
 			
@@ -315,7 +315,7 @@ public class Factor extends Expr{
 			if(expr instanceof Sum && v != null && isPlainPolynomial(expr,v) ) {
 				int degree = degree(expr,v).intValue();
 				if(degree < 2) return e;
-				Sequence poly = polyExtract(expr,v,settings);
+				Sequence poly = polyExtract(expr,v,casInfo);
 				if(poly == null) return e;
 				for(int i = 0;i<poly.size();i++) if(!(poly.get(i) instanceof Num)) return e;//must be all nums
 				ArrayList<Double> rootsAsFloat = Solve.polySolve(poly);
@@ -334,7 +334,7 @@ public class Factor extends Expr{
 					for(int i = 1;i<Math.min(8, degree);i++) {//this checks other factors like x^3-7, still integer root but a quadratic 
 						//System.out.println(frac[0]+"/"+frac[1]);
 						rootAsPoly.add(num(frac[1]));
-						divided = polyDiv(poly, rootAsPoly, settings);//try polynomial division
+						divided = polyDiv(poly, rootAsPoly, casInfo);//try polynomial division
 						if(divided[1].size() == 0) break;//success
 						rootAsPoly.set(i, num(0));//shifting to next degree
 						double newApprox = Math.pow(root,i+1);
@@ -345,15 +345,15 @@ public class Factor extends Expr{
 					
 					
 					if(divided != null && divided[1].size() == 0) {
-						out.add( exprListToPoly(rootAsPoly, v, settings) );
+						out.add( exprListToPoly(rootAsPoly, v, casInfo) );
 						poly = divided[0];
 						degree = poly.size()-1;
 					}
 					
 				}
-				out.add( exprListToPoly(poly, v, settings) );
+				out.add( exprListToPoly(poly, v, casInfo) );
 				if(out.size() > 1) {
-					return out.simplify(settings);
+					return out.simplify(casInfo);
 				}
 				
 			}

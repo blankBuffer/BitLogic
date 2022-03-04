@@ -14,6 +14,7 @@ public class Main extends QuickMath{
 		int currentLine = 0;
 		try {
 			sc = new Scanner(new File(fileName));
+			CasInfo casInfo = new CasInfo();
 			System.out.println("running "+fileName+" test script...");
 			while(sc.hasNextLine()) {
 				String line = sc.nextLine();
@@ -22,11 +23,11 @@ public class Main extends QuickMath{
 				if(verbose) System.out.print(line+" -> ");
 				Expr response = null;
 				
-				response = Ask.ask(line,Defs.blank,Settings.normal);
+				response = Ask.ask(line);
 				
 				if(response != null) {
 					if(verbose) System.out.print(response+" -> ");
-					response = response.replace(Defs.blank.getVars()).simplify(Settings.normal);
+					response = response.simplify(casInfo);
 					if(verbose)System.out.println(response);
 				}
 			}
@@ -46,7 +47,6 @@ public class Main extends QuickMath{
 	}
 	
 	public static void main(String[] args) {
-		Rule.loadRules();
 		int gui = 1;
 		boolean clearTerm = false;
 		

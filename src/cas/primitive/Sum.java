@@ -19,7 +19,7 @@ public class Sum extends Expr{
 		private static final long serialVersionUID = 1L;
 
 		@Override
-		public Expr applyRuleToExpr(Expr e,Settings settings){
+		public Expr applyRuleToExpr(Expr e,CasInfo casInfo){
 			Sum sum = (Sum)e;
 		}
 	};
@@ -29,7 +29,7 @@ public class Sum extends Expr{
 		private static final long serialVersionUID = 1L;
 
 		@Override
-		public Expr applyRuleToExpr(Expr e,Settings settings){
+		public Expr applyRuleToExpr(Expr e,CasInfo casInfo){
 			Sum sum = (Sum)e;
 			
 			boolean hasPosInf = false;
@@ -68,11 +68,11 @@ public class Sum extends Expr{
 		private static final long serialVersionUID = 1L;
 
 		@Override
-		public Expr applyRuleToExpr(Expr e,Settings settings){
+		public Expr applyRuleToExpr(Expr e,CasInfo casInfo){
 			Sum sum = (Sum)e;
 			if(sum.containsType("sin")){
 				for(int i = 0;i < sum.size();i++){
-					sum.set(i, trigExpand(sum.get(i),settings));
+					sum.set(i, trigExpand(sum.get(i),casInfo));
 				}
 			}
 			return sum;
@@ -91,7 +91,7 @@ public class Sum extends Expr{
 		}
 		
 		@Override
-		public Expr applyRuleToExpr(Expr e,Settings settings){
+		public Expr applyRuleToExpr(Expr e,CasInfo casInfo){
 			Sum sum = (Sum)e;
 			
 			if(!sum.containsType("sin")) return e;
@@ -158,7 +158,7 @@ public class Sum extends Expr{
 									otherCoef.remove(index);
 									
 									if(var.equals(otherVar) && coef.equals(otherCoef)) {
-										sum.set(i, coef.simplify(settings));
+										sum.set(i, coef.simplify(casInfo));
 										sum.remove(j);
 										continue outer;
 									}
@@ -180,7 +180,7 @@ public class Sum extends Expr{
 		private static final long serialVersionUID = 1L;
 
 		@Override
-		public Expr applyRuleToExpr(Expr e,Settings settings){
+		public Expr applyRuleToExpr(Expr e,CasInfo casInfo){
 			Sum sum = (Sum)e;
 			
 			IndexSet indexSet = new IndexSet();
@@ -223,7 +223,7 @@ public class Sum extends Expr{
 					}
 					Expr log = prod.get(0);
 					
-					Expr newInnerPow = pow(log.get(),nonLog).simplify(settings);
+					Expr newInnerPow = pow(log.get(),nonLog).simplify(casInfo);
 
 					log.set(0, newInnerPow);
 					sum.set(i,log);
@@ -237,7 +237,7 @@ public class Sum extends Expr{
 					innerProd.add(log.get());
 					sum.remove(i);
 				}
-				sum.add(ln(innerProd).simplify(settings));
+				sum.add(ln(innerProd).simplify(casInfo));
 			}
 			return sum;
 		}
@@ -247,12 +247,12 @@ public class Sum extends Expr{
 		private static final long serialVersionUID = 1L;
 
 		@Override
-		public Expr applyRuleToExpr(Expr e,Settings settings){
+		public Expr applyRuleToExpr(Expr e,CasInfo casInfo){
 			Sum sum = (Sum)e;
 			
 			for(int i = 0;i<sum.size();i++) {
 				if(sum.get(i) instanceof Prod) {
-					sum.set(i,  distr(sum.get(i)).simplify(settings));
+					sum.set(i,  distr(sum.get(i)).simplify(casInfo));
 				}
 			}
 			
@@ -264,7 +264,7 @@ public class Sum extends Expr{
 		private static final long serialVersionUID = 1L;
 
 		@Override
-		public Expr applyRuleToExpr(Expr e,Settings settings){
+		public Expr applyRuleToExpr(Expr e,CasInfo casInfo){
 			Sum sum = (Sum)e;
 			for(int i = 0;i<sum.size();i++) {
 				Expr current = sum.get(i);
@@ -282,7 +282,7 @@ public class Sum extends Expr{
 		private static final long serialVersionUID = 1L;
 
 		@Override
-		public Expr applyRuleToExpr(Expr e,Settings settings){
+		public Expr applyRuleToExpr(Expr e,CasInfo casInfo){
 			Sum sum = (Sum)e;
 			
 			for(int i = 0;i<sum.size();i++) {
@@ -315,7 +315,7 @@ public class Sum extends Expr{
 						sum.remove(j);
 						j--;
 						foundSame = true;
-						coef = sum(coef,toCompCoef).simplify(settings);
+						coef = sum(coef,toCompCoef).simplify(casInfo);
 					}
 					
 				}
@@ -325,7 +325,7 @@ public class Sum extends Expr{
 					}else {//if not just make a new product
 						current = prod(current,coef);
 					}
-					current = current.simplify(settings);//this has to be done in case of 0*x must become zero
+					current = current.simplify(casInfo);//this has to be done in case of 0*x must become zero
 					sum.set(i, current);//replace the sum element with the new combine like term version
 				}
 				
@@ -339,7 +339,7 @@ public class Sum extends Expr{
 		private static final long serialVersionUID = 1L;
 
 		@Override
-		public Expr applyRuleToExpr(Expr e,Settings settings){
+		public Expr applyRuleToExpr(Expr e,CasInfo casInfo){
 			Sum sum = (Sum)e;
 			Num total = Num.ZERO;
 			Expr totalFrac = null;
@@ -363,7 +363,7 @@ public class Sum extends Expr{
 			
 			if(totalFrac != null) {
 				totalFrac = Div.addFracs((Div)totalFrac, div(total,num(1)));
-				totalFrac = totalFrac.simplify(Settings.normal);
+				totalFrac = totalFrac.simplify(CasInfo.normal);
 				sum.add(totalFrac);
 			}else {
 				if(!total.equals(Num.ZERO)) {
@@ -378,7 +378,7 @@ public class Sum extends Expr{
 		private static final long serialVersionUID = 1L;
 
 		@Override
-		public Expr applyRuleToExpr(Expr e,Settings settings){
+		public Expr applyRuleToExpr(Expr e,CasInfo casInfo){
 			Sum sum = (Sum)e;
 			
 			if(sum.size() == 1) {//if a sum is only one element 
@@ -404,7 +404,7 @@ public class Sum extends Expr{
 		}
 		
 		@Override
-		public Expr applyRuleToExpr(Expr e,Settings settings){
+		public Expr applyRuleToExpr(Expr e,CasInfo casInfo){
 			Sum sum = (Sum)e;
 			
 			outer:for(int i = 0;i<sum.size();i++) {
@@ -438,13 +438,13 @@ public class Sum extends Expr{
 					Expr a = Rule.getExprByName(equs, "a");
 					Expr x = Rule.getExprByName(equs, "x");
 					
-					Expr negA = neg(a).simplify(settings);
+					Expr negA = neg(a).simplify(casInfo);
 					
 					for(int j = 0;j < sum.size();j++) {
 						if(j == i) continue;
 						if(sum.get(j).equals(negA)) {
 							sum.remove(Math.max(i, j));
-							sum.set(Math.min(i, j), prod(negA,pow(cos(x),num(2))).simplify(settings) );
+							sum.set(Math.min(i, j), prod(negA,pow(cos(x),num(2))).simplify(casInfo) );
 							i--;
 							continue outer;
 						}
@@ -454,13 +454,13 @@ public class Sum extends Expr{
 					Expr a = Rule.getExprByName(equs, "a");
 					Expr x = Rule.getExprByName(equs, "x");
 					
-					Expr negA = neg(a).simplify(settings);
+					Expr negA = neg(a).simplify(casInfo);
 					
 					for(int j = 0;j < sum.size();j++) {
 						if(j == i) continue;
 						if(sum.get(j).equals(negA)) {
 							sum.remove(Math.max(i, j));
-							sum.set(Math.min(i, j), prod(negA,pow(sin(x),num(2))).simplify(settings) );
+							sum.set(Math.min(i, j), prod(negA,pow(sin(x),num(2))).simplify(casInfo) );
 							i--;
 							continue outer;
 						}
@@ -476,7 +476,7 @@ public class Sum extends Expr{
 		private static final long serialVersionUID = 1L;
 		
 		@Override
-		public Expr applyRuleToExpr(Expr e,Settings settings){
+		public Expr applyRuleToExpr(Expr e,CasInfo casInfo){
 			Sum sum = (Sum)e;
 			if(sum.containsType("mat")) {
 				Sum matricies = new Sum();
@@ -520,7 +520,7 @@ public class Sum extends Expr{
 						
 					}
 					
-					return total.simplify(settings);
+					return total.simplify(casInfo);
 				}
 			}
 			return sum;

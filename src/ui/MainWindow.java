@@ -17,7 +17,7 @@ import java.awt.datatransfer.*;
 
 import javax.swing.*;
 
-import cas.Expr;
+import cas.Rule;
 import cas.graphics.ExprRender;
 import cas.graphics.Plot;
 import cas.programming.StackEditor;
@@ -377,25 +377,25 @@ public class MainWindow extends JFrame{
 		}
 	}
 	
-	class CASSettingsPanel extends JPanel {
+	class CASCasInfoPanel extends JPanel {
 		private static final long serialVersionUID = -1314093096812714908L;
 		
-		JCheckBox allowComplexNumbersCheckBox = new JCheckBox("allow complex numbers",currentStack.currentSettings.allowComplexNumbers);
+		JCheckBox allowComplexNumbersCheckBox = new JCheckBox("allow complex numbers",currentStack.currentCasInfo.allowComplexNumbers);
 		ActionListener allowComplexNumbersUpdate = new ActionListener() {
 			@Override
 			public void actionPerformed(ActionEvent e) {
-				currentStack.currentSettings.allowComplexNumbers = allowComplexNumbersCheckBox.isSelected();
+				currentStack.currentCasInfo.allowComplexNumbers = allowComplexNumbersCheckBox.isSelected();
 			}
 		};
-		JCheckBox allowAbsCheckBox = new JCheckBox("allow abs(x) (turn off for integration)",currentStack.currentSettings.allowAbs);
+		JCheckBox allowAbsCheckBox = new JCheckBox("allow abs(x)",currentStack.currentCasInfo.allowAbs);
 		ActionListener allowAbsUpdate = new ActionListener() {
 			@Override
 			public void actionPerformed(ActionEvent e) {
-				currentStack.currentSettings.allowAbs = allowAbsCheckBox.isSelected();
+				currentStack.currentCasInfo.allowAbs = allowAbsCheckBox.isSelected();
 			}
 		};
 		
-		CASSettingsPanel(){
+		CASCasInfoPanel(){
 			allComponents.add(this);
 			allComponents.add(allowComplexNumbersCheckBox);
 			allComponents.add(allowAbsCheckBox);
@@ -410,7 +410,7 @@ public class MainWindow extends JFrame{
 		
 	}
 	
-	class UISettingsPanel extends JPanel{
+	class UICasInfoPanel extends JPanel{
 		private static final long serialVersionUID = -4037663936986002307L;
 		
 		JCheckBox keepOnTopCheckBox = new JCheckBox("window on top",KEEP_WINDOW_ON_TOP_DEFAULT);
@@ -425,13 +425,6 @@ public class MainWindow extends JFrame{
 			@Override
 			public void actionPerformed(ActionEvent e) {
 				clearTerminal = clearTerminalCheckBox.isSelected();
-			}
-		};
-		JButton clearCache = new JButton("clear cache");
-		ActionListener clearCacheUpdate = new ActionListener() {
-			@Override
-			public void actionPerformed(ActionEvent e) {
-				Expr.clearCache();
 			}
 		};
 		JPanel themeSetter = new JPanel();
@@ -456,15 +449,13 @@ public class MainWindow extends JFrame{
 			}
 		};
 		
-		UISettingsPanel() {
+		UICasInfoPanel() {
 			allComponents.add(this);
 			allComponents.add(keepOnTopCheckBox);
 			allComponents.add(clearTerminalCheckBox);
-			allComponents.add(clearCache);
 			
 			keepOnTopCheckBox.addActionListener(keepOnTopUpdate);
 			clearTerminalCheckBox.addActionListener(clearTerminalUpdate);
-			clearCache.addActionListener(clearCacheUpdate);
 			setTheme.addActionListener(themeUpdate);
 			
 			keepOnTopUpdate.actionPerformed(null);
@@ -482,7 +473,6 @@ public class MainWindow extends JFrame{
 			
 			add(keepOnTopCheckBox);
 			add(clearTerminalCheckBox);
-			add(clearCache);
 			add(themeSetter);
 		}
 		
@@ -501,8 +491,8 @@ public class MainWindow extends JFrame{
 		
 		tabs.addTab("main view",mainViewPanel);
 		tabs.addTab("graphics", new GraphicsPanel());
-		tabs.addTab("CAS settings", new CASSettingsPanel());
-		tabs.addTab("UI settings", new UISettingsPanel());//keep last
+		tabs.addTab("CAS casInfo", new CASCasInfoPanel());
+		tabs.addTab("UI casInfo", new UICasInfoPanel());//keep last
 		
 		return mainContainer;
 	}
@@ -530,6 +520,41 @@ public class MainWindow extends JFrame{
 		} catch (FileNotFoundException e) {
 			e.printStackTrace();
 		}
+	}
+	
+	public static void loadRulesWindow() {
+		JProgressBar progressBar = new JProgressBar(0,100);
+		JFrame progressBarWindow = new JFrame();
+		progressBarWindow.setLayout(new FlowLayout());
+		progressBarWindow.add(new JLabel("loading rules"));
+		progressBarWindow.add(progressBar);
+		progressBarWindow.pack();
+		progressBarWindow.setResizable(false);
+		progressBarWindow.setLocationRelativeTo(null);
+		progressBarWindow.setVisible(true);
+		progressBarWindow.setAlwaysOnTop(true);
+		Thread progressBarThread = new Thread() {
+			@Override
+			public void run() {
+				boolean loading = true;
+				while(loading) {
+					
+					try {
+						progressBar.setValue(Rule.loadingPercent);
+						if(Rule.loadingPercent == 100) loading = false;
+						Thread.sleep(15);
+					} catch (InterruptedException e) {e.printStackTrace();}
+				}
+			}
+		};
+		progressBarThread.start();
+		Rule.loadRules();
+		try {
+			progressBarThread.join();
+		} catch (InterruptedException e1) {
+			e1.printStackTrace();
+		}
+		progressBarWindow.dispose();
 	}
 
 	public MainWindow(){
@@ -572,6 +597,7 @@ public class MainWindow extends JFrame{
 			
 		});
 		WINDOW_INSTANCE_COUNT++;
+		loadRulesWindow();
 	}
 
 }

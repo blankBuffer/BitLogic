@@ -13,7 +13,6 @@ import java.io.ObjectOutputStream;
 import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Collections;
-import java.util.HashMap;
 import java.util.Random;
 
 import cas.primitive.*;
@@ -37,8 +36,6 @@ public abstract class Expr extends QuickMath implements Comparable<Expr>, Serial
 	public boolean commutative = false;
 	public boolean simplifyChildren = true;
 	public Flags flags = new Flags();
-	static boolean USE_CACHE = true;
-	static int CACHE_SIZE = 2048;
 	private static final long serialVersionUID = -8297916729116741273L;
 	private ArrayList<Expr> subExpr = new ArrayList<Expr>();//many expression types have sub expressions like sums
 	
@@ -52,44 +49,6 @@ public abstract class Expr extends QuickMath implements Comparable<Expr>, Serial
 	public String typeName() {
 		String name = getClass().getSimpleName();
 		return Character.toLowerCase(name.charAt(0))+name.substring(1);
-	}
-	
-	private static class ExprAndSettings {//used for caching, saves the settings used for the compute
-		Expr expr;
-		Settings settings;
-		int hash = 0;
-		
-		ExprAndSettings(Expr expr,Settings settings){
-			this.expr = expr;
-			this.settings = settings;
-			hash = expr.hashCode()+87623846*settings.hashCode();
-		}
-		
-		@Override
-		public boolean equals(Object o) {
-			if(o instanceof ExprAndSettings) {
-				ExprAndSettings other = (ExprAndSettings)o;
-				return other.settings.equals(settings) && other.expr.equals(expr);
-			}
-			return false;
-		}
-		
-		@Override
-		public int hashCode() {
-			return hash;
-		}
-		
-		@Override
-		public String toString() {
-			return this.getClass().getSimpleName()+" "+expr+" "+settings;
-		}
-	}
-	
-	public static HashMap<ExprAndSettings,Expr> cached = new HashMap<ExprAndSettings,Expr>();
-	public static ArrayList<ExprAndSettings> cachedKeys = new ArrayList<ExprAndSettings>();
-	public static void clearCache() {
-		cached.clear();
-		cachedKeys.clear();
 	}
 	
 	void print() {
@@ -135,16 +94,17 @@ public abstract class Expr extends QuickMath implements Comparable<Expr>, Serial
 	public static long ruleCallCount = 0;
 	public static int RECURSION_SAFETY;
 	
-	public Expr simplify(Settings settings){//all expressions will have a simplify call, this is the most important function 
+	public Expr simplify(CasInfo casInfo){//all expressions will have a simplify call, this is the most important function 
 		if(Thread.currentThread().isInterrupted()) return null;
 		Expr toBeSimplified = copy();
 		if(flags.simple) return toBeSimplified;
 		
-		if(USE_CACHE && !(this instanceof Func)) {
-			ExprAndSettings thisWithSettings = new ExprAndSettings(this,settings);
-			Expr cacheOut = cached.get(thisWithSettings);
-			if(cacheOut != null){
-				return cacheOut.copy();
+		if(this instanceof Var) return casInfo.definitions.getVar(toString());
+		if(this instanceof Func && getRuleSequence().size() == 0) {
+			Rule r = casInfo.definitions.getFuncRule( ((Func)toBeSimplified ).name );
+			if(r!=null) {
+				Func casted = (Func)toBeSimplified;
+				casted.ruleSequence.add(r);
 			}
 		}
 		RECURSION_SAFETY++;
@@ -154,7 +114,7 @@ public abstract class Expr extends QuickMath implements Comparable<Expr>, Serial
 		}
 		//System.out.println(toBeSimplified);
 		String originalType = toBeSimplified.typeName();
-		if(simplifyChildren || get().typeName().equals("result")) toBeSimplified.simplifyChildren(settings);//simplify sub expressions, result function can override this behavior
+		if(simplifyChildren || get().typeName().equals("result")) toBeSimplified.simplifyChildren(casInfo);//simplify sub expressions, result function can override this behavior
 		
 		Sequence ruleSequence = getRuleSequence();
 		
@@ -163,7 +123,7 @@ public abstract class Expr extends QuickMath implements Comparable<Expr>, Serial
 			for (int i = 0;i<ruleSequence.size();i++){
 				Rule rule = (Rule)ruleSequence.get(i);
 				
-				toBeSimplified = rule.applyRuleToExpr(toBeSimplified, settings);
+				toBeSimplified = rule.applyRuleToExpr(toBeSimplified, casInfo);
 				//System.out.println(rule);
 				ruleCallCount++;
 				if(!toBeSimplified.typeName().equals(originalType)) break;
@@ -171,30 +131,10 @@ public abstract class Expr extends QuickMath implements Comparable<Expr>, Serial
 		}
 		
 		Rule doneRule = getDoneRule();
-		if(doneRule != null) toBeSimplified = doneRule.applyRuleToExpr(toBeSimplified, settings);
+		if(doneRule != null) toBeSimplified = doneRule.applyRuleToExpr(toBeSimplified, casInfo);
 		
 		toBeSimplified.flags.simple = true;//result is simplified and should not be simplified again
 		
-		if(USE_CACHE){
-			if(cached.size()<CACHE_SIZE){
-				if(!(this instanceof Func)) {
-					Expr original = copy();
-					ExprAndSettings cache = new ExprAndSettings( original,settings);
-					cached.put(cache, toBeSimplified.copy());
-					cachedKeys.add( cache );
-				}
-			}else{
-				//remove a random 1024 items from cache
-				//System.out.println("shrinking cache!");
-				if(random == null) random = new Random(761234897);
-				for(int i = 0;i<CACHE_SIZE/4;i++){
-					int randomIndex = random.nextInt(cachedKeys.size());
-					ExprAndSettings cache = cachedKeys.get(randomIndex);
-					cachedKeys.remove(randomIndex);
-					cached.remove(cache);
-				}
-			}
-		}
 		RECURSION_SAFETY--;
 		return toBeSimplified;
 	}
@@ -234,7 +174,7 @@ public abstract class Expr extends QuickMath implements Comparable<Expr>, Serial
 		if(other instanceof Expr){
 			Expr casted = (Expr)other;
 			if(casted.equals(this)) return true;
-			return factor(sub(this,casted)).simplify(Settings.normal).equals(num(0));		
+			return factor(sub(this,casted)).simplify(CasInfo.normal).equals(num(0));		
 		}
 		return false;
 	}
@@ -354,7 +294,7 @@ public abstract class Expr extends QuickMath implements Comparable<Expr>, Serial
 	 * basically if it has a real and imaginary component, the real value takes precedence otherwise use the imaginary
 	 * component
 	 */
-	public Expr strangeAbs(Settings settings) {//Assumes its already simplified
+	public Expr strangeAbs(CasInfo casInfo) {//Assumes its already simplified
 		if(this instanceof Num) return ((Num)this).strangeAbs();
 		else if(this instanceof Prod) {
 			for(int i = 0;i<size();i++) {
@@ -362,13 +302,13 @@ public abstract class Expr extends QuickMath implements Comparable<Expr>, Serial
 					if(((Num)get(i)).signum() == -1) {
 						Expr copy = copy();
 						copy.set(i, ((Num)get(i)).strangeAbs() );
-						return copy.simplify(settings);
+						return copy.simplify(casInfo);
 					}
 				}
 			}
 		}else if(this instanceof Div) {
 			Div casted = (Div)this;
-			return div(casted.getNumer().strangeAbs(settings), casted.getDenom().strangeAbs(settings)).simplify(settings);
+			return div(casted.getNumer().strangeAbs(casInfo), casted.getDenom().strangeAbs(casInfo)).simplify(casInfo);
 		}
 		return copy();
 	}
@@ -562,11 +502,11 @@ public abstract class Expr extends QuickMath implements Comparable<Expr>, Serial
 	public void sort() {
 		sort(null);
 	}
-	public void simplifyChildren(Settings settings) {
+	public void simplifyChildren(CasInfo casInfo) {
 		for(int i = 0;i<subExpr.size();i++) {
 			Expr temp = subExpr.get(i);
 			if(!temp.flags.simple) {
-				temp = temp.simplify(settings);
+				temp = temp.simplify(casInfo);
 				subExpr.set(i, temp);
 			}
 		}

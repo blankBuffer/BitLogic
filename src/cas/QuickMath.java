@@ -11,6 +11,7 @@ import cas.trig.*;
 import cas.calculus.*;
 import cas.lang.*;
 import cas.matrix.*;
+import cas.programming.*;
 
 
 public class QuickMath {
@@ -260,6 +261,12 @@ public class QuickMath {
 	public static Next next(Sequence s,Num num) {
 		return new Next(s,num);
 	}
+	public static Define define(Expr left,Expr right) {
+		return new Define(left,right);
+	}
+	public static Ternary ternary(Expr toBeEvaled,Expr ifTrue,Expr ifFalse) {
+		return new Ternary(toBeEvaled,ifTrue,ifFalse);
+	}
 	public static Sequence sequence(Expr... exprs) {
 		Sequence out = new Sequence();
 		for(Expr e:exprs) {
@@ -269,7 +276,7 @@ public class QuickMath {
 	}
 	public static Func eval(Equ equ) {
 		try {
-			return (Func)SimpleFuncs.getFuncByName("eval", Defs.blank, equ);
+			return (Func)SimpleFuncs.getFuncByName("eval", equ);
 		}catch(Exception e) {}
 		return null;
 	}
@@ -286,7 +293,7 @@ public class QuickMath {
 		return true;
 	}
 	
-	public static Expr partialFrac(Expr expr,Var v,Settings settings) {//being re written, currently disabled
+	public static Expr partialFrac(Expr expr,Var v,CasInfo casInfo) {//being re written, currently disabled
 		if(expr instanceof Div) {
 			BigInteger negOne = BigInteger.valueOf(-1);
 			Div frac = (Div)expr;
@@ -295,7 +302,7 @@ public class QuickMath {
 			
 			if(numerDegree.equals(negOne) || denomDegree.equals(negOne)) return expr;//not polynomials
 			if(denomDegree.compareTo(numerDegree) != 1) return expr;//denominator needs a greater degree
-			Expr denomFactored = factor(frac.getDenom()).simplify(settings);
+			Expr denomFactored = factor(frac.getDenom()).simplify(casInfo);
 			
 			Sequence parts = seperateByVar(denomFactored,v);
 			
@@ -313,9 +320,9 @@ public class QuickMath {
 				
 				Power currentTerm = Power.cast(denomFactored.get(i));
 				
-				Sequence poly = polyExtract(currentTerm.getBase(),v,settings);
+				Sequence poly = polyExtract(currentTerm.getBase(),v,casInfo);
 				Expr linearTermCoef = poly.get(1);
-				Equ solution = (Equ)ExprList.cast(solve(equ(currentTerm,Num.ZERO),v).simplify(settings)).get();
+				Equ solution = (Equ)ExprList.cast(solve(equ(currentTerm,Num.ZERO),v).simplify(casInfo)).get();
 				
 				
 				BigInteger expo = ((Num)currentTerm.getExpo()).realValue;
@@ -326,38 +333,38 @@ public class QuickMath {
 					
 					Expr functionOut = currentFunction.replace(solution);
 					
-					Expr newTerm = div(functionOut, prod(denomCoef,pow(linearTermCoef,num(j)), num(factorial(j)),pow(currentTerm.getBase(),num(currentExpo))  ) ).simplify(settings);
+					Expr newTerm = div(functionOut, prod(denomCoef,pow(linearTermCoef,num(j)), num(factorial(j)),pow(currentTerm.getBase(),num(currentExpo))  ) ).simplify(casInfo);
 					
 					out.add(newTerm);
 					
 					if(!j.equals(expoMinusOne)){
-						currentFunction = diff(currentFunction,v).simplify(settings);
+						currentFunction = diff(currentFunction,v).simplify(casInfo);
 					}
 					
 				}
 				
 			}
-			return out.simplify(settings);
+			return out.simplify(casInfo);
 		}
 		return expr;
 	}
 	
-	public static Expr polyDiv(Expr expr,Var v,Settings settings) {
+	public static Expr polyDiv(Expr expr,Var v,CasInfo casInfo) {
 		if(expr instanceof Div) {
 			Div frac = (Div)expr.copy();
-			Sequence numPoly = polyExtract(distr(frac.getNumer()).simplify(settings),v,settings);
-			Sequence denPoly = polyExtract(distr(frac.getDenom()).simplify(settings),v,settings);
+			Sequence numPoly = polyExtract(distr(frac.getNumer()).simplify(casInfo),v,casInfo);
+			Sequence denPoly = polyExtract(distr(frac.getDenom()).simplify(casInfo),v,casInfo);
 			if(numPoly != null && denPoly != null && numPoly.size()>=denPoly.size()) {
-				Sequence[] result = polyDiv(numPoly,denPoly,settings);
-				Expr outPart =  exprListToPoly(result[0],v,settings);
-				Expr remainPart =  div(exprListToPoly(result[1],v,settings),frac.getDenom());
+				Sequence[] result = polyDiv(numPoly,denPoly,casInfo);
+				Expr outPart =  exprListToPoly(result[0],v,casInfo);
+				Expr remainPart =  div(exprListToPoly(result[1],v,casInfo),frac.getDenom());
 				expr = sum(outPart,remainPart);
 			}
 		}
 		return expr;
 	}
 	
-	public static Sequence[] polyDiv(Sequence num,Sequence den,Settings settings) {//returns output + remainder
+	public static Sequence[] polyDiv(Sequence num,Sequence den,CasInfo casInfo) {//returns output + remainder
 		Sequence remain = (Sequence)num.copy();
 		Num zero = num(0);
 		
@@ -371,13 +378,13 @@ public class QuickMath {
 			}
 			
 			
-			Expr coef = div(remain.get(remain.size()-1).copy(),den.get(den.size()-1).copy()).simplify(settings);
+			Expr coef = div(remain.get(remain.size()-1).copy(),den.get(den.size()-1).copy()).simplify(casInfo);
 			out.add(0, coef);
 			coef = neg(coef);
 			
 			
 			for(int i = remain.size()-den.size();i<remain.size()-1;i++) {//we can skip last one since we know it will be deleted
-				remain.set(i, sum( prod(den.get(i-(remain.size()-den.size()) ),coef) ,remain.get(i)).simplify(settings) );
+				remain.set(i, sum( prod(den.get(i-(remain.size()-den.size()) ),coef) ,remain.get(i)).simplify(casInfo) );
 			}
 			remain.remove(remain.size()-1);//pop last element
 			
@@ -461,7 +468,7 @@ public class QuickMath {
 		return isRealNum(e) && !e.negative();
 	}
 	
-	public static Sequence polyExtract(Expr expr,Var v,Settings settings) {
+	public static Sequence polyExtract(Expr expr,Var v,CasInfo casInfo) {
 		BigInteger maxDegree = BigInteger.valueOf(16);
 		Sequence coef = sequence();
 		Sum sum = Sum.cast(expr);
@@ -487,7 +494,7 @@ public class QuickMath {
 			int degreeInt = degree.intValue();
 			coef.set(degreeInt,sum(coef.get(degreeInt),contents));
 		}
-		coef.simplifyChildren(settings);
+		coef.simplifyChildren(casInfo);
 		return coef;
 	}
 	
@@ -585,7 +592,7 @@ public class QuickMath {
 		return out;
 	}
 	
-	protected static Expr exprListToPoly(Sequence poly,Var v,Settings settings){
+	protected static Expr exprListToPoly(Sequence poly,Var v,CasInfo casInfo){
 		if(poly.size()==0) return num(0);
 		Sum out = new Sum();
 		for(int i = 0;i<poly.size();i++) {
@@ -598,7 +605,7 @@ public class QuickMath {
 			}
 		}
 		
-		return out.simplify(settings);
+		return out.simplify(casInfo);
 	}
 	
 	public static BigInteger bigRoot(BigInteger n,BigInteger root) {
@@ -898,7 +905,7 @@ public class QuickMath {
 		return null;
 	}
 	
-	public static Expr trigExpand(Expr e,Settings settings){
+	public static Expr trigExpand(Expr e,CasInfo casInfo){
 		if(e.containsType("sin")){
 			Expr trigPart = null;
 			Prod coef = new Prod();
@@ -920,13 +927,13 @@ public class QuickMath {
 			
 			if(trigPart != null){
 				Expr innerPart = trigPart.get();
-				Expr halfInner = div(innerPart,num(2)).simplify(settings);
+				Expr halfInner = div(innerPart,num(2)).simplify(casInfo);
 				
 				if(!(halfInner instanceof Div)){
 					coef.add(sin(halfInner));
 					coef.add(cos(halfInner));
 					coef.add(num(2));
-					return coef.simplify(settings);
+					return coef.simplify(casInfo);
 				}
 				return e;
 			}
@@ -957,7 +964,7 @@ public class QuickMath {
 		}
 		return out;
 	}
-	public static Expr multinomial(Expr baseSum,Num expo,Settings settings) {//returns the binomial expansion
+	public static Expr multinomial(Expr baseSum,Num expo,CasInfo casInfo) {//returns the binomial expansion
 		Sum terms = new Sum();
 		ArrayList<BigInteger[]> exponentSets = possiblePartitions(expo.realValue,BigInteger.valueOf(baseSum.size()),null,0,null);
 		//System.out.println(exponentSets);
@@ -974,7 +981,7 @@ public class QuickMath {
 			}
 			
 			term.add(num(coef));
-			terms.add(term.simplify(settings));
+			terms.add(term.simplify(casInfo));
 		}
 		
 		return terms;
@@ -1033,7 +1040,7 @@ public class QuickMath {
 			}
 		}else if(e instanceof Sum) {
 			for(int i = 0;i<e.size();i++) {
-				if(i!=0)out+=generateMathML(e.get(i).strangeAbs(Settings.normal));
+				if(i!=0)out+=generateMathML(e.get(i).strangeAbs(CasInfo.normal));
 				else out+=generateMathML(e.get(i));
 				if(i!=e.size()-1) {
 					if(e.get(i+1).negative()) out+="-";

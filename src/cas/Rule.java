@@ -17,6 +17,7 @@ import java.util.ArrayList;
  * the main reason for specifying the difficulty is for filtering out stupid simple rules from a simplify dump. 
  * It's an arbitrary decision and you may not agree with my difficulty scoring but its not really important
  */
+import java.util.Random;
 
 import cas.bool.*;
 import cas.calculus.*;
@@ -265,10 +266,13 @@ public class Rule extends Expr{
 		this.difficulty = difficulty;
 	}
 	
-	public void init(){
+	private static ArrayList<Rule> allPatternBasedRules = new ArrayList<Rule>();
+	
+	public void init(){//compiling the pattern
 		if(patternStr != null) {
-			this.pattern = (Becomes) createExpr(patternStr);
-			this.pattern.getLeftSide().sort();
+			pattern = (Becomes) createExpr(patternStr);
+			pattern.getLeftSide().sort();
+			allPatternBasedRules.add(this);
 		}
 		if(conditionStr != null) {
 			condition = createExpr(conditionStr);
@@ -294,7 +298,7 @@ public class Rule extends Expr{
 	 * 
 	 * this can be override if you want to hard code a rule if it cant be done with patterns
 	 */
-	public Expr applyRuleToExpr(Expr expr,Settings settings){//note this may modify the original expression. The return is there so that if it changes expression type
+	public Expr applyRuleToExpr(Expr expr,CasInfo casInfo){//note this may modify the original expression. The return is there so that if it changes expression type
 		//System.out.println(pattern.getLeftSide()+" "+expr+" "+fastSimilarStruct(pattern.getLeftSide(),expr));
 		if(fastSimilarStruct(pattern.getLeftSide(),expr)) {//we use fast similar struct here because we don't want to call the getParts function twice and its faster
 			Sequence exampleParts = sequence();
@@ -308,15 +312,15 @@ public class Rule extends Expr{
 			
 			if(condition != null) {
 				Expr condition = this.condition.replace(equs);
-				condition = condition.simplify(settings);
-				if(condition.simplify(settings).equals(BoolState.FALSE)) return expr;
+				condition = condition.simplify(casInfo);
+				if(condition.simplify(casInfo).equals(BoolState.FALSE)) return expr;
 			}
 			
 			Expr out = pattern.getRightSide().replace(equs);
 			if(pattern.getLeftSide().getClass() == pattern.getRightSide().getClass()) {
-				out.simplifyChildren(settings);
+				out.simplifyChildren(casInfo);
 			}else {
-				out = out.simplify(settings);//no recursion since different class type
+				out = out.simplify(casInfo);//no recursion since different class type
 			}
 			return out;
 			
@@ -333,46 +337,67 @@ public class Rule extends Expr{
 		}
 		return name;
 	}
+	
+	private static boolean LOADED = false;
 	/*
 	 * loads all the CAS rules into each type, this can take some time
 	 * this is required to be run somewhere before the CAS can be used, maybe put it as close to first line of main method
 	 */
+	
+	public static volatile int loadingPercent = 0;
 	public static void loadRules(){
+		if(LOADED) return;
 		System.out.println("loading CAS rules...");
 		long startTime = System.nanoTime();
 		
+		random = new Random(761234897);
 		StandardRules.loadRules();
+		
+		loadingPercent = 10;
 		
 		Abs.loadRules();
 		Acos.loadRules();
 		And.loadRules();
 		Approx.loadRules();
 		
+		loadingPercent = 20;
+		
 		Asin.loadRules();
 		Atan.loadRules();
 		Cos.loadRules();
+		Define.loadRules();
 		Diff.loadRules();
+		
+		loadingPercent = 30;
 		
 		Distr.loadRules();
 		Div.loadRules();
 		Dot.loadRules();
 		ExprList.loadRules();
 		
+		loadingPercent = 40;
+		
 		Factor.loadRules();
 		Gamma.loadRules();
 		Integrate.loadRules();
 		IntegrateOver.loadRules();
+		
+		loadingPercent = 50;
 		
 		LambertW.loadRules();
 		Limit.loadRules();
 		Ln.loadRules();
 		Mat.loadRules();
 		
+		loadingPercent = 60;
+		
 		Next.loadRules();
 		Not.loadRules();
 		Or.loadRules();
 		Power.loadRules();
 		Prod.loadRules();
+		
+		loadingPercent = 70;
 		
 		Sin.loadRules();
 		Solve.loadRules();
@@ -381,14 +406,28 @@ public class Rule extends Expr{
 		Ternary.loadRules();
 		Transpose.loadRules();
 		
+		loadingPercent = 80;
+		
 		SimpleFuncs.loadRules();
+		
+		for(Rule r:allPatternBasedRules) {//simplify rules
+			if(!r.pattern.getRightSide().containsType(r.pattern.getLeftSide().typeName())) {//non recursive simplification
+				r.pattern.setRightSide(r.pattern.getRightSide().simplify(CasInfo.normal));
+			}
+			if(r.condition != null) r.condition = r.condition.simplify(CasInfo.normal);
+		}
+		
+		loadingPercent = 90;
+		
+		Ask.loadBasicQuestions();
 		
 		SimpleFuncs.FUNCTION_UNLOCKED = true;
 		
 		long endTime = System.nanoTime();
 		System.out.println("done loading Rules! took "+((endTime-startTime)/1000000.0)+" ms");
 		
-		Ask.loadBasicQuestions();
+		loadingPercent = 100;
+		LOADED = true;
 	}
 	
 	@Override

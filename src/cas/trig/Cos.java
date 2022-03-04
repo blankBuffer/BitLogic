@@ -5,7 +5,7 @@ import java.math.BigInteger;
 import cas.ComplexFloat;
 import cas.Expr;
 import cas.Rule;
-import cas.Settings;
+import cas.CasInfo;
 import cas.StandardRules;
 import cas.primitive.Div;
 import cas.primitive.ExprList;
@@ -33,11 +33,11 @@ public class Cos extends Expr{
 		private static final long serialVersionUID = 1L;
 
 		@Override
-		public Expr applyRuleToExpr(Expr e,Settings settings){
+		public Expr applyRuleToExpr(Expr e,CasInfo casInfo){
 			Cos cos = (Cos)e;
 			Var pi = pi();
 			BigInteger three = BigInteger.valueOf(3),six = BigInteger.valueOf(6),four = BigInteger.valueOf(4),twelve = BigInteger.valueOf(12);
-			Expr innerExpr = distr(cos.get()).simplify(settings);
+			Expr innerExpr = distr(cos.get()).simplify(casInfo);
 			
 			Expr out = cos;
 			if(innerExpr.equals(num(0))) {
@@ -71,7 +71,7 @@ public class Cos extends Expr{
 					else if(numer.equals(BigInteger.ZERO)) out = num(negate);
 					else {
 						//make it into the sin version for canonical form
-						out = prod(  num(negate),   sin(sum( div(prod(pi(),num(numer)),num(denom)) ,div(pi(),num(2))))   ).simplify(settings);
+						out = prod(  num(negate),   sin(sum( div(prod(pi(),num(numer)),num(denom)) ,div(pi(),num(2))))   ).simplify(casInfo);
 						//
 						
 					}
@@ -86,7 +86,7 @@ public class Cos extends Expr{
 						
 						if(frac!=null) {
 							//make it into the sin version for canonical form
-							out = sin(sum( innerExpr ,div(pi(),num(2)))).simplify(settings);
+							out = sin(sum( innerExpr ,div(pi(),num(2)))).simplify(casInfo);
 							//
 						}
 						

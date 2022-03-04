@@ -3,7 +3,7 @@ package cas.trig;
 import cas.ComplexFloat;
 import cas.Expr;
 import cas.Rule;
-import cas.Settings;
+import cas.CasInfo;
 import cas.StandardRules;
 import cas.primitive.ExprList;
 import cas.primitive.Sequence;
@@ -24,10 +24,10 @@ public class Acos extends Expr{
 		private static final long serialVersionUID = 1L;
 
 		@Override
-		public Expr applyRuleToExpr(Expr e,Settings settings){
+		public Expr applyRuleToExpr(Expr e,CasInfo casInfo){
 			Acos acos = (Acos)e;
 			if(acos.get().negative()){
-				Expr result = sum(neg(acos(acos.get().strangeAbs(settings))),pi()).simplify(settings);
+				Expr result = sum(neg(acos(acos.get().strangeAbs(casInfo))),pi()).simplify(casInfo);
 				return result;
 			}
 			return acos;
@@ -51,9 +51,9 @@ public class Acos extends Expr{
 		}
 		
 		@Override
-		public Expr applyRuleToExpr(Expr e,Settings settings){
+		public Expr applyRuleToExpr(Expr e,CasInfo casInfo){
 			for(Rule r:cases){
-				e = r.applyRuleToExpr(e, settings);
+				e = r.applyRuleToExpr(e, casInfo);
 			}
 			return e;
 		}
@@ -75,9 +75,9 @@ public class Acos extends Expr{
 		}
 		
 		@Override
-		public Expr applyRuleToExpr(Expr e,Settings settings){
+		public Expr applyRuleToExpr(Expr e,CasInfo casInfo){
 			for(Rule r:cases){
-				e = r.applyRuleToExpr(e, settings);
+				e = r.applyRuleToExpr(e, casInfo);
 			}
 			return e;
 		}

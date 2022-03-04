@@ -4,14 +4,9 @@ import java.math.BigInteger;
 import cas.ComplexFloat;
 import cas.Expr;
 import cas.Rule;
-import cas.Settings;
+import cas.CasInfo;
 import cas.StandardRules;
-import cas.primitive.Div;
-import cas.primitive.ExprList;
-import cas.primitive.Num;
-import cas.primitive.Sequence;
-import cas.primitive.Sum;
-import cas.primitive.Var;
+import cas.primitive.*;
 
 public class Tan extends Expr{
 	
@@ -30,7 +25,7 @@ public class Tan extends Expr{
 		private static final long serialVersionUID = 1L;
 		
 		@Override
-		public Expr applyRuleToExpr(Expr e,Settings settings){
+		public Expr applyRuleToExpr(Expr e,CasInfo casInfo){
 			Tan tan = (Tan)e;
 			
 			Var pi = pi();
@@ -64,9 +59,9 @@ public class Tan extends Expr{
 						}
 						
 						if(negate == -1) {
-							return neg(tan(div(prod(pi(),num(numer)),num(denom)).simplify(Settings.normal)));
+							return neg(tan(div(prod(pi(),num(numer)),num(denom)).simplify(CasInfo.normal)));
 						}
-						return tan(div(prod(pi(),num(numer)),num(denom)).simplify(Settings.normal));
+						return tan(div(prod(pi(),num(numer)),num(denom)).simplify(CasInfo.normal));
 					}
 					
 				}
@@ -83,7 +78,7 @@ public class Tan extends Expr{
 							numer = numer.mod(denom);//to do this we take the mod
 							
 							innerExpr.set(i,  div(prod(num(numer),pi()),num(denom)) );
-							tan.set(0, innerExpr.simplify(Settings.normal));
+							tan.set(0, innerExpr.simplify(CasInfo.normal));
 							
 						}
 						

@@ -3,7 +3,7 @@ package cas.matrix;
 import cas.ComplexFloat;
 import cas.Expr;
 import cas.Rule;
-import cas.Settings;
+import cas.CasInfo;
 import cas.primitive.ExprList;
 import cas.primitive.Func;
 import cas.primitive.Prod;
@@ -20,7 +20,7 @@ public class Dot extends Expr{
 		private static final long serialVersionUID = 1L;
 		
 		@Override
-		public Expr applyRuleToExpr(Expr e,Settings settings) {
+		public Expr applyRuleToExpr(Expr e,CasInfo casInfo) {
 			Dot dot = (Dot)e;
 			
 			if(dot.get(0) instanceof Mat) {
@@ -47,7 +47,7 @@ public class Dot extends Expr{
 					
 					total = newMat;
 				}
-				return total.simplify(settings);
+				return total.simplify(casInfo);
 			}
 			
 			return dot;
@@ -58,7 +58,7 @@ public class Dot extends Expr{
 		private static final long serialVersionUID = 1L;
 		
 		@Override
-		public Expr applyRuleToExpr(Expr e,Settings settings) {
+		public Expr applyRuleToExpr(Expr e,CasInfo casInfo) {
 			Dot dot = (Dot)e;
 			
 			for(int i = 0;i<dot.size();i++) {
