@@ -414,7 +414,6 @@ public class Rule extends Expr{
 			if(!r.pattern.getRightSide().containsType(r.pattern.getLeftSide().typeName())) {//non recursive simplification
 				r.pattern.setRightSide(r.pattern.getRightSide().simplify(CasInfo.normal));
 			}
-			if(r.condition != null) r.condition = r.condition.simplify(CasInfo.normal);
 		}
 		
 		loadingPercent = 90;

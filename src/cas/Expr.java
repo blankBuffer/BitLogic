@@ -216,7 +216,7 @@ public abstract class Expr extends QuickMath implements Comparable<Expr>, Serial
 	
 	@Override
 	public int hashCode(){
-		int sum = this.getClass().hashCode();
+		int sum = this.typeName().hashCode()+1928372;
 		if(commutative){
 			for(int i = 0;i<size();i++){
 				sum+=get(i).hashCode()*1092571862;

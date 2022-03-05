@@ -101,6 +101,7 @@ public class Plot extends JPanel{
 	static int IN_TERMS_OF_X = 0,IN_TERMS_OF_Y = 1;
 	
 	static void basicPlot2D(Graphics g,Expr expr,int mode,PlotWindowParams plotWindowParams,Dimension windowSize) {//plots basic functions in terms  of x
+		
 		if(mode == IN_TERMS_OF_X) {
 			double beforeY = 0;
 			Equ varDef = QuickMath.equ(QuickMath.var("x"),QuickMath.floatExpr(0));

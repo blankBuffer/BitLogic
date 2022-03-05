@@ -43,6 +43,7 @@ public class Main extends QuickMath{
 	}
 	
 	static void testRegion() {
+		//Rule.loadRules();
 		//runScript("bitLogicTest.bl",true);
 	}
 	

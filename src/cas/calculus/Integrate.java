@@ -514,6 +514,8 @@ public class Integrate extends Expr{
 				while(true) {//try normal u and innermost u sub
 					if(!u.equals(integ.getVar())) {
 						Equ eq = equ(u,uSubVar);//im calling it 0u since variables normally can't start with number
+						//System.out.println(eq);
+						
 						Expr diffObj = diff(u,(Var)integ.getVar().copy()).simplify(casInfo);
 						if(diffObj.containsType("diff")) return integ;
 						
@@ -534,7 +536,9 @@ public class Integrate extends Expr{
 							if(!(solved instanceof Solve)) {
 								solved = ((Equ)solved).getRightSide();
 								newExpr = integrate(newExpr.replace(equ(integ.getVar(),solved)),uSubVar);
+								//System.out.println("before:"+newExpr);
 								newExpr = newExpr.simplify(casInfo);
+								//System.out.println("after:"+newExpr);
 								if(!newExpr.containsType("integrate")) {
 									Expr out = newExpr.replace(equ(uSubVar,u)).simplify(casInfo);
 									return out;
@@ -598,6 +602,7 @@ public class Integrate extends Expr{
 		@Override
 		public void init(){
 			cases = new Rule[]{
+					
 					new Rule("integrate(x^2/sqrt(a+b*x^2),x)->a*asin((x*sqrt(-b))/sqrt(a))/(2*(-b)^(3/2))+x*sqrt(a-(-b)*x^2)/(2*b)","(eval(b<0)|allowComplexNumbers())&~contains({a,b},x)","trig sub",Rule.VERY_DIFFICULT),
 					
 					new Rule("integrate(sqrt(a+b*x^2)/x^2,x)->b*asin(sqrt(-b)*x/sqrt(a))/sqrt(-b)-sqrt(a+b*x^2)/x","(eval(b<0)|allowComplexNumbers())&~contains({a,b},x)","trig sub",Rule.VERY_DIFFICULT),
@@ -605,7 +610,7 @@ public class Integrate extends Expr{
 					new Rule("integrate(sqrt(a+b*x^2),x)->a*asin(x*sqrt(-b)/sqrt(a))/(2*sqrt(-b))+x*sqrt(a+b*x^2)/2","(eval(b<0)|allowComplexNumbers())&~contains({a,b},x)","trig sub",Rule.VERY_DIFFICULT),
 					
 					new Rule("integrate(sqrt(a+b*x^2),x)->x*sqrt(b)*sqrt(a+b*x^2)/(2*sqrt(b))+a*ln(sqrt(a+b*x^2)+x*sqrt(b))/(2*sqrt(b))","(eval(b>0)|allowComplexNumbers())&~contains({a,b},x)","trig sub",Rule.CHALLENGING),
-					new Rule("integrate(sqrt(a+x^2),x)->x*sqrt(a+x^2)/2+a*ln(sqrt(a+x^2)+x)/2","(eval(b>0)|allowComplexNumbers())&~contains(a,x)","trig sub",Rule.CHALLENGING),
+					new Rule("integrate(sqrt(a+x^2),x)->x*sqrt(a+x^2)/2+a*ln(sqrt(a+x^2)+x)/2","~contains(a,x)","trig sub",Rule.CHALLENGING),
 					
 					new Rule("integrate(1/sqrt(a+b*x^2),x)->ln(x*sqrt(b)+sqrt(a+b*x^2))/(2*sqrt(b))-ln(sqrt(a+b*x^2)-x*sqrt(b))/(2*sqrt(b))","(eval(a>0)&eval(b>0)|allowComplexNumbers())&~contains({a,b},x)","trig sub",Rule.CHALLENGING),
 					new Rule("integrate(1/sqrt(a+x^2),x)->ln(x+sqrt(a+x^2))/2-ln(sqrt(a+x^2)-x)/2","(eval(a>0)|allowComplexNumbers())&~contains(a,x)","trig sub",Rule.CHALLENGING),
@@ -625,7 +630,6 @@ public class Integrate extends Expr{
 			for(Rule r:cases){
 				e = r.applyRuleToExpr(e, casInfo);
 			}
-			
 			return e;
 		}
 	};
@@ -645,21 +649,24 @@ public class Integrate extends Expr{
 		@Override
 		public Expr applyRuleToExpr(Expr e,CasInfo casInfo){
 			Integrate integ = (Integrate)e;
-			
 			if(Rule.fastSimilarStruct(sqrtObj, integ.get())) {
+				//System.out.println(e);
 				Sequence coefs = polyExtract(e.get().get(),integ.getVar(),casInfo);
 				if(coefs == null) return integ;
 				if(coefs.size() == 3) {
-					ExprList equs = exprList( equ(var("c"),coefs.get(0)) , equ(var("b"),coefs.get(1)) , equ(var("a"),coefs.get(2)) );
+					ExprList equs = exprList( equ(var("c"),coefs.get(0)) , equ(var("b"),coefs.get(1)) , equ(var("a"),coefs.get(2)) , equ(var("x"),integ.getVar()) );
 					boolean aPositive = check.replace(equs).simplify(casInfo).equals(BoolState.TRUE);
+					Expr out;
 					if(aPositive) {
-						return resultPos.replace(equs).simplify(casInfo);
+						out = resultPos.replace(equs).simplify(casInfo);
+					}else {
+						out = resultNeg.replace(equs).simplify(casInfo);
 					}
-					return resultNeg.replace(equs).simplify(casInfo);
+					//System.out.println(out);
+					return out;
 				}
 				
 			}
-			
 			return integ;
 		}
 	};
@@ -963,7 +970,8 @@ public class Integrate extends Expr{
 	
 	@Override
 	public Rule getDoneRule() {
-		return postProcessing;
+		//return postProcessing;
+		return null;
 	}
 	
 	public Integrate(){}//
