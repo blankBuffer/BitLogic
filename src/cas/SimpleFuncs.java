@@ -97,6 +97,7 @@ public class SimpleFuncs extends QuickMath{
 	static Func subSeq = new Func("subSeq",3);
 	static Func revSeq = new Func("revSeq",1);
 	static Func sumSeq = new Func("sumSeq",1);
+	static Func owns = new Func("owns",2);
 	
 	public static void loadRules(){
 		tree.simplifyChildren = false;
@@ -705,6 +706,8 @@ public class SimpleFuncs extends QuickMath{
 		addFunc(revSeq);
 		addFunc(sumSeq);
 		
+		addFunc(owns);
+		
 		for(String s:simpleFuncs.keySet()) {
 			functionNames.add(s);
 		}
@@ -726,6 +729,7 @@ public class SimpleFuncs extends QuickMath{
 		numberOfParams.put("distr", 1);
 		numberOfParams.put("exp", 1);
 		numberOfParams.put("inv", 1);
+		numberOfParams.put("neg", 1);
 		
 		numberOfParams.put("sinh", 1);
 		numberOfParams.put("cosh", 1);
@@ -809,6 +813,7 @@ public class SimpleFuncs extends QuickMath{
 		if(funcName.equals("distr")) return distr(params[0]);
 		if(funcName.equals("exp")) return exp(params[0]);
 		if(funcName.equals("inv")) return inv(params[0]);
+		if(funcName.equals("neg")) return neg(params[0]);
 		if(funcName.equals("lambertW")) return lambertW(params[0]);
 		if(funcName.equals("abs")) return abs(params[0]);
 		if(funcName.equals("mat")) return mat((Sequence)params[0]);

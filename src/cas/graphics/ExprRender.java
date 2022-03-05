@@ -432,14 +432,15 @@ public class ExprRender extends QuickMath{//sort of a wrap of the image type but
 				ExprImg eImg = newExprImg();
 				eImg.makeExpr(integ.get());
 				
-				setWidth(integralImg.getWidth()+leftBracket.getWidth()+eImg.getWidth()+rightBracket.getWidth()+diffImg.getWidth()+varImg.getWidth());
 				setHeight(eImg.getHeight());
+				setWidth(getHeight()/3+leftBracket.getWidth()+eImg.getWidth()+rightBracket.getWidth()+diffImg.getWidth()+varImg.getWidth());
+				
 				setFractionBar(eImg.getFractionBar());
 				
 				initImg();
 				int currentX = 0;
-				graphics.drawImage(integralImg.getImage(),currentX,0,integralImg.getWidth(),getHeight(),null);
-				currentX+=integralImg.getWidth();
+				graphics.drawImage(integralImg.getImage(),currentX,0,getHeight()/3,getHeight(),null);
+				currentX+=getHeight()/3;
 				graphics.drawImage(leftBracket.getImage(),currentX,0,leftBracket.getWidth(),getHeight(),null);
 				currentX+=leftBracket.getWidth();
 				

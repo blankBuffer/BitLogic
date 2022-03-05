@@ -187,7 +187,7 @@ public class Sum extends Expr{
 			IndexSet indexOfProdWithLog = new IndexSet();
 			
 			for(int i = 0;i < sum.size();i++) {
-				if(sum.get(i) instanceof Ln && !(sum.get(i).get() instanceof Sum)) indexSet.ints.add(i);
+				if(sum.get(i) instanceof Ln && !(sum.get(i).get() instanceof Sum) && !(sum.get(i).get() instanceof Abs && sum.get(i).get().get() instanceof Sum)  ) indexSet.ints.add(i);
 				else if(sum.get(i) instanceof Prod) {
 					Prod innerProd = (Prod)sum.get(i);
 					int innerLogCount = 0;
@@ -195,7 +195,7 @@ public class Sum extends Expr{
 					
 					for(int j = 0;j<innerProd.size();j++) {
 						if(innerProd.get(j) instanceof Ln) {
-							if(!(innerProd.get(j).get() instanceof Sum)) {
+							if(!(innerProd.get(j).get() instanceof Sum) && !(innerProd.get(j).get() instanceof Abs && innerProd.get(j).get().get() instanceof Sum)) {
 								innerLogCount++;
 							}
 						}else {

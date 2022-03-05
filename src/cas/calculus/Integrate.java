@@ -970,8 +970,7 @@ public class Integrate extends Expr{
 	
 	@Override
 	public Rule getDoneRule() {
-		//return postProcessing;
-		return null;
+		return postProcessing;
 	}
 	
 	public Integrate(){}//

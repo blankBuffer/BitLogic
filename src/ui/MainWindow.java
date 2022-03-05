@@ -16,10 +16,14 @@ import java.util.Scanner;
 import java.awt.datatransfer.*;
 
 import javax.swing.*;
+import javax.swing.event.CaretEvent;
+import javax.swing.event.CaretListener;
 
+import cas.Expr;
 import cas.Rule;
 import cas.graphics.ExprRender;
 import cas.graphics.Plot;
+import cas.lang.Interpreter;
 import cas.programming.StackEditor;
 
 public class MainWindow extends JFrame{
@@ -62,14 +66,31 @@ public class MainWindow extends JFrame{
 		JTextArea terminalOut = new JTextArea();
 		JPanel terminalOutWithImg = new JPanel();
 		JScrollPane scrollableTerminalOut = new JScrollPane(terminalOut);
+		Expr focusedExpr = null;
+		
+		public void setFocusedExprDefault() {
+			if(!terminalIn.getText().isEmpty()) {
+				try {
+					focusedExpr = Interpreter.createExprWithThrow(terminalIn.getText());
+					imgExprPanel.repaint();
+				}catch(Exception e1) {
+				}
+			}else if(currentStack.size() > 0) {
+				focusedExpr = currentStack.last();
+			}else{
+				focusedExpr = null;
+			}
+			imgExprPanel.repaint();
+		}
+		
 		JPanel imgExprPanel = new JPanel() {
 			private static final long serialVersionUID = 5476956793821976634L;
 
 			BufferedImage exprImg = null;
 			@Override
 			public void paintComponent(Graphics g) {
-				if(currentStack.size()>0) {
-					exprImg = ExprRender.createImgInFrame(currentStack.last(),new Dimension(getWidth(),getHeight()),terminalOut.getBackground(),terminalOut.getForeground() );
+				if(focusedExpr != null) {
+					exprImg = ExprRender.createImgInFrame(focusedExpr,new Dimension(getWidth(),getHeight()),terminalOut.getBackground(),terminalOut.getForeground() );
 					g.drawImage(exprImg,0,0,getWidth(),getHeight(),null);
 				}else {
 					g.setColor(terminalOut.getBackground());
@@ -151,12 +172,13 @@ public class MainWindow extends JFrame{
 				terminalOut.setText(newState);
 				terminalOut.setCaretPosition(terminalOut.getText().length());
 				
-				imgExprPanel.repaint();
+				setFocusedExprDefault();
 				
 				plot.repaint();
 			}
 			
 		};
+		
 		JPanel resultAndPushButtons = new JPanel();
 		JButton resultButton = new JButton("result");
 		ActionListener resultButtonUpdate = new ActionListener() {
@@ -165,6 +187,12 @@ public class MainWindow extends JFrame{
 				if(currentStack.command("result") == StackEditor.QUIT) closeWindow();
 				
 				terminalOutUpdate.actionPerformed(null);
+			}
+		};
+		CaretListener updateViewBasedOnText = new CaretListener() {
+			@Override
+			public void caretUpdate(CaretEvent e) {
+				setFocusedExprDefault();
 			}
 		};
 		ActionListener terminalInPush = new ActionListener() {
@@ -176,6 +204,7 @@ public class MainWindow extends JFrame{
 				if(stackCode == StackEditor.QUIT) closeWindow();
 				else if(stackCode == StackEditor.EDIT_REQUEST) {
 					terminalIn.setText(currentStack.last().toString());
+					updateViewBasedOnText.caretUpdate(null);
 					currentStack.pop();
 				}
 				else if(stackCode == StackEditor.INPUT_ERROR) {}
@@ -206,6 +235,7 @@ public class MainWindow extends JFrame{
 			terminalOutWithImg.setLayout(new BorderLayout());
 			
 			terminalIn.addActionListener(terminalInPush);
+			terminalIn.addCaretListener(updateViewBasedOnText);
 			resultButton.addActionListener(resultButtonUpdate);
 			
 			imgExprPanel.addMouseListener(imageToClipBoard);

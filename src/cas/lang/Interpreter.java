@@ -14,7 +14,6 @@ public class Interpreter extends QuickMath{
 	public static Expr SUCCESS = var("done!");
 	
 	public static Expr createExpr(String string){
-		string = string.replaceAll(" ", "");//remove spaces
 		try {
 			ArrayList<String> tokens = generateTokens(string);
 			return createExprFromTokens(tokens);
@@ -25,7 +24,6 @@ public class Interpreter extends QuickMath{
 	}
 	
 	public static Expr createExprWithThrow(String string) throws Exception{
-		string = string.replaceAll(" ", "");//remove spaces
 		ArrayList<String> tokens = generateTokens(string);
 		return createExprFromTokens(tokens);
 	}

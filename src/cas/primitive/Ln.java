@@ -99,7 +99,7 @@ public class Ln extends Expr{
 				
 				for(int i = 0;i<prodNumer.size();i++) {
 					Expr current = prodNumer.get(i);
-					if(current instanceof Sum || current instanceof Power && ((Power)current).getBase() instanceof Sum) {
+					if(current instanceof Sum || current instanceof Power && ((Power)current).getBase() instanceof Sum || current instanceof Abs && ((Abs)current).get() instanceof Sum) {
 						if(!current.containsVars() && !current.convertToFloat(exprList()).positiveAndReal()) continue;
 						out.add(ln(current));
 						prodNumer.remove(i);
@@ -108,7 +108,7 @@ public class Ln extends Expr{
 				}
 				for(int i = 0;i<prodDenom.size();i++) {
 					Expr current = prodDenom.get(i);
-					if(current instanceof Sum || current instanceof Power && ((Power)current).getBase() instanceof Sum) {
+					if(current instanceof Sum || current instanceof Power && ((Power)current).getBase() instanceof Sum || current instanceof Abs && ((Abs)current).get() instanceof Sum) {
 						if(!current.containsVars() && !current.convertToFloat(exprList()).positiveAndReal()) continue;
 						out.add(neg(ln(current)));
 						prodDenom.remove(i);

@@ -143,6 +143,9 @@ public class Ask extends QuickMath{
 		replacement.put("took", "-");
 		replacement.put("takes", "-");
 		replacement.put("take", "-");
+		replacement.put("negative", "neg");
+		
+		replacement.put("has", "owns");
 		
 		replacement.put("squared","^2");
 		replacement.put("cubed","^3");
@@ -168,18 +171,6 @@ public class Ask extends QuickMath{
 		replacement.put("arctangent","atan");
 		replacement.put("logarithm","ln");
 		replacement.put("log","ln");
-		
-		replacement.put("one", "1");
-		replacement.put("two", "2");
-		replacement.put("three", "3");
-		replacement.put("four", "4");
-		replacement.put("five", "5");
-		replacement.put("six", "6");
-		replacement.put("seven", "7");
-		replacement.put("eight", "8");
-		replacement.put("nine", "9");
-		replacement.put("zero", "0");
-		replacement.put("ten", "10");
 		
 		replacement.put("derivative", "diff");
 		replacement.put("differentiate", "diff");
@@ -433,6 +424,7 @@ public class Ask extends QuickMath{
 		if(bannedNumberNounPairs.size() == 0){//'3 dollars' -> 3*dollars but '3 to' is not 3*to
 			bannedNumberNounPairs.add("from");
 			bannedNumberNounPairs.add("to");
+			bannedNumberNounPairs.add("in");
 			bannedNumberNounPairs.add("and");
 			bannedNumberNounPairs.add("with");
 			bannedNumberNounPairs.add("with");
@@ -440,7 +432,7 @@ public class Ask extends QuickMath{
 		}
 		
 		for(int i = 0;i<tokens.size()-1;i++) {
-			if(Character.isDigit(tokens.get(i).charAt(0))) {
+			if(tokens.get(i).matches("([0-9]+)|(neg\\([0-9]+\\))")) {
 				if(!Interpreter.containsOperators(tokens.get(i+1)) && !bannedNumberNounPairs.contains(tokens.get(i+1))) {
 					String stripped = tokens.get(i+1);
 					if(!Interpreter.isProbablyExpr(tokens.get(i+1)) && stripped.length() > 1 && stripped.charAt(stripped.length()-1) == 's') {
@@ -588,30 +580,6 @@ public class Ask extends QuickMath{
 		}
 	}
 	
-	static void reformulate(ArrayList<String> tokens) {
-		if(DEBUG){
-			System.out.println("before reformulate");
-			System.out.println(tokens);
-		}
-		
-		applyWordReplacement(tokens);
-		removeDuplicateOperators(tokens);
-		fractionalReading(tokens);
-		numberNounPair(tokens);
-		combineTrailingOperatorTokens(tokens);
-		applyFunctionKeywords(tokens);
-		specialFunctions(tokens);
-		combineTrailingOperatorTokens(tokens);
-		
-		unitReading(tokens);
-		
-		if(DEBUG){
-			System.out.println("after reformulate");
-			System.out.println(tokens);
-		}
-		
-	}
-	
 	static String specialPhraseReplacement(String in){
 		String out = in;
 		for(String key:phraseReplacementKeys){
@@ -629,6 +597,139 @@ public class Ask extends QuickMath{
 			}
 		}
 		return null;
+	}
+	
+	static HashMap<String,String> wordToDig = new HashMap<String,String>();
+	static {
+		wordToDig.put("zero","0");
+		wordToDig.put("one","1");
+		wordToDig.put("two","2");
+		wordToDig.put("three","3");
+		wordToDig.put("four","4");
+		wordToDig.put("five","5");
+		wordToDig.put("six","6");
+		wordToDig.put("seven","7");
+		wordToDig.put("eight","8");
+		wordToDig.put("nine","9");
+		wordToDig.put("ten","10");
+		wordToDig.put("eleven","11");
+		wordToDig.put("twelve","12");
+		wordToDig.put("thirteen","13");
+		wordToDig.put("fourteen","14");
+		wordToDig.put("fifteen","15");
+		wordToDig.put("sixteen","16");
+		wordToDig.put("seventeen","17");
+		wordToDig.put("eighteen","18");
+		wordToDig.put("nineteen","19");
+		wordToDig.put("twenty","20");
+		wordToDig.put("thirty","30");
+		wordToDig.put("fourty","40");
+		wordToDig.put("fifty","50");
+		wordToDig.put("sixty","60");
+		wordToDig.put("seventy","70");
+		wordToDig.put("eighty","80");
+		wordToDig.put("ninety","90");
+		wordToDig.put("hundred","100");
+		wordToDig.put("thousand","1000");
+		wordToDig.put("million","1000000");
+		wordToDig.put("billion","1000000000");
+	}
+	static void constructNumbers(ArrayList<String> tokens) {
+		for(int i = 0;i<tokens.size();i++) {
+			tokens.set(i,  wordToDig.getOrDefault(tokens.get(i), tokens.get(i)) );
+		}
+		for(int i = 0;i<tokens.size()-1;i++) {
+			if(tokens.get(i).matches("[0-9]{2}") && tokens.get(i+1).matches("[1-9]")) {
+				String newToken = tokens.get(i).charAt(0)+tokens.get(i+1);
+				tokens.remove(i+1);
+				tokens.set(i, newToken);
+			}else if(tokens.get(i).matches("[1-9]") && tokens.get(i+1).matches("10[0]+")) {
+				String newToken = tokens.get(i)+tokens.get(i+1).substring(1);
+				tokens.remove(i+1);
+				tokens.set(i, newToken);
+			}
+		}
+		
+		for(int i = 0;i<tokens.size()-1;i++) {
+			if(tokens.get(i).matches("[1-9][0]{2}") && tokens.get(i+1).matches("[0-9]{2}")) {
+				String newToken = tokens.get(i).charAt(0)+tokens.get(i+1);
+				tokens.remove(i+1);
+				tokens.set(i, newToken);
+			}
+		}
+		
+		for(int i = 0;i<tokens.size()-1;i++) {
+			if(tokens.get(i).matches("[0-9]+") && tokens.get(i+1).matches("100[0]+")) {
+				String newToken = tokens.get(i)+tokens.get(i+1).substring(1);
+				tokens.remove(i+1);
+				tokens.set(i, newToken);
+			}
+		}
+		for(int i = 0;i<tokens.size()-1;i++) {
+			if(tokens.get(i).matches("[0-9]+") && tokens.get(i+1).matches("[0-9]+")) {
+				int sum = Integer.parseInt(tokens.get(i))+Integer.parseInt(tokens.get(i+1));
+				tokens.remove(i+1);
+				tokens.set(i, String.valueOf(sum));
+			}
+		}
+		for(int i = 0;i<tokens.size()-1;i++) {
+			if(tokens.get(i).equals("negative") && tokens.get(i+1).matches("[0-9]+")) {
+				String newToken = "neg("+tokens.get(i+1)+")";
+				tokens.remove(i+1);
+				tokens.set(i, newToken);
+			}
+		}
+	}
+	
+	static void nounOwnership(ArrayList<String> tokens) {
+		for(int i = 0;i<tokens.size();i++) {
+			String token = tokens.get(i);
+			if(token.equals("owns") || token.equals("own")) {
+				
+				String items = "";
+				int j = i+1;
+				while(true) {
+					items+=tokens.get(j);
+					if(!(j+1 < tokens.size() && tokens.get(j+1).equals("&"))) break;
+					items+="+";
+					j+=2;
+				}
+				
+				for(int k = j;k>i;k--) {
+					tokens.remove(k);
+				}
+				
+				String newToken = "owns("+tokens.get(i-1)+","+items+")";
+				tokens.remove(i);
+				tokens.set(i-1, newToken);
+				
+			}
+		}
+	}
+	
+	static void reformulate(ArrayList<String> tokens) {
+		if(DEBUG){
+			System.out.println("before reformulate");
+			System.out.println(tokens);
+		}
+		constructNumbers(tokens);
+		applyWordReplacement(tokens);
+		removeDuplicateOperators(tokens);
+		fractionalReading(tokens);
+		numberNounPair(tokens);
+		nounOwnership(tokens);
+		combineTrailingOperatorTokens(tokens);
+		applyFunctionKeywords(tokens);
+		specialFunctions(tokens);
+		combineTrailingOperatorTokens(tokens);
+		
+		unitReading(tokens);
+		
+		if(DEBUG){
+			System.out.println("after reformulate");
+			System.out.println(tokens);
+		}
+		
 	}
 	
 	public static Expr ask(String question) throws Exception {
