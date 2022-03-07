@@ -204,6 +204,7 @@ public class Ask extends QuickMath{
 		phraseReplacement.put("square root", "sqrt");
 		phraseReplacement.put("cube root", "cbrt");
 		phraseReplacement.put("absolute value", "abs");
+		phraseReplacement.put("in terms", "terms");
 		
 		questions.add(new Question(new String[] {"earth","acceleration"},Double.toString(Unit.EARTH_GRAVITY),8));
 		questions.add(new Question(new String[] {"acceleration","earth"},Double.toString(Unit.EARTH_GRAVITY),8));
@@ -424,11 +425,11 @@ public class Ask extends QuickMath{
 		if(bannedNumberNounPairs.size() == 0){//'3 dollars' -> 3*dollars but '3 to' is not 3*to
 			bannedNumberNounPairs.add("from");
 			bannedNumberNounPairs.add("to");
-			bannedNumberNounPairs.add("in");
 			bannedNumberNounPairs.add("and");
 			bannedNumberNounPairs.add("with");
 			bannedNumberNounPairs.add("with");
 			bannedNumberNounPairs.add("respect");
+			//never add in because in short hand for inches
 		}
 		
 		for(int i = 0;i<tokens.size()-1;i++) {

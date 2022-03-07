@@ -671,57 +671,6 @@ public class Integrate extends Expr{
 		}
 	};
 	
-	/*
-	 * this rule makes integration more reliable for both other rules and for u substitutions
-	 * for example with an example equation of x^3/sqrt(1-x^2) we do not want the sqrt(1-x^2) to be in the form of sqrt(1-x)*sqrt(1+x)
-	 * while normally the ladder would be better for integration it creates more problems
-	 */
-	static Rule compressRoots = new Rule("compress roots",Rule.EASY) {//sqrt(a+b)*sqrt(a-b) -> sqrt(a^2-b^2)
-		private static final long serialVersionUID = 1L;
-		
-		public Expr compressRoots(Expr e,CasInfo casInfo) {
-			if(e instanceof Prod) {
-				for(int i = 0;i<e.size();i++) {
-					if(e.get(i) instanceof Power) {
-						Power current = (Power)e.get(i);
-						if(!(current.getExpo() instanceof Div)) continue;
-						Div frac = (Div)current.getExpo();
-						if(!frac.isNumericalAndReal()) continue;
-						
-						current.setBase(Prod.cast(current.getBase()));
-						
-						for(int j = i+1;j<e.size();j++) {
-							if(e.get(j) instanceof Power) {
-								Power otherPow = (Power)e.get(j);
-								if(otherPow.getExpo().equals(current.getExpo())) {
-									current.getBase().add(otherPow.getBase());
-									e.remove(j);
-									j--;
-								}
-								
-							}
-							
-						}
-						current.setBase(distr(current.getBase()).simplify(casInfo));
-					}
-				}
-				e = Prod.unCast(e);
-			}else {
-				for(int i = 0;i<e.size();i++) {
-					e.set(i,compressRoots(e.get(i),casInfo));
-				}
-			}
-			return e;
-		}
-		
-		@Override
-		public Expr applyRuleToExpr(Expr e,CasInfo casInfo) {
-			e = compressRoots(e,casInfo);
-			return e;
-		}
-		
-	};
-	
 	static Rule fullExpandInner = new Rule("full expansion",Rule.TRICKY) {
 		private static final long serialVersionUID = 1L;
 		
@@ -903,7 +852,6 @@ public class Integrate extends Expr{
 				secCase,
 				cotCase,
 				
-				compressRoots,
 				sqrtOfQuadratic,
 				arcsinCase,
 				recursivePowerOverSqrt,
@@ -919,7 +867,6 @@ public class Integrate extends Expr{
 				StandardRules.distrInner,
 				specialUSub,
 				integrationByParts,
-				compressRoots,
 				normalUSub,
 				integrationByPartsSpecial,
 				fullExpandInner,

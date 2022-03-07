@@ -10,6 +10,8 @@ public class Distr extends Expr{
 
 	
 	private static final long serialVersionUID = -1352926948237577310L;
+	
+	
 
 	public Distr(){
 		simplifyChildren = false;
@@ -37,6 +39,15 @@ public class Distr extends Expr{
 						prod = (Prod)expr.copy();
 						prod.remove(i);
 						break;
+					}else if(expr.get(i) instanceof Power) {
+						Power innerPow = (Power)expr.get(i);
+						if(innerPow.getExpo().equals(Num.TWO) && innerPow.getBase() instanceof Sum && innerPow.getBase().size() == 2) {
+							Sum baseSum = (Sum)innerPow.getBase();
+							theSum = sum( pow(baseSum.get(0),num(2)) , prod(num(2),baseSum.get(0),baseSum.get(1)) , pow(baseSum.get(1),num(2)) );
+							prod = (Prod)expr.copy();
+							prod.remove(i);
+							break;
+						}
 					}
 				}
 				if(theSum != null) {
@@ -61,8 +72,19 @@ public class Distr extends Expr{
 				for(int i = 0;i<expr.size();i++) {
 					expr.set(i, distr(expr.get(i)));
 				}
+				
+				
+			}else if(expr instanceof Power) {
+				Power innerPow = (Power)expr;
+				if(innerPow.getExpo().equals(Num.TWO) && innerPow.getBase() instanceof Sum && innerPow.getBase().size() == 2) {
+					Sum baseSum = (Sum)innerPow.getBase();
+					expr = sum( pow(baseSum.get(0),num(2)) , prod(num(2),baseSum.get(0),baseSum.get(1)) , pow(baseSum.get(1),num(2)) );
+				}
 			}
-			return expr.simplify(casInfo);
+			
+			expr = expr.simplify(casInfo);
+			distr.set(0, expr);
+			return distr;
 		}
 	};
 	

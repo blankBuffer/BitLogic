@@ -671,6 +671,50 @@ public class Prod extends Expr{
 		
 	};
 	
+	static Rule compressRoots = new Rule("compress roots together",Rule.EASY){
+		private static final long serialVersionUID = 1L;
+		
+		@Override
+		public Expr applyRuleToExpr(Expr e,CasInfo casInfo){
+			Prod prod = (Prod)e;
+			
+			for(int i = 0;i<prod.size();i++) {
+				if(prod.get(i) instanceof Power && ((Power)prod.get(i)).getExpo() instanceof Div ) {
+					Power current = (Power) prod.get(i);
+					Prod prodBase = Prod.cast(current.getBase());
+					boolean changed = false;
+					
+					for(int j = i+1;j<prod.size();j++) {
+						
+						if(prod.get(j) instanceof Power && ((Power)prod.get(j)).getExpo() instanceof Div ) {
+							Power other = (Power)prod.get(j);
+							if(other.getExpo().equals(current.getExpo())) {
+								
+								if(other.getBase() instanceof Prod) {
+									for(int k = 0;k<other.getBase().size();k++) prodBase.add(other.getBase().get(k));
+								}else {
+									prodBase.add(other.getBase());
+								}
+								changed = true;
+								prod.remove(j);
+								j--;
+							}
+						}
+						
+					}
+					if(changed) {
+						current.setBase( Prod.unCast(prodBase));
+						prod.set(i, current.simplify(casInfo) );
+					}
+					
+				}
+			}
+			
+			return prod;
+		}
+		
+	};
+	
 	static Sequence ruleSequence = null;
 	
 	public static void loadRules(){
@@ -683,6 +727,7 @@ public class Prod extends Expr{
 				expandIntBases,
 				multConj,
 				multiplyLikeTerms,
+				compressRoots,
 				expoIntoBase,
 				multiplyIntBases,
 				reSimplifyIntBasePowers,

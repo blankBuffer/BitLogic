@@ -188,13 +188,13 @@ public class ExprRender extends QuickMath{//sort of a wrap of the image type but
 					ExprImg expoImg = newExprImg();
 					expoImg.makeExpr(pow.getExpo());
 					
-					setWidth(baseImg.getWidth()+expoImg.getWidth());
+					setWidth(baseImg.getWidth()+expoImg.getWidth()*3/4);
 					setHeight(baseImg.getHeight()+expoImg.getHeight()*3/4-oldGraphics.getFont().getSize()/2);
 					setFractionBar(getHeight()-baseImg.getHeight()+baseImg.getFractionBar());
 					initImg();
 					
 					graphics.drawImage(baseImg.getImage(),0,getHeight()-baseImg.getHeight(),baseImg.getWidth(),baseImg.getHeight(),null);
-					graphics.drawImage(expoImg.getImage(),getWidth()-expoImg.getWidth(),0,expoImg.getWidth()*3/4,expoImg.getHeight()*3/4,null);
+					graphics.drawImage(expoImg.getImage(),getWidth()-expoImg.getWidth()*3/4,0,expoImg.getWidth()*3/4,expoImg.getHeight()*3/4,null);
 				}
 			}else if(e instanceof Div) {
 				Div div = (Div)e;

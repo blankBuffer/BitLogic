@@ -267,79 +267,6 @@ public class Power extends Expr{
 		
 	};
 	
-	private static Rule rootExpand = new Rule("break apart the base into rootable parts",Rule.TRICKY){
-		private static final long serialVersionUID = 1L;
-
-		@Override
-		public Expr applyRuleToExpr(Expr e,CasInfo casInfo){
-			Power pow = (Power)e;
-			
-			if(pow.getBase() instanceof Num) {
-				Num numBase = (Num)pow.getBase();
-				BigInteger den = null;
-				Expr numerOfFrac = null;
-				
-				if(pow.getExpo() instanceof Div) {
-					numerOfFrac = ((Div)pow.getExpo()).getNumer();
-					Expr denomOfFrac = ((Div)pow.getExpo()).getDenom();
-					
-					Num denNum = (Num)denomOfFrac.getCoefficient();
-					
-					if(!denNum.isComplex() && !denNum.equals(Num.ONE)) den = denNum.realValue;//denominator captured
-					
-				}
-				
-				BigInteger negOne = BigInteger.valueOf(-1);
-				
-				if(numBase.realValue.signum() == -1 && !numBase.realValue.equals(negOne)) {//if the base is negative and not negative one
-					pow.setBase(prod(num(-1),num(numBase.realValue.abs())));//split and let let the rule "productInBase" handle this
-					return pow;
-				}
-				if(den!=null) {
-					
-					if(numBase.realValue.equals(negOne)) {//handle odd denominators with base negative one. Example (-1)^(x/3) -> (-1)^x
-						if(!den.mod(BigInteger.TWO).equals(BigInteger.ZERO)) {
-							Expr result = pow(num(-1),numerOfFrac);
-							return result;
-						}
-					}
-					
-					BigInteger i = BigInteger.TWO;//base incremental value
-					
-					BigInteger leftOver = numBase.realValue;
-					
-					BigInteger currentPower = i.pow(Math.abs(den.intValue()));//first test
-					
-					BigInteger product = BigInteger.ONE;
-					
-					int denVal = Math.abs(den.intValue());
-					
-					while(leftOver.shiftRight(1).compareTo(currentPower) != -1  ) {//a number can only be divisible by a perfect square that is half its size(simply a conjecture). example 50 is divisible by 25 which is half its size
-						
-						
-						while(leftOver.mod(currentPower).equals(BigInteger.ZERO)) {
-							leftOver = leftOver.divide(currentPower);
-							product = product.multiply(currentPower);//Accumulative product that is root-able
-						}
-						
-						i = i.add(BigInteger.ONE);//increment
-						if(i.intValue()>100000) break;//give up
-						currentPower = i.pow(denVal);//update currentPower value
-					}
-					
-					
-					if(!product.equals(BigInteger.ONE) && !leftOver.equals(BigInteger.ONE)) {
-						Prod newProd = prod(num(product),num(leftOver));
-						pow.setBase(newProd);//split the base with the root-able component and let let the rule "productInBase" handle this
-					}
-					
-				}
-				
-			}
-			return pow;
-		}
-	};
-	
 	private static Rule perfectPowerInBase = new Rule("the base is a perfect power",Rule.UNCOMMON){
 		private static final long serialVersionUID = 1L;
 
@@ -350,7 +277,7 @@ public class Power extends Expr{
 			if(power.getBase() instanceof Num && !(power.getExpo() instanceof Num)) {
 				Power pp = perfectPower((Num)power.getBase());
 				
-				if( ((Num)pp.getExpo()).realValue.equals(BigInteger.ONE) ) return power;
+				if( pp.getExpo().equals(Num.ONE) ) return power;
 				
 				power.setBase(pp.getBase());
 				
@@ -373,7 +300,7 @@ public class Power extends Expr{
 		public Expr applyRuleToExpr(Expr e,CasInfo casInfo){
 			Power pow = (Power)e;
 			
-			if(pow.getBase() instanceof Prod) {
+			if(pow.getBase() instanceof Prod && !(pow.getExpo() instanceof Div)) {
 				Prod casted = (Prod)pow.getBase().copy();
 				Div frac = null;
 				if(pow.getExpo() instanceof Div) frac = (Div)pow.getExpo();
@@ -473,6 +400,171 @@ public class Power extends Expr{
 		
 	};
 	
+	static Rule rootHasCancelingPower = new Rule("root has power or number inside that cancels and goes outside root",Rule.EASY) {
+		private static final long serialVersionUID = 1L;
+		
+		@Override
+		public Expr applyRuleToExpr(Expr e,CasInfo casInfo){
+			Power pow = (Power)e;
+			
+			if(pow.getExpo() instanceof Div && pow.getBase() instanceof Prod) {
+				Prod baseProd = (Prod)pow.getBase();
+				Div expoDiv = (Div)pow.getExpo();
+				
+				boolean evenDenom = isRealNum(expoDiv.getDenom())  && ((Num)expoDiv.getDenom()).realValue.mod(BigInteger.TWO).equals(BigInteger.ZERO);
+				
+				Prod out = new Prod();
+				for(int i = 0;i<baseProd.size();i++) {
+					if(baseProd.get(i) instanceof Power) {
+						Power subPow = (Power)baseProd.get(i);
+						
+						if(subPow.getExpo() instanceof Div) {
+							Div subPowExpoDiv = (Div)subPow.getExpo();
+							if(subPowExpoDiv.getNumer().equals(expoDiv.getDenom())) {
+								if(evenDenom) {
+									out.add(pow(abs(subPow.getBase()),div(expoDiv.getNumer(),subPowExpoDiv.getDenom())));
+								}else {
+									out.add(pow(subPow.getBase(),div(expoDiv.getNumer(),subPowExpoDiv.getDenom())));
+								}
+								baseProd.remove(i);
+								i--;
+							}
+						}else {
+							if(expoDiv.getDenom().equals(subPow.getExpo())) {
+								if(evenDenom) {
+									out.add(pow(abs(subPow.getBase()),expoDiv.getNumer()));
+								}else {
+									out.add(pow(subPow.getBase(),expoDiv.getNumer()));
+								}
+								baseProd.remove(i);
+								i--;
+							}
+						}
+						
+					}else if(isPositiveRealNum(expoDiv.getDenom()) && isRealNum(baseProd.get(i)) ) {
+						
+						Expr computed = rootNumSimp.applyRuleToExpr(pow(baseProd.get(i),pow.getExpo()), casInfo);
+						if(computed instanceof Num) {
+							baseProd.remove(i);
+							i--;
+							out.add(computed);
+						}else if(computed instanceof Prod) {
+							out.add(computed.get(0));
+							baseProd.set(i, computed.get(1).get());
+							i--;
+						}
+						
+					}
+				}
+				if(out.size()>0) {
+					out.add(pow);
+					return out.simplify(casInfo);
+				}
+			}
+			
+			return pow;
+		}
+	};
+	
+	static Rule rootNumSimp = new Rule("root of a number",Rule.EASY) {
+		private static final long serialVersionUID = 1L;
+		
+		@Override
+		public Expr applyRuleToExpr(Expr e,CasInfo casInfo){
+			Power pow = (Power)e;
+			if(pow.getExpo() instanceof Div) {
+				Div expoDiv = (Div)pow.getExpo();
+				
+				if(isPositiveRealNum(expoDiv.getDenom()) && isRealNum(pow.getBase()) ) {
+					Num denomNum = (Num)expoDiv.getDenom();
+					Num baseNum = (Num)pow.getBase();
+				
+					boolean createsComplexNumber = (denomNum).realValue.mod(BigInteger.TWO).equals(BigInteger.ZERO) && baseNum.signum() == -1;
+					
+					if(!createsComplexNumber || casInfo.allowComplexNumbers) {
+						
+						//this portion works similar to the root expand rule
+						BigInteger root = denomNum.realValue;
+						BigInteger num = baseNum.realValue;
+						
+						if(createsComplexNumber) num = num.negate();
+						
+						BigInteger ans = bigRoot( num , root );
+						if(ans.pow(root.intValue()).equals(num)) {
+							if(createsComplexNumber) {
+								return num(BigInteger.ZERO,ans);
+							}
+							return num(ans);
+						}
+						BigInteger factor = divisibleRoot(num, root);
+						if(!factor.equals(BigInteger.ONE)) {
+							BigInteger outerNum = bigRoot( factor , root );
+							if(createsComplexNumber) {
+								return prod( num(BigInteger.ZERO, outerNum ) , pow(num(num.divide(factor)),pow.getExpo()) );
+							}
+							return prod( num(outerNum), pow(num(num.divide(factor)),pow.getExpo()) );
+							
+						}
+						
+						if(createsComplexNumber) {
+							return prod(num(0,1),  pow(num(num),pow.getExpo()));
+						}
+					}
+				}
+			}
+			return pow;
+		}
+	};
+	
+	static Rule rootInRoot = new Rule("root in root",Rule.EASY) {
+		private static final long serialVersionUID = 1L;
+		
+		@Override
+		public Expr applyRuleToExpr(Expr e,CasInfo casInfo){
+			Power pow = (Power)e;
+			
+			if(pow.getBase() instanceof Prod && pow.getExpo() instanceof Div) {
+				Prod innerProd = (Prod)pow.getBase();
+				
+				Prod out = new Prod();
+				
+				for(int i = 0;i<innerProd.size();i++) {
+					if(innerProd.get(i) instanceof Power && ((Power)innerProd.get(i)).getExpo() instanceof Div ) {
+						Power innerPow = (Power)innerProd.get(i);
+						
+						out.add(pow(innerPow.getBase(),prod(pow.getExpo(),innerPow.getExpo())));
+						innerProd.remove(i);
+						i--;
+					}
+				}
+				
+				if(out.size()>0) {
+					out.add(pow);
+					return out.simplify(casInfo);
+				}
+				
+			}
+			
+			return pow;
+		}
+	};
+	
+	static Rule distrBaseIfRoot = new Rule("distribute base if root",Rule.EASY) {
+		private static final long serialVersionUID = 1L;
+		
+		@Override
+		public Expr applyRuleToExpr(Expr e,CasInfo casInfo){
+			Power pow = (Power)e;
+			
+			if(pow.getExpo() instanceof Div && (pow.getBase() instanceof Prod || pow.getBase() instanceof Sum)) {
+				pow.setBase(distr(pow.getBase()).simplify(casInfo));
+			}
+			
+			return pow;
+		}
+		
+	};
+	
 	static Rule sqrtOfSqrtSum = new Rule("sqrt(k*sqrt(b)+a)->sqrt((a+sqrt(a^2-b*k^2))/2)+sqrt((a-sqrt(a^2-b*k^2))/2)*abs(k)/k","isType(result(sqrt(a^2-b*k^2)),num)","square root of a square root sum",Rule.UNCOMMON);
 	
 	static Sequence ruleSequence = null;
@@ -481,36 +573,59 @@ public class Power extends Expr{
 		ruleSequence = sequence(
 				isI,
 				powersWithEpsilonOrInf,
+				
+				zeroToExpo,
+				oneToExpo,
+				
 				sqrtOneMinusSin,
 				sqrtOneMinusCos,
 				sqrtOnePlusSin,
 				sqrtOnePlusCos,
+				
 				sqrtOfSqrtSum,
+				
 				factorExponent,
+				
 				baseHasPower,
+				
 				eulersIdentity,
+				
 				baseHasPowerAbs,
 				baseOfPowerIsAbsExpoEven,
+				
+				powerOfOne,
+				expoOfZero,
+				
 				negativeExpoToInv,
-				oneToExpo,
+				
+				eToLn,
+				baseToLn,
+				eToFracLn,
 				logInExpoProdToBase,
+				
 				expOfLambertW,
 				expOfLambertWProd,
-				rootExpand,
-				perfectPowerInBase,
-				productInBase,
+				
 				factorBase,
 				fracInBase,
-				productInBase,//second time
+				productInBase,
+				rootInRoot,
+				
+				rootNumSimp,
+				
+				perfectPowerInBase,
+				
+				rootHasCancelingPower,
+				
+				distrBaseIfRoot,
+				
 				expoHasIntegerInSum,
-				expoSumHasLog,
-				exponentiateIntegers,
-				expoOfZero,
-				zeroToExpo,
-				powerOfOne,
-				eToLn,
-				eToFracLn,
-				baseToLn
+				expoSumHasLog,//keep after expoHasIntegerInSum
+				
+				exponentiateIntegers
+				
+				
+				
 			);
 		Rule.initRules(ruleSequence);
 	}

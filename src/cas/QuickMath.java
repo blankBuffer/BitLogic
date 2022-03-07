@@ -608,14 +608,42 @@ public class QuickMath {
 		return out.simplify(casInfo);
 	}
 	
-	public static BigInteger bigRoot(BigInteger n,BigInteger root) {
+	public static BigInteger bigRoot(BigInteger n,BigInteger root) {//answer may need validation
+		boolean neg = n.signum() == -1;
+		n = n.abs();
 		BigInteger x = BigInteger.ZERO.setBit(n.bitLength() / root.intValue() + 1);//set minimum guess
+		int rootInt = root.intValue();
 		while (true) {
-			BigInteger y = x.multiply(root.subtract(BigInteger.ONE)).add(n.divide(x.pow(root.intValue()-1))).divide(root);//newton's method of convergence
+			BigInteger y = x.multiply(root.subtract(BigInteger.ONE)).add(n.divide(x.pow(rootInt-1))).divide(root);//newton's method of convergence
 			if (y.compareTo(x) >= 0) break;//converged
 			x = y;
 		}
-		return x;
+		return neg? x.negate():x;
+	}
+	
+	public static BigInteger divisibleRoot(BigInteger n,BigInteger root) {//returns a factor that n can split into example 50,2 -> 25 and 12,2 -> 4 and 54,3 -> 27
+		boolean neg = n.signum() == -1;
+		n = n.abs();
+		
+		int rootInt = root.intValue();
+		BigInteger product = BigInteger.ONE;
+		
+		BigInteger i = BigInteger.TWO;//base incremental value
+		BigInteger currentPower = i.pow(Math.abs(root.intValue()));//first test
+		
+		while(n.shiftRight(1).compareTo(currentPower) != -1  ) {//a number can only be divisible by a perfect square that is half its size(simply a conjecture). example 50 is divisible by 25 which is half its size
+			
+			
+			while(n.mod(currentPower).equals(BigInteger.ZERO)) {
+				n = n.divide(currentPower);
+				product = product.multiply(currentPower);//Accumulative product that is root-able
+			}
+			
+			i = i.add(BigInteger.ONE);//increment
+			if(i.intValue()>0x10000) break;//give up
+			currentPower = i.pow(rootInt);//update currentPower value
+		}
+		return neg? product.negate():product;
 	}
 	
 	public static Power perfectPower(Num n) {//basically tries to do a big root with all possible exponents

@@ -43,8 +43,8 @@ public class Main extends QuickMath{
 	}
 	
 	static void testRegion() {
-		//Rule.loadRules();
-		//runScript("bitLogicTest.bl",true);
+		Rule.loadRules();
+		runScript("bitLogicTest.bl",true);
 	}
 	
 	public static void main(String[] args) {
@@ -62,7 +62,7 @@ public class Main extends QuickMath{
 			}
 		}
 		
-		testRegion();
+		//testRegion();
 		
 		if(gui == 1) UI.startGraphicalInterface();
 		else if(gui == 2) UI.startCommandLineInterface(clearTerm);
