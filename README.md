@@ -1,5 +1,13 @@
 ![social_preview](https://user-images.githubusercontent.com/64857525/151658494-dcdd518e-cb50-44c8-b649-209eb8453767.jpeg)
 
+homepage with download
+
+https://blankbuffer.github.io/BitLogic/
+
+youtube demo
+
+https://www.youtube.com/watch?v=wxWfP2_URYQ
+
 **Features**
 
 •Write your questions in plain english like wolfram alpha. (Limited)
