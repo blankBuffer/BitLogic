@@ -475,7 +475,7 @@ public class Power extends Expr{
 			if(pow.getExpo() instanceof Div) {
 				Div expoDiv = (Div)pow.getExpo();
 				
-				if(isPositiveRealNum(expoDiv.getDenom()) && (isRealNum(pow.getBase()) || casInfo.allowComplexNumbers) ) {
+				if(isPositiveRealNum(expoDiv.getDenom()) && pow.getBase() instanceof Num && (isRealNum(pow.getBase()) || casInfo.allowComplexNumbers) ) {
 					Num denomNum = (Num)expoDiv.getDenom();
 					Num baseNum = (Num)pow.getBase();
 				
@@ -492,22 +492,22 @@ public class Power extends Expr{
 						BigInteger ans = bigRoot( num , root );
 						if(ans.pow(root.intValue()).equals(num)) {
 							if(createsComplexNumber) {
-								return num(BigInteger.ZERO,ans);
+								return pow(num(BigInteger.ZERO,ans),expoDiv.getNumer()).simplify(casInfo);
 							}
-							return num(ans);
+							return pow(num(ans),expoDiv.getNumer()).simplify(casInfo);
 						}
 						BigInteger factor = divisibleRoot(num, root);
 						if(!factor.equals(BigInteger.ONE)) {
 							BigInteger outerNum = bigRoot( factor , root );
 							if(createsComplexNumber) {
-								return prod( num(BigInteger.ZERO, outerNum ) , pow(num(num.divide(factor)),pow.getExpo()) );
+								return prod( pow(num(BigInteger.ZERO, outerNum ),expoDiv.getNumer()).simplify(casInfo), pow(num(num.divide(factor)),expoDiv) );
 							}
-							return prod( num(outerNum), pow(num(num.divide(factor)),pow.getExpo()) );
+							return prod( pow(num(outerNum),expoDiv.getNumer()).simplify(casInfo), pow(num(num.divide(factor)),expoDiv) );
 							
 						}
 						
 						if(createsComplexNumber) {
-							return prod(num(0,1),  pow(num(num),pow.getExpo()));
+							return prod(pow(num(0,1),expoDiv.getNumer()).simplify(casInfo),  pow(num(num),expoDiv));
 						}
 					}else if(casInfo.allowComplexNumbers && denomNum.equals(Num.TWO)){//square root of a complex number
 						BigInteger sumOfSquares = baseNum.realValue.pow(2).add(baseNum.imagValue.pow(2));
@@ -515,7 +515,8 @@ public class Power extends Expr{
 						
 						if(root.pow(2).equals(sumOfSquares)) {
 							
-							return div(sum( sqrt( num(root.add(baseNum.realValue)) ) , prod(num(0,baseNum.imagValue.signum()),sqrt( num(root.subtract(baseNum.realValue)) )) ),sqrt(num(2))).simplify(casInfo);
+							
+							return div(pow(sum( sqrt( num(root.add(baseNum.realValue)) ) , prod(num(0,baseNum.imagValue.signum()),sqrt( num(root.subtract(baseNum.realValue)) )) ),expoDiv.getNumer()), pow(num(2),expoDiv) ).simplify(casInfo);
 							
 						}
 						

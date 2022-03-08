@@ -18,8 +18,13 @@ import java.awt.datatransfer.*;
 import javax.swing.*;
 import javax.swing.event.CaretEvent;
 import javax.swing.event.CaretListener;
+import javax.swing.text.AttributeSet;
+import javax.swing.text.BadLocationException;
+import javax.swing.text.SimpleAttributeSet;
+import javax.swing.text.StyleConstants;
 
 import cas.Expr;
+import cas.QuickMath;
 import cas.Rule;
 import cas.graphics.ExprRender;
 import cas.graphics.Plot;
@@ -63,9 +68,9 @@ public class MainWindow extends JFrame{
 		private static final long serialVersionUID = 1124640544215850600L;
 		
 		final int MAX_CHARS = 1024;
-		JTextArea terminalOut = new JTextArea();
+		JTextPane terminalOutPane = new JTextPane();
 		JPanel terminalOutWithImg = new JPanel();
-		JScrollPane scrollableTerminalOut = new JScrollPane(terminalOut);
+		JScrollPane scrollableTerminalOut = new JScrollPane(terminalOutPane);
 		Expr focusedExpr = null;
 		
 		public void setFocusedExprDefault() {
@@ -90,10 +95,16 @@ public class MainWindow extends JFrame{
 			@Override
 			public void paintComponent(Graphics g) {
 				if(focusedExpr != null) {
-					exprImg = ExprRender.createImgInFrame(focusedExpr,new Dimension(getWidth(),getHeight()),terminalOut.getBackground(),terminalOut.getForeground() );
+					try {
+						exprImg = ExprRender.createImgInFrame(focusedExpr,new Dimension(getWidth(),getHeight()),terminalOutPane.getBackground(),terminalOutPane.getForeground() );
+					}catch(Exception e) {
+						g.setColor(terminalOutPane.getBackground());
+						g.fillRect(0, 0, getWidth(), getHeight());
+						exprImg = null;
+					}
 					g.drawImage(exprImg,0,0,getWidth(),getHeight(),null);
 				}else {
-					g.setColor(terminalOut.getBackground());
+					g.setColor(terminalOutPane.getBackground());
 					g.fillRect(0, 0, getWidth(), getHeight());
 					exprImg = null;
 				}
@@ -133,7 +144,7 @@ public class MainWindow extends JFrame{
 			@Override
 			public void mouseClicked(MouseEvent e) {
 				if(currentStack.size() > 0) {
-					BufferedImage exprImg = ExprRender.createImg(currentStack.last(), Color.gray);
+					BufferedImage exprImg = ExprRender.createImg(currentStack.last(), Color.gray,48);
 					Clipboard clipBoard = Toolkit.getDefaultToolkit().getSystemClipboard();
 					TransferableImage transImage = new TransferableImage(exprImg);
 					clipBoard.setContents(transImage, null);
@@ -159,18 +170,65 @@ public class MainWindow extends JFrame{
 		JPanel terminalInWithButtons = new JPanel();
 		JTextField terminalIn = new JTextField();
 		ActionListener terminalOutUpdate = new ActionListener(){
+			SimpleAttributeSet redText = new SimpleAttributeSet();
+			SimpleAttributeSet greenText = new SimpleAttributeSet();
+			{
+				StyleConstants.setForeground(redText, Color.red.darker());
+				StyleConstants.setForeground(greenText, Color.green.darker());
+				StyleConstants.setFontSize(greenText, 28);
+			}
+			
+			void addTextln(String s,AttributeSet set) {
+				try {
+					terminalOutPane.getDocument().insertString(terminalOutPane.getDocument().getLength(), s+"\n", set);
+				} catch (BadLocationException e) {
+					// TODO Auto-generated catch block
+					e.printStackTrace();
+				}
+			}
+			void addTextln(String s) {
+				addTextln(s,null);
+			}
+			
+			ArrayList<ImageIcon> oldStackImages = new ArrayList<ImageIcon>();
+			ArrayList<ImageIcon> stackImages = new ArrayList<ImageIcon>();
+			
+			@SuppressWarnings("unchecked")
 			@Override
 			public void actionPerformed(ActionEvent e) {
-				String newState = "";
-				if(clearTerminal) {
-					newState = currentStack.getStackAsString();
-				}else {
-					newState = terminalOut.getText()+currentStack.getStackAsString();
-					newState = newState.substring(Math.max(0,newState.length()-MAX_CHARS));
+				try {
+					stackImages.clear();
+					for(int i = 0;i<currentStack.size();i++) {
+						ImageIcon imgIcn = null;
+						try {
+							if(currentStack.stack.get(i).equals(currentStack.stackOld.get(i))) {
+								imgIcn = oldStackImages.get(i);
+							}
+						}catch(IndexOutOfBoundsException e2) {}
+						if(imgIcn == null) imgIcn = new ImageIcon( ExprRender.createImg(currentStack.stack.get(i), Color.BLUE.darker(),18 ) );
+						stackImages.add(imgIcn);
+					}
+					
+					oldStackImages = (ArrayList<ImageIcon>)stackImages.clone();
+					
+					if(clearTerminal) terminalOutPane.getDocument().remove(0, terminalOutPane.getDocument().getLength());
+					addTextln("▛▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▜");
+					for(int i = 0;i<currentStack.size();i++) {
+						addTextln("#"+(i+1)+" approx: "+currentStack.stack.get(i).convertToFloat(QuickMath.exprList()).toString(), redText);
+						addTextln( "text: "+currentStack.stack.get(i), redText);
+						
+						ImageIcon imgIcn = stackImages.get(i);
+						
+						terminalOutPane.insertIcon(imgIcn);
+						addTextln("");
+						if(i!=currentStack.size()-1)addTextln("______________________________");
+					}
+					addTextln("▙▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▟");
+					addTextln(currentStack.getAlerts(),redText);
+					
+				} catch (Exception e1) {
+					e1.printStackTrace();
 				}
-				
-				terminalOut.setText(newState);
-				terminalOut.setCaretPosition(terminalOut.getText().length());
 				
 				setFocusedExprDefault();
 				
@@ -218,20 +276,18 @@ public class MainWindow extends JFrame{
 		TerminalPanel(){
 			
 			allComponents.add(this);
-			allComponents.add(terminalOut);
+			allComponents.add(terminalOutPane);
 			allComponents.add(terminalIn);
 			allComponents.add(resultButton);
 			allComponents.add(resultAndPushButtons);
 			allComponents.add(terminalInWithButtons);
 			
 			setLayout(new BorderLayout());
-			terminalOut.setLineWrap(true);
-			terminalOut.setEditable(false);
-			terminalOut.setText(UI.fancyIntro());
+			terminalOutPane.setEditable(false);
 			scrollableTerminalOut.setMinimumSize(new Dimension(300,200));
 			resultAndPushButtons.setLayout(new FlowLayout());
 			terminalInWithButtons.setLayout(new BorderLayout());
-			imgExprPanel.setPreferredSize(new Dimension(400,200));
+			imgExprPanel.setPreferredSize(new Dimension(400,130));
 			terminalOutWithImg.setLayout(new BorderLayout());
 			
 			terminalIn.addActionListener(terminalInPush);

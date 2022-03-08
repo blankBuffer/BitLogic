@@ -117,6 +117,13 @@ public class StackEditor extends QuickMath {
 		alerts = "";
 		return out;
 	}
+	
+	public String getAlerts() {
+		String out = alerts;
+		alerts = "";
+		return out;
+	}
+	
 	public void printStack() {
 		System.out.print(getStackAsString());
 	}

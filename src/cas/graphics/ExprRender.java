@@ -663,12 +663,12 @@ public class ExprRender extends QuickMath{//sort of a wrap of the image type but
 		}
 	}
 	
-	public static BufferedImage createImg(Expr e,Color text) {//this returns the image with the expression fitting the space as best as possible
+	public static BufferedImage createImg(Expr e,Color text,int fontSize) {//this returns the image with the expression fitting the space as best as possible
 		BufferedImage nothing = new BufferedImage(1,1,BufferedImage.TYPE_INT_ARGB);//need a way to obtain a graphics 2d object
 		Graphics2D g = nothing.createGraphics();
 		g.setColor(text);
 		g.setRenderingHints(new RenderingHints(RenderingHints.KEY_INTERPOLATION, RenderingHints.VALUE_INTERPOLATION_BILINEAR));
-		g.setFont(new Font("courier new",0,48));
+		g.setFont(new Font("courier new",0,fontSize));
 		
 		ExprImg exprImgObj = new ExprImg(g);
 		exprImgObj.makeExpr(e);
