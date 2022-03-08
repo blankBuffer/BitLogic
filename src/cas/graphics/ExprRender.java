@@ -1,5 +1,6 @@
 package cas.graphics;
 
+import java.awt.BasicStroke;
 import java.awt.Color;
 import java.awt.Dimension;
 import java.awt.Font;
@@ -46,8 +47,12 @@ public class ExprRender extends QuickMath{//sort of a wrap of the image type but
 			return new ExprImg(oldGraphics);
 		}
 		
-		private Rectangle2D getStringSize(String s) {
-			return oldGraphics.getFontMetrics().getStringBounds(s, oldGraphics);
+		private Rectangle2D getStringSize(String s,int fontSize) {
+			Font oldFont = oldGraphics.getFont();
+			if(oldFont.getSize() != fontSize) oldGraphics.setFont(new Font(oldGraphics.getFont().getFontName(),0,fontSize));
+			Rectangle2D out =  oldGraphics.getFontMetrics().getStringBounds(s, oldGraphics);
+			oldGraphics.setFont(oldFont);
+			return out;
 		}
 		
 		static HashMap<String,String> nameExchange = new HashMap<String,String>();//use cooler symbols
@@ -70,32 +75,39 @@ public class ExprRender extends QuickMath{//sort of a wrap of the image type but
 			nameExchange.put("psi", "ψ");
 			nameExchange.put("omega", "ω");
 		}
-		public void makeString(String s) {//creates basic text image
+		public void makeString(String s,int fontSize) {//creates basic text image
 			s = s.replace('*', '·');
 			s = nameExchange.getOrDefault(s, s);
 			
-			Rectangle2D bounds = getStringSize(s);
+			Rectangle2D bounds = getStringSize(s,fontSize);
 			setWidth((int)bounds.getWidth());
 			setHeight((int)bounds.getHeight());
 			setFractionBar(getHeight());
-			initImg();
+			initImg(fontSize);
 			graphics.drawString(s,0,(int)(getHeight()*0.8));
+		}
+		public void makeString(String s) {//creates basic text image
+			makeString(s,oldGraphics.getFont().getSize());
 		}
 		
 		public void makeParen(ExprImg eImg) {//makes image and puts parenthesis around e
+			
+			int parenWid = oldGraphics.getFont().getSize()/2;
+			
+			setHeight(Math.max(eImg.getHeight(),oldGraphics.getFont().getSize()));
+			
 			ExprImg leftParenImg = newExprImg();
-			leftParenImg.makeString("(");
+			leftParenImg.makeString("(",getHeight());
 			ExprImg rightParenImg = newExprImg();
-			rightParenImg.makeString(")");
+			rightParenImg.makeString(")",getHeight());
 			
-			setWidth(leftParenImg.getWidth()+eImg.getWidth()+rightParenImg.getWidth());
-			setHeight(Math.max(eImg.getHeight(),leftParenImg.getHeight()));
-			setFractionBar( Math.max(eImg.getFractionBar(),leftParenImg.getFractionBar()) );
+			setWidth(parenWid*2+eImg.getWidth());
 			
+			setFractionBar( Math.min(eImg.getFractionBar(),leftParenImg.getFractionBar()) );
 			initImg();
-			graphics.drawImage(leftParenImg.getImage(),0,0,leftParenImg.getWidth(),getHeight(),null);
-			graphics.drawImage(eImg.getImage(),leftParenImg.getWidth(),0,eImg.getWidth(),eImg.getHeight(),null);
-			graphics.drawImage(rightParenImg.getImage(),getWidth()-rightParenImg.getWidth(),0,rightParenImg.getWidth(),getHeight(),null);
+			graphics.drawImage(leftParenImg.getImage(),0,0,parenWid,getHeight(),null);
+			graphics.drawImage(eImg.getImage(),parenWid,0,eImg.getWidth(),eImg.getHeight(),null);
+			graphics.drawImage(rightParenImg.getImage(),getWidth()-parenWid,0,parenWid,getHeight(),null);
 		}
 		
 		public void makeParen(Expr e) {//makes image and puts parenthesis around e
@@ -164,21 +176,29 @@ public class ExprRender extends QuickMath{//sort of a wrap of the image type but
 				if(Rule.fastSimilarStruct(sqrtObj,e)) {
 					baseImg.makeExpr(pow.getBase());
 					
-					ExprImg sqrtImg = newExprImg();
-					sqrtImg.makeString("√");
 					
-					setWidth(sqrtImg.getWidth()+baseImg.getWidth());
+					
 					int smallShift = oldGraphics.getFont().getSize()/6;
 					setHeight(baseImg.getHeight()+smallShift*2);
+					
+					int sqrtWid = oldGraphics.getFont().getSize()/2;
+					
+					
+					setWidth(sqrtWid+baseImg.getWidth());
+					
 					setFractionBar(baseImg.getFractionBar()+smallShift*2);
 					
-					int overBarHeight = oldGraphics.getFont().getSize()/12;
+					int overBarHeight = Math.max(oldGraphics.getFont().getSize()/12,2);
 					
 					initImg();
 					
-					graphics.drawImage(sqrtImg.getImage(),0,0,sqrtImg.getWidth(),getHeight(),null);
-					graphics.drawImage(baseImg.getImage(),sqrtImg.getWidth(),smallShift*2,baseImg.getWidth(),baseImg.getHeight(),null);
-					graphics.fillRect(sqrtImg.getWidth(),smallShift,getWidth(),overBarHeight);
+					{//draw sqrt section
+						graphics.setStroke(new BasicStroke(overBarHeight));
+						graphics.drawLine(0, getHeight()/2, sqrtWid/2, getHeight()-smallShift);
+						graphics.drawLine(sqrtWid/2, getHeight()-smallShift,sqrtWid,smallShift);
+					}
+					graphics.drawImage(baseImg.getImage(),sqrtWid,smallShift*2,baseImg.getWidth(),baseImg.getHeight(),null);
+					graphics.fillRect(sqrtWid,smallShift,getWidth(),overBarHeight);
 				}else {
 					if(pow.getBase() instanceof Prod || pow.getBase() instanceof Sum || pow.getBase() instanceof Div || pow.getBase() instanceof Power || (pow.getBase() instanceof Num && pow.getBase().negative()) ) {
 						baseImg.makeParen(pow.getBase());
@@ -204,7 +224,7 @@ public class ExprRender extends QuickMath{//sort of a wrap of the image type but
 				ExprImg denomImg = newExprImg();
 				denomImg.makeExpr(div.getDenom());
 				
-				int fractionSpacerHeight = oldGraphics.getFont().getSize()/12;
+				int fractionSpacerHeight = Math.max(oldGraphics.getFont().getSize()/12,2);
 				int max = Math.max( numerImg.getWidth() , denomImg.getWidth() );
 				int fractionSpacerWidth = max;
 				
@@ -414,15 +434,11 @@ public class ExprRender extends QuickMath{//sort of a wrap of the image type but
 				graphics.drawImage(eImg.getImage(),verticleBar.getWidth(),0,eImg.getWidth(),getHeight(),null);
 				graphics.drawImage(verticleBar.getImage(),getWidth()-verticleBar.getWidth(),0,verticleBar.getWidth(),getHeight(),null);
 			}else if(e instanceof Integrate) {
-				ExprImg integralImg = newExprImg();
-				integralImg.makeString("∫");
+				
+				int bracketWid = oldGraphics.getFont().getSize()/2;
+				
 				ExprImg diffImg = newExprImg();
 				diffImg.makeString("∂");
-				
-				ExprImg leftBracket = newExprImg();
-				leftBracket.makeString("[");
-				ExprImg rightBracket = newExprImg();
-				rightBracket.makeString("]");
 				
 				Integrate integ = (Integrate)e;
 				
@@ -433,36 +449,41 @@ public class ExprRender extends QuickMath{//sort of a wrap of the image type but
 				eImg.makeExpr(integ.get());
 				
 				setHeight(eImg.getHeight());
-				setWidth(getHeight()/3+leftBracket.getWidth()+eImg.getWidth()+rightBracket.getWidth()+diffImg.getWidth()+varImg.getWidth());
+				
+				ExprImg leftBracket = newExprImg();
+				leftBracket.makeString("[",getHeight());
+				ExprImg rightBracket = newExprImg();
+				rightBracket.makeString("]",getHeight());
+				
+				setWidth(getHeight()/2+bracketWid+eImg.getWidth()+bracketWid+diffImg.getWidth()+varImg.getWidth());
 				
 				setFractionBar(eImg.getFractionBar());
 				
+				ExprImg integralImg = newExprImg();
+				integralImg.makeString("∫", getHeight() );
+				
 				initImg();
 				int currentX = 0;
-				graphics.drawImage(integralImg.getImage(),currentX,0,getHeight()/3,getHeight(),null);
-				currentX+=getHeight()/3;
-				graphics.drawImage(leftBracket.getImage(),currentX,0,leftBracket.getWidth(),getHeight(),null);
-				currentX+=leftBracket.getWidth();
+				graphics.drawImage(integralImg.getImage(),currentX,0,getHeight()/2,getHeight(),null);
+				currentX+=getHeight()/2;
+				graphics.drawImage(leftBracket.getImage(),currentX,0,bracketWid,getHeight(),null);
+				currentX+=bracketWid;
 				
 				graphics.drawImage(eImg.getImage(),currentX,0,eImg.getWidth(),getHeight(),null);
 				currentX+=eImg.getWidth();
-				graphics.drawImage(rightBracket.getImage(),currentX,0,rightBracket.getWidth(),getHeight(),null);
-				currentX+=rightBracket.getWidth();
+				graphics.drawImage(rightBracket.getImage(),currentX,0,bracketWid,getHeight(),null);
+				currentX+=bracketWid;
 				
 				graphics.drawImage(diffImg.getImage(),currentX,getFractionBar()-diffImg.getHeight(),diffImg.getWidth(),diffImg.getHeight(),null);
 				currentX+=diffImg.getWidth();
 				graphics.drawImage(varImg.getImage(),currentX,getFractionBar()-varImg.getHeight(),varImg.getWidth(),varImg.getHeight(),null);
 				
 			}else if(e instanceof IntegrateOver) {
-				ExprImg integralImg = newExprImg();
-				integralImg.makeString("∫");
+				
 				ExprImg diffImg = newExprImg();
 				diffImg.makeString("∂");
 				
-				ExprImg leftBracket = newExprImg();
-				leftBracket.makeString("[");
-				ExprImg rightBracket = newExprImg();
-				rightBracket.makeString("]");
+				
 				
 				IntegrateOver integ = (IntegrateOver)e;
 				
@@ -479,14 +500,21 @@ public class ExprRender extends QuickMath{//sort of a wrap of the image type but
 				maxImg.makeExpr(integ.getMax());
 				
 				setHeight(Math.max(eImg.getHeight(),minImg.getHeight()*3/4+maxImg.getHeight()*3/4)+oldGraphics.getFont().getSize());
-				setWidth(getHeight()/3+Math.max(maxImg.getWidth()*3/4,minImg.getWidth()*3/4)+leftBracket.getWidth()+eImg.getWidth()+rightBracket.getWidth()+diffImg.getWidth()+varImg.getWidth());
+				ExprImg leftBracket = newExprImg();
+				leftBracket.makeString("[",getHeight());
+				ExprImg rightBracket = newExprImg();
+				rightBracket.makeString("]",getHeight());
+				setWidth(getHeight()/2+Math.max(maxImg.getWidth()*3/4,minImg.getWidth()*3/4)+leftBracket.getWidth()+eImg.getWidth()+rightBracket.getWidth()+diffImg.getWidth()+varImg.getWidth());
 				
 				setFractionBar(getHeight()-eImg.getBelowFractionBar());
 				
+				ExprImg integralImg = newExprImg();
+				integralImg.makeString("∫",getHeight());
+				
 				initImg();
 				int currentX = 0;
-				graphics.drawImage(integralImg.getImage(),currentX,0,getHeight()/3,getHeight(),null);
-				currentX+=getHeight()/3;
+				graphics.drawImage(integralImg.getImage(),currentX,0,getHeight()/2,getHeight(),null);
+				currentX+=getHeight()/2;
 				
 				
 				graphics.drawImage(minImg.getImage(),currentX,getHeight()-minImg.getHeight()*3/4,minImg.getWidth()*3/4,minImg.getHeight()*3/4,null);
@@ -629,12 +657,16 @@ public class ExprRender extends QuickMath{//sort of a wrap of the image type but
 			}
 		}
 		
-		public void initImg() {//width and height must be set before this call
+		public void initImg(int fontSize) {//width and height must be set before this call
 			exprImg = new BufferedImage(width,height,BufferedImage.TYPE_INT_ARGB);
 			graphics = exprImg.createGraphics();
 			graphics.setColor(oldGraphics.getColor());
-			graphics.setFont(oldGraphics.getFont());
+			graphics.setFont(new Font(oldGraphics.getFont().getFontName(),0,fontSize));
 			graphics.setRenderingHints(oldGraphics.getRenderingHints());
+		}
+		
+		public void initImg() {
+			initImg(oldGraphics.getFont().getSize());
 		}
 		
 		public void setWidth(int width) {

@@ -100,6 +100,8 @@ public class SimpleFuncs extends QuickMath{
 	static Func revSeq = new Func("revSeq",1);
 	static Func sumSeq = new Func("sumSeq",1);
 	
+	static Func arcLen = new Func("arcLen",4);
+	
 	public static void loadRules(){
 		tree.simplifyChildren = false;
 		tree.ruleSequence.add(new Rule("show the tree of the expression",Rule.VERY_EASY){
@@ -674,6 +676,33 @@ public class SimpleFuncs extends QuickMath{
 			}
 		});
 		
+		
+		
+		arcLen.ruleSequence.add(new Rule("arc-length of a function",Rule.TRICKY){
+			private static final long serialVersionUID = 1L;
+			
+			@Override
+			public Expr applyRuleToExpr(Expr e,CasInfo casInfo) {
+				Expr min = e.get(0),max = e.get(1);
+				Expr expr = e.get(2);
+				Var v = (Var) e.get(3);
+				
+				return integrateOver(min,max,sqrt(sum(num(1),pow(diff(expr,v),num(2)))),v).simplify(casInfo);
+			}
+		});
+		arcLen.toFloatFunc = new Func.FloatFunc() {
+			private static final long serialVersionUID = 1L;
+
+			@Override
+			public ComplexFloat convertToFloat(ExprList varDefs, Func owner) {
+				Expr min = owner.get(0),max = owner.get(1);
+				Expr expr = owner.get(2);
+				Var v = (Var) owner.get(3);
+				
+				return integrateOver(min,max,sqrt(sum(num(1),pow(diff(expr,v),num(2)))),v).convertToFloat(varDefs);
+			}
+		};
+		
 	}
 	
 	private static ArrayList<String> functionNames = new ArrayList<String>();
@@ -728,6 +757,8 @@ public class SimpleFuncs extends QuickMath{
 		addFunc(subSeq);
 		addFunc(revSeq);
 		addFunc(sumSeq);
+		
+		addFunc(arcLen);
 		
 		for(String s:simpleFuncs.keySet()) {
 			functionNames.add(s);
