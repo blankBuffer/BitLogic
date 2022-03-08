@@ -195,26 +195,6 @@ public class Abs extends Expr{
 	
 	static Rule absOfDiv = new Rule("abs(a/b)->abs(a)/abs(b)","abs of a division",Rule.UNCOMMON);
 	
-	static Rule absOfNum = new Rule("abs of a number",Rule.VERY_EASY) {
-		private static final long serialVersionUID = 1L;
-		
-		@Override
-		public Expr applyRuleToExpr(Expr e,CasInfo casInfo) {
-			Abs abs = (Abs)e;
-			
-			if(abs.get() instanceof Num) {
-				Num num = (Num)abs.get();
-				
-				if(num.isComplex()) {
-					return sqrt( num(  num.realValue.pow(2).add(num.imagValue.pow(2))  ) ).simplify(casInfo);
-				}
-				return num(num.realValue.abs());
-			}
-			
-			return abs;
-		}
-	};
-	
 	static Rule allowAbsRule = new Rule("allow abs rule",Rule.VERY_EASY) {
 		private static final long serialVersionUID = 1L;
 		
@@ -246,6 +226,23 @@ public class Abs extends Expr{
 			return abs;
 		}
 	};
+	
+	static Rule absOfComplexExpr = new Rule("abs of complex expression",Rule.CHALLENGING) {
+		private static final long serialVersionUID = 1L;
+		
+		@Override
+		public Expr applyRuleToExpr(Expr e,CasInfo casInfo) {
+			Abs abs = (Abs)e;
+			
+			Sequence sep = basicRealAndImagComponents(abs.get(),casInfo);
+			
+			if(!sep.get(1).equals(Num.ZERO)) {
+				return sqrt( sum(pow(sep.get(0),num(2)) , pow(sep.get(1),num(2))) ).simplify(casInfo);
+			}
+			
+			return abs;
+		}
+	};
 
 	static Sequence ruleSequence;
 	public static void loadRules(){
@@ -254,11 +251,11 @@ public class Abs extends Expr{
 				StandardRules.factorInner,
 				absOfAbs,
 				alwaysPositive,
-				absOfNum,
 				absOfNegConst,
 				absOfPower,
 				absOfProd,
-				absOfDiv
+				absOfDiv,
+				absOfComplexExpr
 		);
 		Rule.initRules(ruleSequence);
 	}

@@ -12,6 +12,11 @@ public class CasInfo extends QuickMath implements Serializable{
 	public CasInfo() {
 		definitions = new Defs();
 	}
+	public CasInfo(CasInfo casInfo) {
+		allowComplexNumbers = casInfo.allowComplexNumbers;
+		allowAbs = casInfo.allowAbs;
+		definitions = casInfo.definitions;
+	}
 	public static CasInfo normal = new CasInfo();
 	
 	@Override

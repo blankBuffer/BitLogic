@@ -132,6 +132,31 @@ public class Ln extends Expr{
 		
 	};
 	
+	static Rule logOfNegativeOrComplex = new Rule("log of a negative or complex expression",Rule.UNCOMMON) {
+		private static final long serialVersionUID = 1L;
+		
+		@Override
+		public Expr applyRuleToExpr(Expr e,CasInfo casInfo) {
+			Ln log = (Ln)e;
+			
+			if(casInfo.allowComplexNumbers) {
+				Sequence sep = basicRealAndImagComponents(e.get(),casInfo);
+				if(!sep.get(0).equals(Num.ZERO) && !sep.get(1).equals(Num.ZERO)) {
+					//ln(a+b*i) -> ln(sqrt(a^2+b^2)*e^(i*atan(b/a))) -> ln(a^2+b^2)/2+i*atan(b/a)
+					
+					return sum(div(ln(sum(pow(sep.get(0),num(2)),pow(sep.get(1),num(2)))),num(2)),prod(num(0,1),atan(div(sep.get(1),sep.get(0))))).simplify(casInfo);
+					
+				}
+				
+				if(log.get().negative()) {//ln(-x) -> ln(x)+pi*i
+					return sum(ln(neg(log.get()).simplify(casInfo)),prod(pi(),num(0,1)));
+				}
+			}
+			
+			return log;
+		}
+	};
+	
 	static Sequence ruleSequence = null;
 	
 	public static void loadRules(){
@@ -143,6 +168,7 @@ public class Ln extends Expr{
 				lnOfEpsilonSum,
 				logOfInverse,
 				logOfInverse2,
+				logOfNegativeOrComplex,
 				StandardRules.factorInner,
 				logWithSums,
 				logOfPerfectPower,

@@ -133,7 +133,7 @@ public class MainWindow extends JFrame{
 			@Override
 			public void mouseClicked(MouseEvent e) {
 				if(currentStack.size() > 0) {
-					BufferedImage exprImg = ExprRender.createImg(currentStack.last(), terminalOut.getBackground(),terminalOut.getForeground());
+					BufferedImage exprImg = ExprRender.createImg(currentStack.last(), Color.gray);
 					Clipboard clipBoard = Toolkit.getDefaultToolkit().getSystemClipboard();
 					TransferableImage transImage = new TransferableImage(exprImg);
 					clipBoard.setContents(transImage, null);

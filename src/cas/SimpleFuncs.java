@@ -83,6 +83,8 @@ public class SimpleFuncs extends QuickMath{
 	static Func result = new Func("result",1);
 	static Func allowAbs = new Func("allowAbs",0);
 	static Func allowComplexNumbers = new Func("allowComplexNumbers",0);
+	static Func setAllowAbs = new Func("setAllowAbs",1);
+	static Func setAllowComplexNumbers = new Func("setAllowComplexNumbers",1);
 	
 	static Func sinh = new Func("sinh",1);
 	static Func cosh = new Func("cosh",1);
@@ -97,7 +99,6 @@ public class SimpleFuncs extends QuickMath{
 	static Func subSeq = new Func("subSeq",3);
 	static Func revSeq = new Func("revSeq",1);
 	static Func sumSeq = new Func("sumSeq",1);
-	static Func owns = new Func("owns",2);
 	
 	public static void loadRules(){
 		tree.simplifyChildren = false;
@@ -468,6 +469,26 @@ public class SimpleFuncs extends QuickMath{
 			}
 		});
 		
+		setAllowAbs.ruleSequence.add(new Rule("are we allowing absolute values",Rule.VERY_EASY) {
+			private static final long serialVersionUID = 1L;
+			
+			@Override
+			public Expr applyRuleToExpr(Expr e,CasInfo casInfo) {
+				casInfo.allowAbs = e.get().equals(BoolState.TRUE);
+				return bool(casInfo.allowAbs);
+			}
+		});
+		
+		setAllowComplexNumbers.ruleSequence.add(new Rule("are we allowing absolute values",Rule.VERY_EASY) {
+			private static final long serialVersionUID = 1L;
+			
+			@Override
+			public Expr applyRuleToExpr(Expr e,CasInfo casInfo) {
+				casInfo.allowComplexNumbers = e.get().equals(BoolState.TRUE);
+				return bool(casInfo.allowComplexNumbers);
+			}
+		});
+		
 		sinh.ruleSequence.add(new Rule("sinh function",Rule.EASY) {
 			private static final long serialVersionUID = 1L;
 			
@@ -691,6 +712,8 @@ public class SimpleFuncs extends QuickMath{
 		addFunc(result);//override the simplify children bool
 		addFunc(allowAbs);
 		addFunc(allowComplexNumbers);
+		addFunc(setAllowAbs);
+		addFunc(setAllowComplexNumbers);
 		
 		addFunc(sinh);
 		addFunc(cosh);
@@ -705,8 +728,6 @@ public class SimpleFuncs extends QuickMath{
 		addFunc(subSeq);
 		addFunc(revSeq);
 		addFunc(sumSeq);
-		
-		addFunc(owns);
 		
 		for(String s:simpleFuncs.keySet()) {
 			functionNames.add(s);

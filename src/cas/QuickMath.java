@@ -659,6 +659,55 @@ public class QuickMath {
 		return pow(n.copy(),num(1));
 	}
 	
+	public static Sequence basicRealAndImagComponents(Expr e,CasInfo casInfo) {//does obvious separation of real and imaginary components
+		if(e instanceof Num) {
+			Num n = (Num)e;
+			return sequence(num(n.realValue),num(n.imagValue));
+		}
+		
+		if(e instanceof Prod) {
+			Prod eCopy = (Prod)e.copy();
+			for(int i = 0;i<e.size();i++) {
+				if(e.get(i) instanceof Num) {
+					Num num = (Num)eCopy.get(i);
+					
+					if(num.imagValue.equals(BigInteger.ZERO)) {
+						return sequence(eCopy,num(0));
+					}else if(num.realValue.equals(BigInteger.ZERO)) {
+						num.realValue = num.imagValue;
+						num.imagValue = BigInteger.ZERO;
+						eCopy.flags.simple = false;
+						return (Sequence) sequence(num(0),eCopy).simplify(casInfo);
+					}else {
+						
+						Prod imagCopy = (Prod)e.copy();
+						imagCopy.set(i, num(num.imagValue));
+						num.imagValue = BigInteger.ZERO;
+						eCopy.flags.simple = false;
+						return sequence(eCopy.simplify(casInfo),imagCopy.simplify(casInfo));
+					}
+					
+				}
+			}
+			return sequence(eCopy,num(0));
+		}
+		
+		if(e instanceof Sum) {
+			Sequence out = sequence(sum(),sum());
+			for(int i = 0;i<e.size();i++) {
+				Sequence seperatedEl = basicRealAndImagComponents(e.get(i),casInfo);
+				
+				out.get(0).add(seperatedEl.get(0));
+				out.get(1).add(seperatedEl.get(1));
+				
+			}
+			
+			return (Sequence)out.simplify(casInfo);
+		}
+		
+		return sequence(e.copy(),num(0));
+	}
+	
 	static BigInteger gcm(BigInteger a,BigInteger b) {
 		return a.multiply(b).divide(a.gcd(b));
 	}

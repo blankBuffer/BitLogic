@@ -663,42 +663,18 @@ public class ExprRender extends QuickMath{//sort of a wrap of the image type but
 		}
 	}
 	
-	public static BufferedImage createImg(Expr e,Color background,Color text) {//this returns the image with the expression fitting the space as best as possible
-		BufferedImage defaultImageSize = new BufferedImage(256*8,256,BufferedImage.TYPE_INT_RGB);//equations tend to be wide so thats we do height times 8
-		Graphics2D g = defaultImageSize.createGraphics();
-		g.setColor(background);
-		g.fillRect(0, 0, defaultImageSize.getWidth(), defaultImageSize.getHeight());
+	public static BufferedImage createImg(Expr e,Color text) {//this returns the image with the expression fitting the space as best as possible
+		BufferedImage nothing = new BufferedImage(1,1,BufferedImage.TYPE_INT_ARGB);//need a way to obtain a graphics 2d object
+		Graphics2D g = nothing.createGraphics();
 		g.setColor(text);
-		
 		g.setRenderingHints(new RenderingHints(RenderingHints.KEY_INTERPOLATION, RenderingHints.VALUE_INTERPOLATION_BILINEAR));
-		
 		g.setFont(new Font("courier new",0,48));
-		
-		if(e instanceof Var && e.toString().contains("\n")) {
-			return defaultImageSize.getSubimage(0, 0, 32, 32);
-		}
 		
 		ExprImg exprImgObj = new ExprImg(g);
 		exprImgObj.makeExpr(e);
 		BufferedImage exprImg = exprImgObj.getImage();
 		
-		int imgWid = 0,imgHei = 0;
-		double imageRatio = defaultImageSize.getWidth()/defaultImageSize.getHeight();
-		double exprImgRatio = (double)exprImg.getWidth()/exprImg.getHeight();
-		
-		if(imageRatio<exprImgRatio) {
-			double ratio =(double)defaultImageSize.getWidth()/exprImg.getWidth();
-			imgWid = (int)(ratio*exprImg.getWidth());
-			imgHei = (int)(ratio*exprImg.getHeight());
-		}else {
-			double ratio = (double)defaultImageSize.getHeight()/exprImg.getHeight();
-			imgWid = (int)(ratio*exprImg.getWidth());
-			imgHei = (int)(ratio*exprImg.getHeight());
-		}
-		
-		g.drawImage(exprImg,0,0,imgWid, imgHei, null);
-		
-		return defaultImageSize.getSubimage(0, 0, imgWid, imgHei);
+		return exprImg;
 	}
 	
 	public static BufferedImage createImgInFrame(Expr e,Dimension imageSize,Color background,Color text) {//makes an image and puts the expression into a specified frame with the image size parameter

@@ -74,8 +74,11 @@ public class Factor extends Expr{
 				
 				
 				if(pow != null && other != null && other.negative() && isPositiveRealNum(pow.getExpo()) && ((Num)pow.getExpo()).realValue.mod(BigInteger.TWO).equals(BigInteger.ZERO) ) {
-					Expr newPow = sqrt(pow).simplify(casInfo);
-					Expr newOther = sqrt(neg(other)).simplify(casInfo);
+					CasInfo noAbsVersion = new CasInfo(casInfo);
+					noAbsVersion.allowAbs = false;
+					
+					Expr newPow = sqrt(pow).simplify(noAbsVersion);
+					Expr newOther = sqrt(neg(other)).simplify(noAbsVersion);
 					
 					if(!(newOther instanceof Power || newOther instanceof Prod)) {
 						
@@ -115,29 +118,31 @@ public class Factor extends Expr{
 						}
 						Num a =  (Num)coefs.get(2),b = (Num)coefs.get(1),c = (Num)coefs.get(0);
 						
-						if(a.isComplex() || b.isComplex() || c.isComplex()) return e;
+						if(!casInfo.allowComplexNumbers && (a.isComplex() || b.isComplex() || c.isComplex())) return e;
 						
-						BigInteger discrNum = b.realValue.pow(2).subtract(BigInteger.valueOf(4).multiply(a.realValue).multiply(c.realValue));
-					
-						if(discrNum.signum() == -1) return e;
+						Num discrNum = (Num)sum(pow(b,num(2)),prod(num(-4),a,c)).simplify(casInfo);
 						
-						BigInteger discrNumSqrt = discrNum.sqrt();
+						if( !isPositiveRealNum(discrNum) && !casInfo.allowComplexNumbers) return e;
 						
-						if(discrNum.signum() != -1 && discrNumSqrt.pow(2).equals(discrNum)) {
+						boolean createsComplex = discrNum.isComplex() || discrNum.realValue.signum() == -1;
 						
-							Expr discr = num(discrNumSqrt);
+						if(createsComplex && !casInfo.allowComplexNumbers ) return e;
+						
+						Expr discrNumSqrt = sqrt(discrNum).simplify(casInfo);
+						
+						if(!(discrNumSqrt instanceof Num)) return e;
 							
 							
 							Expr out = new Prod();
 							
 							Prod twoAX = prod(num(2),a,x);
-							out.add( sum(twoAX,b.copy(),prod(num(-1),discr)) );
-							out.add( sum(twoAX.copy(),b.copy(),discr.copy()) );
+							out.add( sum(twoAX,b.copy(),prod(num(-1),discrNumSqrt)) );
+							out.add( sum(twoAX.copy(),b.copy(),discrNumSqrt.copy()) );
 							out.add(inv(num(4)));
 							out.add(inv(a.copy()));
 							
 							return out.simplify(casInfo);
-						}
+						
 							
 						
 					}

@@ -475,13 +475,13 @@ public class Power extends Expr{
 			if(pow.getExpo() instanceof Div) {
 				Div expoDiv = (Div)pow.getExpo();
 				
-				if(isPositiveRealNum(expoDiv.getDenom()) && isRealNum(pow.getBase()) ) {
+				if(isPositiveRealNum(expoDiv.getDenom()) && (isRealNum(pow.getBase()) || casInfo.allowComplexNumbers) ) {
 					Num denomNum = (Num)expoDiv.getDenom();
 					Num baseNum = (Num)pow.getBase();
 				
 					boolean createsComplexNumber = (denomNum).realValue.mod(BigInteger.TWO).equals(BigInteger.ZERO) && baseNum.signum() == -1;
 					
-					if(!createsComplexNumber || casInfo.allowComplexNumbers) {
+					if((!createsComplexNumber || casInfo.allowComplexNumbers) && !baseNum.isComplex()) {
 						
 						//this portion works similar to the root expand rule
 						BigInteger root = denomNum.realValue;
@@ -509,6 +509,17 @@ public class Power extends Expr{
 						if(createsComplexNumber) {
 							return prod(num(0,1),  pow(num(num),pow.getExpo()));
 						}
+					}else if(casInfo.allowComplexNumbers && denomNum.equals(Num.TWO)){//square root of a complex number
+						BigInteger sumOfSquares = baseNum.realValue.pow(2).add(baseNum.imagValue.pow(2));
+						BigInteger root = sumOfSquares.sqrt();
+						
+						if(root.pow(2).equals(sumOfSquares)) {
+							
+							return div(sum( sqrt( num(root.add(baseNum.realValue)) ) , prod(num(0,baseNum.imagValue.signum()),sqrt( num(root.subtract(baseNum.realValue)) )) ),sqrt(num(2))).simplify(casInfo);
+							
+						}
+						
+						
 					}
 				}
 			}
