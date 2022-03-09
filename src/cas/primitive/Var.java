@@ -76,4 +76,8 @@ public class Var extends Expr{
 		return null;
 	}
 
+	@Override
+	public String typeName() {
+		return "var";
+	}
 }

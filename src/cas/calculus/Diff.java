@@ -28,7 +28,7 @@ public class Diff extends Expr{
 	static Rule acosCase = new Rule("diff(acos(a),x)->(-diff(a,x))/sqrt(1-a^2)","derivative of arctan",Rule.UNCOMMON);
 	static Rule divCase = new Rule("diff(a/b,x)->(diff(a,x)*b-a*diff(b,x))/(b^2)","derivative of division",Rule.TRICKY);
 	static Rule lambertWCase = new Rule("diff(lambertW(a),x)->lambertW(a)/(a*lambertW(a)+a)*diff(a,x)","derivative of division",Rule.TRICKY);
-	static Rule absCase = new Rule("diff(abs(x),x)->abs(x)/x","derivative of absolute values",Rule.EASY);
+	static Rule absCase = new Rule("diff(abs(a),x)->(abs(a)*diff(a,x))/a","derivative of absolute values",Rule.EASY);
 	
 	static Rule constant = new Rule("derivative of a constant",Rule.VERY_EASY){
 		private static final long serialVersionUID = 1L;
@@ -106,24 +106,34 @@ public class Diff extends Expr{
 	public Var getVar() {
 		return (Var)get(1);
 	}
+	
 	@Override
 	public ComplexFloat convertToFloat(ExprList varDefs) {
-		ComplexFloat delta = new ComplexFloat(1.0/Integer.MAX_VALUE,0);
-		ComplexFloat y0 = get().convertToFloat(varDefs);
 		
-		ExprList varDefs2 = (ExprList) varDefs.copy();
+		ComplexFloat equRightSideVal = null;
+		Expr expr = get();
 		
-		for(int i = 0;i < varDefs2.size();i++) {
-			Equ temp = (Equ)varDefs2.get(i);
-			Var v = (Var)temp.getLeftSide();
+		for(int i = 0;i < varDefs.size();i++) {//search for definition
+			Equ equ = (Equ)varDefs.get(i);
+			Var v = (Var)equ.getLeftSide();
 			if(v.equals(getVar())) {
-				((FloatExpr)temp.getRightSide()).value.set(ComplexFloat.add(((FloatExpr)temp.getRightSide()).value, delta));
+				equRightSideVal = ((FloatExpr)equ.getRightSide()).value;//found!
 				break;
 			}
 		}
-		ComplexFloat y1 = get().convertToFloat(varDefs2);
+		if(equRightSideVal == null) return new ComplexFloat(0,0);
+		ComplexFloat delta = new ComplexFloat(Math.abs(equRightSideVal.real)/Short.MAX_VALUE,0);
 		
-		return ComplexFloat.div((ComplexFloat.sub(y1, y0)),delta);
+		ComplexFloat y0 = expr.convertToFloat(varDefs);
+		equRightSideVal.set( ComplexFloat.add(equRightSideVal, delta) );//add delta
+		ComplexFloat y1 = expr.convertToFloat(varDefs);
+		
+		ComplexFloat slope = ComplexFloat.div((ComplexFloat.sub(y1, y0)),delta);
+		return slope;
 	}
 	
+	@Override
+	public String typeName() {
+		return "diff";
+	}
 }

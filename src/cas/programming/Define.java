@@ -67,4 +67,9 @@ public class Define extends Expr{
 		out+=getRightSide();
 		return out;
 	}
+	
+	@Override
+	public String typeName() {
+		return "define";
+	}
 }

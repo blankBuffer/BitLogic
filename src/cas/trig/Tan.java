@@ -113,4 +113,8 @@ public class Tan extends Expr{
 		return ruleSequence;
 	}
 
+	@Override
+	public String typeName() {
+		return "tan";
+	}
 }

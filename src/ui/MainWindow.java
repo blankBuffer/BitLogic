@@ -15,6 +15,7 @@ import java.util.ArrayList;
 import java.util.Scanner;
 import java.awt.datatransfer.*;
 
+import javax.imageio.ImageIO;
 import javax.swing.*;
 import javax.swing.event.CaretEvent;
 import javax.swing.event.CaretListener;
@@ -190,8 +191,45 @@ public class MainWindow extends JFrame{
 				addTextln(s,null);
 			}
 			
+			void moveCaret() {
+				terminalOutPane.setCaretPosition(terminalOutPane.getDocument().getLength());
+			}
+			
+			JButton makeStackButton(String name,String command) {
+				JButton stackButton = new JButton(name);
+				stackButton.setBackground(Color.lightGray);
+				stackButton.setForeground(Color.white);
+				
+				stackButton.addActionListener(new ActionListener() {
+					@Override
+					public void actionPerformed(ActionEvent e) {
+						currentStack.command(command);
+						terminalOutUpdate.actionPerformed(null);
+					}
+				});
+				return stackButton;
+			}
+			
+			JButton makeStackButton(String name,ActionListener l) {
+				JButton stackButton = new JButton(name);
+				stackButton.setBackground(Color.lightGray);
+				stackButton.setForeground(Color.white);
+				
+				stackButton.addActionListener(l);
+				
+				return stackButton;
+			}
+			
 			ArrayList<ImageIcon> oldStackImages = new ArrayList<ImageIcon>();
 			ArrayList<ImageIcon> stackImages = new ArrayList<ImageIcon>();
+			
+			class StackButtonGroup{
+				JButton deleteButton;
+				JButton copyButton;
+				JButton resultButton;
+				JButton editButton;
+			}
+			ArrayList<StackButtonGroup> stackButtons = new ArrayList<StackButtonGroup>();
 			
 			@SuppressWarnings("unchecked")
 			@Override
@@ -208,17 +246,49 @@ public class MainWindow extends JFrame{
 						if(imgIcn == null) imgIcn = new ImageIcon( ExprRender.createImg(currentStack.stack.get(i), Color.BLUE.darker(),18 ) );
 						stackImages.add(imgIcn);
 					}
-					
 					oldStackImages = (ArrayList<ImageIcon>)stackImages.clone();
 					
 					if(clearTerminal) terminalOutPane.getDocument().remove(0, terminalOutPane.getDocument().getLength());
 					addTextln("▛▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▜");
 					for(int i = 0;i<currentStack.size();i++) {
 						addTextln("#"+(i+1)+" approx: "+currentStack.stack.get(i).convertToFloat(QuickMath.exprList()).toString(), redText);
+						
+						StackButtonGroup stackButtonGroup = new StackButtonGroup();
+						
+						if(i>stackButtons.size()-1) {
+							stackButtonGroup.deleteButton = makeStackButton("delete","pop:"+(i+1));
+							stackButtonGroup.copyButton = makeStackButton("copy","dup:"+(i+1));
+							stackButtonGroup.resultButton = makeStackButton("result","result:"+(i+1));
+							Integer iObj = Integer.valueOf(i);
+							stackButtonGroup.editButton = makeStackButton("edit",new ActionListener() {
+								@Override
+								public void actionPerformed(ActionEvent e) {
+									terminalIn.setText(currentStack.stack.get(iObj).toString());
+									currentStack.stack.remove(iObj);
+									terminalOutUpdate.actionPerformed(null);
+								}
+							});
+							stackButtons.add(stackButtonGroup);
+						}else {
+							stackButtonGroup = stackButtons.get(i);
+						}
+						moveCaret();
+						terminalOutPane.insertComponent(stackButtonGroup.deleteButton);
+						moveCaret();
+						terminalOutPane.insertComponent(stackButtonGroup.copyButton);
+						moveCaret();
+						terminalOutPane.insertComponent(stackButtonGroup.resultButton);
+						moveCaret();
+						terminalOutPane.insertComponent(stackButtonGroup.editButton);
+						moveCaret();
+						
+						addTextln("");
+						
 						addTextln( "text: "+currentStack.stack.get(i), redText);
 						
 						ImageIcon imgIcn = stackImages.get(i);
 						
+						moveCaret();
 						terminalOutPane.insertIcon(imgIcn);
 						addTextln("");
 						if(i!=currentStack.size()-1)addTextln("______________________________");
@@ -260,11 +330,6 @@ public class MainWindow extends JFrame{
 				
 				int stackCode = currentStack.command(terminalInText);
 				if(stackCode == StackEditor.QUIT) closeWindow();
-				else if(stackCode == StackEditor.EDIT_REQUEST) {
-					terminalIn.setText(currentStack.last().toString());
-					updateViewBasedOnText.caretUpdate(null);
-					currentStack.pop();
-				}
 				else if(stackCode == StackEditor.INPUT_ERROR) {}
 				if(stackCode == StackEditor.FINISHED) {
 					terminalIn.setText("");
@@ -277,6 +342,11 @@ public class MainWindow extends JFrame{
 			
 			allComponents.add(this);
 			allComponents.add(terminalOutPane);
+			try {
+				terminalOutPane.getDocument().insertString(terminalOutPane.getDocument().getLength(), UI.CRED+"\n", null);
+			} catch (Exception e) {
+				e.printStackTrace();
+			}
 			allComponents.add(terminalIn);
 			allComponents.add(resultButton);
 			allComponents.add(resultAndPushButtons);
@@ -466,18 +536,20 @@ public class MainWindow extends JFrame{
 	class CASCasInfoPanel extends JPanel {
 		private static final long serialVersionUID = -1314093096812714908L;
 		
-		JCheckBox allowComplexNumbersCheckBox = new JCheckBox("allow complex numbers",currentStack.currentCasInfo.allowComplexNumbers);
+		JCheckBox allowComplexNumbersCheckBox = new JCheckBox("allow complex numbers",currentStack.currentCasInfo.allowComplexNumbers());
 		ActionListener allowComplexNumbersUpdate = new ActionListener() {
 			@Override
 			public void actionPerformed(ActionEvent e) {
-				currentStack.currentCasInfo.allowComplexNumbers = allowComplexNumbersCheckBox.isSelected();
+				currentStack.currentCasInfo.setAllowComplexNumbers( allowComplexNumbersCheckBox.isSelected());
+				allowAbsCheckBox.setSelected(currentStack.currentCasInfo.allowAbs());
 			}
 		};
-		JCheckBox allowAbsCheckBox = new JCheckBox("allow abs(x)",currentStack.currentCasInfo.allowAbs);
+		JCheckBox allowAbsCheckBox = new JCheckBox("allow abs(x)",currentStack.currentCasInfo.allowAbs());
 		ActionListener allowAbsUpdate = new ActionListener() {
 			@Override
 			public void actionPerformed(ActionEvent e) {
-				currentStack.currentCasInfo.allowAbs = allowAbsCheckBox.isSelected();
+				currentStack.currentCasInfo.setAllowAbs(allowAbsCheckBox.isSelected());
+				allowComplexNumbersCheckBox.setSelected(currentStack.currentCasInfo.allowComplexNumbers());
 			}
 		};
 		
@@ -610,10 +682,17 @@ public class MainWindow extends JFrame{
 	
 	public static void loadRulesWindow() {
 		JProgressBar progressBar = new JProgressBar(0,100);
-		JFrame progressBarWindow = new JFrame();
-		progressBarWindow.setLayout(new FlowLayout());
-		progressBarWindow.add(new JLabel("loading rules"));
-		progressBarWindow.add(progressBar);
+		JFrame progressBarWindow = new JFrame("loading rules");
+		JPanel panel = new JPanel();
+		panel.setLayout(new BoxLayout(panel,BoxLayout.Y_AXIS));
+		try {
+			panel.add(new JLabel(new ImageIcon(ImageIO.read(new File("resources/BitLogicLogo_tiny.jpg")))));
+		} catch (IOException e2) {
+			// TODO Auto-generated catch block
+			e2.printStackTrace();
+		}
+		panel.add(progressBar);
+		progressBarWindow.add(panel);
 		progressBarWindow.pack();
 		progressBarWindow.setResizable(false);
 		progressBarWindow.setLocationRelativeTo(null);
@@ -626,7 +705,7 @@ public class MainWindow extends JFrame{
 				while(loading) {
 					
 					try {
-						progressBar.setValue(Rule.loadingPercent);
+						progressBar.setValue((int)Rule.loadingPercent);
 						if(Rule.loadingPercent == 100) loading = false;
 						Thread.sleep(15);
 					} catch (InterruptedException e) {e.printStackTrace();}
@@ -644,6 +723,7 @@ public class MainWindow extends JFrame{
 	}
 
 	public MainWindow(){
+		super("BitLogic "+UI.VERSION);
 		try {
 			UIManager.setLookAndFeel(UIManager.getCrossPlatformLookAndFeelClassName());
 		} catch (Exception e) {
@@ -657,7 +737,6 @@ public class MainWindow extends JFrame{
 		
 		loadPrefs();
 		
-		setName("BitLogic");
 		setSize(WINDOW_WIDTH,WINDOW_HEIGHT);
 		setMinimumSize(new Dimension(600,200));
 		add(createMainContainer());

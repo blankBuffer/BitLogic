@@ -101,6 +101,7 @@ public class SimpleFuncs extends QuickMath{
 	static Func sumSeq = new Func("sumSeq",1);
 	
 	static Func arcLen = new Func("arcLen",4);
+	static Func repDiff = new Func("repDiff",3);
 	
 	public static void loadRules(){
 		tree.simplifyChildren = false;
@@ -458,7 +459,7 @@ public class SimpleFuncs extends QuickMath{
 			
 			@Override
 			public Expr applyRuleToExpr(Expr e,CasInfo casInfo) {
-				return bool(casInfo.allowAbs);
+				return bool(casInfo.allowAbs());
 			}
 		});
 		
@@ -467,7 +468,7 @@ public class SimpleFuncs extends QuickMath{
 			
 			@Override
 			public Expr applyRuleToExpr(Expr e,CasInfo casInfo) {
-				return bool(casInfo.allowComplexNumbers);
+				return bool(casInfo.allowComplexNumbers());
 			}
 		});
 		
@@ -476,8 +477,8 @@ public class SimpleFuncs extends QuickMath{
 			
 			@Override
 			public Expr applyRuleToExpr(Expr e,CasInfo casInfo) {
-				casInfo.allowAbs = e.get().equals(BoolState.TRUE);
-				return bool(casInfo.allowAbs);
+				casInfo.setAllowAbs(e.get().equals(BoolState.TRUE));
+				return bool(casInfo.allowAbs());
 			}
 		});
 		
@@ -486,8 +487,8 @@ public class SimpleFuncs extends QuickMath{
 			
 			@Override
 			public Expr applyRuleToExpr(Expr e,CasInfo casInfo) {
-				casInfo.allowComplexNumbers = e.get().equals(BoolState.TRUE);
-				return bool(casInfo.allowComplexNumbers);
+				casInfo.setAllowComplexNumbers( e.get().equals(BoolState.TRUE));
+				return bool(casInfo.allowComplexNumbers());
 			}
 		});
 		
@@ -703,6 +704,81 @@ public class SimpleFuncs extends QuickMath{
 			}
 		};
 		
+		repDiff.ruleSequence.add(new Rule("repeated derivative",Rule.EASY){
+			private static final long serialVersionUID = 1L;
+			
+			@Override
+			public Expr applyRuleToExpr(Expr e,CasInfo casInfo) {
+				int amount = ((Num)e.get(2)).realValue.intValue();
+				
+				Expr expr = e.get(0);
+				Var v = (Var)e.get(1);
+				
+				for(int i = 0;i<amount;i++) {
+					expr = distr(diff(expr,v)).simplify(casInfo);
+				}
+				
+				return expr;
+			}
+		});
+		repDiff.toFloatFunc = new Func.FloatFunc() {
+			private static final long serialVersionUID = 1L;
+			
+			//this is not based on any mathematical rigor, but it seems to somewhat work
+			//time complexity of 2^n so keep n small
+			ComplexFloat calcDerivRec(Expr expr,ExprList varDefs,ComplexFloat var,int n,ComplexFloat delta) {
+				if(n > 8) return new ComplexFloat(0,0);//does not work well beyond this point
+				if(n == 0) return expr.convertToFloat(varDefs);
+				
+				ComplexFloat deltaOver2 = new ComplexFloat(delta.real/2,0);
+				
+				if(n==1) {
+					
+					var.set( ComplexFloat.sub(var, deltaOver2) );//subtract delta/2
+					ComplexFloat y0 = expr.convertToFloat(varDefs);
+					var.set( ComplexFloat.add(var, delta) );//add delta
+					ComplexFloat y1 = expr.convertToFloat(varDefs);
+					
+					ComplexFloat slope = ComplexFloat.div((ComplexFloat.sub(y1, y0)),delta);
+					return slope;
+				}
+				
+				ComplexFloat originalVal = new ComplexFloat(var);
+				ComplexFloat newDelta = new ComplexFloat(delta.real/2.0,0);//increase precision on lower order derivatives
+				
+				var.set( ComplexFloat.sub(var, deltaOver2) );
+				ComplexFloat y0Der = calcDerivRec(expr,varDefs,var,n-1,newDelta);
+				var.set( ComplexFloat.add(originalVal, deltaOver2 ) );//add delta/2 to the original x
+				ComplexFloat y1Der = calcDerivRec(expr,varDefs,var,n-1,newDelta);
+				
+				ComplexFloat slope = ComplexFloat.div((ComplexFloat.sub(y1Der, y0Der)),delta);
+				return slope;
+				
+			}
+
+			@Override
+			public ComplexFloat convertToFloat(ExprList varDefs, Func owner) {
+				int amount = ((Num)owner.get(2)).realValue.intValue();
+				Var var = (Var)owner.get(1);
+				ComplexFloat equRightSideVal = null;
+				Expr expr = owner.get(0);
+				
+				for(int i = 0;i < varDefs.size();i++) {//search for definition
+					Equ equ = (Equ)varDefs.get(i);
+					Var v = (Var)equ.getLeftSide();
+					if(v.equals(var)) {
+						equRightSideVal = ((FloatExpr)equ.getRightSide()).value;//found!
+						break;
+					}
+				}
+				
+				if(equRightSideVal == null) return new ComplexFloat(0,0);
+				
+				ComplexFloat delta = new ComplexFloat( Math.pow( Math.abs(equRightSideVal.real)/Short.MAX_VALUE,1.0/amount ) ,0);//set original precision
+				return calcDerivRec(expr,varDefs,equRightSideVal,amount,delta);
+			}
+		};
+		
 	}
 	
 	private static ArrayList<String> functionNames = new ArrayList<String>();
@@ -759,6 +835,7 @@ public class SimpleFuncs extends QuickMath{
 		addFunc(sumSeq);
 		
 		addFunc(arcLen);
+		addFunc(repDiff);
 		
 		for(String s:simpleFuncs.keySet()) {
 			functionNames.add(s);

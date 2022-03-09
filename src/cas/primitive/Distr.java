@@ -107,5 +107,10 @@ public class Distr extends Expr{
 	public ComplexFloat convertToFloat(ExprList varDefs) {
 		return get().convertToFloat(varDefs);
 	}
+	
+	@Override
+	public String typeName() {
+		return "distr";
+	}
 
 }

@@ -33,4 +33,8 @@ public class If extends Expr{
 		return null;
 	}
 
+	@Override
+	public String typeName() {
+		return "if";
+	}
 }

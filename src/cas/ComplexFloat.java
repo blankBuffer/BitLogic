@@ -15,6 +15,9 @@ public class ComplexFloat implements Serializable{
 		this.real = real;
 		this.imag = imag;
 	}
+	public ComplexFloat(ComplexFloat other) {
+		set(other);
+	}
 	public void set(ComplexFloat other) {
 		this.real = other.real;
 		this.imag = other.imag;

@@ -5,8 +5,8 @@ import java.io.Serializable;
 public class CasInfo extends QuickMath implements Serializable{
 	
 	private static final long serialVersionUID = -423836233586167621L;
-	public boolean allowComplexNumbers = false;
-	public boolean allowAbs = true;
+	private boolean allowComplexNumbers = false;
+	private boolean allowAbs = true;
 	public Defs definitions;
 	
 	public CasInfo() {
@@ -39,5 +39,21 @@ public class CasInfo extends QuickMath implements Serializable{
 	@Override
 	public int hashCode() {
 		return (allowComplexNumbers ? 872634 : 987423)+(allowAbs ? 109263 : 62200872)+definitions.hashCode();
+	}
+	
+	public void setAllowAbs(boolean allowAbs) {
+		this.allowAbs = allowAbs;
+		if(allowAbs) allowComplexNumbers = false;
+	}
+	public void setAllowComplexNumbers(boolean allowComplexNumbers) {
+		this.allowComplexNumbers = allowComplexNumbers;
+		if(allowComplexNumbers) allowAbs = false;
+	}
+	
+	public boolean allowAbs() {
+		return allowAbs;
+	}
+	public boolean allowComplexNumbers() {
+		return allowComplexNumbers;
 	}
 }

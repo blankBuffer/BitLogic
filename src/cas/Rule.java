@@ -61,33 +61,14 @@ public class Rule extends Expr{
 		if(other == null) return false;
 		if(template instanceof Var && ((Var) template).generic) return true;
 		
-		if(other.getClass().equals(template.getClass())) {
+		if(template.typeName().equals(other.typeName())) {
 			
 			if(template instanceof Num || template instanceof BoolState || template instanceof FloatExpr || template instanceof Var) return template.equals(other);
 			
-			if(!checked) other.sort();
 			if(template.size() != other.size()) return false;
+			if(!checked) other.sort();
 			
-			if(!checked) if(Rule.checkForMatches(template,other) == false) return false;
-			
-			if(template.commutative){
-				
-				boolean[] usedIndicies = new boolean[other.size()];
-				for(int i = 0;i<template.size();i++) {
-					if(template.get(i) instanceof Var && ((Var)template.get(i)).generic) continue;//skip because they return true on anything
-					boolean found = false;
-					for(int j = 0;j<other.size();j++) {
-						if(usedIndicies[j]) continue;
-						else if(fastSimilarStruct(template.get(i),other.get(j))) {
-							found = true;
-							usedIndicies[j] = true;
-							break;
-						}
-					}
-					if(!found) return false;
-				}
-				return true;
-			}//else not commutative
+			if(!checked) return Rule.checkForMatches(template,other);//check for matches works like similarStuct at a fundamental level so no need to do anything more
 			
 			if(template instanceof Equ && ((Equ)template).type != ((Equ)other).type ) return false;
 			
@@ -177,7 +158,7 @@ public class Rule extends Expr{
 			templateVarsOut.add(template.copy());
 			exprsPartsOut.add(expr.copy());
 		}else{
-			if(template.size()==expr.size()) {
+			if(template.size()==expr.size() && template.typeName().equals(expr.typeName())) {
 				for(int i = 0;i<template.size();i++) {
 					if(!getParts(templateVarsOut,exprsPartsOut,template.get(i),expr.get(i))) return false;
 				}
@@ -188,7 +169,7 @@ public class Rule extends Expr{
 		return true;
 	}
 	/*
-	 * given a template and the expr it checks if the sets match for the parts list, it also loads the parts into
+	 * given a template and the expr it checks if the sets match for the parts list and if they are similar, it also loads the parts into
 	 * the templateVars and exprsParts list since they will likely be used later on to construct an equation set
 	 */
 	static boolean checkForMatches(Sequence templateVars,Sequence exprsParts,Expr template,Expr expr) {
@@ -223,7 +204,7 @@ public class Rule extends Expr{
 		}
 		
 		
-		///parts two, check other has matches
+		///parts two, check expr parts have the index set pairs
 		
 		for(IndexSet set:indexSets) {
 			Expr e = exprsParts.get(set.ints.get(0));
@@ -344,7 +325,7 @@ public class Rule extends Expr{
 	 * this is required to be run somewhere before the CAS can be used, maybe put it as close to first line of main method
 	 */
 	
-	public static volatile int loadingPercent = 0;
+	public static volatile float loadingPercent = 0;
 	public static void loadRules(){
 		if(LOADED) return;
 		System.out.println("loading CAS rules...");
@@ -360,7 +341,7 @@ public class Rule extends Expr{
 		And.loadRules();
 		Approx.loadRules();
 		
-		loadingPercent = 20;
+		loadingPercent = 15;
 		
 		Asin.loadRules();
 		Atan.loadRules();
@@ -368,28 +349,29 @@ public class Rule extends Expr{
 		Define.loadRules();
 		Diff.loadRules();
 		
-		loadingPercent = 30;
+		loadingPercent = 20;
 		
 		Distr.loadRules();
 		Div.loadRules();
 		Dot.loadRules();
 		ExprList.loadRules();
 		
-		loadingPercent = 40;
+		loadingPercent = 25;
 		
 		Factor.loadRules();
 		Gamma.loadRules();
 		Integrate.loadRules();
+		loadingPercent = 35;
 		IntegrateOver.loadRules();
 		
-		loadingPercent = 50;
+		loadingPercent = 40;
 		
 		LambertW.loadRules();
 		Limit.loadRules();
 		Ln.loadRules();
 		Mat.loadRules();
 		
-		loadingPercent = 60;
+		loadingPercent = 50;
 		
 		Next.loadRules();
 		Not.loadRules();
@@ -397,7 +379,7 @@ public class Rule extends Expr{
 		Power.loadRules();
 		Prod.loadRules();
 		
-		loadingPercent = 70;
+		loadingPercent = 60;
 		
 		Sin.loadRules();
 		Solve.loadRules();
@@ -406,14 +388,16 @@ public class Rule extends Expr{
 		Ternary.loadRules();
 		Transpose.loadRules();
 		
-		loadingPercent = 80;
+		loadingPercent = 70;
 		
 		SimpleFuncs.loadRules();
 		
+		float incr = 20.0f/allPatternBasedRules.size();
 		for(Rule r:allPatternBasedRules) {//simplify rules
 			if(!r.pattern.getRightSide().containsType(r.pattern.getLeftSide().typeName())) {//non recursive simplification
 				r.pattern.setRightSide(r.pattern.getRightSide().simplify(CasInfo.normal));
 			}
+			loadingPercent+=incr;
 		}
 		
 		loadingPercent = 90;
@@ -436,5 +420,10 @@ public class Rule extends Expr{
 	@Override
 	public ComplexFloat convertToFloat(ExprList varDefs) {
 		return null;
+	}
+	
+	@Override
+	public String typeName() {
+		return "rule";
 	}
 }

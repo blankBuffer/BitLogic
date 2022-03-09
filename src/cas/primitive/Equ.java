@@ -68,4 +68,9 @@ public class Equ extends Expr{
 		}
 		return false;
 	}
+	
+	@Override
+	public String typeName() {
+		return "equ";
+	}
 }

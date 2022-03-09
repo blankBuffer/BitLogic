@@ -67,4 +67,9 @@ public class Atan extends Expr{
 	public ComplexFloat convertToFloat(ExprList varDefs) {
 		return ComplexFloat.atan(get().convertToFloat(varDefs));
 	}
+	
+	@Override
+	public String typeName() {
+		return "acos";
+	}
 }

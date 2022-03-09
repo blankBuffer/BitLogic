@@ -106,4 +106,9 @@ public class Acos extends Expr{
 	public ComplexFloat convertToFloat(ExprList varDefs) {
 		return ComplexFloat.acos(get().convertToFloat(varDefs));
 	}
+	
+	@Override
+	public String typeName() {
+		return "acos";
+	}
 }

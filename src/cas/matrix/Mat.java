@@ -108,4 +108,8 @@ public class Mat extends Expr{
 		return new ComplexFloat(0,0);
 	}
 
+	@Override
+	public String typeName() {
+		return "mat";
+	}
 }

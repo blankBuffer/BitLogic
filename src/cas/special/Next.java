@@ -4,7 +4,8 @@ import cas.*;
 import cas.primitive.*;
 
 /*
- * tries to predict the next element in a sequence
+ * tries to predict the next elements in a sequence based on the pattern provided
+ * it is based on a few common patterns
  */
 public class Next extends Expr{
 	
@@ -25,6 +26,7 @@ public class Next extends Expr{
 		return (Num)get(1);
 	}
 	
+	//is the sequence the standard fibonacci
 	static Rule isFibonacci = new Rule("is the fibonacci sequence",Rule.EASY) {
 		private static final long serialVersionUID = 1L;
 		
@@ -58,6 +60,13 @@ public class Next extends Expr{
 		
 	};
 	
+	/*
+	 * finds the pattern by checking the ratio pattern
+	 * for example if the sequence was 2,4,8,16,32 it would calculate the ration sequence to be
+	 * 2,2,2,2 and then predict the next ratios to continue the sequence
+	 * 
+	 * this can also predict factorial sequence
+	 */
 	static boolean USED_GEO = false;
 	static Rule geometric = new Rule("is a geometric series",Rule.EASY) {
 		private static final long serialVersionUID = 1L;
@@ -93,6 +102,9 @@ public class Next extends Expr{
 		}
 	};
 	
+	/*
+	 * sequence loops like 1,2,3,4,1,2,3,4,1,2,3,4 etc
+	 */
 	static Rule looping = new Rule("sequence is a loop",Rule.EASY) {
 		private static final long serialVersionUID = 1L;
 		
@@ -117,6 +129,12 @@ public class Next extends Expr{
 		}
 	};
 	
+	/*
+	 * patterns are combine together
+	 * for example with the sequence 10,1,9,2,8,3,7,4 has a step of 2 for each sub pattern
+	 * the pattern in the even indexes gives 10,9,8,7 and in the odd 1,2,3,4
+	 * it can detect up to 6 sequences 'interlaced' or a step of 6.
+	 */
 	static boolean USED_STEP = false;
 	static Rule steppedPattern = new Rule("stepped/interlaced patterns",Rule.EASY) {//basically like sequences interlaced
 		private static final long serialVersionUID = 1L;
@@ -193,6 +211,9 @@ public class Next extends Expr{
 			
 	};
 	
+	/*
+	 * looks for patterns in the coefficients of the pattern
+	 */
 	static boolean USED_COEF = false;
 	static Rule coefPredict = new Rule("predict seperatly the coefficinet and the variable component",Rule.EASY) {
 		private static final long serialVersionUID = 1L;
@@ -229,7 +250,7 @@ public class Next extends Expr{
 			return newSeq;
 		}
 	};
-	
+	//predicts the next fraction in a sequence. Looks at the numerator and denominator patterns separately to predict the next elements
 	static Rule fracPredict = new Rule("predict next fraction",Rule.EASY) {
 		private static final long serialVersionUID = 1L;
 		
@@ -267,6 +288,9 @@ public class Next extends Expr{
 		}
 	};
 	
+	/*
+	 * predicts the next power in a sequence by looking at the base and exponent as seperate sequences
+	 */
 	static Rule powPredict = new Rule("predict next power",Rule.EASY) {
 		private static final long serialVersionUID = 1L;
 		
@@ -304,6 +328,9 @@ public class Next extends Expr{
 		}
 	};
 	
+	/*
+	 * standard way of predicting the next number in a sequences
+	 */
 	static Rule polynomial = new Rule("is a polynomial sequence",Rule.TRICKY) {
 		private static final long serialVersionUID = 1L;
 		
@@ -358,6 +385,7 @@ public class Next extends Expr{
 		}
 	};
 	
+	//sequence is only 1 or 0 elements
 	static Rule nothingCase = new Rule("nothing case for sequence prediction",Rule.VERY_EASY) {
 		private static final long serialVersionUID = 1L;
 		
@@ -376,6 +404,9 @@ public class Next extends Expr{
 		}
 	};
 	
+	/*
+	 * looks what's inside the function and predicts the next inner
+	 */
 	static Rule funcPredict = new Rule("expression layout prediction",Rule.TRICKY) {
 		private static final long serialVersionUID = 1L;
 		
@@ -434,4 +465,8 @@ public class Next extends Expr{
 		return new ComplexFloat(0,0);
 	}
 
+	@Override
+	public String typeName() {
+		return "next";
+	}
 }

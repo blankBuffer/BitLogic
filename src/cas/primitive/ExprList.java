@@ -120,5 +120,10 @@ public class ExprList extends Expr{
 	public Sequence getRuleSequence() {
 		return ruleSequence;
 	}
+	
+	@Override
+	public String typeName() {
+		return "exprList";
+	}
 
 }

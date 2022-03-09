@@ -107,5 +107,9 @@ public class Dot extends Expr{
 	public ComplexFloat convertToFloat(ExprList varDefs) {
 		return new ComplexFloat(0,0);
 	}
-
+	
+	@Override
+	public String typeName() {
+		return "dot";
+	}
 }

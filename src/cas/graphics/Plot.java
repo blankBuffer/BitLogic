@@ -354,7 +354,7 @@ public class Plot extends JPanel{
 					Point p3 = points[yIndex+1][xIndex+1];
 					Point p4 = points[yIndex][xIndex+1];
 					
-					int brightness = (int) Math.min(Math.max(128.0-(p1.y-3.5)*256.0, 32),255);
+					int brightness = (int) Math.min(Math.max(128.0-(p1.y-3.5)*256.0, 64),255);
 					Color color = new Color( brightness,brightness,brightness );
 					
 					if((xIndex/2+yIndex/2)%2==0) color = color.darker();

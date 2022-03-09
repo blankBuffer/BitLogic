@@ -123,4 +123,9 @@ public class Cos extends Expr{
 	public ComplexFloat convertToFloat(ExprList varDefs) {
 		return ComplexFloat.cos(get().convertToFloat(varDefs));
 	}
+	
+	@Override
+	public String typeName() {
+		return "cos";
+	}
 }

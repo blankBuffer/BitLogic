@@ -18,6 +18,16 @@ public class Factor extends Expr{
 		add(expr);
 	}
 	
+	static Rule fastEscape = new Rule("nothing to factor",Rule.EASY) {
+		private static final long serialVersionUID = 1L;
+
+		@Override
+		public Expr applyRuleToExpr(Expr e,CasInfo casInfo) {
+			if(e.get() instanceof Var || e.get() instanceof Num) return e.get();
+			return e;
+		}
+	};
+	
 	static Rule reversePascalsTriangle = new Rule("reverse pascals triangle",Rule.DIFFICULT){
 		private static final long serialVersionUID = 1L;
 
@@ -75,7 +85,7 @@ public class Factor extends Expr{
 				
 				if(pow != null && other != null && other.negative() && isPositiveRealNum(pow.getExpo()) && ((Num)pow.getExpo()).realValue.mod(BigInteger.TWO).equals(BigInteger.ZERO) ) {
 					CasInfo noAbsVersion = new CasInfo(casInfo);
-					noAbsVersion.allowAbs = false;
+					noAbsVersion.setAllowAbs(false);
 					
 					Expr newPow = sqrt(pow).simplify(noAbsVersion);
 					Expr newOther = sqrt(neg(other)).simplify(noAbsVersion);
@@ -118,15 +128,15 @@ public class Factor extends Expr{
 						}
 						Num a =  (Num)coefs.get(2),b = (Num)coefs.get(1),c = (Num)coefs.get(0);
 						
-						if(!casInfo.allowComplexNumbers && (a.isComplex() || b.isComplex() || c.isComplex())) return e;
+						if(!casInfo.allowComplexNumbers() && (a.isComplex() || b.isComplex() || c.isComplex())) return e;
 						
 						Num discrNum = (Num)sum(pow(b,num(2)),prod(num(-4),a,c)).simplify(casInfo);
 						
-						if( !isPositiveRealNum(discrNum) && !casInfo.allowComplexNumbers) return e;
+						if( !isPositiveRealNum(discrNum) && !casInfo.allowComplexNumbers()) return e;
 						
 						boolean createsComplex = discrNum.isComplex() || discrNum.realValue.signum() == -1;
 						
-						if(createsComplex && !casInfo.allowComplexNumbers ) return e;
+						if(createsComplex && !casInfo.allowComplexNumbers() ) return e;
 						
 						Expr discrNumSqrt = sqrt(discrNum).simplify(casInfo);
 						
@@ -370,6 +380,7 @@ public class Factor extends Expr{
 	static Sequence ruleSequence = null;
 	public static void loadRules(){
 		ruleSequence = sequence(
+				fastEscape,
 				sumOfCubes,
 				differenceOfCubes,
 				power2Reduction,
@@ -393,4 +404,9 @@ public class Factor extends Expr{
 		return get().convertToFloat(varDefs);
 	}
 
+	@Override
+	public String typeName() {
+		return "factor";
+	}
+	
 }

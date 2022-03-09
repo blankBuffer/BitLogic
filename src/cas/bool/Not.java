@@ -77,5 +77,10 @@ public class Not extends Expr{
 		double res = state ? 1.0 : 0.0;
 		return new ComplexFloat(res,0);
 	}
+	
+	@Override
+	public String typeName() {
+		return "not";
+	}
 
 }

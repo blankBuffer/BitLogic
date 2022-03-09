@@ -2,9 +2,9 @@ clear_terminal:true
 keep_window_on_top:true
 show_plot:true
 plot_mode:0
-background_red:200
-background_green:200
-background_blue:200
+background_red:250
+background_green:250
+background_blue:250
 foreground_red:64
 foreground_green:64
 foreground_blue:64

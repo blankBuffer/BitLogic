@@ -92,5 +92,10 @@ public class Asin extends Expr{
 	public ComplexFloat convertToFloat(ExprList varDefs) {
 		return ComplexFloat.asin(get().convertToFloat(varDefs));
 	}
+	
+	@Override
+	public String typeName() {
+		return "asin";
+	}
 
 }

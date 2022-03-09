@@ -517,9 +517,6 @@ public class Solve extends Expr{
 					e = ((Rule)loopedSequence.get(i)).applyRuleToExpr(solve, casInfo);
 					if(!(e instanceof Solve)) break;
 					solve = (Solve)e;
-				}
-				if(e instanceof Solve) {
-					solve = (Solve)e;
 					if(solve.getEqu().getLeftSide().equals(solve.getVar())) {
 						return solve.getEqu();
 					}
@@ -711,6 +708,11 @@ public class Solve extends Expr{
 		}
 		
 		return solutions;
+	}
+	
+	@Override
+	public String typeName() {
+		return "solve";
 	}
 
 }

@@ -45,4 +45,9 @@ public class Sequence extends Expr{
 		out+="}";
 		return out;
 	}
+	
+	@Override
+	public String typeName() {
+		return "sequence";
+	}
 }

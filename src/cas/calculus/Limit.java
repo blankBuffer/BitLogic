@@ -596,4 +596,8 @@ public class Limit extends Expr{
 		return get().convertToFloat(varDefs);
 	}
 
+	@Override
+	public String typeName() {
+		return "limit";
+	}
 }

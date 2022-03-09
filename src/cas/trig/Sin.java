@@ -138,4 +138,8 @@ public class Sin extends Expr{
 		return ruleSequence;
 	}
 
+	@Override
+	public String typeName() {
+		return "sin";
+	}
 }

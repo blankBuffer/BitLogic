@@ -139,7 +139,7 @@ public class Ln extends Expr{
 		public Expr applyRuleToExpr(Expr e,CasInfo casInfo) {
 			Ln log = (Ln)e;
 			
-			if(casInfo.allowComplexNumbers) {
+			if(casInfo.allowComplexNumbers()) {
 				Sequence sep = basicRealAndImagComponents(e.get(),casInfo);
 				if(!sep.get(0).equals(Num.ZERO) && !sep.get(1).equals(Num.ZERO)) {
 					//ln(a+b*i) -> ln(sqrt(a^2+b^2)*e^(i*atan(b/a))) -> ln(a^2+b^2)/2+i*atan(b/a)
@@ -187,4 +187,8 @@ public class Ln extends Expr{
 		return ComplexFloat.ln(get().convertToFloat(varDefs));
 	}
 
+	@Override
+	public String typeName() {
+		return "ln";
+	}
 }

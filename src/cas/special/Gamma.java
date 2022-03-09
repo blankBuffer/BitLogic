@@ -96,5 +96,10 @@ public class Gamma extends Expr{
 	public Sequence getRuleSequence() {
 		return ruleSequence;
 	}
+	
+	@Override
+	public String typeName() {
+		return "gamma";
+	}
 
 }

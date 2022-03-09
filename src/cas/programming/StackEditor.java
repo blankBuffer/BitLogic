@@ -21,7 +21,6 @@ public class StackEditor extends QuickMath {
 
 	public static final int QUIT = -1;
 	public static final int INPUT_ERROR = -2;
-	public static final int EDIT_REQUEST = 1;
 	public static final int FINISHED = 0;
 	
 	public CasInfo currentCasInfo = new CasInfo();
@@ -38,10 +37,10 @@ public class StackEditor extends QuickMath {
 	/*
 	 * computes the result of the last item on the stack. It runs on its own thread to prevent freezing
 	 */
-	public void result() {
+	public void result(int index) {
 		if (last() == null)
 			return;
-		expr = last();
+		expr = stack.get(index);
 		Thread compute = new Thread("compute") {
 			@Override
 			public void run() {
@@ -79,7 +78,7 @@ public class StackEditor extends QuickMath {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
-		if(expr != null) stack.set(size() - 1, expr);
+		if(expr != null) stack.set(index, expr);
 	}
 
 	public ExprList stack = new ExprList();
@@ -375,7 +374,7 @@ public class StackEditor extends QuickMath {
 			} else if (command.equals("^")) {
 				exponent();
 			} else if (command.equals("r") || (command.equals("result"))) {// get result
-				result();
+				result(stack.size()-1);
 			} else if (command.equals("p") || command.equals("pop")) {// pop element
 				pop();
 			} else if (command.equals("swap")) {
@@ -400,15 +399,16 @@ public class StackEditor extends QuickMath {
 				duplicate();
 			} else if (command.equals("roll")) {
 				roll();
-			} else if(command.equals("edit")) {
-				return EDIT_REQUEST;
 			}else if(command.equals("addAll")) {
 				addAll();
 			}else if(command.equals("multAll")) {
 				multAll();
 			}else if (command.equals("quit") || command.equals("exit") || command.equals("close")) {
 				return QUIT;
-			}else if (command.matches("[a-zA-Z]+(:)((true|false)|([0-9]+))")) {
+			}else if (command.equals("sort")) {
+				last().sort();
+			}
+			else if (command.matches("[a-zA-Z]+(:)((true|false)|([0-9]+))")) {
 				String[] parts = command.split(":");
 				command = parts[0];
 				boolean isNum = parts[1].matches("[0-9]+");
@@ -441,12 +441,19 @@ public class StackEditor extends QuickMath {
 						val = Math.floorMod(val,size());
 						for(int i = 0;i<val;i++) roll();
 					} else createAlert("need more elements");
+				}else if(command.equals("result")) {
+					val--;
+					if (val > -1 && val < size()) {
+						result(val);
+					}else createAlert("invalid index");
 				}else if(command.equals("allowAbs")) {
-					currentCasInfo.allowAbs = bool;
+					currentCasInfo.setAllowAbs(bool);
 					createAlert("allowAbs="+bool);
 				}else if(command.equals("allowComplexNumbers")) {
-					currentCasInfo.allowComplexNumbers = bool;
+					currentCasInfo.setAllowComplexNumbers(bool);
 					createAlert("allowComplexNumbers="+bool);
+				}else {
+					System.out.println("unknown stack commans: "+command);
 				}
 			}else if(SimpleFuncs.isFunc(command)) {
 				int numberOfParams = SimpleFuncs.getExpectectedParams(command);

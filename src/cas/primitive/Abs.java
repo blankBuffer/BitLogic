@@ -202,7 +202,7 @@ public class Abs extends Expr{
 		public Expr applyRuleToExpr(Expr e,CasInfo casInfo) {
 			Abs abs = (Abs)e;
 			
-			if(!casInfo.allowAbs) return abs.get();
+			if(!casInfo.allowAbs()) return abs.get();
 			
 			return abs;
 		}
@@ -267,6 +267,11 @@ public class Abs extends Expr{
 	@Override
 	public ComplexFloat convertToFloat(ExprList varDefs) {
 		return ComplexFloat.mag(get().convertToFloat(varDefs));
+	}
+
+	@Override
+	public String typeName() {
+		return "abs";
 	}
 
 }

@@ -305,7 +305,7 @@ public class Power extends Expr{
 				Div frac = null;
 				if(pow.getExpo() instanceof Div) frac = (Div)pow.getExpo();
 				boolean createsComplexNumber = false;
-				if(!casInfo.allowComplexNumbers && frac != null && frac.isNumericalAndReal()) {
+				if(!casInfo.allowComplexNumbers() && frac != null && frac.isNumericalAndReal()) {
 					if(((Num)frac.getDenom()).realValue.mod(BigInteger.TWO).equals(BigInteger.ZERO)) createsComplexNumber = true;//root in the form (x)^(a/(2*n))
 				}
 				
@@ -475,13 +475,13 @@ public class Power extends Expr{
 			if(pow.getExpo() instanceof Div) {
 				Div expoDiv = (Div)pow.getExpo();
 				
-				if(isPositiveRealNum(expoDiv.getDenom()) && pow.getBase() instanceof Num && (isRealNum(pow.getBase()) || casInfo.allowComplexNumbers) ) {
+				if(isPositiveRealNum(expoDiv.getDenom()) && pow.getBase() instanceof Num && (isRealNum(pow.getBase()) || casInfo.allowComplexNumbers()) ) {
 					Num denomNum = (Num)expoDiv.getDenom();
 					Num baseNum = (Num)pow.getBase();
 				
 					boolean createsComplexNumber = (denomNum).realValue.mod(BigInteger.TWO).equals(BigInteger.ZERO) && baseNum.signum() == -1;
 					
-					if((!createsComplexNumber || casInfo.allowComplexNumbers) && !baseNum.isComplex()) {
+					if((!createsComplexNumber || casInfo.allowComplexNumbers()) && !baseNum.isComplex()) {
 						
 						//this portion works similar to the root expand rule
 						BigInteger root = denomNum.realValue;
@@ -509,7 +509,7 @@ public class Power extends Expr{
 						if(createsComplexNumber) {
 							return prod(pow(num(0,1),expoDiv.getNumer()).simplify(casInfo),  pow(num(num),expoDiv));
 						}
-					}else if(casInfo.allowComplexNumbers && denomNum.equals(Num.TWO)){//square root of a complex number
+					}else if(casInfo.allowComplexNumbers() && denomNum.equals(Num.TWO)){//square root of a complex number
 						BigInteger sumOfSquares = baseNum.realValue.pow(2).add(baseNum.imagValue.pow(2));
 						BigInteger root = sumOfSquares.sqrt();
 						
@@ -699,4 +699,8 @@ public class Power extends Expr{
 		return ComplexFloat.pow(getBase().convertToFloat(varDefs), getExpo().convertToFloat(varDefs));
 	}
 
+	@Override
+	public String typeName() {
+		return "power";
+	}
 }

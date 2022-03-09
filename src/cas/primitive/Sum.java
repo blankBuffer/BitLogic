@@ -633,4 +633,8 @@ public class Sum extends Expr{
 		return total;
 	}
 
+	@Override
+	public String typeName() {
+		return "sum";
+	}
 }

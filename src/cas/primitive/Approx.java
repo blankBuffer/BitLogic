@@ -44,5 +44,9 @@ public class Approx extends Expr{
 	public ComplexFloat convertToFloat(ExprList varDefs) {
 		return get().convertToFloat((ExprList)get(1));//kinda pointless but whatever
 	}
-
+	
+	@Override
+	public String typeName() {
+		return "approx";
+	}
 }

@@ -37,4 +37,8 @@ public class Params extends Expr{
 		return out;
 	}
 
+	@Override
+	public String typeName() {
+		return "params";
+	}
 }

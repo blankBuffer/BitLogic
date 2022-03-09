@@ -894,24 +894,56 @@ public class Integrate extends Expr{
 		
 		@Override
 		public Expr applyRuleToExpr(Expr e,CasInfo casInfo) {
-			if(e.containsType("integrate") || e.contains(var("0u"))) return e;//obviously in the middle of processing if you encounter u
 			
-			if(!casInfo.allowComplexNumbers) {
-				e = applyAbs(e,casInfo);
+			Expr expr = e.get();
+			if(expr.containsType("integrate")) return expr;
+			
+			Integrate original = (Integrate)e.get(1);
+			Var v = original.getVar();
+			
+			/*
+			 * sometimes the signs become incorrect after integration, this attempts to fix that issue
+			 */
+			if(casInfo.allowAbs()){
+				double shift = Math.scalb(2.0, -8);
+				Equ equLeft = equ(v,floatExpr(-shift));
+				boolean leftNegOnOriginal = original.get().convertToFloat(exprList(equLeft)).real < 0;
+				boolean leftNegOnFinal = diff(expr,v).convertToFloat(exprList(equLeft)).real < 0;
+				
+				boolean flipLeft = leftNegOnOriginal^leftNegOnFinal;
+				
+				Equ equRight = equ(v,floatExpr(shift));
+				boolean rightNegOnOriginal = original.get().convertToFloat(exprList(equRight)).real < 0;
+				boolean rightNegOnFinal = diff(expr,v).convertToFloat(exprList(equRight)).real < 0;
+				
+				boolean flipRight = rightNegOnOriginal^rightNegOnFinal;
+				
+				if(flipLeft && flipRight) {
+					expr = neg(expr);
+				}else if(flipLeft && !flipRight) {
+					expr = div(prod(expr,abs(v)),v);
+				}else if(!flipLeft && flipRight){
+					expr = div(prod(expr,abs(v),num(-1)),v);
+				}
 			}
 			
-			e = distr(e).simplify(casInfo);
+			if(expr.containsType("integrate") || expr.contains(var("0u"))) return expr;//obviously in the middle of processing if you encounter u
 			
-			if(e instanceof Sum) {//remove any trailing constants
-				for(int i = 0;i<e.size();i++) {
-					if(!e.get(i).containsVars()) {
-						e.remove(i);
+			if(!casInfo.allowComplexNumbers()) {
+				expr = applyAbs(expr,casInfo);
+			}
+			expr = distr(expr.simplify(casInfo)).simplify(casInfo);
+			
+			if(expr instanceof Sum) {//remove any trailing constants
+				for(int i = 0;i<expr.size();i++) {
+					if(!expr.get(i).containsVars()) {
+						expr.remove(i);
 						i--;
 					}
 				}
 			}
 			
-			return e;
+			return expr;
 		}
 	};
 	
@@ -938,4 +970,8 @@ public class Integrate extends Expr{
 		return integrateOver(floatExpr(smallRandNum),getVar(),get(),getVar()).convertToFloat(varDefs);
 	}
 
+	@Override
+	public String typeName() {
+		return "integrate";
+	}
 }

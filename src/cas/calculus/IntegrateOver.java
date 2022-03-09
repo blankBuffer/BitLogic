@@ -116,5 +116,10 @@ public class IntegrateOver extends Expr {
 		return ComplexFloat.mult(sum,ComplexFloat.mult(step, new ComplexFloat(1.0/3.0,0)));
 		
 	}
+	
+	@Override
+	public String typeName() {
+		return "integrateOver";
+	}
 
 }

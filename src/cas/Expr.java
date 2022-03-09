@@ -13,6 +13,7 @@ import java.io.ObjectOutputStream;
 import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.Comparator;
 import java.util.Random;
 
 import cas.primitive.*;
@@ -30,7 +31,7 @@ import cas.primitive.*;
  * 
  */
 
-public abstract class Expr extends QuickMath implements Comparable<Expr>, Serializable{
+public abstract class Expr extends QuickMath implements Serializable{
 	
 	static Random random;
 	public boolean commutative = false;
@@ -46,10 +47,7 @@ public abstract class Expr extends QuickMath implements Comparable<Expr>, Serial
 	}
 	
 	public abstract ComplexFloat convertToFloat(ExprList varDefs);
-	public String typeName() {
-		String name = getClass().getSimpleName();
-		return Character.toLowerCase(name.charAt(0))+name.substring(1);
-	}
+	public abstract String typeName();
 	
 	void print() {
 		System.out.print(this);
@@ -71,6 +69,7 @@ public abstract class Expr extends QuickMath implements Comparable<Expr>, Serial
 	 */
 	public static class Flags implements Serializable{
 		private static final long serialVersionUID = -2823404902493132716L;
+		
 		public boolean simple = false;
 		public boolean sorted = false;
 		
@@ -131,7 +130,7 @@ public abstract class Expr extends QuickMath implements Comparable<Expr>, Serial
 		}
 		
 		Rule doneRule = getDoneRule();
-		if(doneRule != null) toBeSimplified = doneRule.applyRuleToExpr(toBeSimplified, casInfo);
+		if(doneRule != null) toBeSimplified = doneRule.applyRuleToExpr(sequence(toBeSimplified,this), casInfo);//give it the original problem to have access to variables
 		
 		toBeSimplified.flags.simple = true;//result is simplified and should not be simplified again
 		
@@ -188,7 +187,7 @@ public abstract class Expr extends QuickMath implements Comparable<Expr>, Serial
 			
 			if(otherCasted.size() == size()) {//make sure they are the same size
 				
-				if(this.commutative){
+				if(this.commutative && !flags.sorted){
 					boolean usedIndex[] = new boolean[size()];//keep track of what indices have been used
 					int length = otherCasted.size();//length of the lists
 					
@@ -205,7 +204,7 @@ public abstract class Expr extends QuickMath implements Comparable<Expr>, Serial
 					
 					return true;//they are the same as everything was found
 				}
-				for(int i = 0;i<size();i++){//not commutative
+				for(int i = 0;i<size();i++){//not commutative or sorted
 					if(!get(i).equals(otherCasted.get(i))) return false;
 				}
 				return true;
@@ -360,28 +359,11 @@ public abstract class Expr extends QuickMath implements Comparable<Expr>, Serial
 	
 	/*
 	 * a score of how complex the expression is, this counts the number of nodes in the expression
-	 * 
-	 * however products are special and triple the complexity, this is important for sorting (for complexityForSorting only)
-	 * examples
-	 * x^3 -> 3
-	 * sin(x) -> 2
-	 * sqrt(x) -> 5
-	 * sin(x+a) -> 4
-	 * -cos(b) -> 12
-	 * sin(x+a)-cos(b) -> 17 , when this is sorted -cos(b) has a higher complexity than sin(x+a) pushing it to the front even though they have the same number of nodes
 	 */
-	public long complexityForSorting() {
+	public int complexity() {
 		int sum = 1;
 		for(Expr e:subExpr) {
-			sum+= e.complexityForSorting();
-		}
-		if(this instanceof Prod) sum*=3;
-		return sum;
-	}
-	public long complexity() {
-		int sum = 1;
-		for(Expr e:subExpr) {
-			sum+= e.complexityForSorting();
+			sum+= e.complexity();
 		}
 		return sum;
 	}
@@ -431,6 +413,7 @@ public abstract class Expr extends QuickMath implements Comparable<Expr>, Serial
 		flags.reset();
 		subExpr.clear();
 	}
+	
 	/*
 	 * sorted expressions are based on complexity and variable frequency
 	 * 
@@ -455,23 +438,35 @@ public abstract class Expr extends QuickMath implements Comparable<Expr>, Serial
 			if(this instanceof Sum || this instanceof Prod || this instanceof ExprList) {
 				boolean wasSimple = flags.simple;
 				
-				int moved = 0;
-				for(int i = 0;i<varcounts.size();i++) {//sort based on frequency
+				for(int i = varcounts.size()-1;i>=0;i--) {//sort based on frequency
 					VarCount varcount = varcounts.get(i);
-					int subMoved = 0;
-					for(int j = moved;j<size() && subMoved != varcount.count;j++) {
-						if(get(j).contains(varcount.v)) {
-							Expr temp = get(moved);
-							set(moved,get(j));
-							set(j,temp);
-							moved++;
-							subMoved++;
+					Var v = varcount.v;
+					subExpr.sort(new Comparator<Expr>() {
+						@Override
+						public int compare(Expr first, Expr second) {
+							return -Boolean.compare(first.contains(v), second.contains(v));
 						}
-						
-					}	
+					});
 				}
 				
-				Collections.sort(subExpr);
+				subExpr.sort(new Comparator<Expr>() {//sort based on priority then by complexity then by hash
+					@Override
+					public int compare(Expr first, Expr second) {
+						int fPriority = first.typeName().hashCode();
+						int sPriority = second.typeName().hashCode();
+						
+						if(fPriority != sPriority) {
+							return -Integer.compare(fPriority, sPriority);
+						}
+						int fComplexity = first.complexity();
+						int sComplexity = second.complexity();
+						
+						if(fComplexity != sComplexity) {
+							return -Integer.compare(fComplexity, sComplexity);
+						}
+						return Integer.compare(first.hashCode(), second.hashCode());
+					}
+				});
 				
 				flags.simple = wasSimple;
 			}
@@ -483,6 +478,10 @@ public abstract class Expr extends QuickMath implements Comparable<Expr>, Serial
 			
 			flags.sorted = true;
 		}
+	}
+	
+	public void sort() {
+		sort(null);
 	}
 	
 	public Expr replace(ExprList equs) {
@@ -499,9 +498,6 @@ public abstract class Expr extends QuickMath implements Comparable<Expr>, Serial
 		return replacedChildren;
 	}
 	
-	public void sort() {
-		sort(null);
-	}
 	public void simplifyChildren(CasInfo casInfo) {
 		for(int i = 0;i<subExpr.size();i++) {
 			Expr temp = subExpr.get(i);
@@ -555,11 +551,6 @@ public abstract class Expr extends QuickMath implements Comparable<Expr>, Serial
 		if(tab == 0) out+=("EXPR-TREE-END-------------")+"\n";
 		
 		return out;
-	}
-	@Override
-	public int compareTo(Expr other) {
-		int c = -Long.compare(complexityForSorting(), other.complexityForSorting());
-		return c;
 	}
 	
 }

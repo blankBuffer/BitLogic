@@ -833,4 +833,9 @@ public class Prod extends Expr{
 		for(int i = 0;i<size();i++) total=ComplexFloat.mult(total, get(i).convertToFloat(varDefs));
 		return total;
 	}
+	
+	@Override
+	public String typeName() {
+		return "prod";
+	}
 }

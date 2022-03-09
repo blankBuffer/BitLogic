@@ -589,6 +589,78 @@ public class Div extends Expr{
 		}
 	};
 	
+	static Rule expandRoots = new Rule("expand roots",Rule.UNCOMMON) {
+		private static final long serialVersionUID = 1L;
+		
+		Expr rootForm;
+		@Override
+		public void init() {
+			rootForm = createExpr("a^(b/c)");
+		}
+		
+		public boolean prodInForm(Prod prod) {
+			for(int i = 0;i<prod.size();i++) {
+				if(Rule.fastSimilarStruct(rootForm, prod.get(i)) && prod.get(i).get() instanceof Prod && !prod.get(i).get().negative()) {
+					return true;
+				}
+			}
+			return false;
+		}
+		public Prod expandRoots(Prod prod,CasInfo casInfo) {
+			Prod out = new Prod();
+			for(int i = 0;i<prod.size();i++) {
+				Expr current = prod.get(i);
+				if(Rule.fastSimilarStruct(rootForm, current) && current.get() instanceof Prod && !current.get().negative()) {
+					
+					Expr expo = ((Power)current).getExpo();
+					Prod base = (Prod)prod.get(i).get();
+					prod.remove(i);
+					for(int j = 0;j<base.size();j++) {
+						out.add(pow(base.get(j),expo).simplify(casInfo));
+					}
+					
+				}else {
+					out.add(prod.get(i));
+				}
+			}
+			return out;
+		}
+		
+		@Override
+		public Expr applyRuleToExpr(Expr e,CasInfo casInfo){
+			Div div = (Div)e;
+			
+			Prod numerProd = Prod.cast(div.getNumer());
+			Prod denomProd = Prod.cast(div.getDenom());
+			
+			boolean inForm = prodInForm(numerProd) || prodInForm(denomProd);
+		
+			if(!inForm) return div;
+			
+			numerProd = expandRoots(numerProd,casInfo);
+			denomProd = expandRoots(denomProd,casInfo);
+			
+			div.setNumer(Prod.unCast(numerProd));
+			div.setDenom(Prod.unCast(denomProd));
+			
+			return div;
+		}
+	};
+	
+	static Rule reSimpNumerAndDenom = new Rule("simplify numerator and denominator again",Rule.EASY) {
+		private static final long serialVersionUID = 1L;
+		
+		@Override
+		public Expr applyRuleToExpr(Expr e,CasInfo casInfo){
+			Div div = (Div)e;
+			
+			div.setNumer(div.getNumer().simplify(casInfo));
+			div.setDenom(div.getDenom().simplify(casInfo));
+			
+			return div;
+		}
+	};
+	
 	static Sequence ruleSequence = null;
 	
 	public static void loadRules(){
@@ -599,7 +671,9 @@ public class Div extends Expr{
 				reduceTrigFraction,
 				divContainsDiv,
 				absInDenom,
+				expandRoots,
 				cancelOutTerms,
+				reSimpNumerAndDenom,//to reverse expandRoots process
 				rationalize,
 				rationalize2,
 				reduceFraction,
@@ -725,5 +799,9 @@ public class Div extends Expr{
 	public ComplexFloat convertToFloat(ExprList varDefs) {
 		return ComplexFloat.div(getNumer().convertToFloat(varDefs), getDenom().convertToFloat(varDefs));
 	}
-
+	
+	@Override
+	public String typeName() {
+		return "div";
+	}
 }

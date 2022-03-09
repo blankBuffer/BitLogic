@@ -54,4 +54,9 @@ public class Script extends Expr{
 	public Sequence getRuleSequence() {
 		return null;
 	}
+	
+	@Override
+	public String typeName() {
+		return "script";
+	}
 }

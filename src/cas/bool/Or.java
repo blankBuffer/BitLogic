@@ -523,4 +523,9 @@ public class Or extends Expr{
 		}
 		return or(e);
 	}
+	
+	@Override
+	public String typeName() {
+		return "or";
+	}
 }

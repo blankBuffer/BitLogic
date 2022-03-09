@@ -222,4 +222,9 @@ public class And extends Expr{
 		}
 		return and(e);
 	}
+	
+	@Override
+	public String typeName() {
+		return "and";
+	}
 }

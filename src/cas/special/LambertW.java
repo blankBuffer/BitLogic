@@ -9,6 +9,9 @@ import cas.primitive.FloatExpr;
 import cas.primitive.Sequence;
 import cas.primitive.Solve;
 
+/*
+ * the Lambert W function which is the inverse of x*e^x
+ */
 public class LambertW extends Expr {
 
 	private static final long serialVersionUID = 1242113729865756736L;
@@ -111,14 +114,9 @@ public class LambertW extends Expr {
 		return ruleSequence;
 	}
 	
-	@Override
-	public String toString() {
-		String out = "lambertW(";
-		out+=get();
-		out+=")";
-		return out;
-	}
-
+	/*
+	 * the Lambert w function is 'visually' really close to ln(x+1)*0.75 so using that as the initial guess for Newton approximation
+	 */
 	@Override
 	public ComplexFloat convertToFloat(ExprList varDefs) {
 		FloatExpr x = floatExpr(get().convertToFloat(varDefs));
@@ -128,4 +126,8 @@ public class LambertW extends Expr {
 		return expr.convertToFloat(varDefs);
 	}
 
+	@Override
+	public String typeName() {
+		return "lambertW";
+	}
 }
