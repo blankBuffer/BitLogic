@@ -9,13 +9,13 @@ public class Ln extends Expr{
 	
 	
 	private static final long serialVersionUID = 8168024064884459716L;
-	static Rule log1To0 = new Rule("ln(1)->0","log of 1",Rule.VERY_EASY);
-	static Rule logETo1 = new Rule("ln(e)->1","log of e",Rule.VERY_EASY);
-	static Rule powToProd = new Rule("ln(a^b)->b*ln(a)","log of power",Rule.EASY);
-	static Rule lnOfEpsilon = new Rule("ln(epsilon)->-inf","log of epsilon",Rule.EASY);
-	static Rule lnOfInf = new Rule("ln(inf)->inf","log of infinity",Rule.EASY);
+	static Rule log1To0 = new Rule("ln(1)->0","log of 1");
+	static Rule logETo1 = new Rule("ln(e)->1","log of e");
+	static Rule powToProd = new Rule("ln(a^b)->b*ln(a)","log of power");
+	static Rule lnOfEpsilon = new Rule("ln(epsilon)->-inf","log of epsilon");
+	static Rule lnOfInf = new Rule("ln(inf)->inf","log of infinity");
 	
-	static Rule lnOfEpsilonSum = new Rule("log of sum with epsilon",Rule.UNCOMMON){
+	static Rule lnOfEpsilonSum = new Rule("log of sum with epsilon"){
 		private static final long serialVersionUID = 1L;
 
 		@Override
@@ -47,7 +47,7 @@ public class Ln extends Expr{
 		add(e);
 	}
 	
-	static Rule logOfPerfectPower = new Rule("log of a perfect power",Rule.EASY){
+	static Rule logOfPerfectPower = new Rule("log of a perfect power"){
 		private static final long serialVersionUID = 1L;
 
 		@Override
@@ -78,18 +78,18 @@ public class Ln extends Expr{
 		}
 	};
 	
-	static Rule logOfInverse = new Rule("ln(1/x)->-ln(x)","log of inverse becomes negative log",Rule.VERY_EASY);
-	static Rule logOfInverse2 = new Rule("ln((-1)/x)->-ln(-x)","log of inverse becomes negative log",Rule.VERY_EASY);
+	static Rule logOfInverse = new Rule("ln(1/x)->-ln(x)","log of inverse becomes negative log");
+	static Rule logOfInverse2 = new Rule("ln((-1)/x)->-ln(-x)","log of inverse becomes negative log");
 	
 	
-	static Rule logWithSums = new Rule("remove sums from within logs",Rule.UNCOMMON) {//the goal is to remove sums inside of logs if they are part of a product or divisin
+	static Rule logWithSums = new Rule("remove sums from within logs") {//the goal is to remove sums inside of logs if they are part of a product or division
 		private static final long serialVersionUID = 1L;
 		
 		@Override
 		public Expr applyRuleToExpr(Expr e,CasInfo casInfo) {
 			Ln log = (Ln)e;
 			
-			if(log.get() instanceof Prod || log.get() instanceof Div) {
+			if((log.get() instanceof Prod || log.get() instanceof Div) && (casInfo.allowComplexNumbers() || !log.get().negative()) ) {
 
 				Sum out = new Sum();
 				Div div = Div.cast(log.get());
@@ -116,7 +116,6 @@ public class Ln extends Expr{
 					}
 				}
 				
-				
 				if(out.size()>0) {
 					div.setNumer(prodNumer);
 					div.setDenom(prodDenom);
@@ -132,7 +131,7 @@ public class Ln extends Expr{
 		
 	};
 	
-	static Rule logOfNegativeOrComplex = new Rule("log of a negative or complex expression",Rule.UNCOMMON) {
+	static Rule logOfNegativeOrComplex = new Rule("log of a negative or complex expression") {
 		private static final long serialVersionUID = 1L;
 		
 		@Override
@@ -144,14 +143,32 @@ public class Ln extends Expr{
 				if(!sep.get(0).equals(Num.ZERO) && !sep.get(1).equals(Num.ZERO)) {
 					//ln(a+b*i) -> ln(sqrt(a^2+b^2)*e^(i*atan(b/a))) -> ln(a^2+b^2)/2+i*atan(b/a)
 					
-					return sum(div(ln(sum(pow(sep.get(0),num(2)),pow(sep.get(1),num(2)))),num(2)),prod(num(0,1),atan(div(sep.get(1),sep.get(0))))).simplify(casInfo);
-					
+					Expr out = sum(div(ln(sum(pow(sep.get(0),num(2)),pow(sep.get(1),num(2)))),num(2)),prod(num(0,1),atan(div(sep.get(1),sep.get(0)))));
+					return out.simplify(casInfo);
 				}
 				
 				if(log.get().negative()) {//ln(-x) -> ln(x)+pi*i
 					return sum(ln(neg(log.get()).simplify(casInfo)),prod(pi(),num(0,1)));
 				}
 			}
+			
+			return log;
+		}
+	};
+	
+	/*
+	 * cant factor complex roots because that would create recursion with ln(x+i) -> ln(x^2+1)+i*atan(1/x) -> ln((x-i)*(x+i))+i*atan(1/x) back to itself again
+	 */
+	static Rule factorInnerReal = new Rule("only factor real") {
+		private static final long serialVersionUID = 1L;
+		
+		@Override
+		public Expr applyRuleToExpr(Expr e,CasInfo casInfo) {
+			Ln log = (Ln)e;
+			
+			CasInfo noComplex = new CasInfo(casInfo);
+			noComplex.setAllowComplexNumbers(false);
+			log.set(0, factor(log.get()).simplify(noComplex) );
 			
 			return log;
 		}
@@ -169,7 +186,7 @@ public class Ln extends Expr{
 				logOfInverse,
 				logOfInverse2,
 				logOfNegativeOrComplex,
-				StandardRules.factorInner,
+				factorInnerReal,
 				logWithSums,
 				logOfPerfectPower,
 				powToProd

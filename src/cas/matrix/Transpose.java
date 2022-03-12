@@ -18,7 +18,7 @@ public class Transpose extends Expr{
 		add(e);
 	}
 
-	static Rule transContainsTrans = new Rule("transpose contains transpose",Rule.EASY){
+	static Rule transContainsTrans = new Rule("transpose contains transpose"){
 		private static final long serialVersionUID = 1L;
 		
 		@Override
@@ -29,7 +29,7 @@ public class Transpose extends Expr{
 			return e;
 		}
 	};
-	static Rule transOfSum = new Rule("tranpose of sum",Rule.EASY){
+	static Rule transOfSum = new Rule("tranpose of sum"){
 		private static final long serialVersionUID = 1L;
 		
 		@Override
@@ -44,7 +44,7 @@ public class Transpose extends Expr{
 			return e;
 		}
 	};
-	static Rule transOfProd = new Rule("tranpose of product",Rule.EASY){
+	static Rule transOfProd = new Rule("tranpose of product"){
 		private static final long serialVersionUID = 1L;
 		
 		@Override
@@ -59,7 +59,7 @@ public class Transpose extends Expr{
 			return e;
 		}
 	};
-	static Rule transOfDotMult = new Rule("tranpose of dot multiply",Rule.EASY){
+	static Rule transOfDotMult = new Rule("tranpose of dot multiply"){
 		private static final long serialVersionUID = 1L;
 		
 		@Override
@@ -75,7 +75,7 @@ public class Transpose extends Expr{
 			return e;
 		}
 	};
-	static Rule transOfMatrix = new Rule("matrix transpose",Rule.EASY){
+	static Rule transOfMatrix = new Rule("matrix transpose"){
 		private static final long serialVersionUID = 1L;
 		
 		@Override

@@ -16,7 +16,7 @@ public class SimpleFuncs extends QuickMath{
 	private static HashMap<String,Func> simpleFuncs = new HashMap<String,Func>();
 	static boolean FUNCTION_UNLOCKED = false;
 	
-	public static Rule fullExpand = new Rule("full expand",Rule.TRICKY){
+	public static Rule fullExpand = new Rule("full expand"){
 		private static final long serialVersionUID = 1L;
 
 		@Override
@@ -103,9 +103,14 @@ public class SimpleFuncs extends QuickMath{
 	static Func arcLen = new Func("arcLen",4);
 	static Func repDiff = new Func("repDiff",3);
 	
+	static Func similar = new Func("similar",2);
+	static Func fastSimilar = new Func("fastSimilar",2);
+	
+	static Func sortExpr = new Func("sortExpr",1);
+	
 	public static void loadRules(){
 		tree.simplifyChildren = false;
-		tree.ruleSequence.add(new Rule("show the tree of the expression",Rule.VERY_EASY){
+		tree.ruleSequence.add(new Rule("show the tree of the expression"){
 			private static final long serialVersionUID = 1L;
 
 			@Override
@@ -116,7 +121,7 @@ public class SimpleFuncs extends QuickMath{
 		});
 		
 		size.simplifyChildren = false;
-		size.ruleSequence.add(new Rule("get size of sub expression",Rule.VERY_EASY){
+		size.ruleSequence.add(new Rule("get size of sub expression"){
 			private static final long serialVersionUID = 1L;
 
 			@Override
@@ -136,7 +141,7 @@ public class SimpleFuncs extends QuickMath{
 		};
 		
 		get.simplifyChildren = false;
-		get.ruleSequence.add(new Rule("get sub expression",Rule.VERY_EASY){
+		get.ruleSequence.add(new Rule("get sub expression"){
 			private static final long serialVersionUID = 1L;
 
 				@Override
@@ -156,7 +161,7 @@ public class SimpleFuncs extends QuickMath{
 			}
 		};
 		
-		choose.ruleSequence.add(new Rule("choose formula",Rule.UNCOMMON){
+		choose.ruleSequence.add(new Rule("choose formula"){
 			private static final long serialVersionUID = 1L;
 
 			@Override
@@ -183,7 +188,7 @@ public class SimpleFuncs extends QuickMath{
 			}
 		};
 		
-		primeFactor.ruleSequence.add(new Rule("prime factor an integer",Rule.EASY){
+		primeFactor.ruleSequence.add(new Rule("prime factor an integer"){
 			private static final long serialVersionUID = 1L;
 
 			@Override
@@ -194,7 +199,7 @@ public class SimpleFuncs extends QuickMath{
 		});
 		primeFactor.toFloatFunc = Func.nothingFunc;
 		
-		partialFrac.ruleSequence.add(new Rule("break apart polynomial ratio into a sum of inverse linear terms",Rule.VERY_EASY){
+		partialFrac.ruleSequence.add(new Rule("break apart polynomial ratio into a sum of inverse linear terms"){
 			private static final long serialVersionUID = 1L;
 
 			@Override
@@ -207,7 +212,7 @@ public class SimpleFuncs extends QuickMath{
 		});
 		partialFrac.toFloatFunc = Func.nothingFunc;
 		
-		polyDiv.ruleSequence.add(new Rule("polynomial division",Rule.EASY) {
+		polyDiv.ruleSequence.add(new Rule("polynomial division") {
 			private static final long serialVersionUID = 1L;
 			
 			@Override
@@ -219,7 +224,7 @@ public class SimpleFuncs extends QuickMath{
 		});
 		polyDiv.toFloatFunc = Func.nothingFunc;
 		
-		polyCoef.ruleSequence.add(new Rule("get the coefficients of a polynomial as a list",Rule.VERY_EASY){
+		polyCoef.ruleSequence.add(new Rule("get the coefficients of a polynomial as a list"){
 			private static final long serialVersionUID = 1L;
 
 			@Override
@@ -231,7 +236,7 @@ public class SimpleFuncs extends QuickMath{
 			}
 		});
 		
-		degree.ruleSequence.add(new Rule("get the degree of a polynomial",Rule.VERY_EASY){
+		degree.ruleSequence.add(new Rule("get the degree of a polynomial"){
 			private static final long serialVersionUID = 1L;
 
 			@Override
@@ -243,7 +248,7 @@ public class SimpleFuncs extends QuickMath{
 			}
 		});
 		
-		bigger.ruleSequence.add(new Rule("choose the bigger function",Rule.VERY_EASY){
+		bigger.ruleSequence.add(new Rule("choose the bigger function"){
 			private static final long serialVersionUID = 1L;
 
 			@Override
@@ -259,14 +264,14 @@ public class SimpleFuncs extends QuickMath{
 		});
 		
 		save.simplifyChildren = false;
-		save.ruleSequence.add(new Rule("saving expression",Rule.VERY_EASY) {
+		save.ruleSequence.add(new Rule("saving expression") {
 			private static final long serialVersionUID = 1L;
 
 			@Override
 			public Expr applyRuleToExpr(Expr e,CasInfo casInfo){
 				Func f = (Func)e;
 				try {
-					Expr.saveExpr(f.get(0), f.get(1).toString());
+					Expr.serializedSaveExpr(f.get(0), f.get(1).toString());
 				} catch (IOException e1) {
 					e1.printStackTrace();
 					return var("error");
@@ -277,7 +282,7 @@ public class SimpleFuncs extends QuickMath{
 		});
 		
 		open.simplifyChildren = false;
-		open.ruleSequence.add(new Rule("opening expression",Rule.VERY_EASY) {
+		open.ruleSequence.add(new Rule("opening expression") {
 			private static final long serialVersionUID = 1L;
 
 			@Override
@@ -285,7 +290,7 @@ public class SimpleFuncs extends QuickMath{
 				Func f = (Func)e;
 				
 				try {
-					return Expr.openExpr(f.get(0).toString());
+					return Expr.serializedOpenExpr(f.get(0).toString());
 				} catch (ClassNotFoundException | IOException e1) {
 					e1.printStackTrace();
 				}
@@ -295,7 +300,7 @@ public class SimpleFuncs extends QuickMath{
 		});
 		
 		conv.simplifyChildren = false;
-		conv.ruleSequence.add(new Rule("unit conversion",Rule.EASY) {
+		conv.ruleSequence.add(new Rule("unit conversion") {
 			private static final long serialVersionUID = 1L;
 			
 			@Override
@@ -313,7 +318,7 @@ public class SimpleFuncs extends QuickMath{
 		});
 		
 		mathML.simplifyChildren = false;
-		mathML.ruleSequence.add(new Rule("math markup language conversion",Rule.EASY) {
+		mathML.ruleSequence.add(new Rule("math markup language conversion") {
 			private static final long serialVersionUID = 1L;
 			
 			@Override
@@ -324,7 +329,7 @@ public class SimpleFuncs extends QuickMath{
 			}
 		});
 		
-		subst.ruleSequence.add(new Rule("substitution",Rule.EASY) {
+		subst.ruleSequence.add(new Rule("substitution") {
 			private static final long serialVersionUID = 1L;
 			
 			@Override
@@ -337,7 +342,7 @@ public class SimpleFuncs extends QuickMath{
 			}
 		});
 		
-		eval.ruleSequence.add(new Rule("evaluate",Rule.EASY) {
+		eval.ruleSequence.add(new Rule("evaluate") {
 			private static final long serialVersionUID = 1L;
 			
 			@Override
@@ -346,18 +351,20 @@ public class SimpleFuncs extends QuickMath{
 				
 				if(f.get() instanceof Equ) {
 					Equ casted = (Equ)f.get();
+					
+					return bool(casted.getLeftSide().exactlyEquals(casted.getRightSide()));
+				}else if(f.get() instanceof Less) {
+					Less casted = (Less)f.get();
+					if(casted.containsVars()) return bool(true);
 					boolean equal = casted.getLeftSide().exactlyEquals(casted.getRightSide());
 					
-					if(casted.type == Equ.EQUALS) {
-						return bool(equal);
-					}
+					return bool(!equal && casted.getLeftSide().convertToFloat(exprList()).real < casted.getRightSide().convertToFloat(exprList()).real );
+				}else if(f.get() instanceof Greater) {
+					Greater casted = (Greater)f.get();
 					if(casted.containsVars()) return bool(true);
-					if(casted.type == Equ.GREATER) {
-						return bool(!equal && casted.getLeftSide().convertToFloat(exprList()).real > casted.getRightSide().convertToFloat(exprList()).real );
-					}
-					if(casted.type == Equ.LESS) {
-						return bool(!equal && casted.getLeftSide().convertToFloat(exprList()).real < casted.getRightSide().convertToFloat(exprList()).real );
-					}
+					boolean equal = casted.getLeftSide().exactlyEquals(casted.getRightSide());
+					
+					return bool(!equal && casted.getLeftSide().convertToFloat(exprList()).real > casted.getRightSide().convertToFloat(exprList()).real );
 				}else if(f.get() instanceof BoolState) {
 					return f.get();
 				}
@@ -367,7 +374,7 @@ public class SimpleFuncs extends QuickMath{
 		});
 		
 		expand.simplifyChildren = false;
-		expand.ruleSequence.add(new Rule("expand",Rule.TRICKY) {
+		expand.ruleSequence.add(new Rule("expand") {
 			private static final long serialVersionUID = 1L;
 			
 			@Override
@@ -378,7 +385,7 @@ public class SimpleFuncs extends QuickMath{
 		});
 		expand.toFloatFunc = Func.nothingFunc;
 		
-		taylor.ruleSequence.add(new Rule("taylor series",Rule.TRICKY){
+		taylor.ruleSequence.add(new Rule("taylor series"){
 			private static final long serialVersionUID = 1L;
 			
 			@Override
@@ -405,7 +412,7 @@ public class SimpleFuncs extends QuickMath{
 			}
 		});
 		
-		gui.ruleSequence.add(new Rule("opens a new window",Rule.VERY_EASY) {
+		gui.ruleSequence.add(new Rule("opens a new window") {
 			private static final long serialVersionUID = 1L;
 			
 			@SuppressWarnings("unused")
@@ -417,7 +424,7 @@ public class SimpleFuncs extends QuickMath{
 			}
 		});
 		
-		nParams.ruleSequence.add(new Rule("expected number of paramters",Rule.VERY_EASY) {
+		nParams.ruleSequence.add(new Rule("expected number of paramters") {
 			private static final long serialVersionUID = 1L;
 			
 			@Override
@@ -429,7 +436,7 @@ public class SimpleFuncs extends QuickMath{
 		});
 		
 		isType.simplifyChildren = false;
-		isType.ruleSequence.add(new Rule("check type",Rule.VERY_EASY) {
+		isType.ruleSequence.add(new Rule("check type") {
 			private static final long serialVersionUID = 1L;
 			
 			@Override
@@ -441,7 +448,7 @@ public class SimpleFuncs extends QuickMath{
 		});
 		
 		contains.simplifyChildren = false;
-		contains.ruleSequence.add(new Rule("check if first argument contains the second argument",Rule.VERY_EASY){
+		contains.ruleSequence.add(new Rule("check if first argument contains the second argument"){
 			private static final long serialVersionUID = 1L;
 			
 			@Override
@@ -454,7 +461,7 @@ public class SimpleFuncs extends QuickMath{
 		
 		result.ruleSequence.add(StandardRules.becomeInner);
 		
-		allowAbs.ruleSequence.add(new Rule("are we allowing absolute values",Rule.VERY_EASY) {
+		allowAbs.ruleSequence.add(new Rule("are we allowing absolute values") {
 			private static final long serialVersionUID = 1L;
 			
 			@Override
@@ -463,7 +470,7 @@ public class SimpleFuncs extends QuickMath{
 			}
 		});
 		
-		allowComplexNumbers.ruleSequence.add(new Rule("are we allowing absolute values",Rule.VERY_EASY) {
+		allowComplexNumbers.ruleSequence.add(new Rule("are we allowing absolute values") {
 			private static final long serialVersionUID = 1L;
 			
 			@Override
@@ -472,7 +479,7 @@ public class SimpleFuncs extends QuickMath{
 			}
 		});
 		
-		setAllowAbs.ruleSequence.add(new Rule("are we allowing absolute values",Rule.VERY_EASY) {
+		setAllowAbs.ruleSequence.add(new Rule("are we allowing absolute values") {
 			private static final long serialVersionUID = 1L;
 			
 			@Override
@@ -482,7 +489,7 @@ public class SimpleFuncs extends QuickMath{
 			}
 		});
 		
-		setAllowComplexNumbers.ruleSequence.add(new Rule("are we allowing absolute values",Rule.VERY_EASY) {
+		setAllowComplexNumbers.ruleSequence.add(new Rule("are we allowing absolute values") {
 			private static final long serialVersionUID = 1L;
 			
 			@Override
@@ -492,7 +499,7 @@ public class SimpleFuncs extends QuickMath{
 			}
 		});
 		
-		sinh.ruleSequence.add(new Rule("sinh function",Rule.EASY) {
+		sinh.ruleSequence.add(new Rule("sinh function") {
 			private static final long serialVersionUID = 1L;
 			
 			@Override
@@ -509,7 +516,7 @@ public class SimpleFuncs extends QuickMath{
 			}
 		};
 		
-		cosh.ruleSequence.add(new Rule("cosh function",Rule.EASY) {
+		cosh.ruleSequence.add(new Rule("cosh function") {
 			private static final long serialVersionUID = 1L;
 			
 			@Override
@@ -526,7 +533,7 @@ public class SimpleFuncs extends QuickMath{
 			}
 		};
 		
-		tanh.ruleSequence.add(new Rule("tanh function",Rule.EASY) {
+		tanh.ruleSequence.add(new Rule("tanh function") {
 			private static final long serialVersionUID = 1L;
 			
 			@Override
@@ -544,7 +551,7 @@ public class SimpleFuncs extends QuickMath{
 			}
 		};
 		
-		sec.ruleSequence.add(new Rule("replace sec with one over cos",Rule.EASY){
+		sec.ruleSequence.add(new Rule("replace sec with one over cos"){
 			private static final long serialVersionUID = 1L;
 			
 			@Override
@@ -561,7 +568,7 @@ public class SimpleFuncs extends QuickMath{
 			}
 		};
 		
-		csc.ruleSequence.add(new Rule("replace csc with one over sin",Rule.EASY){
+		csc.ruleSequence.add(new Rule("replace csc with one over sin"){
 			private static final long serialVersionUID = 1L;
 			
 			@Override
@@ -578,7 +585,7 @@ public class SimpleFuncs extends QuickMath{
 			}
 		};
 		
-		cot.ruleSequence.add(new Rule("replace cot with one over tan",Rule.EASY){
+		cot.ruleSequence.add(new Rule("replace cot with one over tan"){
 			private static final long serialVersionUID = 1L;
 			
 			@Override
@@ -596,7 +603,7 @@ public class SimpleFuncs extends QuickMath{
 		};
 		
 		
-		extSeq.ruleSequence.add(new Rule("extend the sequence",Rule.EASY){
+		extSeq.ruleSequence.add(new Rule("extend the sequence"){
 			private static final long serialVersionUID = 1L;
 			
 			@Override
@@ -619,7 +626,7 @@ public class SimpleFuncs extends QuickMath{
 				return e.get();
 			}
 		});
-		truncSeq.ruleSequence.add(new Rule("truncate the sequence",Rule.EASY) {
+		truncSeq.ruleSequence.add(new Rule("truncate the sequence") {
 			private static final long serialVersionUID = 1L;
 			
 			@Override
@@ -633,7 +640,7 @@ public class SimpleFuncs extends QuickMath{
 				return truncated;
 			}
 		});
-		subSeq.ruleSequence.add(new Rule("get the sub sequence from start to end, end is non inclusive",Rule.EASY) {
+		subSeq.ruleSequence.add(new Rule("get the sub sequence from start to end, end is non inclusive") {
 			private static final long serialVersionUID = 1L;
 			
 			@Override
@@ -648,7 +655,7 @@ public class SimpleFuncs extends QuickMath{
 				return truncated;
 			}
 		});
-		revSeq.ruleSequence.add(new Rule("revserse the sequence",Rule.EASY) {
+		revSeq.ruleSequence.add(new Rule("revserse the sequence") {
 			private static final long serialVersionUID = 1L;
 			
 			@Override
@@ -663,7 +670,7 @@ public class SimpleFuncs extends QuickMath{
 				return newSeq;
 			}
 		});
-		sumSeq.ruleSequence.add(new Rule("add elements of sequence",Rule.EASY){
+		sumSeq.ruleSequence.add(new Rule("add elements of sequence"){
 			private static final long serialVersionUID = 1L;
 			
 			@Override
@@ -679,7 +686,7 @@ public class SimpleFuncs extends QuickMath{
 		
 		
 		
-		arcLen.ruleSequence.add(new Rule("arc-length of a function",Rule.TRICKY){
+		arcLen.ruleSequence.add(new Rule("arc-length of a function"){
 			private static final long serialVersionUID = 1L;
 			
 			@Override
@@ -704,7 +711,7 @@ public class SimpleFuncs extends QuickMath{
 			}
 		};
 		
-		repDiff.ruleSequence.add(new Rule("repeated derivative",Rule.EASY){
+		repDiff.ruleSequence.add(new Rule("repeated derivative"){
 			private static final long serialVersionUID = 1L;
 			
 			@Override
@@ -779,6 +786,37 @@ public class SimpleFuncs extends QuickMath{
 			}
 		};
 		
+		similar.simplifyChildren = false;
+		similar.ruleSequence.add(new Rule("expressions are similar"){
+			private static final long serialVersionUID = 1L;
+			
+			@Override
+			public Expr applyRuleToExpr(Expr e,CasInfo casInfo) {
+				return bool(Rule.strictSimilarExpr(e.get(0), e.get(1)));
+			}
+		});
+		fastSimilar.simplifyChildren = false;
+		fastSimilar.ruleSequence.add(new Rule("expressions are similar computed quickly"){
+			private static final long serialVersionUID = 1L;
+			
+			@Override
+			public Expr applyRuleToExpr(Expr e,CasInfo casInfo) {
+				return bool(Rule.fastSimilarExpr(e.get(0), e.get(1)));
+			}
+		});
+		
+		sortExpr.simplifyChildren = false;
+		sortExpr.ruleSequence.add(new Rule("sort expression into cononical arangement") {
+			private static final long serialVersionUID = 1L;
+			
+			@Override
+			public Expr applyRuleToExpr(Expr e,CasInfo casInfo) {
+				e.get().sort();
+				System.out.println(e.get().flags.sorted);
+				return e.get();
+			}
+		});
+		
 	}
 	
 	private static ArrayList<String> functionNames = new ArrayList<String>();
@@ -837,6 +875,10 @@ public class SimpleFuncs extends QuickMath{
 		addFunc(arcLen);
 		addFunc(repDiff);
 		
+		addFunc(similar);
+		addFunc(fastSimilar);
+		addFunc(sortExpr);
+		
 		for(String s:simpleFuncs.keySet()) {
 			functionNames.add(s);
 		}
@@ -868,6 +910,7 @@ public class SimpleFuncs extends QuickMath{
 		
 		numberOfParams.put("solve", 2);
 		numberOfParams.put("diff", 2);
+		numberOfParams.put("range", 4);
 		numberOfParams.put("integrate", 2);
 		numberOfParams.put("approx", 2);
 		
@@ -956,6 +999,7 @@ public class SimpleFuncs extends QuickMath{
 		if(funcName.equals("integrateOver")) return integrateOver(params[0],params[1],params[2],(Var)params[3]);
 	
 		if(funcName.equals("limit")) return limit(params[0],(Var)params[1],params[2]);
+		if(funcName.equals("range")) return range(params[0],params[1],params[2],(Var)params[3]);
 		
 		if(!FUNCTION_UNLOCKED) throw new Exception("no function by the name: "+funcName);//allow making new functions on the fly
 		

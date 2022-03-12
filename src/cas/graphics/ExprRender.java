@@ -74,6 +74,7 @@ public class ExprRender extends QuickMath{//sort of a wrap of the image type but
 			nameExchange.put("phi", "φ");
 			nameExchange.put("psi", "ψ");
 			nameExchange.put("omega", "ω");
+			nameExchange.put("inf", "∞");
 		}
 		public void makeString(String s,int fontSize) {//creates basic text image
 			s = s.replace('*', '·');
@@ -113,7 +114,7 @@ public class ExprRender extends QuickMath{//sort of a wrap of the image type but
 			
 			setWidth(getFontWidth()*2+eImg.getWidth());
 			
-			setFractionBar( Math.min(eImg.getFractionBar(),leftParenImg.getFractionBar()) );
+			setFractionBar( Math.min(Math.max(eImg.getFractionBar(),fontSize()),leftParenImg.getFractionBar()) );
 			initImg();
 			drawImage(leftParenImg,0,0,getFontWidth(),getHeight());
 			drawImage(eImg,getFontWidth(),0,eImg.getWidth(),eImg.getHeight());
@@ -183,7 +184,7 @@ public class ExprRender extends QuickMath{//sort of a wrap of the image type but
 				
 				ExprImg baseImg = newExprImg();
 				
-				if(Rule.fastSimilarStruct(sqrtObj,e)) {
+				if(Rule.fastSimilarExpr(sqrtObj,e)) {
 					baseImg.makeExpr(pow.getBase());
 					
 					
@@ -249,9 +250,7 @@ public class ExprRender extends QuickMath{//sort of a wrap of the image type but
 				Equ equ = (Equ)e;
 				
 				ExprImg equImg = newExprImg();
-				if(equ.type == Equ.EQUALS)equImg.makeString("=");
-				if(equ.type == Equ.GREATER)equImg.makeString(">");
-				if(equ.type == Equ.LESS)equImg.makeString("<");
+				equImg.makeString("=");
 				
 				ExprImg leftImg = newExprImg();
 				leftImg.makeExpr(equ.getLeftSide());
@@ -370,7 +369,7 @@ public class ExprRender extends QuickMath{//sort of a wrap of the image type but
 				
 				setWidth(getFontWidth()+parameters.getWidth()+getFontWidth());
 				
-				setFractionBar(Math.max(parameters.getFractionBar(),leftBrac.getFractionBar()));
+				setFractionBar(Math.min(Math.max(parameters.getFractionBar(),fontSize()),leftBrac.getFractionBar()));
 				
 				initImg();
 				drawImage(leftBrac,0,0,getFontWidth(),getHeight());
@@ -704,12 +703,14 @@ public class ExprRender extends QuickMath{//sort of a wrap of the image type but
 		}
 	}
 	
+	public static final String FONT = "courier new";
+	
 	public static BufferedImage createImg(Expr e,Color text,int fontSize) {//this returns the image with the expression fitting the space as best as possible
 		BufferedImage nothing = new BufferedImage(1,1,BufferedImage.TYPE_INT_ARGB);//need a way to obtain a graphics 2d object
 		Graphics2D g = nothing.createGraphics();
 		g.setColor(text);
 		g.setRenderingHints(new RenderingHints(RenderingHints.KEY_INTERPOLATION, RenderingHints.VALUE_INTERPOLATION_BILINEAR));
-		g.setFont(new Font("courier new",0,fontSize));
+		g.setFont(new Font(FONT,0,fontSize));
 		
 		ExprImg exprImgObj = new ExprImg(g);
 		exprImgObj.makeExpr(e);
@@ -731,7 +732,7 @@ public class ExprRender extends QuickMath{//sort of a wrap of the image type but
 		
 		g.setRenderingHints(new RenderingHints(RenderingHints.KEY_INTERPOLATION, RenderingHints.VALUE_INTERPOLATION_BILINEAR));
 		
-		g.setFont(new Font("courier new",0,48));
+		g.setFont(new Font(FONT,0,48));
 		
 		//fitting expression image into desired space and centering it
 		ExprImg exprImgObj = new ExprImg(g);

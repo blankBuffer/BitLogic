@@ -10,15 +10,15 @@ public class Factor extends Expr{
 	
 	private static final long serialVersionUID = -5448276275686292911L;
 	
-	static Rule sumOfCubes = new Rule("factor(a^3+b^3)->(a+b)*(a^2-a*b+b^2)","sum of cubes",Rule.UNCOMMON);
-	static Rule differenceOfCubes = new Rule("factor(a^3-b^3)->(a-b)*(a^2+a*b+b^2)","difference of cubes",Rule.UNCOMMON);
+	static Rule sumOfCubes = new Rule("factor(a^3+b^3)->(a+b)*(a^2-a*b+b^2)","sum of cubes");
+	static Rule differenceOfCubes = new Rule("factor(a^3-b^3)->(a-b)*(a^2+a*b+b^2)","difference of cubes");
 
 	public Factor(){}//
 	public Factor(Expr expr) {
 		add(expr);
 	}
 	
-	static Rule fastEscape = new Rule("nothing to factor",Rule.EASY) {
+	static Rule fastEscape = new Rule("nothing to factor") {
 		private static final long serialVersionUID = 1L;
 
 		@Override
@@ -28,7 +28,7 @@ public class Factor extends Expr{
 		}
 	};
 	
-	static Rule reversePascalsTriangle = new Rule("reverse pascals triangle",Rule.DIFFICULT){
+	static Rule reversePascalsTriangle = new Rule("reverse pascals triangle"){
 		private static final long serialVersionUID = 1L;
 
 		@Override
@@ -63,7 +63,7 @@ public class Factor extends Expr{
 		}
 	};
 	
-	static Rule power2Reduction = new Rule("power of 2 polynomial",Rule.UNCOMMON){
+	static Rule power2Reduction = new Rule("power of 2 polynomial"){
 		private static final long serialVersionUID = 1L;
 
 		@Override
@@ -102,7 +102,7 @@ public class Factor extends Expr{
 		}
 	};
 	
-	static Rule quadraticFactor = new Rule("factor quadratics",Rule.TRICKY){
+	static Rule quadraticFactor = new Rule("factor quadratics"){
 		private static final long serialVersionUID = 1L;
 
 		@Override
@@ -163,7 +163,7 @@ public class Factor extends Expr{
 		}
 	};
 	
-	static Rule generalFactor = new Rule("general factor",Rule.TRICKY){
+	static Rule generalFactor = new Rule("general factor"){
 		private static final long serialVersionUID = 1L;
 		
 		private Num getNumerOfPower(Power pow) {
@@ -294,7 +294,7 @@ public class Factor extends Expr{
 		}
 	};
 	
-	static Rule reExpandSubSums = new Rule("re distribute sums",Rule.EASY){
+	static Rule reExpandSubSums = new Rule("re distribute sums"){
 		private static final long serialVersionUID = 1L;
 		
 		@Override
@@ -317,7 +317,7 @@ public class Factor extends Expr{
 		}
 	};
 	
-	static Rule pullOutRoots = new Rule("pull out roots of polynomial",Rule.VERY_DIFFICULT){
+	static Rule pullOutRoots = new Rule("pull out roots of polynomial"){
 		private static final long serialVersionUID = 1L;
 		
 		@Override

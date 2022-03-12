@@ -15,7 +15,7 @@ public class ExprList extends Expr{
 	public ExprList(){
 		commutative = true;
 	}
-	static Rule removeRepeats = new Rule("remove repeats",Rule.VERY_EASY){
+	static Rule removeRepeats = new Rule("remove repeats"){
 		private static final long serialVersionUID = 1L;
 
 		@Override
@@ -34,7 +34,7 @@ public class ExprList extends Expr{
 		}
 	};
 	
-	static Rule alone = new Rule("alone list",Rule.VERY_EASY) {
+	static Rule alone = new Rule("alone list") {
 		private static final long serialVersionUID = 1L;
 		
 		@Override
@@ -49,7 +49,7 @@ public class ExprList extends Expr{
 		}
 	};
 	
-	static Rule listContainsList = new Rule("list contains list",Rule.VERY_EASY) {
+	static Rule listContainsList = new Rule("list contains list") {
 		
 		private static final long serialVersionUID = 1L;
 		

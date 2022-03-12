@@ -15,7 +15,7 @@ public class Approx extends Expr{
 		simplifyChildren = false;
 	}
 	
-	static Rule getFloatExpr = new Rule("get float approximation",Rule.EASY){
+	static Rule getFloatExpr = new Rule("get float approximation"){
 		private static final long serialVersionUID = 1L;
 		
 		@Override

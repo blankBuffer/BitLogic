@@ -25,7 +25,7 @@ public class Define extends Expr{
 		return get(1);
 	}
 	
-	static Rule addDefinition = new Rule("add definition",Rule.EASY) {
+	static Rule addDefinition = new Rule("add definition") {
 		private static final long serialVersionUID = 1L;
 		
 		@Override

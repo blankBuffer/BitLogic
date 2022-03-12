@@ -41,12 +41,13 @@ public class StackEditor extends QuickMath {
 		if (last() == null)
 			return;
 		expr = stack.get(index);
+		expr.flags.simple = false;
 		Thread compute = new Thread("compute") {
 			@Override
 			public void run() {
 				Expr.RECURSION_SAFETY = 0;
-				long oldTime = System.nanoTime();
 				long startingInstructionCount = Expr.ruleCallCount;
+				long oldTime = System.nanoTime();
 				expr = expr.simplify(currentCasInfo);// Substitutes the variables and}
 				long delta = System.nanoTime() - oldTime;
 				createAlert("took " + delta / 1000000.0 + " ms to compute, "+(Expr.ruleCallCount-startingInstructionCount)+" intructions called");

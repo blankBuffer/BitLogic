@@ -16,7 +16,7 @@ public class Dot extends Expr{
 	
 	public Dot(){}//
 	
-	static Rule matrixMult = new Rule("matrix multiplication",Rule.TRICKY) {
+	static Rule matrixMult = new Rule("matrix multiplication") {
 		private static final long serialVersionUID = 1L;
 		
 		@Override
@@ -54,7 +54,7 @@ public class Dot extends Expr{
 		}
 	};
 	
-	static Rule dotContainsDot = new Rule("dot contains dot",Rule.EASY) {
+	static Rule dotContainsDot = new Rule("dot contains dot") {
 		private static final long serialVersionUID = 1L;
 		
 		@Override

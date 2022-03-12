@@ -42,7 +42,7 @@ public class Prod extends Expr{
 	public Prod() {
 		commutative = true;
 	}
-	static Rule epsilonInfReduction = new Rule("expressions with epsilon or infinity",Rule.EASY){
+	static Rule epsilonInfReduction = new Rule("expressions with epsilon or infinity"){
 		private static final long serialVersionUID = 1L;
 
 		@Override
@@ -117,7 +117,7 @@ public class Prod extends Expr{
 		return false;
 	}
 	
-	static Rule trigExpandElements = new Rule("trig expand elements Prod",Rule.TRICKY){
+	static Rule trigExpandElements = new Rule("trig expand elements Prod"){
 		private static final long serialVersionUID = 1L;
 
 		@Override
@@ -133,7 +133,7 @@ public class Prod extends Expr{
 		}
 	};
 	
-	static Rule combineWithDiv = new Rule("combine products with division",Rule.EASY){
+	static Rule combineWithDiv = new Rule("combine products with division"){
 		private static final long serialVersionUID = 1L;
 
 		@Override
@@ -177,7 +177,7 @@ public class Prod extends Expr{
 		
 	};
 	
-	static Rule factorSubSums = new Rule("factor sum elements",Rule.EASY){
+	static Rule factorSubSums = new Rule("factor sum elements"){
 		private static final long serialVersionUID = 1L;
 
 		@Override
@@ -188,7 +188,7 @@ public class Prod extends Expr{
 		}
 	};
 	
-	static Rule reSimplifyIntBasePowers = new Rule("re-simplify int based powers",Rule.EASY){
+	static Rule reSimplifyIntBasePowers = new Rule("re-simplify int based powers"){
 		private static final long serialVersionUID = 1L;
 
 		@Override
@@ -210,7 +210,7 @@ public class Prod extends Expr{
 		
 	};
 	
-	static Rule prodContainsProd = new Rule("product contains a product",Rule.EASY){
+	static Rule prodContainsProd = new Rule("product contains a product"){
 		private static final long serialVersionUID = 1L;
 
 		@Override
@@ -230,7 +230,7 @@ public class Prod extends Expr{
 		}
 	};
 	
-	static Rule expoIntoBase = new Rule("power of integers with exponent being product",Rule.UNCOMMON){
+	static Rule expoIntoBase = new Rule("power of integers with exponent being product"){
 		private static final long serialVersionUID = 1L;
 
 		@Override
@@ -268,7 +268,7 @@ public class Prod extends Expr{
 		
 	};
 	
-	static Rule multiplyIntBases = new Rule("multiply int bases",Rule.UNCOMMON){
+	static Rule multiplyIntBases = new Rule("multiply int bases"){
 		private static final long serialVersionUID = 1L;
 
 		@Override
@@ -311,7 +311,7 @@ public class Prod extends Expr{
 		}
 	};
 	
-	static Rule expandIntBases = new Rule("prime factor and expand int bases",Rule.TRICKY){
+	static Rule expandIntBases = new Rule("prime factor and expand int bases"){
 		private static final long serialVersionUID = 1L;
 		
 		@Override
@@ -359,7 +359,7 @@ public class Prod extends Expr{
 		}
 	};
 	
-	static Rule multiplyLikeTerms = new Rule("multiply like terms",Rule.EASY){
+	static Rule multiplyLikeTerms = new Rule("multiply like terms"){
 		private static final long serialVersionUID = 1L;
 		
 		@Override
@@ -405,7 +405,7 @@ public class Prod extends Expr{
 		}
 	};
 	
-	static Rule zeroInProd = new Rule("zero in the product",Rule.VERY_EASY){
+	static Rule zeroInProd = new Rule("zero in the product"){
 		private static final long serialVersionUID = 1L;
 		
 		@Override
@@ -430,7 +430,7 @@ public class Prod extends Expr{
 		}
 	};
 	
-	static Rule multiplyIntegers = new Rule("multiply integers",Rule.EASY){
+	static Rule multiplyIntegers = new Rule("multiply integers"){
 		private static final long serialVersionUID = 1L;
 		
 		@Override
@@ -456,7 +456,7 @@ public class Prod extends Expr{
 		}
 	};
 	
-	static Rule reduceTrigProd = new Rule("reducing trig product",Rule.EASY) {//tan(x)*cos(x) -> sin(x)
+	static Rule reduceTrigProd = new Rule("reducing trig product") {//tan(x)*cos(x) -> sin(x)
 		private static final long serialVersionUID = 1L;
 		
 		@Override
@@ -546,7 +546,7 @@ public class Prod extends Expr{
 		
 	};
 	
-	static Rule aloneProd = new Rule("product is alone",Rule.VERY_EASY){
+	static Rule aloneProd = new Rule("product is alone"){
 		private static final long serialVersionUID = 1L;
 		
 		@Override
@@ -555,7 +555,7 @@ public class Prod extends Expr{
 		}
 	};
 	
-	static Rule multConj = new Rule("multiplying conjugates",Rule.TRICKY) {//(sqrt(2)+3)*(sqrt(2)-3) -> -7
+	static Rule multConj = new Rule("multiplying conjugates") {//(sqrt(2)+3)*(sqrt(2)-3) -> -7
 		private static final long serialVersionUID = 1L;
 		
 		Expr sqrtObjExtended,sqrtObjExtended2;
@@ -578,7 +578,7 @@ public class Prod extends Expr{
 					
 					for(int j = 0;j<currentSum.size();j++) {
 						if(currentSum.get(j) instanceof Num) num = (Num)currentSum.get(j);
-						else if(Rule.fastSimilarStruct(sqrtObjExtended, currentSum.get(j)) || Rule.fastSimilarStruct(sqrtObjExtended2, currentSum.get(j))) {
+						else if(Rule.fastSimilarExpr(sqrtObjExtended, currentSum.get(j)) || Rule.fastSimilarExpr(sqrtObjExtended2, currentSum.get(j))) {
 							other = currentSum.get(j);
 						}
 					}
@@ -615,7 +615,7 @@ public class Prod extends Expr{
 		}
 	};
 	
-	static Rule productWithMatrix = new Rule("product with matrix",Rule.EASY) {//multiplication of each element
+	static Rule productWithMatrix = new Rule("product with matrix") {//multiplication of each element
 		private static final long serialVersionUID = 1L;
 		
 		@Override
@@ -671,7 +671,7 @@ public class Prod extends Expr{
 		
 	};
 	
-	static Rule compressRoots = new Rule("compress roots together",Rule.EASY){
+	static Rule compressRoots = new Rule("compress roots together"){
 		private static final long serialVersionUID = 1L;
 		
 		@Override

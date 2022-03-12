@@ -351,7 +351,7 @@ public class Limit extends Expr{
 	
 	
 	
-	static Rule biggestInSumLimit = new Rule("biggest term in sum controls",Rule.EASY){
+	static Rule biggestInSumLimit = new Rule("biggest term in sum controls"){
 		private static final long serialVersionUID = 1L;
 
 		@Override
@@ -389,7 +389,7 @@ public class Limit extends Expr{
 		add(value);
 	}
 	
-	static Rule removeConstants = new Rule("limit product with constants",Rule.VERY_EASY){
+	static Rule removeConstants = new Rule("limit product with constants"){
 		private static final long serialVersionUID = 1L;
 
 		@Override
@@ -410,7 +410,7 @@ public class Limit extends Expr{
 		}
 	};
 	
-	static Rule divPolyLimit = new Rule("limit of dividing polynomials",Rule.CHALLENGING){
+	static Rule divPolyLimit = new Rule("limit of dividing polynomials"){
 		private static final long serialVersionUID = 1L;
 
 		@Override
@@ -470,7 +470,7 @@ public class Limit extends Expr{
 		}
 	};
 	
-	static Rule directSubst = new Rule("direct substitution",Rule.EASY){
+	static Rule directSubst = new Rule("direct substitution"){
 		private static final long serialVersionUID = 1L;
 
 		@Override
@@ -487,7 +487,7 @@ public class Limit extends Expr{
 		}
 	};
 	
-	static Rule lhopitalsRule = new Rule("l'hopital's rule",Rule.TRICKY){
+	static Rule lhopitalsRule = new Rule("l'hopital's rule"){
 		private static final long serialVersionUID = 1L;
 
 		boolean containsReducablePart(Expr e,Var v){

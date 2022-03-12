@@ -7,6 +7,7 @@ public class CasInfo extends QuickMath implements Serializable{
 	private static final long serialVersionUID = -423836233586167621L;
 	private boolean allowComplexNumbers = false;
 	private boolean allowAbs = true;
+	private boolean factorIrrationalRoots = false;
 	public Defs definitions;
 	
 	public CasInfo() {
@@ -49,11 +50,18 @@ public class CasInfo extends QuickMath implements Serializable{
 		this.allowComplexNumbers = allowComplexNumbers;
 		if(allowComplexNumbers) allowAbs = false;
 	}
+	public void setFactorIrrationalRoots(boolean factorIrrationalRoots) {
+		this.factorIrrationalRoots = factorIrrationalRoots;
+	}
 	
 	public boolean allowAbs() {
 		return allowAbs;
 	}
 	public boolean allowComplexNumbers() {
 		return allowComplexNumbers;
+	}
+	
+	public boolean factorIrrationalRoots() {
+		return factorIrrationalRoots;
 	}
 }

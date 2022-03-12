@@ -7,9 +7,11 @@ public class Var extends Expr{
 	
 	private static final long serialVersionUID = -3581525014075161068L;
 	public String name;
-	public ComplexFloat valuef = new ComplexFloat(0,0);
 	
-	public boolean generic = true;//if it is easily similar
+	/*
+	 * for non generic variables this is the defined value for the constant
+	 */
+	public ComplexFloat valuef = new ComplexFloat(0,0);
 	
 	public Var(String name){
 		if(name.equals("pi")){
@@ -28,6 +30,15 @@ public class Var extends Expr{
 		flags.sorted = true;
 	}
 
+	
+	/*
+	 * non generic variables behave like numbers and are constant
+	 * many functions handle variables differently if they are generic
+	 */
+	private boolean generic = true;
+	public boolean isGeneric() {
+		return generic;
+	}
 	@Override
 	public Expr copy() {
 		return new Var(name);
@@ -48,13 +59,7 @@ public class Var extends Expr{
 
 	@Override
 	public int hashCode() {
-		int ex = 913478934;
-		int sum = 0;
-		for(int i = 0;i<name.length();i++) {
-			sum+= (name.charAt(i))*ex;
-			ex*=1508572583;
-		}
-		return sum+891267084;
+		return name.hashCode()+980698164;
 	}
 
 	@Override

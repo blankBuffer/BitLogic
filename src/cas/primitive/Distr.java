@@ -21,7 +21,7 @@ public class Distr extends Expr{
 		simplifyChildren = false;
 	}
 	
-	static Rule generalDistr = new Rule("general distribution",Rule.EASY){
+	static Rule generalDistr = new Rule("general distribution"){
 		private static final long serialVersionUID = 1L;
 
 		@Override

@@ -27,7 +27,7 @@ public class Next extends Expr{
 	}
 	
 	//is the sequence the standard fibonacci
-	static Rule isFibonacci = new Rule("is the fibonacci sequence",Rule.EASY) {
+	static Rule isFibonacci = new Rule("is the fibonacci sequence") {
 		private static final long serialVersionUID = 1L;
 		
 		@Override
@@ -68,7 +68,7 @@ public class Next extends Expr{
 	 * this can also predict factorial sequence
 	 */
 	static boolean USED_GEO = false;
-	static Rule geometric = new Rule("is a geometric series",Rule.EASY) {
+	static Rule geometric = new Rule("is a geometric series") {
 		private static final long serialVersionUID = 1L;
 		
 		@Override
@@ -105,7 +105,7 @@ public class Next extends Expr{
 	/*
 	 * sequence loops like 1,2,3,4,1,2,3,4,1,2,3,4 etc
 	 */
-	static Rule looping = new Rule("sequence is a loop",Rule.EASY) {
+	static Rule looping = new Rule("sequence is a loop") {
 		private static final long serialVersionUID = 1L;
 		
 		@Override
@@ -136,7 +136,7 @@ public class Next extends Expr{
 	 * it can detect up to 6 sequences 'interlaced' or a step of 6.
 	 */
 	static boolean USED_STEP = false;
-	static Rule steppedPattern = new Rule("stepped/interlaced patterns",Rule.EASY) {//basically like sequences interlaced
+	static Rule steppedPattern = new Rule("stepped/interlaced patterns") {//basically like sequences interlaced
 		private static final long serialVersionUID = 1L;
 		
 		@Override
@@ -215,7 +215,7 @@ public class Next extends Expr{
 	 * looks for patterns in the coefficients of the pattern
 	 */
 	static boolean USED_COEF = false;
-	static Rule coefPredict = new Rule("predict seperatly the coefficinet and the variable component",Rule.EASY) {
+	static Rule coefPredict = new Rule("predict seperatly the coefficinet and the variable component") {
 		private static final long serialVersionUID = 1L;
 		
 		@Override
@@ -251,7 +251,7 @@ public class Next extends Expr{
 		}
 	};
 	//predicts the next fraction in a sequence. Looks at the numerator and denominator patterns separately to predict the next elements
-	static Rule fracPredict = new Rule("predict next fraction",Rule.EASY) {
+	static Rule fracPredict = new Rule("predict next fraction") {
 		private static final long serialVersionUID = 1L;
 		
 		@Override
@@ -291,7 +291,7 @@ public class Next extends Expr{
 	/*
 	 * predicts the next power in a sequence by looking at the base and exponent as seperate sequences
 	 */
-	static Rule powPredict = new Rule("predict next power",Rule.EASY) {
+	static Rule powPredict = new Rule("predict next power") {
 		private static final long serialVersionUID = 1L;
 		
 		@Override
@@ -331,7 +331,7 @@ public class Next extends Expr{
 	/*
 	 * standard way of predicting the next number in a sequences
 	 */
-	static Rule polynomial = new Rule("is a polynomial sequence",Rule.TRICKY) {
+	static Rule polynomial = new Rule("is a polynomial sequence") {
 		private static final long serialVersionUID = 1L;
 		
 		boolean allSame(Sequence s) {
@@ -386,7 +386,7 @@ public class Next extends Expr{
 	};
 	
 	//sequence is only 1 or 0 elements
-	static Rule nothingCase = new Rule("nothing case for sequence prediction",Rule.VERY_EASY) {
+	static Rule nothingCase = new Rule("nothing case for sequence prediction") {
 		private static final long serialVersionUID = 1L;
 		
 		@Override
@@ -407,7 +407,7 @@ public class Next extends Expr{
 	/*
 	 * looks what's inside the function and predicts the next inner
 	 */
-	static Rule funcPredict = new Rule("expression layout prediction",Rule.TRICKY) {
+	static Rule funcPredict = new Rule("expression layout prediction") {
 		private static final long serialVersionUID = 1L;
 		
 		@Override

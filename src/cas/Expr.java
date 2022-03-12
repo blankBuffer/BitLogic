@@ -16,6 +16,7 @@ import java.util.Collections;
 import java.util.Comparator;
 import java.util.Random;
 
+import cas.bool.BoolState;
 import cas.primitive.*;
 
 /*
@@ -49,10 +50,10 @@ public abstract class Expr extends QuickMath implements Serializable{
 	public abstract ComplexFloat convertToFloat(ExprList varDefs);
 	public abstract String typeName();
 	
-	void print() {
+	public void print() {
 		System.out.print(this);
 	}
-	void println() {
+	public void println() {
 		System.out.println(this);
 	}
 	
@@ -337,14 +338,14 @@ public abstract class Expr extends QuickMath implements Serializable{
 	
 	//returns if the expression contains any variables
 	public boolean containsVars() {
-		if(this instanceof Var && ((Var)this).generic) return true;
+		if(this instanceof Var && ((Var)this).isGeneric()) return true;
 		for(Expr e:subExpr) if(e.containsVars()) return true;
 		return false;
 	}
 	
 	//counts the variables in an expression into the provided arrayList and sorts them by frequency
 	public void countVars(ArrayList<VarCount> varcounts) {
-		if(this instanceof Var && ((Var)this).generic) {
+		if(this instanceof Var && ((Var)this).isGeneric()) {
 			for(int i = 0;i<varcounts.size();i++) {//search
 				if(varcounts.get(i).v.equals(this)) {
 					varcounts.get(i).count++;
@@ -414,21 +415,7 @@ public abstract class Expr extends QuickMath implements Serializable{
 		subExpr.clear();
 	}
 	
-	/*
-	 * sorted expressions are based on complexity and variable frequency
-	 * 
-	 * more complex parts are put in the front and simpler in the back
-	 * 
-	 * variables which appear more often in the expression are pushed to the fron
-	 * 
-	 * example x+sqrt(y+x) -> sqrt(x+y)+x
-	 *     since the sqrt(y+x) is more complex than x it is moved to the front
-	 *     sqrt(y+x) -> sqrt(x+y) , x is moved to the fron because it appears more often
-	 * 
-	 * sorting allows for the similarStuct comparison to occur allowing for more freedom in what modifyFromExample can do
-	 * 
-	 * the sort output is NOT completely guaranteed to output the same order, this is because the complexity of two or more expressions may be the same
-	 */
+	
 	public void sort(ArrayList<VarCount> varcounts) {
 		if(!flags.sorted) {
 			if (varcounts == null) {
@@ -438,25 +425,35 @@ public abstract class Expr extends QuickMath implements Serializable{
 			if(this instanceof Sum || this instanceof Prod || this instanceof ExprList) {
 				boolean wasSimple = flags.simple;
 				
-				for(int i = varcounts.size()-1;i>=0;i--) {//sort based on frequency
-					VarCount varcount = varcounts.get(i);
-					Var v = varcount.v;
-					subExpr.sort(new Comparator<Expr>() {
-						@Override
-						public int compare(Expr first, Expr second) {
-							return -Boolean.compare(first.contains(v), second.contains(v));
-						}
-					});
-				}
-				
-				subExpr.sort(new Comparator<Expr>() {//sort based on priority then by complexity then by hash
+				final ArrayList<VarCount> varcountsConst = varcounts;
+				subExpr.sort(new Comparator<Expr>() {//sort based on variable frequency then type priority then by complexity
 					@Override
 					public int compare(Expr first, Expr second) {
+						
+						if(first instanceof Var && second instanceof Var) {
+							for(int i = 0;i<varcountsConst.size();i++) {
+								VarCount vc = varcountsConst.get(i);
+								
+								boolean firstSame = first.equals(vc.v);
+								boolean secondSame = second.equals(vc.v);
+								
+								if(firstSame && !secondSame) {
+									return -1;
+								}else if(!firstSame && secondSame) {
+									return 1;
+								}
+								
+							}
+						}
+						
+						if(first instanceof Var) return 1;
+						if(second instanceof Var) return -1;
+						
 						int fPriority = first.typeName().hashCode();
 						int sPriority = second.typeName().hashCode();
 						
 						if(fPriority != sPriority) {
-							return -Integer.compare(fPriority, sPriority);
+							return Integer.compare(fPriority, sPriority);
 						}
 						int fComplexity = first.complexity();
 						int sComplexity = second.complexity();
@@ -464,7 +461,8 @@ public abstract class Expr extends QuickMath implements Serializable{
 						if(fComplexity != sComplexity) {
 							return -Integer.compare(fComplexity, sComplexity);
 						}
-						return Integer.compare(first.hashCode(), second.hashCode());
+						
+						return 0;
 					}
 				});
 				
@@ -508,14 +506,14 @@ public abstract class Expr extends QuickMath implements Serializable{
 		}
 	}
 	
-	public static void saveExpr(Expr expr,String fileName)throws IOException{
+	public static void serializedSaveExpr(Expr expr,String fileName)throws IOException{
 	    FileOutputStream fos = new FileOutputStream("saves/"+fileName);
 	    ObjectOutputStream oos = new ObjectOutputStream(fos);
 	    oos.writeObject(expr);
 	    oos.close();
 	}
 
-	public static Expr openExpr(String fileName)throws IOException, ClassNotFoundException{
+	public static Expr serializedOpenExpr(String fileName)throws IOException, ClassNotFoundException{
 	   FileInputStream fin = new FileInputStream("saves/"+fileName);
 	   ObjectInputStream ois = new ObjectInputStream(fin);
 	   Expr expr = (Expr) ois.readObject();
@@ -531,7 +529,7 @@ public abstract class Expr extends QuickMath implements Serializable{
 		String out = "";
 		
 		if(tab == 0){
-			out+=("EXPR-TREE-START-----------: "+this+" flags: "+flags)+"\n";
+			out+=("EXPR-TREE-START-----------: flags: "+flags)+"\n";
 		}
 		String tabStr = "";
 		if(tab>0) tabStr+="|";
@@ -539,7 +537,7 @@ public abstract class Expr extends QuickMath implements Serializable{
 		if(tab>0) tabStr+="--->";
 		else tabStr+=">";
 		out+=(tabStr+ typeName() +" hash: "+hashCode());
-		if(this instanceof Num || this instanceof Var || this instanceof FloatExpr) out+=(" name: "+this);
+		if(this instanceof Num || this instanceof Var || this instanceof FloatExpr || this instanceof BoolState) out+=(" name: "+this);
 		out+="\n";
 		if(this instanceof Func) {
 			out+="rules: "+((Func)this).getRuleSequence();

@@ -17,10 +17,10 @@ public class Acos extends Expr{
 		add(expr);
 	}
 	
-	static Rule containsInverse = new Rule("acos(cos(x))->x","acos contains inverse",Rule.EASY);
-	static Rule containsSin = new Rule("acos(sin(x))->-x+pi/2","acos contains inverse",Rule.UNCOMMON);
+	static Rule containsInverse = new Rule("acos(cos(x))->x","acos contains inverse");
+	static Rule containsSin = new Rule("acos(sin(x))->-x+pi/2","acos contains inverse");
 	
-	static Rule negativeInner = new Rule("arccos of negative value",Rule.UNCOMMON){
+	static Rule negativeInner = new Rule("arccos of negative value"){
 		private static final long serialVersionUID = 1L;
 
 		@Override
@@ -34,18 +34,18 @@ public class Acos extends Expr{
 		}
 	};
 	
-	static Rule inverseUnitCircle = new Rule("unit circle for arccos",Rule.UNCOMMON){
+	static Rule inverseUnitCircle = new Rule("unit circle for arccos"){
 		private static final long serialVersionUID = 1L;
 		
 		Rule[] cases;
 		@Override
 		public void init(){
 			cases = new Rule[]{
-				new Rule("acos(0)->pi/2","arccos of zero",Rule.VERY_EASY),
-				new Rule("acos(1)->0","arccos of one",Rule.VERY_EASY),
-				new Rule("acos(sqrt(2)/2)->pi/4","arccos of root 2 over 2",Rule.VERY_EASY),
-				new Rule("acos(1/2)->pi/3","arccos of a half",Rule.VERY_EASY),
-				new Rule("acos(sqrt(3)/2)->pi/6","arccos of root 3 over 2",Rule.VERY_EASY),
+				new Rule("acos(0)->pi/2","arccos of zero"),
+				new Rule("acos(1)->0","arccos of one"),
+				new Rule("acos(sqrt(2)/2)->pi/4","arccos of root 2 over 2"),
+				new Rule("acos(1/2)->pi/3","arccos of a half"),
+				new Rule("acos(sqrt(3)/2)->pi/6","arccos of root 3 over 2"),
 			};
 			Rule.initRules(cases);
 		}
@@ -59,17 +59,17 @@ public class Acos extends Expr{
 		}
 	};
 	
-	static Rule arccosWithSqrt = new Rule("arcsin with square root",Rule.UNCOMMON){
+	static Rule arccosWithSqrt = new Rule("arcsin with square root"){
 		private static final long serialVersionUID = 1L;
 		
 		Rule[] cases;
 		@Override
 		public void init(){
 			cases = new Rule[]{
-				new Rule("acos(sqrt(a*x+b)/c)->asin((c^2-2*a*x-2*b)/c^2)/2+pi/4","arcsin with square root",Rule.UNCOMMON),
-				new Rule("acos(sqrt(x+b)/c)->asin((c^2-2*x-2*b)/c^2)/2+pi/4","arcsin with square root",Rule.UNCOMMON),
-				new Rule("acos(sqrt(a*x+b))->asin(1-2*a*x-2*b)/2+pi/4","arcsin with square root",Rule.UNCOMMON),
-				new Rule("acos(sqrt(x+b))->asin(1-2*x-2*b)/2+pi/4","arcsin with square root",Rule.UNCOMMON),
+				new Rule("acos(sqrt(a*x+b)/c)->asin((c^2-2*a*x-2*b)/c^2)/2+pi/4","arcsin with square root"),
+				new Rule("acos(sqrt(x+b)/c)->asin((c^2-2*x-2*b)/c^2)/2+pi/4","arcsin with square root"),
+				new Rule("acos(sqrt(a*x+b))->asin(1-2*a*x-2*b)/2+pi/4","arcsin with square root"),
+				new Rule("acos(sqrt(x+b))->asin(1-2*x-2*b)/2+pi/4","arcsin with square root"),
 			};
 			Rule.initRules(cases);
 		}

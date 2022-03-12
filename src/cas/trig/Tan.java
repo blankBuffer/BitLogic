@@ -12,16 +12,16 @@ public class Tan extends Expr{
 	
 	private static final long serialVersionUID = -2282985074053649819L;
 
-	static Rule containsInverse = new Rule("tan(atan(x))->x","contains inverse",Rule.VERY_EASY);
-	static Rule tanOfArcsin = new Rule("tan(asin(x))->x/sqrt(1-x^2)","tan of arcsin",Rule.UNCOMMON);
-	static Rule tanOfArccos = new Rule("tan(acos(x))->sqrt(1-x^2)/x","tan of arccos",Rule.UNCOMMON);
+	static Rule containsInverse = new Rule("tan(atan(x))->x","contains inverse");
+	static Rule tanOfArcsin = new Rule("tan(asin(x))->x/sqrt(1-x^2)","tan of arcsin");
+	static Rule tanOfArccos = new Rule("tan(acos(x))->sqrt(1-x^2)/x","tan of arccos");
 	
 	public Tan(){}//
 	public Tan(Expr a) {
 		add(a);
 	}
 	
-	public static Rule unitCircle = new Rule("unit circle for tan",Rule.TRICKY){
+	public static Rule unitCircle = new Rule("unit circle for tan"){
 		private static final long serialVersionUID = 1L;
 		
 		@Override

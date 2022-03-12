@@ -37,7 +37,7 @@ public class IntegrateOver extends Expr {
 		add(v);
 	}
 	
-	static Rule definiteIntegral = new Rule("integral with bounds",Rule.EASY){
+	static Rule definiteIntegral = new Rule("integral with bounds"){
 		private static final long serialVersionUID = 1L;
 
 		@Override

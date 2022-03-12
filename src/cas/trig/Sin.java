@@ -18,16 +18,16 @@ public class Sin extends Expr{
 	
 	private static final long serialVersionUID = -5759564792496416862L;
 	
-	static Rule sinOfArctan = new Rule("sin(atan(x))->x/sqrt(1+x^2)","sin of arctan",Rule.UNCOMMON);
-	static Rule sinOfAsin = new Rule("sin(asin(x))->x","sin contains inverse",Rule.EASY);
-	static Rule sinOfAcos = new Rule("sin(acos(x))->sqrt(1-x^2)","sin of arccos",Rule.UNCOMMON);
+	static Rule sinOfArctan = new Rule("sin(atan(x))->x/sqrt(1+x^2)","sin of arctan");
+	static Rule sinOfAsin = new Rule("sin(asin(x))->x","sin contains inverse");
+	static Rule sinOfAcos = new Rule("sin(acos(x))->sqrt(1-x^2)","sin of arccos");
 
 	public Sin(){}//
 	public Sin(Expr a) {
 		add(a);
 	}
 	
-	static Rule unitCircle = new Rule("unit circle for sine",Rule.TRICKY){
+	static Rule unitCircle = new Rule("unit circle for sine"){
 		private static final long serialVersionUID = 1L;
 		
 		@Override

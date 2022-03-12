@@ -68,7 +68,7 @@ public class Mat extends Expr{
 		return true;
 	}
 	
-	static Rule make2d = new Rule("force it to be 2d",Rule.EASY) {
+	static Rule make2d = new Rule("force it to be 2d") {
 		private static final long serialVersionUID = 1L;
 		
 		@Override

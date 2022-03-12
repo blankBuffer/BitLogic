@@ -15,7 +15,7 @@ public class And extends Expr{
 		commutative = true;
 	}
 	
-	static Rule andContainsAnd = new Rule("and contains and",Rule.VERY_EASY){
+	static Rule andContainsAnd = new Rule("and contains and"){
 		private static final long serialVersionUID = 1L;
 		
 		@Override
@@ -36,7 +36,7 @@ public class And extends Expr{
 		
 	};
 	
-	static Rule nullRule = new Rule("null rule",Rule.EASY){
+	static Rule nullRule = new Rule("null rule"){
 		private static final long serialVersionUID = 1L;
 		
 		@Override
@@ -52,7 +52,7 @@ public class And extends Expr{
 		}
 	};
 	
-	static Rule removeTrues = new Rule("remove trues",Rule.VERY_EASY){
+	static Rule removeTrues = new Rule("remove trues"){
 		private static final long serialVersionUID = 1L;
 		
 		@Override
@@ -68,7 +68,7 @@ public class And extends Expr{
 		}
 	};
 	
-	static Rule complement = new Rule("has complement",Rule.TRICKY){
+	static Rule complement = new Rule("has complement"){
 		private static final long serialVersionUID = 1L;
 		
 		@Override
@@ -92,7 +92,7 @@ public class And extends Expr{
 		}
 	};
 	
-	static Rule removeDuplicates = new Rule("remove duplicates",Rule.VERY_EASY){
+	static Rule removeDuplicates = new Rule("remove duplicates"){
 		private static final long serialVersionUID = 1L;
 		
 		@Override
@@ -115,7 +115,7 @@ public class And extends Expr{
 		}
 	};
 	
-	static Rule distribute = new Rule("and contains or",Rule.EASY){
+	static Rule distribute = new Rule("and contains or"){
 		private static final long serialVersionUID = 1L;
 		
 		@Override
@@ -153,7 +153,7 @@ public class And extends Expr{
 		}
 	};
 	
-	static Rule aloneAnd = new Rule("and has one element",Rule.VERY_EASY){
+	static Rule aloneAnd = new Rule("and has one element"){
 		private static final long serialVersionUID = 1L;
 		
 		@Override

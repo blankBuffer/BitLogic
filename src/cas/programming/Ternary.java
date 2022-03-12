@@ -26,7 +26,7 @@ public class Ternary extends Expr{
 		return get(2);
 	}
 	
-	static Rule ternaryOperation = new Rule("the ternary operator",Rule.VERY_EASY) {
+	static Rule ternaryOperation = new Rule("the ternary operator") {
 		private static final long serialVersionUID = 1L;
 		
 		@Override

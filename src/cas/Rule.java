@@ -31,283 +31,86 @@ import cas.trig.*;
 public class Rule extends Expr{
 	private static final long serialVersionUID = 5928512201641990677L;
 	
-	public static final int VERY_EASY = 0,EASY = 1,UNCOMMON = 2,TRICKY = 3,CHALLENGING = 4,DIFFICULT = 5,VERY_DIFFICULT = 6;//this is opinion based
-	static final boolean VERBOSE_DEFAULT = false;
-	static final int VERBOSE_DIFFICULTY = VERY_EASY;
+	public String name = null;//name or description of the rule
+	private String patternStr = null;//pattern as a string before initialization
+	private String conditionStr = null;//condition as a string before initialization
 	
-	String name = null;
-	public boolean verbose = VERBOSE_DEFAULT;
-	int difficulty = 0;
 	
 	/*
-	 * the similarStruct function checks if the other expression has the same layout as the template
-	 * 
-	 * there are two wrapped functions for this function namely fastSimilarStruct and strictSimilarStruct
-	 * the main reason for having separate functions is because its not always necessary to check for variable matching pairs
-	 * 
-	 * similar is defined as having a same tree but the variables might be different or other has expressions where the variables would be
-	 * 
-	 * this is best understood by example
-	 * 
-	 * template=a^b other=2^3 , fastSimilar = true , strictSimilar = false
-	 * template=a^a other=2^3 , fastSimilar = true , strictSimilar = false (because 2 not equal to 3 and the template has the same symbol for both so it fails the matching pairs test)
-	 * 
-	 * this=sin(x)^b other = a^b , not similar at all, why? because the template was expecting the base to be the sine function
-	 * 
-	 * note that with sums and products the length of sub expressions must be equal. It does its best to sort the expressions in the sum/product in a similar kind of way, but its not perfect
-	 * 
+	 * the transformation description with a before and after state
+	 * beforeState->afterState
 	 */
-	static boolean similarStruct(Expr template,Expr other,boolean checked){//returns if another expression is similar to this but any comparison with variables is returned true
-		if(other == null) return false;
-		if(template instanceof Var && ((Var) template).generic) return true;
-		
-		if(template.typeName().equals(other.typeName())) {
-			
-			if(template instanceof Num || template instanceof BoolState || template instanceof FloatExpr || template instanceof Var) return template.equals(other);
-			
-			if(template.size() != other.size()) return false;
-			if(!checked) other.sort();
-			
-			if(!checked) return Rule.checkForMatches(template,other);//check for matches works like similarStuct at a fundamental level so no need to do anything more
-			
-			if(template instanceof Equ && ((Equ)template).type != ((Equ)other).type ) return false;
-			
-			for(int i = 0;i<template.size();i++) {
-				if(!fastSimilarStruct(template.get(i),other.get(i))) return false;
-			}
-			
-			return true;
-		}
-		return false;
-	}
+	private Becomes pattern = null;
+	private Expr condition = null;//conditions that apply to the rule
+	
 	
 	/*
-	 * letting the template expression=this we check if the other expression is similar to the template
-	 * we DONT check for matches which is why its called fast
+	 * the list of variables in the left side of the pattern used for comparison
+	 * if the left side of the pattern was
+	 * sin(2*k)*a^b
+	 * it would generate a part set of [k,a,b] assuming the expression is sorted
 	 */
-	public static boolean fastSimilarStruct(Expr template,Expr other) {
-		return similarStruct(template,other,true);
-	}
-	/*
-	 * a full similar comparisons we DO check for matches making it a 'near' guarantee
-	 * note that with sums and products the length must be equal
-	 */
-	public static boolean strictSimilarStruct(Expr template,Expr other) {
-		return similarStruct(template,other,false);
-	}
+	private Sequence patternParts = null;
+	
 	
 	/*
-	 * this takes a list of equations as an input and you can ask for a particular value from the set
-	 * given [x=3,y=5,z=m] we can give the name "x" and it returns 3, if we ask for "z" it returns m
-	 * this is useful for extracting out variables from a template and putting them into objects manually
+	 * the sets of matching variables in the patterns parts
+	 * if the left side of the pattern has variables used more than once it keeps track of the
+	 * matching indexes from the patternParts variable
+	 * for example with the left side of a pattern being
+	 * sin(c*b)*a^b+a
+	 * it would generate a part set of [c,b,a,b,a] assuming the expression is sorted
+	 * the variables 'a' and 'b' show up more than once so when comparing with the pattern we need
+	 * the same locations to be equal
+	 * the 	matchingSetsForPattern' would therefore store this as
+	 * {{1,3},{2,4}}
+	 * indicating the indexes of the matching variables in the parts list
 	 */
-	public static Expr getExprByName(ExprList equs,String name){
-		for (int i = 0;i<equs.size();i++){
-			Equ currentEqu = (Equ) equs.get(i);
-			if(currentEqu.getLeftSide().toString().equals(name)){
-				return currentEqu.getRightSide();
-			}
-		}
-		return null;
-	}
-	/*
-	 * you give it a template expression and the expression which is similar and it returns a list of equations for the values of each variable
-	 * getEqusFromTemplate(a^b,2^3) returns [a=2,b=3] returns null if it can't be done
-	 */
-	static public ExprList getEqusFromTemplate(Expr template,Expr expr) {
-		if(fastSimilarStruct(template,expr)) {//we use fast similar struct here because we don't want to call the getParts and later we check for matches anyway
-			Sequence exampleParts = sequence();
-			Sequence parts = sequence();
-			boolean match = checkForMatches(exampleParts,parts,template,expr);//this effectively makes it a strictSimilarStruct anyway
-			if(!match) {
-				return null;
-			}
-			ExprList equs = new ExprList();
-			for(int i = 0;i<parts.size();i++) equs.add(equ(exampleParts.get(i),parts.get(i)));
-			
-			return equs;
-			
-		}
-		return null;
-	}
-	
-	static boolean checkForMatches(Expr template,Expr expr) {//shortcut
-		Sequence vars = sequence();
-		Sequence exprs = sequence();
-		
-		return checkForMatches(vars,exprs,template,expr);
-	}
+	private ArrayList<IndexSet> matchingSetsForPattern = null;
 	
 	/*
-	 * extracts the parts and variables from the template=this, and expr is the parts to be extracted 
-	 * example, let template=diff(x^a,x) and expr=diff(m^(k*l),m)
-	 * these expression break down into lists based on the format of the template tree
-	 * template -> {x,a,x} the list is loaded into templateVarsOut
-	 * expr -> {m,k*l,m} the list is loaded into exprsPartsOut
-	 * 
-	 * if this lists for some reason are not the same length it returns false saying that they can't be compared
-	 * returning true is saying no problems were encountered
-	 * 
-	 * this is useful because we can later compare the list for matching sets,
-	 * for example in this example the first and last element must be the same [ ->x ,a, ->x ],
-	 * this is what the check for matches function does
-	 * 
+	 * list of all pattern based rules in the CAS
+	 * we store it so that we can simplify the patterns before being used
 	 */
-	static boolean getParts(Sequence templateVarsOut,Sequence exprsPartsOut,Expr template,Expr expr) {//template and this is input,vars and exprs are outputs
-		if(template instanceof Var && ((Var)template).generic) {//template encountered a variable, time for extraction into the expr list
-			templateVarsOut.add(template.copy());
-			exprsPartsOut.add(expr.copy());
-		}else{
-			if(template.size()==expr.size() && template.typeName().equals(expr.typeName())) {
-				for(int i = 0;i<template.size();i++) {
-					if(!getParts(templateVarsOut,exprsPartsOut,template.get(i),expr.get(i))) return false;
-				}
-			}else {
-				return false;//different size so variables will obviously not match
-			}
-		}
-		return true;
-	}
-	/*
-	 * given a template and the expr it checks if the sets match for the parts list and if they are similar, it also loads the parts into
-	 * the templateVars and exprsParts list since they will likely be used later on to construct an equation set
-	 */
-	static boolean checkForMatches(Sequence templateVars,Sequence exprsParts,Expr template,Expr expr) {
-		
-		//part one, create index pairs
-		
-		ExprList usedVars = new ExprList();
-		ArrayList<IndexSet> indexSets = new ArrayList<IndexSet>();
-		
-		template.sort();
-		expr.sort();
-		
-		if(!getParts(templateVars,exprsParts,template,expr)) return false;//its possible for expressions to be un-strictly similar
-		
-		for(int i = 0;i<templateVars.size();i++) {
-			
-			if(usedVars.contains(templateVars.get(i))) continue;
-			
-			IndexSet set = new IndexSet();
-			set.ints.add(i);
-			
-			for(int j = i+1;j<templateVars.size();j++) {
-				if(templateVars.get(i).equals(templateVars.get(j))) {
-					set.ints.add(j);
-					
-				}
-			}
-			
-			if(set.ints.size() != 1) indexSets.add(set);
-			
-			usedVars.add(templateVars.get(i));
-		}
-		
-		
-		///parts two, check expr parts have the index set pairs
-		
-		for(IndexSet set:indexSets) {
-			Expr e = exprsParts.get(set.ints.get(0));
-			for(int i = 1;i<set.ints.size();i++) {
-				if(set.ints.get(i) > exprsParts.size()) return false;
-				
-				Expr e2 =  exprsParts.get(set.ints.get(i));
-				
-				if(!e2.equals(e)) return false;
-			}
-			
-		}
-		
-		
-		return true;
-	}
+	private static ArrayList<Rule> allPatternBasedRules = new ArrayList<Rule>();
 	
-	String patternStr = null;
-	String conditionStr = null;
-	
-	public Rule(String pattern,String name,int difficulty){
+	public Rule(String pattern,String name){
 		patternStr = pattern;
 		this.name = name;
-		this.difficulty = difficulty;
 	}
-	public Rule(String pattern,String condition,String name,int difficulty){
+	public Rule(String pattern,String condition,String name){
 		patternStr = pattern;
 		conditionStr = condition;
 		this.name = name;
-		this.difficulty = difficulty;
 	}
-	public Rule(Becomes pattern,String name,int difficulty){
+	public Rule(Becomes pattern,String name){
 		this.pattern = pattern;
 		this.pattern.getLeftSide().sort();
 		this.name = name;
-		this.difficulty = difficulty;
 	}
-	public Rule(String name,int difficulty){
+	public Rule(String name){
 		this.name = name;
-		this.difficulty = difficulty;
 	}
 	
-	private static ArrayList<Rule> allPatternBasedRules = new ArrayList<Rule>();
-	
-	public void init(){//compiling the pattern
+	/*
+	 * loads the rule from the 'patternStr' string to the 'pattern' expression
+	 * loads the condition from the 'conditionStr' string to the 'condition' expression
+	 */
+	public void init(){
 		if(patternStr != null) {
 			pattern = (Becomes) createExpr(patternStr);
-			pattern.getLeftSide().sort();
+			pattern.getLeftSide().sort();//sort the patterns left side into a standardized order
+			
+			patternParts = generateTemplateParts(pattern.getLeftSide());
+			matchingSetsForPattern = generateTemplateMatchingSets(patternParts);
+			
 			allPatternBasedRules.add(this);
 		}
 		if(conditionStr != null) {
 			condition = createExpr(conditionStr);
 		}
 	}
-	//calls init of each rule in the list of sequence
-	public static void initRules(Sequence ruleSequence) {
-		for(int i = 0;i<ruleSequence.size();i++) ((Rule)ruleSequence.get(i)).init();
-	}
-	public static void initRules(Rule[] ruleSequence) {
-		for(int i = 0;i<ruleSequence.length;i++) ruleSequence[i].init();
-	}
 	
-	public Becomes pattern = null;//the template expresion, its basically an example of the problem
-	public Expr condition = null;//a condition for the variables, for example checking if a variable is positive
-	/*
-	 * uses either the pattern provided or a hard coded system
-	 * just applies a transformation to an expression
-	 * 
-	 * NOTE if your using a pattern based rule make sure to call init before it is used
-	 * The reason its not set in stone with the constructor is because some rules are statically defined and we don't want the interpreter to construct
-	 * the tree if the interpreter is being upgraded otherwise as soon as it begins the run-time it will crash and tests can't be done
-	 * 
-	 * this can be override if you want to hard code a rule if it cant be done with patterns
-	 */
-	public Expr applyRuleToExpr(Expr expr,CasInfo casInfo){//note this may modify the original expression. The return is there so that if it changes expression type
-		//System.out.println(pattern.getLeftSide()+" "+expr+" "+fastSimilarStruct(pattern.getLeftSide(),expr));
-		if(fastSimilarStruct(pattern.getLeftSide(),expr)) {//we use fast similar struct here because we don't want to call the getParts function twice and its faster
-			Sequence exampleParts = sequence();
-			Sequence parts = sequence();
-			boolean match = checkForMatches(exampleParts,parts,pattern.getLeftSide(),expr);
-			if(!match) {
-				return expr;
-			}
-			ExprList equs = new ExprList();
-			for(int i = 0;i<parts.size();i++) equs.add(equ(exampleParts.get(i),parts.get(i)));
-			
-			if(condition != null) {
-				Expr condition = this.condition.replace(equs);
-				condition = condition.simplify(casInfo);
-				if(condition.simplify(casInfo).equals(BoolState.FALSE)) return expr;
-			}
-			
-			Expr out = pattern.getRightSide().replace(equs);
-			if(pattern.getLeftSide().getClass() == pattern.getRightSide().getClass()) {
-				out.simplifyChildren(casInfo);
-			}else {
-				out = out.simplify(casInfo);//no recursion since different class type
-			}
-			return out;
-			
-		}
-		return expr;
-	}
 	@Override
 	public String toString(){
 		if(pattern != null && condition != null) {
@@ -319,11 +122,203 @@ public class Rule extends Expr{
 		return name;
 	}
 	
-	private static boolean LOADED = false;
 	/*
-	 * loads all the CAS rules into each type, this can take some time
-	 * this is required to be run somewhere before the CAS can be used, maybe put it as close to first line of main method
+	 * loads the parts based on the template expression layout
+	 * basically whenever you run into a variable in the template tree load the same relative expression part
+	 * into the 'exprsPartsOut' list
+	 * 
+	 * say the template is sin(a^b)+k and the expression is sin(2^(k+1))+cos(x)
+	 * it would generate the parts [2,k+1,cos(x)]
+	 * 
+	 * the function returns false if it cannot accomplish the task because the expression is not similar to the template
 	 */
+	private static boolean getPartsBasedOnTemplate(Sequence exprsPartsOut,Expr template,Expr expr) {
+		if(template instanceof Var && ((Var)template).isGeneric()) {
+			exprsPartsOut.add(expr.copy());
+		}else{
+			if(template.size()==expr.size() && template.typeName().equals(expr.typeName())) {
+				for(int i = 0;i<template.size();i++) {
+					if(!getPartsBasedOnTemplate(exprsPartsOut,template.get(i),expr.get(i))) return false;
+				}
+			}else {
+				return false;
+			}
+		}
+		return true;
+	}
+	
+	private static ArrayList<IndexSet> generateTemplateMatchingSets(Sequence templateParts){
+		ExprList usedVars = new ExprList();
+		ArrayList<IndexSet> matcherIndexSets = new ArrayList<IndexSet>();
+		for(int i = 0;i<templateParts.size();i++) {
+			
+			if(usedVars.contains(templateParts.get(i))) continue;
+			
+			IndexSet matchSet = new IndexSet();
+			matchSet.ints.add(i);
+			
+			for(int j = i+1;j<templateParts.size();j++) {
+				if(templateParts.get(i).equals(templateParts.get(j))) {
+					matchSet.ints.add(j);
+					
+				}
+			}
+			
+			if(matchSet.ints.size() != 1) matcherIndexSets.add(matchSet);
+			
+			usedVars.add(templateParts.get(i));
+		}
+		return matcherIndexSets;
+	}
+	
+	private static Sequence generateTemplateParts(Expr template) {//wrapper function
+		Sequence templateVarsOut = sequence();
+		generateTemplatePartsRec(templateVarsOut,template);
+		return templateVarsOut;
+	}
+	private static void generateTemplatePartsRec(Sequence templateVarsOut,Expr template) {
+		if(template instanceof Var && ((Var)template).isGeneric()) {
+			templateVarsOut.add(template.copy());
+		}else{
+			for(int i = 0;i<template.size();i++) {
+				generateTemplatePartsRec(templateVarsOut,template.get(i));
+			}
+		}
+	}
+	
+	private static boolean checkForMatches(Expr template,Expr expr) {
+		Sequence exprs = sequence();
+		
+		Sequence templateParts = generateTemplateParts(template);
+		ArrayList<IndexSet> matchingSets = generateTemplateMatchingSets(templateParts);
+		
+		return checkForMatches(matchingSets,exprs,template,expr);
+	}
+	
+	private static boolean similarExpr(Expr template,Expr other,boolean checked){
+		if(other == null) return false;
+		if(template instanceof Var && ((Var) template).isGeneric()) return true;
+		
+		if(template.typeName().equals(other.typeName())) {
+			if(template instanceof Num || template instanceof BoolState || template instanceof FloatExpr || template instanceof Var) return template.equals(other);
+			if(template.size() != other.size()) return false;
+			
+			template.sort();
+			other.sort();
+			
+			if(!checked) return Rule.checkForMatches(template,other);
+			
+			for(int i = 0;i<template.size();i++) {
+				if(!fastSimilarExpr(template.get(i),other.get(i))) return false;
+			}
+			
+			return true;
+		}
+		return false;
+	}
+	
+	
+	public static boolean fastSimilarExpr(Expr template,Expr other) {
+		return similarExpr(template,other,true);
+	}
+	
+	public static boolean strictSimilarExpr(Expr template,Expr other) {
+		return similarExpr(template,other,false);
+	}
+	
+	public static Expr getExprByName(ExprList equs,String name){
+		for (int i = 0;i<equs.size();i++){
+			Equ currentEqu = (Equ) equs.get(i);
+			if(currentEqu.getLeftSide().toString().equals(name)){
+				return currentEqu.getRightSide();
+			}
+		}
+		return null;
+	}
+	
+	
+	static public ExprList getEqusFromTemplate(Expr template,Expr expr) {
+		if(fastSimilarExpr(template,expr)) {
+			Sequence exprParts = sequence();
+			
+			Sequence templateParts = generateTemplateParts(template);
+			ArrayList<IndexSet> matchingSets = generateTemplateMatchingSets(templateParts);
+			
+			boolean match = checkForMatches(matchingSets,exprParts,template,expr);
+			if(!match) {
+				return null;
+			}
+			ExprList equs = new ExprList();
+			for(int i = 0;i<exprParts.size();i++) equs.add(equ(templateParts.get(i),exprParts.get(i)));
+			
+			return equs;
+			
+		}
+		return null;
+	}
+	
+	private static boolean checkForMatches(ArrayList<IndexSet> matchingSets,Sequence exprsParts,Expr template,Expr expr) {
+		
+		template.sort();
+		expr.sort();
+		
+		if(!getPartsBasedOnTemplate(exprsParts,template,expr)) return false;
+		
+		for(IndexSet set:matchingSets) {
+			Expr e = exprsParts.get(set.ints.get(0));
+			for(int i = 1;i<set.ints.size();i++) {
+				
+				Expr e2 =  exprsParts.get(set.ints.get(i));
+				
+				if(!e2.equals(e)) return false;
+			}
+			
+		}
+		
+		return true;
+	}
+	
+	public static void initRules(Sequence ruleSequence) {
+		for(int i = 0;i<ruleSequence.size();i++) ((Rule)ruleSequence.get(i)).init();
+	}
+	public static void initRules(Rule[] ruleSequence) {
+		for(int i = 0;i<ruleSequence.length;i++) ruleSequence[i].init();
+	}
+	
+	public Expr applyRuleToExpr(Expr expr,CasInfo casInfo){
+		
+		if(fastSimilarExpr(pattern.getLeftSide(),expr)) {
+			Sequence parts = sequence();
+			
+			boolean match = checkForMatches(matchingSetsForPattern,parts,pattern.getLeftSide(),expr);
+			if(!match) {
+				return expr;
+			}
+			ExprList equs = new ExprList();
+			for(int i = 0;i<parts.size();i++) equs.add(equ(patternParts.get(i),parts.get(i)));
+			
+			if(condition != null) {
+				Expr condition = this.condition.replace(equs);
+				condition = condition.simplify(casInfo);
+				if(condition.simplify(casInfo).equals(BoolState.FALSE)) return expr;
+			}
+			
+			Expr out = pattern.getRightSide().replace(equs);
+			if(pattern.getLeftSide().getClass() == pattern.getRightSide().getClass()) {
+				out.simplifyChildren(casInfo);
+			}else {
+				out = out.simplify(casInfo);
+			}
+			return out;
+			
+		}
+		return expr;
+	}
+	
+	private static boolean LOADED = false;
+	public static boolean isLoaded() {
+		return LOADED;
+	}
 	
 	public static volatile float loadingPercent = 0;
 	public static void loadRules(){
@@ -378,6 +373,7 @@ public class Rule extends Expr{
 		Or.loadRules();
 		Power.loadRules();
 		Prod.loadRules();
+		Range.loadRules();
 		
 		loadingPercent = 60;
 		
@@ -393,8 +389,8 @@ public class Rule extends Expr{
 		SimpleFuncs.loadRules();
 		
 		float incr = 20.0f/allPatternBasedRules.size();
-		for(Rule r:allPatternBasedRules) {//simplify rules
-			if(!r.pattern.getRightSide().containsType(r.pattern.getLeftSide().typeName())) {//non recursive simplification
+		for(Rule r:allPatternBasedRules) {
+			if(!r.pattern.getRightSide().containsType(r.pattern.getLeftSide().typeName())) {
 				r.pattern.setRightSide(r.pattern.getRightSide().simplify(CasInfo.normal));
 			}
 			loadingPercent+=incr;

@@ -3,11 +3,11 @@ package cas.primitive;
 import cas.ComplexFloat;
 import cas.Expr;
 
-public class Equ extends Expr{
-	private static final long serialVersionUID = 4002612647044850391L;
+public class Greater extends Expr{
+	private static final long serialVersionUID = -4682039735081744605L;
 
-	public Equ(){}//
-	public Equ(Expr leftSide,Expr rightSide){
+	public Greater(){}//
+	public Greater(Expr leftSide,Expr rightSide){
 		add(leftSide);
 		add(rightSide);
 	}
@@ -29,7 +29,7 @@ public class Equ extends Expr{
 	public String toString() {
 		String out = "";
 		out+=getLeftSide().toString();
-		out+='=';
+		out+='>';
 		out+=getRightSide().toString();
 		return out;
 	}
@@ -45,6 +45,6 @@ public class Equ extends Expr{
 	
 	@Override
 	public String typeName() {
-		return "equ";
+		return "greater";
 	}
 }

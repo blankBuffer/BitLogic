@@ -31,26 +31,26 @@ public class Power extends Expr{
 		add(expo);
 	}
 	
-	private static Rule baseHasPower = new Rule("(a^b)^c->a^(b*c)","~(isType(result(b/2),num)&allowAbs())","base has power",Rule.EASY);
-	private static Rule baseHasPowerAbs = new Rule("(a^b)^c->abs(a)^(b*c)","isType(result(b/2),num)&allowAbs()","base has power",Rule.EASY);
+	private static Rule baseHasPower = new Rule("(a^b)^c->a^(b*c)","~(isType(result(b/2),num)&allowAbs())","base has power");
+	private static Rule baseHasPowerAbs = new Rule("(a^b)^c->abs(a)^(b*c)","isType(result(b/2),num)&allowAbs()","base has power");
 	
-	private static Rule expoOfZero = new Rule("a^0->1","~eval(a=0)","exponent is zero",Rule.VERY_EASY);
-	private static Rule isI = new Rule("sqrt(-1)->i","allowComplexNumbers()","is equal to i",Rule.EASY);
-	private static Rule eToLn = new Rule("e^ln(a)->a","e to ln",Rule.EASY);
-	private static Rule eToFracLn = new Rule("e^(ln(a)/b)->a^(1/b)","e to fraction with ln",Rule.UNCOMMON);
-	private static Rule zeroToExpo = new Rule("0^x->0","~eval(x=0)","base is zero",Rule.VERY_EASY);
-	private static Rule baseToLn = new Rule("a^ln(b)->e^(ln(a)*ln(b))","base not e and expo has log",Rule.UNCOMMON);
-	private static Rule expOfLambertW = new Rule("e^(lambertW(x))->x/lambertW(x)","e to lambert w",Rule.UNCOMMON);
-	private static Rule expOfLambertWProd = new Rule("e^(lambertW(x)*n)->x^n/lambertW(x)^n","e to lambert w product",Rule.TRICKY);
-	private static Rule powerOfOne = new Rule("a^1->a","exponent is one",Rule.VERY_EASY);
-	private static Rule fracInBase = new Rule("(a/b)^n->a^n/b^n","base is a fraction",Rule.EASY);
-	private static Rule sqrtOneMinusSin = new Rule("sqrt(1-sin(x))->sqrt(2)*sin(pi/4-x/2)","sqrt of 1 minus sin",Rule.UNCOMMON);
-	private static Rule sqrtOneMinusCos = new Rule("sqrt(1-cos(x))->sqrt(2)*sin(x/2)","sqrt of 1 minus cos",Rule.UNCOMMON);
-	private static Rule sqrtOnePlusSin = new Rule("sqrt(1+sin(x))->sqrt(2)*cos(pi/4-x/2)","sqrt of 1 plus sin",Rule.UNCOMMON);
-	private static Rule sqrtOnePlusCos = new Rule("sqrt(1+cos(x))->sqrt(2)*cos(x/2)","sqrt of 1 plus cos",Rule.UNCOMMON);
-	private static Rule baseOfPowerIsAbsExpoEven = new Rule("abs(a)^b->a^b","~isType(result(b/2),div)","base of power is absolute value and exponent is divisible by 2",Rule.TRICKY);
+	private static Rule expoOfZero = new Rule("a^0->1","~eval(a=0)","exponent is zero");
+	private static Rule isI = new Rule("sqrt(-1)->i","allowComplexNumbers()","is equal to i");
+	private static Rule eToLn = new Rule("e^ln(a)->a","e to ln");
+	private static Rule eToFracLn = new Rule("e^(ln(a)/b)->a^(1/b)","e to fraction with ln");
+	private static Rule zeroToExpo = new Rule("0^x->0","~eval(x=0)","base is zero");
+	private static Rule baseToLn = new Rule("a^ln(b)->e^(ln(a)*ln(b))","base not e and expo has log");
+	private static Rule expOfLambertW = new Rule("e^(lambertW(x))->x/lambertW(x)","e to lambert w");
+	private static Rule expOfLambertWProd = new Rule("e^(lambertW(x)*n)->x^n/lambertW(x)^n","e to lambert w product");
+	private static Rule powerOfOne = new Rule("a^1->a","exponent is one");
+	private static Rule fracInBase = new Rule("(a/b)^n->a^n/b^n","base is a fraction");
+	private static Rule sqrtOneMinusSin = new Rule("sqrt(1-sin(x))->sqrt(2)*sin(pi/4-x/2)","sqrt of 1 minus sin");
+	private static Rule sqrtOneMinusCos = new Rule("sqrt(1-cos(x))->sqrt(2)*sin(x/2)","sqrt of 1 minus cos");
+	private static Rule sqrtOnePlusSin = new Rule("sqrt(1+sin(x))->sqrt(2)*cos(pi/4-x/2)","sqrt of 1 plus sin");
+	private static Rule sqrtOnePlusCos = new Rule("sqrt(1+cos(x))->sqrt(2)*cos(x/2)","sqrt of 1 plus cos");
+	private static Rule baseOfPowerIsAbsExpoEven = new Rule("abs(a)^b->a^b","~isType(result(b/2),div)","base of power is absolute value and exponent is divisible by 2");
 	
-	private static Rule oneToExpo = new Rule("base is one",Rule.VERY_EASY){
+	private static Rule oneToExpo = new Rule("base is one"){
 		private static final long serialVersionUID = 1L;
 
 		@Override
@@ -71,7 +71,7 @@ public class Power extends Expr{
 		
 	};
 	
-	private static Rule exponentiateIntegers = new Rule("exponentiate integers",Rule.VERY_EASY){
+	private static Rule exponentiateIntegers = new Rule("exponentiate integers"){
 		private static final long serialVersionUID = 1L;
 
 		@Override
@@ -94,7 +94,7 @@ public class Power extends Expr{
 			return power;
 		}
 	};
-	private static Rule negativeExpoToInv = new Rule("negative expoonent to inverse",Rule.EASY){
+	private static Rule negativeExpoToInv = new Rule("negative expoonent to inverse"){
 		private static final long serialVersionUID = 1L;
 
 		@Override
@@ -110,7 +110,7 @@ public class Power extends Expr{
 			
 		}
 	};
-	private static Rule factorExponent = new Rule("factoring the exponent",Rule.TRICKY){
+	private static Rule factorExponent = new Rule("factoring the exponent"){
 		private static final long serialVersionUID = 1L;
 
 		@Override
@@ -127,7 +127,7 @@ public class Power extends Expr{
 			return power;
 		}
 	};
-	private static Rule factorBase = new Rule("factoring the base",Rule.TRICKY){
+	private static Rule factorBase = new Rule("factoring the base"){
 		private static final long serialVersionUID = 1L;
 
 		@Override
@@ -144,7 +144,7 @@ public class Power extends Expr{
 			return power;
 		}
 	};
-	private static Rule logInExpoProdToBase = new Rule("e to exponent product with single ln",Rule.UNCOMMON){
+	private static Rule logInExpoProdToBase = new Rule("e to exponent product with single ln"){
 		private static final long serialVersionUID = 1L;
 
 		
@@ -192,7 +192,7 @@ public class Power extends Expr{
 			return pow;
 		}
 	};
-	private static Rule expoSumHasLog = new Rule("base is e and expo has sum with logs",Rule.TRICKY){
+	private static Rule expoSumHasLog = new Rule("base is e and expo has sum with logs"){
 		private static final long serialVersionUID = 1L;
 
 		@Override
@@ -220,7 +220,7 @@ public class Power extends Expr{
 		}
 		
 	};
-	private static Rule expoHasIntegerInSum = new Rule("exponent has integer in sum and base is integer",Rule.TRICKY){
+	private static Rule expoHasIntegerInSum = new Rule("exponent has integer in sum and base is integer"){
 		private static final long serialVersionUID = 1L;
 
 		@Override
@@ -267,7 +267,7 @@ public class Power extends Expr{
 		
 	};
 	
-	private static Rule perfectPowerInBase = new Rule("the base is a perfect power",Rule.UNCOMMON){
+	private static Rule perfectPowerInBase = new Rule("the base is a perfect power"){
 		private static final long serialVersionUID = 1L;
 
 		@Override
@@ -293,7 +293,7 @@ public class Power extends Expr{
 		
 	};
 	
-	private static Rule productInBase = new Rule("the base is a product",Rule.UNCOMMON){
+	private static Rule productInBase = new Rule("the base is a product"){
 		private static final long serialVersionUID = 1L;
 
 		@Override
@@ -332,7 +332,7 @@ public class Power extends Expr{
 		
 	};
 	
-	static Rule powersWithEpsilonOrInf = new Rule("power with epsilon or infinity",Rule.UNCOMMON){
+	static Rule powersWithEpsilonOrInf = new Rule("power with epsilon or infinity"){
 		private static final long serialVersionUID = 1L;
 
 		@Override
@@ -362,7 +362,7 @@ public class Power extends Expr{
 		}
 	};
 	
-	static Rule eulersIdentity = new Rule("eulers identity",Rule.EASY) {
+	static Rule eulersIdentity = new Rule("eulers identity") {
 		private static final long serialVersionUID = 1L;
 		
 		@Override
@@ -400,7 +400,7 @@ public class Power extends Expr{
 		
 	};
 	
-	static Rule rootHasCancelingPower = new Rule("root has power or number inside that cancels and goes outside root",Rule.EASY) {
+	static Rule rootHasCancelingPower = new Rule("root has power or number inside that cancels and goes outside root") {
 		private static final long serialVersionUID = 1L;
 		
 		@Override
@@ -466,7 +466,7 @@ public class Power extends Expr{
 		}
 	};
 	
-	static Rule rootNumSimp = new Rule("root of a number",Rule.EASY) {
+	static Rule rootNumSimp = new Rule("root of a number") {
 		private static final long serialVersionUID = 1L;
 		
 		@Override
@@ -528,7 +528,7 @@ public class Power extends Expr{
 		}
 	};
 	
-	static Rule rootInRoot = new Rule("root in root",Rule.EASY) {
+	static Rule rootInRoot = new Rule("root in root") {
 		private static final long serialVersionUID = 1L;
 		
 		@Override
@@ -561,7 +561,7 @@ public class Power extends Expr{
 		}
 	};
 	
-	static Rule distrBaseIfRoot = new Rule("distribute base if root",Rule.EASY) {
+	static Rule distrBaseIfRoot = new Rule("distribute base if root") {
 		private static final long serialVersionUID = 1L;
 		
 		@Override
@@ -577,7 +577,7 @@ public class Power extends Expr{
 		
 	};
 	
-	static Rule sqrtOfSqrtSum = new Rule("sqrt(k*sqrt(b)+a)->sqrt((a+sqrt(a^2-b*k^2))/2)+sqrt((a-sqrt(a^2-b*k^2))/2)*abs(k)/k","isType(result(sqrt(a^2-b*k^2)),num)","square root of a square root sum",Rule.UNCOMMON);
+	static Rule sqrtOfSqrtSum = new Rule("sqrt(k*sqrt(b)+a)->sqrt((a+sqrt(a^2-b*k^2))/2)+sqrt((a-sqrt(a^2-b*k^2))/2)*abs(k)/k","isType(result(sqrt(a^2-b*k^2)),num)","square root of a square root sum");
 	
 	static Sequence ruleSequence = null;
 	
@@ -651,11 +651,11 @@ public class Power extends Expr{
 	public String toString() {
 		String out = "";
 		
-		if(Rule.fastSimilarStruct(sqrtObj,this)) {//fancy and having set to true makes it faster
+		if(Rule.fastSimilarExpr(sqrtObj,this)) {//fancy and having set to true makes it faster
 			out+="sqrt(";
 			out+=getBase().toString();
 			out+=')';
-		}else if(Rule.fastSimilarStruct(cbrtObj,this)) {
+		}else if(Rule.fastSimilarExpr(cbrtObj,this)) {
 			out+="cbrt(";
 			out+=getBase().toString();
 			out+=')';

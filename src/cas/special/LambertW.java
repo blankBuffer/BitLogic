@@ -16,12 +16,12 @@ public class LambertW extends Expr {
 
 	private static final long serialVersionUID = 1242113729865756736L;
 	
-	static Rule hasInverse = new Rule("lambertW(x*e^x)->x","lambert w of product exponential",Rule.UNCOMMON);
-	static Rule productWithLog = new Rule("lambertW(x*ln(x))->ln(x)","lambert w of product of logs",Rule.UNCOMMON);
-	static Rule isNegOne = new Rule("lambertW((-1)/e)->-1","lambert w of -1/e",Rule.UNCOMMON);
-	static Rule ratioLog = new Rule("lambertW((-ln(x))/x)->-ln(x)","lambert w of -ln(x) over x",Rule.UNCOMMON);
+	static Rule hasInverse = new Rule("lambertW(x*e^x)->x","lambert w of product exponential");
+	static Rule productWithLog = new Rule("lambertW(x*ln(x))->ln(x)","lambert w of product of logs");
+	static Rule isNegOne = new Rule("lambertW((-1)/e)->-1","lambert w of -1/e");
+	static Rule ratioLog = new Rule("lambertW((-ln(x))/x)->-ln(x)","lambert w of -ln(x) over x");
 	
-	static Rule crazyProductRule = new Rule("crazy product rule",Rule.VERY_DIFFICULT){
+	static Rule crazyProductRule = new Rule("crazy product rule"){
 		private static final long serialVersionUID = 1L;
 		
 		Expr crazyProductRuleFormat;

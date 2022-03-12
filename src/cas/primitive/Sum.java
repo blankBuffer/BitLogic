@@ -8,7 +8,7 @@ public class Sum extends Expr{
 	
 	private static final long serialVersionUID = 2026808885890783719L;
 	
-	static Rule pythagOnePlusTanSqr = new Rule("1+tan(x)^2->cos(x)^-2","one plus tangent squared",Rule.UNCOMMON);
+	static Rule pythagOnePlusTanSqr = new Rule("1+tan(x)^2->cos(x)^-2","one plus tangent squared");
 	
 	public Sum() {
 		commutative = true;
@@ -25,7 +25,7 @@ public class Sum extends Expr{
 	};
 	 */
 	
-	public static Rule sumWithInf = new Rule("sum with infinity",Rule.EASY){
+	public static Rule sumWithInf = new Rule("sum with infinity"){
 		private static final long serialVersionUID = 1L;
 
 		@Override
@@ -64,7 +64,7 @@ public class Sum extends Expr{
 		}
 	};
 	
-	public static Rule trigExpandElements = new Rule("trig expand elements",Rule.CHALLENGING){
+	public static Rule trigExpandElements = new Rule("trig expand elements"){
 		private static final long serialVersionUID = 1L;
 
 		@Override
@@ -79,7 +79,7 @@ public class Sum extends Expr{
 		}
 	};
 	
-	public static Rule complexPythagIden = new Rule("pythagorean identity",Rule.EASY){//sin(x)^2+cos(x)^2 = 1 and a*sin(x)^2+a*cos(x)^2=a
+	public static Rule complexPythagIden = new Rule("pythagorean identity"){//sin(x)^2+cos(x)^2 = 1 and a*sin(x)^2+a*cos(x)^2=a
 		private static final long serialVersionUID = 1L;
 
 		Expr sinsqr,cossqr;
@@ -99,12 +99,12 @@ public class Sum extends Expr{
 			outer:for(int i = 0;i<sum.size();i++) {
 				Expr current = sum.get(i);
 				if(!(current.containsType("sin") || current.containsType("cos"))) continue;
-				if(fastSimilarStruct(sinsqr,current)) {
+				if(fastSimilarExpr(sinsqr,current)) {
 					Expr var = current.get(0).get(0);
 					for(int j = 0;j<sum.size();j++) {
 						if(j==i) continue;
 						Expr other = sum.get(j); 
-						if(fastSimilarStruct(cossqr,other)) {
+						if(fastSimilarExpr(cossqr,other)) {
 							Expr otherVar = other.get(0).get(0);
 							
 							if(otherVar.equals(var)) {
@@ -124,11 +124,11 @@ public class Sum extends Expr{
 					int index = -1;
 					String type = null;
 					for(int j = 0;j < current.size();j++) {
-						if(fastSimilarStruct(sinsqr,current.get(j))) {
+						if(fastSimilarExpr(sinsqr,current.get(j))) {
 							index = j;
 							type = "sin";
 							break;
-						}else if(fastSimilarStruct(cossqr,current.get(j))) {
+						}else if(fastSimilarExpr(cossqr,current.get(j))) {
 							index = j;
 							type = "cos";
 							break;
@@ -144,10 +144,10 @@ public class Sum extends Expr{
 							if(other instanceof Prod) {
 								index = -1;
 								for(int k = 0;k < other.size();k++) {
-									if(type == "cos" && fastSimilarStruct(sinsqr,other.get(k))) {
+									if(type == "cos" && fastSimilarExpr(sinsqr,other.get(k))) {
 										index = k;
 										break;
-									}else if(type == "sin" && fastSimilarStruct(cossqr,other.get(k))) {
+									}else if(type == "sin" && fastSimilarExpr(cossqr,other.get(k))) {
 										index = k;
 										break;
 									}
@@ -176,7 +176,7 @@ public class Sum extends Expr{
 		}
 	};
 	
-	public static Rule addLogs = new Rule("add logarithms",Rule.EASY){
+	public static Rule addLogs = new Rule("add logarithms"){
 		private static final long serialVersionUID = 1L;
 
 		@Override
@@ -243,7 +243,7 @@ public class Sum extends Expr{
 		}
 	};
 	
-	public static Rule distrSubProds = new Rule("distribute sub products",Rule.EASY){
+	public static Rule distrSubProds = new Rule("distribute sub products"){
 		private static final long serialVersionUID = 1L;
 
 		@Override
@@ -260,7 +260,7 @@ public class Sum extends Expr{
 		}
 	};
 	
-	public static Rule sumContainsSum = new Rule("sum contains sum",Rule.EASY){
+	public static Rule sumContainsSum = new Rule("sum contains sum"){
 		private static final long serialVersionUID = 1L;
 
 		@Override
@@ -278,7 +278,7 @@ public class Sum extends Expr{
 		}
 	};
 	
-	public static Rule addLikeTerms = new Rule("add like terms",Rule.EASY){
+	public static Rule addLikeTerms = new Rule("add like terms"){
 		private static final long serialVersionUID = 1L;
 
 		@Override
@@ -335,7 +335,7 @@ public class Sum extends Expr{
 		}
 	};
 	
-	public static Rule addIntegersAndFractions = new Rule("add integers and fractions",Rule.EASY){
+	public static Rule addIntegersAndFractions = new Rule("add integers and fractions"){
 		private static final long serialVersionUID = 1L;
 
 		@Override
@@ -374,7 +374,7 @@ public class Sum extends Expr{
 		}
 	};
 	
-	public static Rule alone = new Rule("alone sum",Rule.EASY){
+	public static Rule alone = new Rule("alone sum"){
 		private static final long serialVersionUID = 1L;
 
 		@Override
@@ -390,7 +390,7 @@ public class Sum extends Expr{
 		}
 	};
 	
-	public static Rule basicPythagIden = new Rule("basic pythagorean identity",Rule.EASY) {
+	public static Rule basicPythagIden = new Rule("basic pythagorean identity") {
 		private static final long serialVersionUID = 1L;
 		
 		Expr sinSqrTemplate,cosSqrTemplate,sinSqrProdTemplate,cosSqrProdTemplate;
@@ -409,7 +409,7 @@ public class Sum extends Expr{
 			
 			outer:for(int i = 0;i<sum.size();i++) {
 				Expr current = sum.get(i);
-				if(Rule.fastSimilarStruct(sinSqrTemplate, current )) {
+				if(Rule.fastSimilarExpr(sinSqrTemplate, current )) {
 					Expr var = current.get().get();
 					
 					for(int j = 0;j < sum.size();j++) {
@@ -421,7 +421,7 @@ public class Sum extends Expr{
 							continue outer;
 						}
 					}
-				}else if(Rule.fastSimilarStruct(cosSqrTemplate, current )) {
+				}else if(Rule.fastSimilarExpr(cosSqrTemplate, current )) {
 					Expr var = current.get().get();
 					
 					for(int j = 0;j < sum.size();j++) {
@@ -433,7 +433,7 @@ public class Sum extends Expr{
 							continue outer;
 						}
 					}
-				}else if(Rule.fastSimilarStruct(sinSqrProdTemplate, sum.get(i))) {
+				}else if(Rule.fastSimilarExpr(sinSqrProdTemplate, sum.get(i))) {
 					ExprList equs = Rule.getEqusFromTemplate(sinSqrProdTemplate, sum.get(i));
 					Expr a = Rule.getExprByName(equs, "a");
 					Expr x = Rule.getExprByName(equs, "x");
@@ -449,7 +449,7 @@ public class Sum extends Expr{
 							continue outer;
 						}
 					}
-				}else if(Rule.fastSimilarStruct(cosSqrProdTemplate, sum.get(i))) {
+				}else if(Rule.fastSimilarExpr(cosSqrProdTemplate, sum.get(i))) {
 					ExprList equs = Rule.getEqusFromTemplate(cosSqrProdTemplate, sum.get(i));
 					Expr a = Rule.getExprByName(equs, "a");
 					Expr x = Rule.getExprByName(equs, "x");
@@ -472,7 +472,7 @@ public class Sum extends Expr{
 		}
 	};
 	
-	static Rule sumWithMatrix = new Rule("sum with matrix",Rule.EASY) {//sum of each element
+	static Rule sumWithMatrix = new Rule("sum with matrix") {//sum of each element
 		private static final long serialVersionUID = 1L;
 		
 		@Override

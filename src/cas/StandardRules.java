@@ -6,7 +6,7 @@ import cas.primitive.Sum;
 import cas.primitive.Var;
 
 public class StandardRules extends QuickMath{
-	public static Rule oddFunction = new Rule("function is odd",Rule.EASY){
+	public static Rule oddFunction = new Rule("function is odd"){
 		private static final long serialVersionUID = 1L;
 		
 		@Override
@@ -23,7 +23,7 @@ public class StandardRules extends QuickMath{
 		}
 	};
 	
-	public static Rule evenFunction = new Rule("function is even",Rule.EASY){
+	public static Rule evenFunction = new Rule("function is even"){
 		private static final long serialVersionUID = 1L;
 		
 		@Override
@@ -41,7 +41,7 @@ public class StandardRules extends QuickMath{
 		}
 	};
 	
-	public static Rule trigCompressInner = new Rule("trig compress inside the function",Rule.CHALLENGING){
+	public static Rule trigCompressInner = new Rule("trig compress inside the function"){
 		private static final long serialVersionUID = 1L;
 		
 		Rule[] cases;
@@ -49,10 +49,10 @@ public class StandardRules extends QuickMath{
 		public void init(){
 			if(cases != null) return;
 			cases = new Rule[]{
-				new Rule("sin(x)*cos(x)->sin(2*x)/2","compressing trig",Rule.EASY),
-				new Rule("a*sin(x)*cos(x)->a*sin(2*x)/2","compressing trig",Rule.EASY),
-				new Rule("2*cos(x)^2-1->cos(2*x)","compressing trig",Rule.EASY),
-				new Rule("2*tan(x)/(1-tan(x)^2)->tan(2*x)","compressing trig",Rule.EASY),
+				new Rule("sin(x)*cos(x)->sin(2*x)/2","compressing trig"),
+				new Rule("a*sin(x)*cos(x)->a*sin(2*x)/2","compressing trig"),
+				new Rule("2*cos(x)^2-1->cos(2*x)","compressing trig"),
+				new Rule("2*tan(x)/(1-tan(x)^2)->tan(2*x)","compressing trig"),
 			};
 			Rule.initRules(cases);
 		}
@@ -71,7 +71,7 @@ public class StandardRules extends QuickMath{
 		}
 	};
 	
-	public static Rule linearOperator = new Rule("operator in linear",Rule.EASY){
+	public static Rule linearOperator = new Rule("operator in linear"){
 		private static final long serialVersionUID = 1L;
 		
 		@Override
@@ -94,7 +94,7 @@ public class StandardRules extends QuickMath{
 		}
 	};
 	
-	public static Rule pullOutConstants = new Rule("pull out constants",Rule.EASY){
+	public static Rule pullOutConstants = new Rule("pull out constants"){
 		private static final long serialVersionUID = 1L;
 		
 		@Override
@@ -112,7 +112,7 @@ public class StandardRules extends QuickMath{
 		}
 	};
 	
-	public static Rule becomeInner = new Rule("become the argument",Rule.VERY_EASY){
+	public static Rule becomeInner = new Rule("become the argument"){
 		private static final long serialVersionUID = 1L;
 		
 		@Override
@@ -121,7 +121,7 @@ public class StandardRules extends QuickMath{
 		}
 	};
 	
-	public static Rule distrInner = new Rule("distribute inner",Rule.EASY){
+	public static Rule distrInner = new Rule("distribute inner"){
 		private static final long serialVersionUID = 1L;
 		
 		@Override
@@ -132,7 +132,7 @@ public class StandardRules extends QuickMath{
 		
 	};
 	
-	public static Rule factorInner = new Rule("factor inner",Rule.EASY){
+	public static Rule factorInner = new Rule("factor inner"){
 		private static final long serialVersionUID = 1L;
 		
 		@Override
@@ -143,7 +143,7 @@ public class StandardRules extends QuickMath{
 		
 	};
 	
-	public static Rule showState = new Rule("print state",Rule.VERY_EASY){
+	public static Rule showState = new Rule("print state"){
 		private static final long serialVersionUID = 1L;
 		
 		@Override

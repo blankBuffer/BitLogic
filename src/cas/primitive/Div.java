@@ -15,8 +15,8 @@ import cas.trig.Tan;
 public class Div extends Expr{
 	
 	private static final long serialVersionUID = -1262460519269095855L;
-	public static Rule overOne = new Rule("a/1->a","divide by one",Rule.VERY_EASY);
-	public static Rule zeroInNum = new Rule("0/a->0","zero in numerator",Rule.VERY_EASY);
+	public static Rule overOne = new Rule("a/1->a","divide by one");
+	public static Rule zeroInNum = new Rule("0/a->0","zero in numerator");
 
 	public Div(){}//
 	public Div(Expr num,Expr den){
@@ -39,7 +39,7 @@ public class Div extends Expr{
 		set(1,e);
 	}
 	
-	static Rule divWithEpsilon = new Rule("divisions with epsilon",Rule.UNCOMMON){
+	static Rule divWithEpsilon = new Rule("divisions with epsilon"){
 		private static final long serialVersionUID = 1L;
 
 		@Override
@@ -81,7 +81,7 @@ public class Div extends Expr{
 		}
 	};
 	
-	static Rule trigExpandElements = new Rule("trig expand elements div",Rule.TRICKY){
+	static Rule trigExpandElements = new Rule("trig expand elements div"){
 		private static final long serialVersionUID = 1L;
 
 		@Override
@@ -125,7 +125,7 @@ public class Div extends Expr{
 			return div;
 		}
 	};
-	static Rule cancelOutTerms = new Rule("cancel out terms",Rule.EASY){
+	static Rule cancelOutTerms = new Rule("cancel out terms"){
 		private static final long serialVersionUID = 1L;
 
 		@Override
@@ -201,7 +201,7 @@ public class Div extends Expr{
 		
 		}
 	};
-	static Rule divContainsDiv = new Rule("cancel out terms",Rule.EASY){
+	static Rule divContainsDiv = new Rule("cancel out terms"){
 		private static final long serialVersionUID = 1L;
 
 		@Override
@@ -241,7 +241,7 @@ public class Div extends Expr{
 			return div;
 		}
 	};
-	static Rule reduceFraction = new Rule("cancel out terms",Rule.EASY){
+	static Rule reduceFraction = new Rule("cancel out terms"){
 		private static final long serialVersionUID = 1L;
 
 		@Override
@@ -361,7 +361,7 @@ public class Div extends Expr{
 		}
 	};
 	
-	static Rule factorChildren = new Rule("factor sub expression",Rule.CHALLENGING){
+	static Rule factorChildren = new Rule("factor sub expression"){
 		private static final long serialVersionUID = 1L;
 		
 		@Override
@@ -373,7 +373,7 @@ public class Div extends Expr{
 		}
 	};
 	
-	static Rule reduceTrigFraction = new Rule("reducing trig fraction",Rule.EASY) {
+	static Rule reduceTrigFraction = new Rule("reducing trig fraction") {
 		private static final long serialVersionUID = 1L;
 		
 		@Override
@@ -501,7 +501,7 @@ public class Div extends Expr{
 	/*
 	 * x/abs(x) -> abs(x)/x
 	 */
-	static Rule absInDenom = new Rule("denominator has an absolute value",Rule.EASY) {
+	static Rule absInDenom = new Rule("denominator has an absolute value") {
 		private static final long serialVersionUID = 1L;
 		
 		@Override
@@ -533,10 +533,10 @@ public class Div extends Expr{
 		}
 	};
 	
-	static Rule rationalize = new Rule("a/b^(m/n)->a*b^((n-m)/n)/b","isType(b,num)&isType(m,num)","rationalize denom",Rule.VERY_EASY);
-	static Rule rationalize2 = new Rule("a/(k*b^(m/n))->a*b^((n-m)/n)/(k*b)","isType(b,num)&isType(k,num)&isType(m,num)","rationalize denom",Rule.VERY_EASY);
+	static Rule rationalize = new Rule("a/b^(m/n)->a*b^((n-m)/n)/b","isType(b,num)&isType(m,num)","rationalize denom");
+	static Rule rationalize2 = new Rule("a/(k*b^(m/n))->a*b^((n-m)/n)/(k*b)","isType(b,num)&isType(k,num)&isType(m,num)","rationalize denom");
 	
-	static Rule divWithMatrix = new Rule("divisions with a matrix",Rule.EASY) {
+	static Rule divWithMatrix = new Rule("divisions with a matrix") {
 		private static final long serialVersionUID = 1L;
 		
 		@Override
@@ -589,7 +589,7 @@ public class Div extends Expr{
 		}
 	};
 	
-	static Rule expandRoots = new Rule("expand roots",Rule.UNCOMMON) {
+	static Rule expandRoots = new Rule("expand roots") {
 		private static final long serialVersionUID = 1L;
 		
 		Expr rootForm;
@@ -598,23 +598,29 @@ public class Div extends Expr{
 			rootForm = createExpr("a^(b/c)");
 		}
 		
-		public boolean prodInForm(Prod prod) {
+		public boolean prodInForm(Prod prod,CasInfo casInfo) {//also factors the root base
+			boolean inForm = false;
 			for(int i = 0;i<prod.size();i++) {
-				if(Rule.fastSimilarStruct(rootForm, prod.get(i)) && prod.get(i).get() instanceof Prod && !prod.get(i).get().negative()) {
-					return true;
+				if(Rule.fastSimilarExpr(rootForm, prod.get(i))) {
+					Power pow = (Power)prod.get(i);
+					
+					if(pow.getBase() instanceof Sum) {
+						pow.setBase(factor(pow.getBase()).simplify(casInfo));
+					}
+					
+					if(pow.getBase() instanceof Prod) inForm = true;
 				}
 			}
-			return false;
+			return inForm;
 		}
 		public Prod expandRoots(Prod prod,CasInfo casInfo) {
 			Prod out = new Prod();
 			for(int i = 0;i<prod.size();i++) {
 				Expr current = prod.get(i);
-				if(Rule.fastSimilarStruct(rootForm, current) && current.get() instanceof Prod && !current.get().negative()) {
+				if(Rule.fastSimilarExpr(rootForm, current) && current.get() instanceof Prod) {
 					
 					Expr expo = ((Power)current).getExpo();
 					Prod base = (Prod)prod.get(i).get();
-					prod.remove(i);
 					for(int j = 0;j<base.size();j++) {
 						out.add(pow(base.get(j),expo).simplify(casInfo));
 					}
@@ -633,7 +639,7 @@ public class Div extends Expr{
 			Prod numerProd = Prod.cast(div.getNumer());
 			Prod denomProd = Prod.cast(div.getDenom());
 			
-			boolean inForm = prodInForm(numerProd) || prodInForm(denomProd);
+			boolean inForm = prodInForm(numerProd,casInfo) | prodInForm(denomProd,casInfo);//but use single | operator because we don't want short circuit evaluation
 		
 			if(!inForm) return div;
 			
@@ -647,7 +653,7 @@ public class Div extends Expr{
 		}
 	};
 	
-	static Rule reSimpNumerAndDenom = new Rule("simplify numerator and denominator again",Rule.EASY) {
+	static Rule reSimpNumerAndDenom = new Rule("simplify numerator and denominator again") {
 		private static final long serialVersionUID = 1L;
 		
 		@Override

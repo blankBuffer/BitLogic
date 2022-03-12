@@ -16,15 +16,15 @@ public class Abs extends Expr{
 		add(e);
 	}
 	
-	static Rule absOfPower = new Rule("abs(a^b)->abs(a)^b","abs of a power",Rule.EASY);
-	static Rule absOfAbs = new Rule("abs(abs(x))->abs(x)","absolute value of absolute value",Rule.VERY_EASY);
+	static Rule absOfPower = new Rule("abs(a^b)->abs(a)^b","abs of a power");
+	static Rule absOfAbs = new Rule("abs(abs(x))->abs(x)","absolute value of absolute value");
 	
 	
 	/*
 	 * checks for when the inside is a polynomial that never crosses the x axis
 	 * it also handles things like 2*sin(x)+x^2+2 is always positive because 2*sin(x) has a max of 2 and the polynomial is always above 2
 	 */
-	static Rule alwaysPositive = new Rule("expression is always positive",Rule.UNCOMMON) {
+	static Rule alwaysPositive = new Rule("expression is always positive") {
 		private static final long serialVersionUID = 1L;
 		
 		Expr computeResult(Abs abs,Expr theoryMin,Expr theoryMax,CasInfo casInfo) {
@@ -53,19 +53,19 @@ public class Abs extends Expr{
 			basicAbsProd = createExpr("a*abs(x)");
 			
 			cases = new Rule[] {
-					new Rule("abs(sin(x)+x^2-x)->sin(x)+x^2-x","special case of abs",Rule.UNCOMMON),
-					new Rule("abs(-sin(x)-x^2+x)->sin(x)+x2n-x","special case of abs",Rule.UNCOMMON),
+					new Rule("abs(sin(x)+x^2-x)->sin(x)+x^2-x","special case of abs"),
+					new Rule("abs(-sin(x)-x^2+x)->sin(x)+x2n-x","special case of abs"),
 					
-					new Rule("abs(cos(x)+x^2)->cos(x)+x^2","special case of abs",Rule.UNCOMMON),
-					new Rule("abs(a*cos(x)+a*x^2)->abs(a)*cos(x)+abs(a)*x^2","special case of abs",Rule.UNCOMMON),
+					new Rule("abs(cos(x)+x^2)->cos(x)+x^2","special case of abs"),
+					new Rule("abs(a*cos(x)+a*x^2)->abs(a)*cos(x)+abs(a)*x^2","special case of abs"),
 					
-					new Rule("abs(cos(x)+x^2-x)->cos(x)+x^2-x","special case of abs",Rule.UNCOMMON),
-					new Rule("abs(cos(x)+x^2+x)->cos(x)+x^2+x","special case of abs",Rule.UNCOMMON),
-					new Rule("abs(-cos(x)-x^2-x)->cos(x)+x^2+x","special case of abs",Rule.UNCOMMON),
-					new Rule("abs(-cos(x)-x^2+x)->cos(x)+x^2-x","special case of abs",Rule.UNCOMMON),
+					new Rule("abs(cos(x)+x^2-x)->cos(x)+x^2-x","special case of abs"),
+					new Rule("abs(cos(x)+x^2+x)->cos(x)+x^2+x","special case of abs"),
+					new Rule("abs(-cos(x)-x^2-x)->cos(x)+x^2+x","special case of abs"),
+					new Rule("abs(-cos(x)-x^2+x)->cos(x)+x^2-x","special case of abs"),
 					
-					new Rule("abs(a*sin(x)+x^2+b*x)->a*sin(x)+x^2-a*x","eval(a=-b)&eval(a>-pi)&eval(a<pi)","special case of abs",Rule.UNCOMMON),
-					new Rule("abs(a*sin(x)-x^2+b*x)->-a*sin(x)+x^2+a*x","eval(a=-b)&eval(a>-pi)&eval(a<pi)","special case of abs",Rule.UNCOMMON),
+					new Rule("abs(a*sin(x)+x^2+b*x)->a*sin(x)+x^2-a*x","eval(a=-b)&eval(a>-pi)&eval(a<pi)","special case of abs"),
+					new Rule("abs(a*sin(x)-x^2+b*x)->-a*sin(x)+x^2+a*x","eval(a=-b)&eval(a>-pi)&eval(a<pi)","special case of abs"),
 			};
 			Rule.initRules(cases);
 		}
@@ -105,7 +105,7 @@ public class Abs extends Expr{
 				}else if(current instanceof Sin || current instanceof Cos) {
 					theoryMin.add(num(-1));
 					theoryMax.add(num(1));
-				}else if(Rule.fastSimilarStruct(basicSinProd, current)) {
+				}else if(Rule.fastSimilarExpr(basicSinProd, current)) {
 					ExprList equs = Rule.getEqusFromTemplate(basicSinProd, current);
 					Expr a = Rule.getExprByName(equs, "a");
 					
@@ -113,7 +113,7 @@ public class Abs extends Expr{
 						theoryMin.add(neg(abs(a)));
 						theoryMax.add(abs(a));
 					}else return abs;
-				}else if(Rule.fastSimilarStruct(basicCosProd, current)) {
+				}else if(Rule.fastSimilarExpr(basicCosProd, current)) {
 					ExprList equs = Rule.getEqusFromTemplate(basicCosProd, current);
 					Expr a = Rule.getExprByName(equs, "a");
 					
@@ -123,7 +123,7 @@ public class Abs extends Expr{
 					}else return abs;
 				}else if(current instanceof Abs) {
 					theoryMax.add(inf());
-				}else if(Rule.fastSimilarStruct(basicAbsProd, current)) {
+				}else if(Rule.fastSimilarExpr(basicAbsProd, current)) {
 					ExprList equs = Rule.getEqusFromTemplate(basicAbsProd, current);
 					Expr a = Rule.getExprByName(equs, "a");
 					
@@ -172,7 +172,7 @@ public class Abs extends Expr{
 		}
 	};
 	
-	static Rule absOfProd = new Rule("contains product",Rule.UNCOMMON) {
+	static Rule absOfProd = new Rule("contains product") {
 		private static final long serialVersionUID = 1L;
 		
 		@Override
@@ -193,9 +193,9 @@ public class Abs extends Expr{
 		}
 	};
 	
-	static Rule absOfDiv = new Rule("abs(a/b)->abs(a)/abs(b)","abs of a division",Rule.UNCOMMON);
+	static Rule absOfDiv = new Rule("abs(a/b)->abs(a)/abs(b)","abs of a division");
 	
-	static Rule allowAbsRule = new Rule("allow abs rule",Rule.VERY_EASY) {
+	static Rule allowAbsRule = new Rule("allow abs rule") {
 		private static final long serialVersionUID = 1L;
 		
 		@Override
@@ -208,7 +208,7 @@ public class Abs extends Expr{
 		}
 	};
 	
-	static Rule absOfNegConst = new Rule("abs of negative constant",Rule.VERY_EASY) {
+	static Rule absOfNegConst = new Rule("abs of negative constant") {
 		private static final long serialVersionUID = 1L;
 		
 		@Override
@@ -227,7 +227,7 @@ public class Abs extends Expr{
 		}
 	};
 	
-	static Rule absOfComplexExpr = new Rule("abs of complex expression",Rule.CHALLENGING) {
+	static Rule absOfComplexExpr = new Rule("abs of complex expression") {
 		private static final long serialVersionUID = 1L;
 		
 		@Override

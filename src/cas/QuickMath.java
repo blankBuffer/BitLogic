@@ -151,13 +151,13 @@ public class QuickMath {
 		return new FloatExpr(s);
 	}
 	public static Equ equ(Expr a,Expr b) {
-		return new Equ(a,b,Equ.EQUALS);
+		return new Equ(a,b);
 	}
-	public static Equ equGreater(Expr a,Expr b) {
-		return new Equ(a,b,Equ.GREATER);
+	public static Greater equGreater(Expr a,Expr b) {
+		return new Greater(a,b);
 	}
-	public static Equ equLess(Expr a,Expr b) {
-		return new Equ(a,b,Equ.LESS);
+	public static Less equLess(Expr a,Expr b) {
+		return new Less(a,b);
 	}
 	public static BoolState bool(boolean b) {
 		return new BoolState(b);
@@ -267,6 +267,9 @@ public class QuickMath {
 	public static Ternary ternary(Expr toBeEvaled,Expr ifTrue,Expr ifFalse) {
 		return new Ternary(toBeEvaled,ifTrue,ifFalse);
 	}
+	public static Range range(Expr min,Expr max,Expr e,Var v) {
+		return new Range(min,max,e,v);
+	}
 	public static Sequence sequence(Expr... exprs) {
 		Sequence out = new Sequence();
 		for(Expr e:exprs) {
@@ -274,7 +277,7 @@ public class QuickMath {
 		}
 		return out;
 	}
-	public static Func eval(Equ equ) {
+	public static Func eval(Expr equ) {
 		try {
 			return (Func)SimpleFuncs.getFuncByName("eval", equ);
 		}catch(Exception e) {}

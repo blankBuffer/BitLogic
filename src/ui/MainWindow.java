@@ -61,7 +61,7 @@ public class MainWindow extends JFrame{
 	static final int _2D = 0,_3D = 1;
 	int PLOT_MODE_DEFAULT = _2D;
 	Color BACKGROUND_COLOR_DEFAULT = new Color(255,255,255),FOREGROUND_COLOR_DEFAULT = new Color(0,0,0);
-	Font font = new Font("courier new",0,16);
+	Font font = new Font(null,0,16);
 	
 	ArrayList<JComponent> allComponents = new ArrayList<JComponent>();
 	
@@ -197,8 +197,9 @@ public class MainWindow extends JFrame{
 			
 			JButton makeStackButton(String name,String command) {
 				JButton stackButton = new JButton(name);
-				stackButton.setBackground(Color.lightGray);
+				stackButton.setBackground(Color.gray);
 				stackButton.setForeground(Color.white);
+				stackButton.setPreferredSize(new Dimension(50,18));
 				
 				stackButton.addActionListener(new ActionListener() {
 					@Override
@@ -212,8 +213,9 @@ public class MainWindow extends JFrame{
 			
 			JButton makeStackButton(String name,ActionListener l) {
 				JButton stackButton = new JButton(name);
-				stackButton.setBackground(Color.lightGray);
+				stackButton.setBackground(Color.gray);
 				stackButton.setForeground(Color.white);
+				stackButton.setPreferredSize(new Dimension(50,18));
 				
 				stackButton.addActionListener(l);
 				
@@ -236,6 +238,7 @@ public class MainWindow extends JFrame{
 			public void actionPerformed(ActionEvent e) {
 				try {
 					stackImages.clear();
+					Color bestBlue = new Color(90,90,255);
 					for(int i = 0;i<currentStack.size();i++) {
 						ImageIcon imgIcn = null;
 						try {
@@ -243,7 +246,7 @@ public class MainWindow extends JFrame{
 								imgIcn = oldStackImages.get(i);
 							}
 						}catch(IndexOutOfBoundsException e2) {}
-						if(imgIcn == null) imgIcn = new ImageIcon( ExprRender.createImg(currentStack.stack.get(i), Color.BLUE.darker(),18 ) );
+						if(imgIcn == null) imgIcn = new ImageIcon( ExprRender.createImg(currentStack.stack.get(i), bestBlue ,18 ) );
 						stackImages.add(imgIcn);
 					}
 					oldStackImages = (ArrayList<ImageIcon>)stackImages.clone();
@@ -342,11 +345,7 @@ public class MainWindow extends JFrame{
 			
 			allComponents.add(this);
 			allComponents.add(terminalOutPane);
-			try {
-				terminalOutPane.getDocument().insertString(terminalOutPane.getDocument().getLength(), UI.CRED+"\n", null);
-			} catch (Exception e) {
-				e.printStackTrace();
-			}
+			
 			allComponents.add(terminalIn);
 			allComponents.add(resultButton);
 			allComponents.add(resultAndPushButtons);
@@ -374,6 +373,12 @@ public class MainWindow extends JFrame{
 			
 			add(terminalOutWithImg,BorderLayout.CENTER);
 			add(terminalInWithButtons,BorderLayout.SOUTH);
+			
+			try {
+				terminalOutPane.getDocument().insertString(terminalOutPane.getDocument().getLength(), UI.CRED+"\n", null);
+			} catch (Exception e) {
+				e.printStackTrace();
+			}
 		}
 		
 	}
@@ -533,7 +538,7 @@ public class MainWindow extends JFrame{
 		}
 	}
 	
-	class CASCasInfoPanel extends JPanel {
+	class CASOptionsPanel extends JPanel {
 		private static final long serialVersionUID = -1314093096812714908L;
 		
 		JCheckBox allowComplexNumbersCheckBox = new JCheckBox("allow complex numbers",currentStack.currentCasInfo.allowComplexNumbers());
@@ -553,7 +558,7 @@ public class MainWindow extends JFrame{
 			}
 		};
 		
-		CASCasInfoPanel(){
+		CASOptionsPanel(){
 			allComponents.add(this);
 			allComponents.add(allowComplexNumbersCheckBox);
 			allComponents.add(allowAbsCheckBox);
@@ -568,7 +573,7 @@ public class MainWindow extends JFrame{
 		
 	}
 	
-	class UICasInfoPanel extends JPanel{
+	class UIOptionsPanel extends JPanel{
 		private static final long serialVersionUID = -4037663936986002307L;
 		
 		JCheckBox keepOnTopCheckBox = new JCheckBox("window on top",KEEP_WINDOW_ON_TOP_DEFAULT);
@@ -600,14 +605,15 @@ public class MainWindow extends JFrame{
 				for(JComponent c:allComponents) {
 					c.setBackground(background);
 					c.setForeground(foreground);
-					c.setFont(font);
+					if(c instanceof JTextPane) c.setFont(new Font(ExprRender.FONT,0,16));
+					else c.setFont(font);
 					
 					if(c instanceof JTextField) ((JTextField)c).setCaretColor(foreground);
 				}
 			}
 		};
 		
-		UICasInfoPanel() {
+		UIOptionsPanel() {
 			allComponents.add(this);
 			allComponents.add(keepOnTopCheckBox);
 			allComponents.add(clearTerminalCheckBox);
@@ -647,10 +653,10 @@ public class MainWindow extends JFrame{
 		
 		allComponents.add(plot);
 		
-		tabs.addTab("main view",mainViewPanel);
-		tabs.addTab("graphics", new GraphicsPanel());
-		tabs.addTab("CAS casInfo", new CASCasInfoPanel());
-		tabs.addTab("UI casInfo", new UICasInfoPanel());//keep last
+		tabs.addTab("Main View",mainViewPanel);
+		tabs.addTab("Graphics", new GraphicsPanel());
+		tabs.addTab("CAS Options", new CASOptionsPanel());
+		tabs.addTab("UI Options", new UIOptionsPanel());//keep last
 		
 		return mainContainer;
 	}

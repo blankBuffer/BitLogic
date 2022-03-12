@@ -14,7 +14,7 @@ public class Gamma extends Expr{
 		add(e);
 	}
 	
-	static Rule integerCase = new Rule("gamma of an integer",Rule.EASY){
+	static Rule integerCase = new Rule("gamma of an integer"){
 		private static final long serialVersionUID = 1L;
 
 		@Override
@@ -34,10 +34,10 @@ public class Gamma extends Expr{
 		}
 		return gamma;
 	}
-	static Rule fracCase = new Rule("gamma of an n/2",Rule.TRICKY){
+	static Rule fracCase = new Rule("gamma of an n/2"){
 		private static final long serialVersionUID = 1L;
 		
-		Rule halfCase = new Rule("gamma(1/2)->sqrt(pi)","gamma of a half",Rule.EASY);
+		Rule halfCase = new Rule("gamma(1/2)->sqrt(pi)","gamma of a half");
 
 		@Override
 		public void init(){

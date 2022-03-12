@@ -15,7 +15,7 @@ public class Or extends Expr{
 		commutative = true;
 	}
 	
-	static Rule orContainsOr = new Rule("or contains or",Rule.VERY_EASY){
+	static Rule orContainsOr = new Rule("or contains or"){
 		private static final long serialVersionUID = 1L;
 
 		@Override
@@ -41,7 +41,7 @@ public class Or extends Expr{
 		
 	};
 	
-	static Rule nullRule = new Rule("null rule",Rule.EASY){
+	static Rule nullRule = new Rule("null rule"){
 		private static final long serialVersionUID = 1L;
 
 		@Override
@@ -62,7 +62,7 @@ public class Or extends Expr{
 		}
 	};
 	
-	static Rule removeFalses = new Rule("remove falses",Rule.VERY_EASY){
+	static Rule removeFalses = new Rule("remove falses"){
 		private static final long serialVersionUID = 1L;
 
 		@Override
@@ -83,7 +83,7 @@ public class Or extends Expr{
 		}
 	};
 	
-	static Rule complement = new Rule("has complement",Rule.TRICKY){
+	static Rule complement = new Rule("has complement"){
 		private static final long serialVersionUID = 1L;
 
 		@Override
@@ -137,7 +137,7 @@ public class Or extends Expr{
 		}
 	};
 	
-	static Rule removeDuplicates = new Rule("remove duplicates",Rule.VERY_EASY){
+	static Rule removeDuplicates = new Rule("remove duplicates"){
 		private static final long serialVersionUID = 1L;
 
 		@Override
@@ -165,7 +165,7 @@ public class Or extends Expr{
 		}
 	};
 	
-	static Rule absorb = new Rule("absorption",Rule.EASY){
+	static Rule absorb = new Rule("absorption"){
 		private static final long serialVersionUID = 1L;
 
 		@Override
@@ -213,7 +213,7 @@ public class Or extends Expr{
 		}
 	};
 	
-	static Rule aloneOr = new Rule("or has one element",Rule.VERY_EASY){
+	static Rule aloneOr = new Rule("or has one element"){
 		private static final long serialVersionUID = 1L;
 
 		@Override
@@ -245,7 +245,7 @@ public class Or extends Expr{
 		}
 		return -1;
 	}
-	static Rule redundance = new Rule("redundant factors",Rule.TRICKY){
+	static Rule redundance = new Rule("redundant factors"){
 		private static final long serialVersionUID = 1L;
 
 		class BucketInfo{
@@ -340,7 +340,7 @@ public class Or extends Expr{
 		}
 	};
 	
-	static Rule consensus = new Rule("consensus rule",Rule.CHALLENGING){
+	static Rule consensus = new Rule("consensus rule"){
 		private static final long serialVersionUID = 1L;
 
 		@Override
@@ -398,7 +398,7 @@ public class Or extends Expr{
 		}
 	};
 	
-	static Rule ruleCombination = new Rule("rule set",Rule.CHALLENGING){
+	static Rule ruleCombination = new Rule("rule set"){
 		private static final long serialVersionUID = 1L;
 
 		ExprList allFactorableVars(Or or){

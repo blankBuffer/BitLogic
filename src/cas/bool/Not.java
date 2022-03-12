@@ -17,10 +17,10 @@ public class Not extends Expr{
 		add(e);
 	}
 	
-	static Rule isTrue = new Rule("~true->false","true case",Rule.VERY_EASY);
-	static Rule isFalse = new Rule("~false->true","false case",Rule.VERY_EASY);
-	static Rule containsNot = new Rule("~~x->x","contains not",Rule.VERY_EASY);
-	static Rule demorgan = new Rule("demorgan",Rule.EASY){
+	static Rule isTrue = new Rule("~true->false","true case");
+	static Rule isFalse = new Rule("~false->true","false case");
+	static Rule containsNot = new Rule("~~x->x","contains not");
+	static Rule demorgan = new Rule("demorgan"){
 		private static final long serialVersionUID = 1L;
 
 		@Override
