@@ -9,7 +9,6 @@ import cas.lang.*;
 import cas.primitive.*;
 import cas.special.*;
 import cas.bool.*;
-import cas.calculus.*;
 
 public class SimpleFuncs extends QuickMath{
 
@@ -22,20 +21,18 @@ public class SimpleFuncs extends QuickMath{
 		@Override
 		public Expr applyRuleToExpr(Expr e,CasInfo casInfo){
 			if(e instanceof Prod){
-				boolean changed = false;
 				for(int i = 0;i<e.size();i++){
 					if(e.get(i) instanceof Power){
 						Power casted = (Power)e.get(i);
 						if( isPositiveRealNum(casted.getExpo()) && casted.getBase() instanceof Sum){
 							e.set(i, multinomial(casted.getBase(),(Num)casted.getExpo(),casInfo));
-							changed = true;
 						}
 					}
 				}
-				if(changed){
-					Expr result = distr(e).simplify(casInfo);
-					return result;
-				}
+				
+				Expr result = distr(e).simplify(casInfo);
+				return result;
+				
 			}else if(e instanceof Sum){
 				Expr sum = new Sum();
 				
@@ -67,7 +64,6 @@ public class SimpleFuncs extends QuickMath{
 	
 	static Func polyCoef = new Func("polyCoef",2);
 	static Func degree = new Func("degree",2);
-	static Func bigger = new Func("bigger",3);
 	static Func save = new Func("save",2);
 	static Func open = new Func("open",1);
 	static Func conv = new Func("conv",3);
@@ -245,21 +241,6 @@ public class SimpleFuncs extends QuickMath{
 				Expr inner = f.get(0);
 				Var var = (Var)f.get(1);
 				return num(degree(inner,var));
-			}
-		});
-		
-		bigger.ruleSequence.add(new Rule("choose the bigger function"){
-			private static final long serialVersionUID = 1L;
-
-			@Override
-			public Expr applyRuleToExpr(Expr e,CasInfo casInfo){
-				Func f = (Func)e;
-				Expr a = f.get(0);
-				Expr b = f.get(1);
-				Var var = (Var)f.get(2);
-				
-				Expr out = Limit.Bigger.bigger(a, b, var);
-				return out == null ? var("neither") : out;
 			}
 		});
 		
@@ -839,7 +820,6 @@ public class SimpleFuncs extends QuickMath{
 		
 		addFunc(polyCoef);
 		addFunc(degree);
-		addFunc(bigger);
 		addFunc(save);
 		addFunc(open);
 		addFunc(conv);
@@ -915,7 +895,7 @@ public class SimpleFuncs extends QuickMath{
 		numberOfParams.put("approx", 2);
 		
 		numberOfParams.put("integrateOver", 4);
-		numberOfParams.put("limit", 3);
+		numberOfParams.put("limit", 2);
 		numberOfParams.put("abs", 1);
 		numberOfParams.put("mat", 1);
 		numberOfParams.put("transpose", 1);
@@ -992,13 +972,15 @@ public class SimpleFuncs extends QuickMath{
 		if(funcName.equals("transpose")) return transpose(params[0]);
 		if(funcName.equals("next")) return next((Sequence)params[0],(Num)params[1]);
 		
+		if(funcName.equals("gcd")) return gcd(params);
+		
 		if(funcName.equals("solve")) return solve((Equ)params[0],(Var)params[1]);
 		if(funcName.equals("diff")) return diff(params[0],(Var)params[1]);
 		if(funcName.equals("integrate")) return integrate(params[0],(Var)params[1]);
 		
 		if(funcName.equals("integrateOver")) return integrateOver(params[0],params[1],params[2],(Var)params[3]);
 	
-		if(funcName.equals("limit")) return limit(params[0],(Var)params[1],params[2]);
+		if(funcName.equals("limit")) return limit(params[0],(Becomes)params[1]);
 		if(funcName.equals("range")) return range(params[0],params[1],params[2],(Var)params[3]);
 		
 		if(!FUNCTION_UNLOCKED) throw new Exception("no function by the name: "+funcName);//allow making new functions on the fly

@@ -49,14 +49,12 @@ public class Prod extends Expr{
 		public Expr applyRuleToExpr(Expr e,CasInfo casInfo){
 			Prod prod = (Prod)e;
 			
-			Expr epsilon = epsilon();
-			Expr inf = inf();
 			boolean hasEpsilon = false;
 			boolean hasInf = false;
 			for(int i = 0;i<prod.size();i++){
-				if(prod.get(i).equals(epsilon)){
+				if(prod.get(i).equals(Var.EPSILON)){
 					hasEpsilon = true;
-				}else if(prod.get(i).equals(inf)){
+				}else if(prod.get(i).equals(Var.INF)){
 					hasInf = true;
 				}
 				if(hasInf && hasEpsilon) break;
@@ -64,26 +62,26 @@ public class Prod extends Expr{
 			if(hasEpsilon && !hasInf){
 				if(prod.negative()){
 					prod.clear();
-					prod.add(neg(epsilon));
+					prod.add(Var.NEG_EPSILON);
 				}else{
 					prod.clear();
-					prod.add(epsilon);
+					prod.add(Var.EPSILON);
 				}
 			}else if(!hasEpsilon && hasInf){
 				if(prod.negative()){
 					prod.clear();
-					prod.add(neg(inf));
+					prod.add(Var.NEG_INF);
 				}else{
 					prod.clear();
-					prod.add(inf);
+					prod.add(Var.INF);
 				}
 			}else if(hasEpsilon && hasInf){
 				if(prod.negative()){
 					prod.clear();
-					prod.add(prod(num(-1),epsilon,inf));
+					prod.add(prod(num(-1),epsilon(),inf()));
 				}else{
 					prod.clear();
-					prod.add(prod(epsilon,inf));
+					prod.add(prod(epsilon(),inf()));
 				}
 			}
 			

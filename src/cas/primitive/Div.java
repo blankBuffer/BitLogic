@@ -52,28 +52,34 @@ public class Div extends Expr{
 			}
 			if(!Limit.zeroOrEpsilon(div.getDenom())){
 				if(Limit.isEpsilon(div.getNumer())){
-					if(div.negative()){
-						return neg(epsilon());
-					}
-					return epsilon();
+					return prod(div.getNumer(),div.getDenom()).simplify(casInfo);
 				}else if(Limit.isInf(div.getNumer())){
-					if(div.negative()){
-						return neg(inf());
-					}
-					return inf();
+					return prod(div.getNumer(),div.getDenom()).simplify(casInfo);
 				}
 			}
 			if(!Limit.zeroOrEpsilon(div.getNumer())){
 				if(Limit.isEpsilon(div.getDenom()) ){
-					if(div.negative()){
-						return neg(inf());
+					if(div.getDenom().equals(Var.EPSILON) ){
+						return prod(inf(),div.getNumer()).simplify(casInfo);
 					}
-					return inf();
+					return prod(num(-1),inf(),div.getNumer()).simplify(casInfo);
 				}else if(Limit.isInf(div.getDenom())){
-					if(div.negative()){
-						return neg(epsilon());
+					if(div.getDenom().equals(Var.INF) ){
+						return prod(epsilon(),div.getNumer()).simplify(casInfo);
 					}
-					return epsilon();
+					return prod(num(-1),epsilon(),div.getNumer()).simplify(casInfo);
+				}
+			}
+			
+			if(!div.getDenom().contains(Var.INF)) {//h/(m+epsilon) -> h/m-epsilon
+				short direction = Limit.getDirection(div.getDenom());
+				if(direction != Limit.NONE) {
+					
+					div.setDenom(Limit.stripDirection(div.getDenom()));
+					
+					direction = (short) -direction;
+					
+					return Limit.applyDirection(div.simplify(casInfo), direction);
 				}
 			}
 			
@@ -707,7 +713,7 @@ public class Div extends Expr{
 			if(getNumer() instanceof Prod && getNumer().size() == 2) {
 				Prod numerProdCopy = (Prod)getNumer().copy();
 				for(int i = 0;i<2;i++) {
-					if(numerProdCopy.get(i).equals(pi())) {
+					if(numerProdCopy.get(i).equals(Var.PI)) {
 						numerProdCopy.remove(i);
 						break;
 					}
@@ -715,7 +721,7 @@ public class Div extends Expr{
 				if(numerProdCopy.size() == 1 && numerProdCopy.get() instanceof Num && !((Num)numerProdCopy.get()).isComplex()) {
 					return div(numerProdCopy.get(),getDenom().copy());
 				}
-			}else if(getNumer().equals(pi())) {
+			}else if(getNumer().equals(Var.PI)) {
 				return div(num(1),getDenom().copy());
 			}
 		}

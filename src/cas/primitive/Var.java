@@ -8,6 +8,13 @@ public class Var extends Expr{
 	private static final long serialVersionUID = -3581525014075161068L;
 	public String name;
 	
+	public static final Var PI = pi();
+	public static final Var E = e();
+	public static final Var INF = inf();
+	public static final Expr NEG_INF = neg(inf());
+	public static final Var EPSILON = epsilon();
+	public static final Expr NEG_EPSILON = neg(epsilon());
+	
 	/*
 	 * for non generic variables this is the defined value for the constant
 	 */
@@ -25,6 +32,7 @@ public class Var extends Expr{
 			valuef.real = Double.POSITIVE_INFINITY;
 		}else if(name.equals("epsilon")){
 			generic = false;
+			valuef.real = 0.0000000001;
 		}
 		this.name = name;
 		flags.sorted = true;

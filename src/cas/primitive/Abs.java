@@ -18,7 +18,7 @@ public class Abs extends Expr{
 	
 	static Rule absOfPower = new Rule("abs(a^b)->abs(a)^b","abs of a power");
 	static Rule absOfAbs = new Rule("abs(abs(x))->abs(x)","absolute value of absolute value");
-	
+	static Rule absOfEpsilon = new Rule("abs(epsilon)->epsilon","absolute value of epsilon becomes epsilon");
 	
 	/*
 	 * checks for when the inside is a polynomial that never crosses the x axis
@@ -214,7 +214,7 @@ public class Abs extends Expr{
 		@Override
 		public Expr applyRuleToExpr(Expr e,CasInfo casInfo) {
 			Abs abs = (Abs)e;
-			if(!abs.get().containsVars()) {
+			if(!abs.get().containsVars() && !abs.contains(Var.EPSILON)) {
 				ComplexFloat approx = abs.get().convertToFloat(exprList());
 				if(ComplexFloat.closeToZero(approx.imag)) {
 					if(approx.real<0) {
@@ -252,6 +252,7 @@ public class Abs extends Expr{
 				absOfAbs,
 				alwaysPositive,
 				absOfNegConst,
+				absOfEpsilon,
 				absOfPower,
 				absOfProd,
 				absOfDiv,

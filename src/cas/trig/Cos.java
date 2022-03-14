@@ -35,16 +35,15 @@ public class Cos extends Expr{
 		@Override
 		public Expr applyRuleToExpr(Expr e,CasInfo casInfo){
 			Cos cos = (Cos)e;
-			Var pi = pi();
 			BigInteger three = BigInteger.valueOf(3),six = BigInteger.valueOf(6),four = BigInteger.valueOf(4),twelve = BigInteger.valueOf(12);
 			Expr innerExpr = distr(cos.get()).simplify(casInfo);
 			
 			Expr out = cos;
 			if(innerExpr.equals(num(0))) {
 				out = num(1);
-			}else if(innerExpr.equals(pi))
+			}else if(innerExpr.equals(Var.PI))
 				out = num(-1);
-			if(innerExpr instanceof Div && innerExpr.contains(pi())){
+			if(innerExpr instanceof Div && innerExpr.contains(Var.PI)){
 				Div frac =((Div)innerExpr).ratioOfUnitCircle();
 				
 				if(frac!=null) {
@@ -81,7 +80,7 @@ public class Cos extends Expr{
 				
 			}else if(innerExpr instanceof Sum) {//cos(x-pi/4) can be turned into sin(x+7*pi/4) because sin has symmetry
 				for(int i = 0;i<innerExpr.size();i++) {
-					if(innerExpr.get(i) instanceof Div && !innerExpr.get(i).containsVars() && innerExpr.get(i).contains(pi)) {
+					if(innerExpr.get(i) instanceof Div && !innerExpr.get(i).containsVars() && innerExpr.get(i).contains(Var.PI)) {
 						Div frac = ((Div)innerExpr.get(i)).ratioOfUnitCircle();
 						
 						if(frac!=null) {

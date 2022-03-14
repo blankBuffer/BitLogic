@@ -147,6 +147,10 @@ public class Rule extends Expr{
 		return true;
 	}
 	
+	/*
+	 * creates the matching array sequences to describe where variable names are re-used
+	 * this is described above where sin(c*b)*a^b+a maps to {{1,3},{2,4}}
+	 */
 	private static ArrayList<IndexSet> generateTemplateMatchingSets(Sequence templateParts){
 		ExprList usedVars = new ExprList();
 		ArrayList<IndexSet> matcherIndexSets = new ArrayList<IndexSet>();
@@ -186,16 +190,15 @@ public class Rule extends Expr{
 		}
 	}
 	
-	private static boolean checkForMatches(Expr template,Expr expr) {
-		Sequence exprs = sequence();
-		
-		Sequence templateParts = generateTemplateParts(template);
-		ArrayList<IndexSet> matchingSets = generateTemplateMatchingSets(templateParts);
-		
-		return checkForMatches(matchingSets,exprs,template,expr);
+	private static ExprList makeEqusFromParts(Sequence templateParts,Sequence otherParts) {
+		ExprList out = new ExprList();
+		for(int i = 0;i<templateParts.size();i++) {
+			out.add(equ(templateParts.get(i),otherParts.get(i)));
+		}
+		return out;
 	}
 	
-	private static boolean similarExpr(Expr template,Expr other,boolean checked){
+	private static boolean similarExpr(Expr template,Expr other,Expr condition,boolean checked){
 		if(other == null) return false;
 		if(template instanceof Var && ((Var) template).isGeneric()) return true;
 		
@@ -206,7 +209,19 @@ public class Rule extends Expr{
 			template.sort();
 			other.sort();
 			
-			if(!checked) return Rule.checkForMatches(template,other);
+			if(!checked) {
+				Sequence otherParts = sequence();
+				
+				Sequence templateParts = generateTemplateParts(template);
+				ArrayList<IndexSet> matchingSets = generateTemplateMatchingSets(templateParts);
+				
+				boolean partsMatch = checkForMatches(matchingSets,otherParts,template,other);
+				if(condition == null) return partsMatch;
+				if(!partsMatch) return false;
+				
+				ExprList equs = makeEqusFromParts(templateParts,otherParts);
+				return condition.replace(equs).simplify(CasInfo.normal).equals(BoolState.TRUE);
+			}
 			
 			for(int i = 0;i<template.size();i++) {
 				if(!fastSimilarExpr(template.get(i),other.get(i))) return false;
@@ -219,11 +234,15 @@ public class Rule extends Expr{
 	
 	
 	public static boolean fastSimilarExpr(Expr template,Expr other) {
-		return similarExpr(template,other,true);
+		return similarExpr(template,other,null,true);
 	}
 	
 	public static boolean strictSimilarExpr(Expr template,Expr other) {
-		return similarExpr(template,other,false);
+		return similarExpr(template,other,null,false);
+	}
+	
+	public static boolean similarWithCondition(Expr template,Expr other,Expr condition) {
+		return similarExpr(template,other,condition,false);
 	}
 	
 	public static Expr getExprByName(ExprList equs,String name){
@@ -237,7 +256,8 @@ public class Rule extends Expr{
 	}
 	
 	
-	static public ExprList getEqusFromTemplate(Expr template,Expr expr) {
+	
+	static public ExprList getEqusFromTemplate(Expr template,Expr condition,Expr expr) {
 		if(fastSimilarExpr(template,expr)) {
 			Sequence exprParts = sequence();
 			
@@ -248,13 +268,17 @@ public class Rule extends Expr{
 			if(!match) {
 				return null;
 			}
-			ExprList equs = new ExprList();
-			for(int i = 0;i<exprParts.size();i++) equs.add(equ(templateParts.get(i),exprParts.get(i)));
+			ExprList equs = makeEqusFromParts(templateParts,exprParts);
+			if(!condition.replace(equs).simplify(CasInfo.normal).equals(BoolState.TRUE)) return null;
 			
 			return equs;
 			
 		}
 		return null;
+	}
+	
+	static public ExprList getEqusFromTemplate(Expr template,Expr expr) {
+		return getEqusFromTemplate(template,null,expr);
 	}
 	
 	private static boolean checkForMatches(ArrayList<IndexSet> matchingSets,Sequence exprsParts,Expr template,Expr expr) {
@@ -294,13 +318,12 @@ public class Rule extends Expr{
 			if(!match) {
 				return expr;
 			}
-			ExprList equs = new ExprList();
-			for(int i = 0;i<parts.size();i++) equs.add(equ(patternParts.get(i),parts.get(i)));
+			ExprList equs = makeEqusFromParts(patternParts,parts);
 			
 			if(condition != null) {
 				Expr condition = this.condition.replace(equs);
 				condition = condition.simplify(casInfo);
-				if(condition.simplify(casInfo).equals(BoolState.FALSE)) return expr;
+				if(!condition.simplify(casInfo).equals(BoolState.TRUE)) return expr;
 			}
 			
 			Expr out = pattern.getRightSide().replace(equs);
@@ -355,8 +378,11 @@ public class Rule extends Expr{
 		
 		Factor.loadRules();
 		Gamma.loadRules();
-		Integrate.loadRules();
+		Gcd.loadRules();
+		
 		loadingPercent = 35;
+		
+		Integrate.loadRules();
 		IntegrateOver.loadRules();
 		
 		loadingPercent = 40;

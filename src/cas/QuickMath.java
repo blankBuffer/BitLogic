@@ -65,6 +65,19 @@ public class QuickMath {
 	public static Expr sqrtObj = sqrt(var("x"));//used for comparing to
 	public static Expr cbrtObj = cbrt(var("x"));//used for comparing to
 	
+	public static Var e() {
+		return var("e");
+	}
+	public static Var pi() {
+		return var("pi");
+	}
+	public static Var inf(){
+		return var("inf");
+	}
+	public static Var epsilon(){
+		return var("epsilon");
+	}
+	
 	//
 	public static Power pow(Expr a,Expr b) {
 		return new Power(a,b);
@@ -111,14 +124,16 @@ public class QuickMath {
 		}
 		return out;
 	}
-	public static Var inf(){
-		return var("inf");
+	public static Gcd gcd(Expr... exprs) {
+		Gcd out = new Gcd();
+		for(Expr e:exprs){
+			out.add(e);
+		}
+		return out;
 	}
-	public static Var epsilon(){
-		return var("epsilon");
-	}
-	public static Limit limit(Expr e,Var v,Expr value){
-		return new Limit(e,v,value);
+	
+	public static Limit limit(Expr e,Becomes becomes){
+		return new Limit(e,becomes);
 	}
 	public static Not not(Expr a) {
 		return new Not(a);
@@ -183,12 +198,7 @@ public class QuickMath {
 	public static Div div(Expr a,Expr b) {
 		return new Div(a,b);
 	}
-	public static Var e() {
-		return var("e");
-	}
-	public static Var pi() {
-		return var("pi");
-	}
+	
 	public static Diff diff(Expr e,Var v) {
 		return new Diff(e,v);
 	}
@@ -281,6 +291,12 @@ public class QuickMath {
 		try {
 			return (Func)SimpleFuncs.getFuncByName("eval", equ);
 		}catch(Exception e) {}
+		return null;
+	}
+	public static Func expand(Expr e) {
+		try {
+			return (Func)SimpleFuncs.getFuncByName("expand", e);
+		}catch(Exception e2) {}
 		return null;
 	}
 	//
@@ -711,7 +727,7 @@ public class QuickMath {
 		return sequence(e.copy(),num(0));
 	}
 	
-	static BigInteger gcm(BigInteger a,BigInteger b) {
+	public static BigInteger gcm(BigInteger a,BigInteger b) {
 		return a.multiply(b).divide(a.gcd(b));
 	}
 	
@@ -1106,9 +1122,9 @@ public class QuickMath {
 		String out = "";
 		String leftParen = "\\left( ";
 		String rightParen = "\\right) ";
-		if(e.equals(pi())) {
+		if(e.equals(Var.PI)) {
 			out+="\\pi ";
-		}else if(e instanceof Var || e instanceof Num || e.equals(e())) {
+		}else if(e instanceof Var || e instanceof Num || e.equals(Var.E)) {
 			out += e.toString();
 		}else if(e instanceof Prod) {
 			for(int i = 0;i<e.size();i++) {

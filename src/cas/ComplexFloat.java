@@ -35,6 +35,10 @@ public class ComplexFloat implements Serializable{
 	public boolean negativeAndReal() {
 		return real<0 && closeToZero(imag);
 	}
+	public boolean real() {
+		return closeToZero(imag);
+	}
+	
 	@Override
 	public String toString(){
 		if(!closeToZero(real) && !closeToZero(imag)) {

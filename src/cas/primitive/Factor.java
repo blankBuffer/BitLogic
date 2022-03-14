@@ -186,6 +186,7 @@ public class Factor extends Expr{
 		@Override
 		public Expr applyRuleToExpr(Expr e,CasInfo casInfo) {
 			Factor factor = (Factor)e;
+			if(e.contains(Var.INF)) return factor;//can't factor infinity lmao
 			Expr expr = factor.get();
 		
 			if(expr instanceof Sum) {

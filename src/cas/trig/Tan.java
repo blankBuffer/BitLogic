@@ -28,13 +28,12 @@ public class Tan extends Expr{
 		public Expr applyRuleToExpr(Expr e,CasInfo casInfo){
 			Tan tan = (Tan)e;
 			
-			Var pi = pi();
 			BigInteger three = BigInteger.valueOf(3),six = BigInteger.valueOf(6),four = BigInteger.valueOf(4),five = BigInteger.valueOf(5),twelve = BigInteger.valueOf(12);
 			
 			Expr innerExpr = tan.get();
-			if(innerExpr.equals(num(BigInteger.ZERO)) || innerExpr.equals(pi)) {
+			if(innerExpr.equals(num(BigInteger.ZERO)) || innerExpr.equals(Var.PI)) {
 				return num(0);
-			}if(innerExpr instanceof Div && innerExpr.contains(pi())){
+			}if(innerExpr instanceof Div && innerExpr.contains(Var.PI)){
 				Div frac = ((Div)innerExpr).ratioOfUnitCircle();
 				
 				if(frac!=null) {
@@ -67,7 +66,7 @@ public class Tan extends Expr{
 				}
 			}else if(innerExpr instanceof Sum){
 				for(int i = 0;i<innerExpr.size();i++) {
-					if(innerExpr.get(i) instanceof Div && !innerExpr.get(i).containsVars() && innerExpr.get(i).contains(pi)) {
+					if(innerExpr.get(i) instanceof Div && !innerExpr.get(i).containsVars() && innerExpr.get(i).contains(Var.PI)) {
 						
 						Div frac = ((Div)innerExpr.get(i)).ratioOfUnitCircle();
 						

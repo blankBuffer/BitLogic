@@ -34,15 +34,14 @@ public class Sin extends Expr{
 		public Expr applyRuleToExpr(Expr e,CasInfo casInfo){
 			Sin sin = (Sin)e;
 			
-			Var pi = pi();
 			BigInteger three = BigInteger.valueOf(3),six = BigInteger.valueOf(6),four = BigInteger.valueOf(4),twelve = BigInteger.valueOf(12);
 			
 			Expr innerExpr = sin.get();
 			if(innerExpr.equals(num(0))) {
 				return num(0);
-			}else if(innerExpr.equals(pi))
+			}else if(innerExpr.equals(Var.PI))
 				return num(0);
-			if(innerExpr instanceof Div && innerExpr.contains(pi())){
+			if(innerExpr instanceof Div && innerExpr.contains(Var.PI)){
 				Div frac = ((Div)innerExpr).ratioOfUnitCircle();
 				
 				if(frac != null) {
@@ -78,7 +77,7 @@ public class Sin extends Expr{
 				
 			}else if(innerExpr instanceof Sum) {//sin(x-pi/4) can be turned into sin(x+7*pi/4) because sin has symmetry
 				for(int i = 0;i<innerExpr.size();i++) {
-					if(innerExpr.get(i) instanceof Div && !innerExpr.get(i).containsVars() && innerExpr.get(i).contains(pi)) {
+					if(innerExpr.get(i) instanceof Div && !innerExpr.get(i).containsVars() && innerExpr.get(i).contains(Var.PI)) {
 						
 						Div frac = ((Div)innerExpr.get(i)).ratioOfUnitCircle();
 						

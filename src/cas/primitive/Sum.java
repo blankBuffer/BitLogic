@@ -35,13 +35,10 @@ public class Sum extends Expr{
 			boolean hasPosInf = false;
 			boolean hasNegInf = false;
 			
-			Expr inf = inf();
-			Expr negInf = neg(inf());
-			
 			for(int i = 0;i<sum.size();i++){
-				if(sum.get(i).equals(inf)){
+				if(sum.get(i).equals(Var.INF)){
 					hasPosInf = true;
-				}else if(sum.get(i).equals(negInf)){
+				}else if(sum.get(i).equals(Var.NEG_INF)){
 					hasNegInf = true;
 				}
 				if(hasPosInf && hasNegInf) break;
@@ -50,14 +47,14 @@ public class Sum extends Expr{
 			
 			if(hasPosInf && !hasNegInf){
 				sum.clear();
-				sum.add(inf);
+				sum.add(inf());
 			} else if(!hasPosInf && hasNegInf){
 				sum.clear();
-				sum.add(negInf);
+				sum.add(neg(inf()));
 			}else if(hasPosInf && hasNegInf && sum.size() != 2){
 				sum.clear();
-				sum.add(inf);
-				sum.add(negInf);
+				sum.add(inf());
+				sum.add(neg(inf()));
 			}
 			
 			return sum;

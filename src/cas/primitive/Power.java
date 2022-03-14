@@ -2,6 +2,7 @@ package cas.primitive;
 import java.math.BigInteger;
 
 import cas.*;
+import cas.bool.BoolState;
 import cas.calculus.Limit;
 
 public class Power extends Expr{
@@ -57,7 +58,7 @@ public class Power extends Expr{
 		public Expr applyRuleToExpr(Expr e,CasInfo casInfo){
 			Power power = (Power)e;
 			
-			if(Limit.stripDirection(power.getBase()).equals(Num.ONE) && !power.getExpo().equals(inf())){
+			if(Limit.stripDirection(power.getBase()).equals(Num.ONE) && !power.getExpo().equals(Var.INF)){
 				short direction = Limit.getDirection(power.getBase());
 				
 				direction = power.getExpo().negative() ? Limit.flipDirection(direction) : direction;
@@ -152,7 +153,7 @@ public class Power extends Expr{
 		public Expr applyRuleToExpr(Expr e,CasInfo casInfo){
 			Power pow = (Power)e;
 			
-			if(pow.getBase().equals(e())) {
+			if(pow.getBase().equals(Var.E)) {
 				Prod expoProd = null;
 				Div expoDiv = null;
 				if(pow.getExpo() instanceof Div && ((Div)pow.getExpo()).getNumer() instanceof Prod ) {
@@ -198,7 +199,7 @@ public class Power extends Expr{
 		@Override
 		public Expr applyRuleToExpr(Expr e,CasInfo casInfo){
 			Power pow = (Power)e;
-			if(pow.getExpo() instanceof Sum && pow.getBase().equals(e())) {
+			if(pow.getExpo() instanceof Sum && pow.getBase().equals(Var.E)) {
 				Sum expoSum = (Sum)pow.getExpo();
 				Prod outerProd = new Prod();
 				for(int i = 0;i<expoSum.size();i++) {
@@ -339,23 +340,41 @@ public class Power extends Expr{
 		public Expr applyRuleToExpr(Expr e,CasInfo casInfo){
 			Power pow = (Power)e;
 			
-			if(pow.getBase().equals(epsilon()) && !pow.getExpo().negative() && !Limit.zeroOrEpsilon(pow.getExpo())){
-				Expr out = epsilon();
-				
-				return out;
-			}else if(pow.getBase().equals(inf()) && !pow.getExpo().negative() && !Limit.zeroOrEpsilon(pow.getExpo())){
-				Expr out = inf();
-				
-				return out;
-			}else if(pow.getExpo().equals(inf())){
-				Expr baseMinusOne = factor(sub(pow.getBase(),Num.ONE)).simplify(casInfo);
-				
-				if(!baseMinusOne.negative() && !Limit.zeroOrEpsilon(baseMinusOne) || pow.getBase().equals(e()) || pow.getBase().equals(pi())){
-					Expr out = inf();
-					
-					return out;
+			if(pow.getExpo().equals(Var.INF)){//x^inf
+				if(!Limit.stripDirection(pow.getBase()).equals(Num.ONE)) {
+					if(eval(equGreater(pow.getBase(),num(1))).simplify(casInfo).equals(BoolState.TRUE)) {
+						return inf();
+					}
 				}
 				
+			}else if(pow.getExpo().contains(Var.EPSILON) && !Limit.isEpsilon(pow.getBase()) && !Limit.isInf(pow.getBase()) && !pow.getBase().equals(Num.ONE)) {//x^(y+epsilon)
+				
+				short direction = Limit.getDirection(pow.getExpo());
+				pow.setExpo(Limit.stripDirection(pow.getExpo()));
+				
+				if(direction != Limit.NONE) {
+					if(eval(equLess(pow.getBase(),num(1))).simplify(casInfo).equals(BoolState.TRUE)) {
+						direction = (short) -direction;
+					}
+					return Limit.applyDirection(pow, direction).simplify(casInfo);
+				}
+			}else if(pow.getBase().equals(Var.EPSILON) && !pow.getExpo().negative() ) {
+				return epsilon();
+			}else if(!pow.getBase().contains(Var.INF) && !pow.getExpo().negative() && !Limit.zeroOrEpsilon(pow.getExpo())){//(x+epsilon)^y cases
+				
+				
+				if(Limit.zeroOrEpsilon(pow.getBase())) return pow;//let product in base separate out the negative
+				
+				short direction = Limit.getDirection(pow.getBase());
+				if(direction == Limit.NONE) return pow;
+				
+				pow.setBase(Limit.stripDirection(pow.getBase()));
+				
+				if(pow.getBase().negative()) direction = (short) -direction;//(-2-epsilon)^3 -> -8+epsilon
+				
+				return Limit.applyDirection(pow.simplify(casInfo), direction);
+			}else if(pow.getBase().equals(Var.INF) && !pow.getExpo().negative() && !Limit.zeroOrEpsilon(pow.getExpo())){//inf^x
+				return inf();
 			}
 			
 			return pow;

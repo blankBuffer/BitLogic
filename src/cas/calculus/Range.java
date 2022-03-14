@@ -40,19 +40,26 @@ public class Range extends Expr{
 		
 		ExprList getCriticalPoints(Expr e,Var v,CasInfo casInfo) {
 			Expr derivative = diff(e,v).simplify(casInfo);
-			ExprList solutions = ExprList.cast(solve(equ(derivative,num(0)),v).simplify(casInfo));
-			return solutions;
+			ExprList derivativeSolutions = ExprList.cast(solve(equ(derivative,num(0)),v).simplify(casInfo));
+			ExprList solutions = ExprList.cast(solve(equ(e,num(0)),v).simplify(casInfo));
+			
+			ExprList criticalPoints = new ExprList();
+			
+			for(int i = 0;i<solutions.size();i++) criticalPoints.add(solutions.get(i));
+			for(int i = 0;i<derivativeSolutions.size();i++) criticalPoints.add(derivativeSolutions.get(i));
+			
+			return criticalPoints;
 		}
 		
 		Expr maximum(Expr e,ExprList criticalPoints,CasInfo casInfo) {
 			Expr currentMax = e.replace( (Equ)criticalPoints.get(0) ).simplify(casInfo);
-			System.out.println(currentMax);
 			ComplexFloat floatMax = currentMax.convertToFloat(exprList());
 			
 			for(int i = 1;i<criticalPoints.size();i++) {
 				Expr current = e.replace( (Equ)criticalPoints.get(i)).simplify(casInfo);
 				ComplexFloat currentApprox = current.convertToFloat(exprList());
-				if(currentApprox.real > floatMax.real) {
+				
+				if(currentApprox.real > floatMax.real && currentApprox.real()) {
 					floatMax = currentApprox;
 					currentMax = current;
 				}
@@ -61,13 +68,13 @@ public class Range extends Expr{
 		}
 		Expr minimum(Expr e,ExprList criticalPoints,CasInfo casInfo) {
 			Expr currentMax = e.replace( (Equ)criticalPoints.get(0) ).simplify(casInfo);
-			System.out.println(currentMax);
 			ComplexFloat floatMax = currentMax.convertToFloat(exprList());
 			
 			for(int i = 1;i<criticalPoints.size();i++) {
 				Expr current = e.replace( (Equ)criticalPoints.get(i)).simplify(casInfo);
 				ComplexFloat currentApprox = current.convertToFloat(exprList());
-				if(currentApprox.real < floatMax.real) {
+				
+				if(currentApprox.real < floatMax.real && currentApprox.real()) {
 					floatMax = currentApprox;
 					currentMax = current;
 				}
@@ -88,10 +95,16 @@ public class Range extends Expr{
 				ComplexFloat maxApprox = range.getMax().convertToFloat(exprList());
 				
 				for(int i = 0;i<criticalPoints.size();i++) {
+					if(criticalPoints.get(i) instanceof Solve) {//Unsolved state
+						criticalPoints.remove(i);
+						i--;
+						continue;
+					}
+					
 					Expr critVal = ((Equ)criticalPoints.get(i)).getRightSide();
 					ComplexFloat approx = critVal.convertToFloat(exprList());
 					
-					if(approx.real > maxApprox.real || approx.real < minApprox.real) {
+					if(approx.real > maxApprox.real || approx.real < minApprox.real) {//out of bounds of domain
 						criticalPoints.remove(i);
 						i--;
 					}
@@ -99,6 +112,7 @@ public class Range extends Expr{
 				}
 			}
 			
+			//add domain points to critical points list
 			criticalPoints.add(equ(range.getVar(),range.getMin()));
 			criticalPoints.add(equ(range.getVar(),range.getMax()));
 			
