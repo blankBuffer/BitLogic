@@ -269,7 +269,8 @@ public class Rule extends Expr{
 				return null;
 			}
 			ExprList equs = makeEqusFromParts(templateParts,exprParts);
-			if(!condition.replace(equs).simplify(CasInfo.normal).equals(BoolState.TRUE)) return null;
+			
+			if(condition != null && !condition.replace(equs).simplify(CasInfo.normal).equals(BoolState.TRUE)) return null;
 			
 			return equs;
 			

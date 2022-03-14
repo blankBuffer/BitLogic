@@ -78,7 +78,9 @@ approx(ln(4)+1)
 approx(2.1+3.7)
 approx(gamma(3.7))
 #limits
-limit((1+1/x)^x,x,inf)
+limit((1+1/x)^x,x->inf)
+limit(sqrt(2*x+x^2)-sqrt(-x+x^2),x->inf)
+limit((x+3)/sqrt(9*x^2-5*x),x->-inf)
 #prime factor
 primeFactor(98769876234523498761234)
 #language conversion

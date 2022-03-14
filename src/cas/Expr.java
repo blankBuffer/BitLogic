@@ -446,14 +446,19 @@ public abstract class Expr extends QuickMath implements Serializable{
 							}
 						}
 						
-						if(first instanceof Var) return 1;
-						if(second instanceof Var) return -1;
+						int fPriority = 0;
+						int sPriority = 0;
 						
-						int fPriority = first.typeName().hashCode();
-						int sPriority = second.typeName().hashCode();
+						if(first.typeName().equals("var")) fPriority = 2;
+						else if(first.typeName().equals("num")) fPriority = 1;
+						if(second.typeName().equals("var")) sPriority = 2;
+						else if(second.typeName().equals("num")) sPriority = 1;
+						
+						if(fPriority == 0) fPriority = first.typeName().hashCode();
+						if(sPriority == 0) sPriority = second.typeName().hashCode();
 						
 						if(fPriority != sPriority) {
-							return Integer.compare(fPriority, sPriority);
+							return -Integer.compare(fPriority, sPriority);
 						}
 						int fComplexity = first.complexity();
 						int sComplexity = second.complexity();

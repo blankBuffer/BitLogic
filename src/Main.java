@@ -44,7 +44,7 @@ public class Main extends QuickMath{
 	
 	static void testRegion() {
 		Rule.loadRules();
-		runScript("bitLogicTest.bl",false);
+		runScript("bitLogicTest.bl",true);
 	}
 	
 	public static void main(String[] args) {
