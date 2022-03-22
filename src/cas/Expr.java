@@ -131,7 +131,7 @@ public abstract class Expr extends QuickMath implements Serializable{
 		}
 		
 		Rule doneRule = getDoneRule();
-		if(doneRule != null) toBeSimplified = doneRule.applyRuleToExpr(sequence(toBeSimplified,this), casInfo);//give it the original problem to have access to variables
+		if(doneRule != null) toBeSimplified = doneRule.applyRuleToExpr(toBeSimplified, casInfo);//give it the original problem to have access to variables
 		
 		toBeSimplified.flags.simple = true;//result is simplified and should not be simplified again
 		
@@ -458,7 +458,7 @@ public abstract class Expr extends QuickMath implements Serializable{
 						if(sPriority == 0) sPriority = second.typeName().hashCode();
 						
 						if(fPriority != sPriority) {
-							return -Integer.compare(fPriority, sPriority);
+							return -Integer.compare(Math.abs(fPriority), Math.abs(sPriority));
 						}
 						int fComplexity = first.complexity();
 						int sComplexity = second.complexity();

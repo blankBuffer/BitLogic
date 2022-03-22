@@ -89,7 +89,7 @@ public class ExprList extends Expr{
 	public static ExprList cast(Expr e) {
 		if(e == null) return exprList();
 		if(e instanceof ExprList) return (ExprList)e;
-		if(e instanceof Params) {
+		if(e instanceof Params || e instanceof Sequence) {
 			ExprList out = new ExprList();
 			for(int i = 0;i<e.size();i++) {
 				out.add(e.get(i));

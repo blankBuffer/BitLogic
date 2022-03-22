@@ -27,6 +27,7 @@ import javax.swing.text.StyleConstants;
 import cas.Expr;
 import cas.QuickMath;
 import cas.Rule;
+import cas.SimpleFuncs;
 import cas.graphics.ExprRender;
 import cas.graphics.Plot;
 import cas.lang.Interpreter;
@@ -58,7 +59,7 @@ public class MainWindow extends JFrame{
 	
 	boolean KEEP_WINDOW_ON_TOP_DEFAULT = false;
 	boolean SHOW_PLOT_DEFAULT = true;
-	static final int _2D = 0,_3D = 1;
+	static final int _2D = 0,_3D = 1,_COMPLEX = 2;
 	int PLOT_MODE_DEFAULT = _2D;
 	Color BACKGROUND_COLOR_DEFAULT = new Color(255,255,255),FOREGROUND_COLOR_DEFAULT = new Color(0,0,0);
 	Font font = new Font(null,0,16);
@@ -230,6 +231,7 @@ public class MainWindow extends JFrame{
 				JButton copyButton;
 				JButton resultButton;
 				JButton editButton;
+				JCheckBox showCheckBox;
 			}
 			ArrayList<StackButtonGroup> stackButtons = new ArrayList<StackButtonGroup>();
 			
@@ -271,6 +273,27 @@ public class MainWindow extends JFrame{
 									terminalOutUpdate.actionPerformed(null);
 								}
 							});
+							JCheckBox showCheckBox = new JCheckBox("show",true);
+							showCheckBox.addActionListener(new ActionListener() {
+								@Override
+								public void actionPerformed(ActionEvent e) {
+									Expr expr = currentStack.stack.get(iObj);
+									
+									if(expr.typeName().equals("show") || expr.typeName().equals("hide")) {
+										expr = expr.get();
+									}
+									
+									if(!showCheckBox.isSelected()) {
+										try {
+											expr = SimpleFuncs.getFuncByName("hide", expr);
+										} catch (Exception e1) {}
+									}
+									currentStack.stack.set(iObj,expr);
+									terminalOutUpdate.actionPerformed(null);
+								}
+							});
+							stackButtonGroup.showCheckBox = showCheckBox;
+							
 							stackButtons.add(stackButtonGroup);
 						}else {
 							stackButtonGroup = stackButtons.get(i);
@@ -283,6 +306,8 @@ public class MainWindow extends JFrame{
 						terminalOutPane.insertComponent(stackButtonGroup.resultButton);
 						moveCaret();
 						terminalOutPane.insertComponent(stackButtonGroup.editButton);
+						moveCaret();
+						terminalOutPane.insertComponent(stackButtonGroup.showCheckBox);
 						moveCaret();
 						
 						addTextln("");
@@ -343,6 +368,13 @@ public class MainWindow extends JFrame{
 		
 		TerminalPanel(){
 			
+			try {
+				terminalOutPane.getDocument().insertString(terminalOutPane.getDocument().getLength(), UI.CRED+"\n", null);
+			} catch (Exception e) {
+				e.printStackTrace();
+			}
+			terminalOutPane.setEditable(false);
+			
 			allComponents.add(this);
 			allComponents.add(terminalOutPane);
 			
@@ -352,7 +384,6 @@ public class MainWindow extends JFrame{
 			allComponents.add(terminalInWithButtons);
 			
 			setLayout(new BorderLayout());
-			terminalOutPane.setEditable(false);
 			scrollableTerminalOut.setMinimumSize(new Dimension(300,200));
 			resultAndPushButtons.setLayout(new FlowLayout());
 			terminalInWithButtons.setLayout(new BorderLayout());
@@ -373,12 +404,6 @@ public class MainWindow extends JFrame{
 			
 			add(terminalOutWithImg,BorderLayout.CENTER);
 			add(terminalInWithButtons,BorderLayout.SOUTH);
-			
-			try {
-				terminalOutPane.getDocument().insertString(terminalOutPane.getDocument().getLength(), UI.CRED+"\n", null);
-			} catch (Exception e) {
-				e.printStackTrace();
-			}
 		}
 		
 	}
@@ -407,7 +432,7 @@ public class MainWindow extends JFrame{
 			}
 			
 		};
-		JComboBox<String> plotModeComboBox = new JComboBox<String>(new String[] {"2D","3D"});
+		JComboBox<String> plotModeComboBox = new JComboBox<String>(new String[] {"2D","3D","Complex"});
 		ActionListener plotModeUpdate = new ActionListener() {
 
 			@Override
@@ -416,6 +441,8 @@ public class MainWindow extends JFrame{
 					plot.mode = Plot.MODE_2D;
 				}else if(plotModeComboBox.getSelectedItem().equals("3D")) {
 					plot.mode = Plot.MODE_3D;
+				}else if(plotModeComboBox.getSelectedItem().equals("Complex")) {
+					plot.mode = Plot.MODE_COMPLEX;
 				}
 				plot.repaint();
 			}
@@ -546,7 +573,6 @@ public class MainWindow extends JFrame{
 			@Override
 			public void actionPerformed(ActionEvent e) {
 				currentStack.currentCasInfo.setAllowComplexNumbers( allowComplexNumbersCheckBox.isSelected());
-				allowAbsCheckBox.setSelected(currentStack.currentCasInfo.allowAbs());
 			}
 		};
 		JCheckBox allowAbsCheckBox = new JCheckBox("allow abs(x)",currentStack.currentCasInfo.allowAbs());
@@ -554,7 +580,6 @@ public class MainWindow extends JFrame{
 			@Override
 			public void actionPerformed(ActionEvent e) {
 				currentStack.currentCasInfo.setAllowAbs(allowAbsCheckBox.isSelected());
-				allowComplexNumbersCheckBox.setSelected(currentStack.currentCasInfo.allowComplexNumbers());
 			}
 		};
 		
@@ -747,7 +772,6 @@ public class MainWindow extends JFrame{
 		setMinimumSize(new Dimension(600,200));
 		add(createMainContainer());
 		setLocationRelativeTo(null);
-		setVisible(true);
 		this.addWindowListener(new WindowListener() {
 			@Override
 			public void windowOpened(WindowEvent e) {}
@@ -767,6 +791,9 @@ public class MainWindow extends JFrame{
 			public void windowDeactivated(WindowEvent e) {}
 			
 		});
+		
+		setVisible(true);
+		
 		WINDOW_INSTANCE_COUNT++;
 		loadRulesWindow();
 	}

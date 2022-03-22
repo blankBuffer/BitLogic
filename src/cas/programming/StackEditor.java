@@ -10,6 +10,7 @@ import cas.lang.Ask;
 import cas.matrix.Dot;
 import cas.primitive.ExprList;
 import cas.primitive.Prod;
+import cas.primitive.Sequence;
 import cas.primitive.Sum;
 
 /*
@@ -82,8 +83,8 @@ public class StackEditor extends QuickMath {
 		if(expr != null) stack.set(index, expr);
 	}
 
-	public ExprList stack = new ExprList();
-	public ExprList stackOld = new ExprList();
+	public Sequence stack = new Sequence();
+	public Sequence stackOld = new Sequence();
 
 	public int size() {
 		return stack.size();
@@ -334,7 +335,7 @@ public class StackEditor extends QuickMath {
 	}
 	
 	public void undo() {
-		ExprList temp = stack;
+		Sequence temp = stack;
 		stack = stackOld;
 		stackOld = temp;
 	}

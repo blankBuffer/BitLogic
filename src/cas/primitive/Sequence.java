@@ -24,7 +24,7 @@ public class Sequence extends Expr{
 	public static Sequence cast(Expr e) {
 		if(e == null) return sequence();
 		if(e instanceof Sequence) return (Sequence)e;
-		if(e instanceof Params) {
+		if(e instanceof Params || e instanceof ExprList) {
 			Sequence out = new Sequence();
 			for(int i = 0;i<e.size();i++) {
 				out.add(e.get(i));

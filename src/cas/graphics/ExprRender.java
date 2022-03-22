@@ -246,16 +246,17 @@ public class ExprRender extends QuickMath{//sort of a wrap of the image type but
 				drawImage(numerImg,getWidth()/2-numerImg.getWidth()/2,0,numerImg.getWidth(),numerImg.getHeight());
 				graphics.fillRect(getWidth()/2-fractionSpacerWidth/2, numerImg.getHeight(), fractionSpacerWidth, fractionSpacerHeight);
 				drawImage(denomImg,getWidth()/2-denomImg.getWidth()/2,getHeight()-denomImg.getHeight(),denomImg.getWidth(),denomImg.getHeight());
-			}else if(e instanceof Equ) {
-				Equ equ = (Equ)e;
+			}else if(e instanceof Equ || e instanceof Greater || e instanceof Less) {
+				Expr leftSide = getLeftSide(e);
+				Expr rightSide = getRightSide(e);
 				
 				ExprImg equImg = newExprImg();
-				equImg.makeString("=");
+				equImg.makeString( (e instanceof Equ) ? "=" : ((e instanceof Greater) ? ">" : "<") );
 				
 				ExprImg leftImg = newExprImg();
-				leftImg.makeExpr(equ.getLeftSide());
+				leftImg.makeExpr(leftSide);
 				ExprImg rightImg = newExprImg();
-				rightImg.makeExpr(equ.getRightSide());
+				rightImg.makeExpr(rightSide);
 				
 				makeImgSeries(new ExprImg[]{leftImg,equImg,rightImg});
 			}else if(e instanceof Sum) {

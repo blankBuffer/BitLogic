@@ -320,8 +320,8 @@ public class Ask extends QuickMath{
 				
 				if(equation != null) {
 					if(!_3d)
-						return new ObjectExpr(Plot.renderGraph2D(exprList(equation), plotWind, new Dimension(400,400), new Color(64,64,64), new Color(255,255,255) ));
-					return new ObjectExpr(Plot.renderGraph3D(exprList(equation), plotWind, new Dimension(400,400),new Color(64,64,64), new Color(255,255,255), 48));
+						return new ObjectExpr(Plot.renderGraph2D(sequence(equation), plotWind, new Dimension(400,400), new Color(64,64,64), new Color(255,255,255) ,1));
+					return new ObjectExpr(Plot.renderGraph3D(sequence(equation), plotWind, new Dimension(400,400),new Color(64,64,64), new Color(255,255,255), 48));
 				}
 				return var("not sure what to plot?");
 			}

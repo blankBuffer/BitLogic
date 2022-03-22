@@ -74,6 +74,8 @@ public class Abs extends Expr{
 		public Expr applyRuleToExpr(Expr e,CasInfo casInfo) {
 			Abs abs = (Abs)e;
 			
+			if(casInfo.allowComplexNumbers()) return abs;
+			
 			for(Rule rule:cases) {
 				e = rule.applyRuleToExpr(abs, casInfo);
 				if(!(e instanceof Abs)) return e;

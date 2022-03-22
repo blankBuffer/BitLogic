@@ -32,8 +32,8 @@ public class Power extends Expr{
 		add(expo);
 	}
 	
-	private static Rule baseHasPower = new Rule("(a^b)^c->a^(b*c)","~(isType(result(b/2),num)&allowAbs())","base has power");
-	private static Rule baseHasPowerAbs = new Rule("(a^b)^c->abs(a)^(b*c)","isType(result(b/2),num)&allowAbs()","base has power");
+	private static Rule baseHasPower = new Rule("(a^b)^c->a^(b*c)","isType(b,num)&isType(c,num)|eval(a>0)","base has power");
+	private static Rule baseHasPowerAbs = new Rule("(a^b)^c->abs(a)^(b*c)","isType(result(b/2),num)&~allowComplexNumbers()","base has power");
 	
 	private static Rule expoOfZero = new Rule("a^0->1","~eval(a=0)","exponent is zero");
 	private static Rule isI = new Rule("sqrt(-1)->i","allowComplexNumbers()","is equal to i");
@@ -49,7 +49,7 @@ public class Power extends Expr{
 	private static Rule sqrtOneMinusCos = new Rule("sqrt(1-cos(x))->sqrt(2)*sin(x/2)","sqrt of 1 minus cos");
 	private static Rule sqrtOnePlusSin = new Rule("sqrt(1+sin(x))->sqrt(2)*cos(pi/4-x/2)","sqrt of 1 plus sin");
 	private static Rule sqrtOnePlusCos = new Rule("sqrt(1+cos(x))->sqrt(2)*cos(x/2)","sqrt of 1 plus cos");
-	private static Rule baseOfPowerIsAbsExpoEven = new Rule("abs(a)^b->a^b","~isType(result(b/2),div)","base of power is absolute value and exponent is divisible by 2");
+	private static Rule baseOfPowerIsAbsExpoEven = new Rule("abs(a)^b->a^b","~isType(result(b/2),div)&~allowComplexNumbers()","base of power is absolute value and exponent is divisible by 2");
 	
 	private static Rule oneToExpo = new Rule("base is one"){
 		private static final long serialVersionUID = 1L;
@@ -430,8 +430,6 @@ public class Power extends Expr{
 				Prod baseProd = (Prod)pow.getBase();
 				Div expoDiv = (Div)pow.getExpo();
 				
-				boolean evenDenom = isRealNum(expoDiv.getDenom())  && ((Num)expoDiv.getDenom()).realValue.mod(BigInteger.TWO).equals(BigInteger.ZERO);
-				
 				Prod out = new Prod();
 				for(int i = 0;i<baseProd.size();i++) {
 					if(baseProd.get(i) instanceof Power) {
@@ -440,21 +438,17 @@ public class Power extends Expr{
 						if(subPow.getExpo() instanceof Div) {
 							Div subPowExpoDiv = (Div)subPow.getExpo();
 							if(subPowExpoDiv.getNumer().equals(expoDiv.getDenom())) {
-								if(evenDenom) {
-									out.add(pow(abs(subPow.getBase()),div(expoDiv.getNumer(),subPowExpoDiv.getDenom())));
-								}else {
-									out.add(pow(subPow.getBase(),div(expoDiv.getNumer(),subPowExpoDiv.getDenom())));
-								}
+								
+								out.add(pow(subPow.getBase(),div(expoDiv.getNumer(),subPowExpoDiv.getDenom())));
+								
 								baseProd.remove(i);
 								i--;
 							}
 						}else {
 							if(expoDiv.getDenom().equals(subPow.getExpo())) {
-								if(evenDenom) {
-									out.add(pow(abs(subPow.getBase()),expoDiv.getNumer()));
-								}else {
-									out.add(pow(subPow.getBase(),expoDiv.getNumer()));
-								}
+								
+								out.add(pow(subPow,expoDiv));
+								
 								baseProd.remove(i);
 								i--;
 							}
@@ -496,46 +490,37 @@ public class Power extends Expr{
 				
 				if(isPositiveRealNum(expoDiv.getDenom()) && pow.getBase() instanceof Num && (isRealNum(pow.getBase()) || casInfo.allowComplexNumbers()) ) {
 					Num denomNum = (Num)expoDiv.getDenom();
+					
 					Num baseNum = (Num)pow.getBase();
 				
-					boolean createsComplexNumber = (denomNum).realValue.mod(BigInteger.TWO).equals(BigInteger.ZERO) && baseNum.signum() == -1;
+					//if the base is negative and the denominator is even
 					
-					if((!createsComplexNumber || casInfo.allowComplexNumbers()) && !baseNum.isComplex()) {
+					if(isPositiveRealNum(baseNum)) {
 						
 						//this portion works similar to the root expand rule
 						BigInteger root = denomNum.realValue;
 						BigInteger num = baseNum.realValue;
 						
-						if(createsComplexNumber) num = num.negate();
 						
 						BigInteger ans = bigRoot( num , root );
 						if(ans.pow(root.intValue()).equals(num)) {
-							if(createsComplexNumber) {
-								return pow(num(BigInteger.ZERO,ans),expoDiv.getNumer()).simplify(casInfo);
-							}
 							return pow(num(ans),expoDiv.getNumer()).simplify(casInfo);
 						}
 						BigInteger factor = divisibleRoot(num, root);
 						if(!factor.equals(BigInteger.ONE)) {
 							BigInteger outerNum = bigRoot( factor , root );
-							if(createsComplexNumber) {
-								return prod( pow(num(BigInteger.ZERO, outerNum ),expoDiv.getNumer()).simplify(casInfo), pow(num(num.divide(factor)),expoDiv) );
-							}
 							return prod( pow(num(outerNum),expoDiv.getNumer()).simplify(casInfo), pow(num(num.divide(factor)),expoDiv) );
 							
 						}
-						
-						if(createsComplexNumber) {
-							return prod(pow(num(0,1),expoDiv.getNumer()).simplify(casInfo),  pow(num(num),expoDiv));
-						}
-					}else if(casInfo.allowComplexNumbers() && denomNum.equals(Num.TWO)){//square root of a complex number
+					}else if(casInfo.allowComplexNumbers() && denomNum.equals(Num.TWO)){//square root of a complex or negative number
 						BigInteger sumOfSquares = baseNum.realValue.pow(2).add(baseNum.imagValue.pow(2));
 						BigInteger root = sumOfSquares.sqrt();
 						
+						//sqrt(a+b*i) -> (sqrt(sqrt(a^2+b^2)+a)+sign(b)*sqrt(sqrt(a^2+b^2)-a))/sqrt(2)
 						if(root.pow(2).equals(sumOfSquares)) {
 							
-							
-							return div(pow(sum( sqrt( num(root.add(baseNum.realValue)) ) , prod(num(0,baseNum.imagValue.signum()),sqrt( num(root.subtract(baseNum.realValue)) )) ),expoDiv.getNumer()), pow(num(2),expoDiv) ).simplify(casInfo);
+							Expr out = div(pow(sum( sqrt( num(root.add(baseNum.realValue)) ) , prod(num(0,baseNum.imagValue.signum() == -1? -1 : 1),sqrt( num(root.subtract(baseNum.realValue)) )) ),expoDiv.getNumer()), pow(num(2),expoDiv) );
+							return out.simplify(casInfo);
 							
 						}
 						

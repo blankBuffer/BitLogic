@@ -23,7 +23,7 @@ public class Plot extends JPanel{
 	boolean mousePressed;
 	private Color backgroundColor = Color.WHITE,foregroundColor = Color.DARK_GRAY;
 	StackEditor stackEditor;
-	public static final int MODE_2D = 0,MODE_3D = 1;
+	public static final int MODE_2D = 0,MODE_3D = 1,MODE_COMPLEX = 2;
 	public int mode = MODE_2D;
 	
 	public static class PlotWindowParams{
@@ -98,11 +98,15 @@ public class Plot extends JPanel{
 	}
 	
 	
-	static int IN_TERMS_OF_X = 0,IN_TERMS_OF_Y = 1;
+	static final int IN_TERMS_OF_X = 0,IN_TERMS_OF_Y = 1;
+	static final int EQU = 0, GREATER = 1,LESS = -1;
+	private static final Var Y = QuickMath.var("y"),X = QuickMath.var("x");
 	
-	static void basicPlot2D(Graphics g,Expr expr,int mode,PlotWindowParams plotWindowParams,Dimension windowSize) {//plots basic functions in terms  of x
+	static void basicPlot2D(Graphics g,Expr expr,PlotWindowParams plotWindowParams,Dimension windowSize,int varChoice,int equType) {//plots basic functions in terms  of x
 		
-		if(mode == IN_TERMS_OF_X) {
+		int step = 2;
+		
+		if(varChoice == IN_TERMS_OF_X) {
 			double beforeY = 0;
 			Equ varDef = QuickMath.equ(QuickMath.var("x"),QuickMath.floatExpr(0));
 			ExprList varDefs = new ExprList();
@@ -112,88 +116,127 @@ public class Plot extends JPanel{
 			((FloatExpr)varDef.getRightSide()).value.set(new ComplexFloat(x,0));
 			beforeY = convertToExternalPositionY(expr.convertToFloat(varDefs).real ,plotWindowParams,windowSize);
 			
-			g.setColor(randomColor(expr.hashCode()));
-			for(int i = 0;i<windowSize.getWidth();i+=2) {
+			for(int i = 0;i<windowSize.getWidth();i+=step) {
 				x = convertToInternalPositionX(i,plotWindowParams,windowSize);
 				((FloatExpr)varDef.getRightSide()).value.set(new ComplexFloat(x,0));
 				double y = convertToExternalPositionY(expr.convertToFloat(varDefs).real ,plotWindowParams,windowSize);
-				g.drawLine(i-1, (int)beforeY, i, (int)y);
+				
+				if(equType == EQU) g.drawLine(i-1, (int)beforeY, i, (int)y);
+				else if(equType == GREATER) g.fillRect(i-1, 0, step, (int)y);
+				else if(equType == LESS) g.fillRect(i-1, (int)y, step, windowSize.height-(int)y);
+				
 				beforeY = y;
 			}
-		}else if(mode == IN_TERMS_OF_Y){
+		}else if(varChoice == IN_TERMS_OF_Y){
 			double beforeX = 0;
 			Equ varDef = QuickMath.equ(QuickMath.var("y"),QuickMath.floatExpr(0));
 			ExprList varDefs = new ExprList();
 			varDefs.add(varDef);
-			g.setColor(randomColor(expr.hashCode()));
+			
 			for(int i = 0;i<windowSize.getHeight();i+=2) {
 				double y = convertToInternalPositionY(i,plotWindowParams,windowSize);
 				((FloatExpr)varDef.getRightSide()).value.set(new ComplexFloat(y,0));
 				double x = convertToExternalPositionX(expr.convertToFloat(varDefs).real ,plotWindowParams,windowSize);
-				g.drawLine((int)beforeX,i-1, (int)x,i);
+				
+				if(equType == EQU) g.drawLine((int)beforeX,i-1, (int)x,i);
+				else if(equType == GREATER) g.fillRect(0,i-1, (int)x,step);
+				else if(equType == LESS) g.fillRect((int)x,i-1, windowSize.width-(int)x,step);
 				beforeX = x;
 			}
 		}
 	}
 	
-	static void equPlot2D(Graphics g,Equ equ,int detail,PlotWindowParams plotWindowParams,Dimension windowSize) {//plots equations with x and y
+	static void equPlot2D(Graphics g,Expr expr,PlotWindowParams plotWindowParams,Dimension windowSize,int detail) {//plots equations with x and y
 		Equ xDef = QuickMath.equ(QuickMath.var("x"),QuickMath.floatExpr(0)),yDef = QuickMath.equ(QuickMath.var("y"),QuickMath.floatExpr(0));
 		ExprList varDefs = new ExprList();
 		varDefs.add(xDef);
 		varDefs.add(yDef);
 		
-		g.setColor(randomColor(equ.hashCode()));
+		Expr leftSide = QuickMath.getLeftSide(expr);
+		Expr rightSide = QuickMath.getRightSide(expr);
+		
+		int equType = EQU;
+		if(expr instanceof Greater) equType = GREATER;
+		if(expr instanceof Less) equType = LESS;
 		
 		for(int i = 0;i<windowSize.getWidth();i+=detail) {
 			for(int j = 0;j<windowSize.getHeight();j+=detail) {
 				((FloatExpr)xDef.getRightSide()).value.set(new ComplexFloat(convertToInternalPositionX(i,plotWindowParams,windowSize),0));
 				((FloatExpr)yDef.getRightSide()).value.set(new ComplexFloat(convertToInternalPositionY(j,plotWindowParams,windowSize),0));
-				double originalRes = equ.getLeftSide().convertToFloat(varDefs).real-equ.getRightSide().convertToFloat(varDefs).real;
+				double originalRes = leftSide.convertToFloat(varDefs).real-rightSide.convertToFloat(varDefs).real;
+				boolean showPixel = false;
 				
-				boolean diff = false;
-				outer:for(int k = -2;k<=2;k+=2) {
-					for(int l = -2;l<=2;l+=2) {
-						if(l == 0 && k == 0) continue;
-						((FloatExpr)xDef.getRightSide()).value.set(new ComplexFloat(convertToInternalPositionX(i+k,plotWindowParams,windowSize),0));
-						((FloatExpr)yDef.getRightSide()).value.set(new ComplexFloat(convertToInternalPositionY(j+l,plotWindowParams,windowSize),0));
-						double testRes = equ.getLeftSide().convertToFloat(varDefs).real-equ.getRightSide().convertToFloat(varDefs).real;
-						if((testRes<0) != (originalRes<0)) {
-							diff = true;
-							break outer;
+				if(equType == EQU) {
+					boolean diff = false;
+					outer:for(int k = -2;k<=2;k+=2) {
+						for(int l = -2;l<=2;l+=2) {
+							if(l == 0 && k == 0) continue;
+							((FloatExpr)xDef.getRightSide()).value.set(new ComplexFloat(convertToInternalPositionX(i+k,plotWindowParams,windowSize),0));
+							((FloatExpr)yDef.getRightSide()).value.set(new ComplexFloat(convertToInternalPositionY(j+l,plotWindowParams,windowSize),0));
+							double testRes = leftSide.convertToFloat(varDefs).real-rightSide.convertToFloat(varDefs).real;
+							if((testRes<0) != (originalRes<0)) {
+								diff = true;
+								break outer;
+							}
 						}
 					}
+					if(diff) showPixel = true;
+				}else if(equType == GREATER) {
+					if(originalRes>0) {
+						 showPixel = true;
+					}
+				}else if(equType == LESS) {
+					if(originalRes<0) {
+						 showPixel = true;
+					}
 				}
-				if(diff) g.fillRect(i-detail/2, j-detail/2, detail, detail);
+				
+				if(showPixel) g.fillRect(i-detail/2, j-detail/2, detail, detail);
 			}
 		}
 	}
 	
-	static void renderPlots2D(Graphics g,ExprList stack,PlotWindowParams plotWindowParams,Dimension windowSize){//renders all the lines and geometry
+	static void renderPlots2D(Graphics g,Sequence stack,PlotWindowParams plotWindowParams,Dimension windowSize,int detail){//renders all the lines and geometry
+		
 		for(int i = 0;i<stack.size();i++) {
 			Expr expr = stack.get(i);
-			if(expr instanceof Equ) {
-				Equ casted = (Equ)expr;
+			
+			if(expr.typeName().equals("hide")) continue;
+			if(expr.typeName().equals("show")) expr = expr.get();
+			
+			g.setColor(randomColor(expr.hashCode()));
+			
+			if(expr instanceof Equ || expr instanceof Greater || expr instanceof Less) {
 				
-				if(casted.getLeftSide().equals(y)) {
-					basicPlot2D(g,casted.getRightSide(),IN_TERMS_OF_X,plotWindowParams,windowSize);
-				}else if(casted.getLeftSide().equals(x)) {
-					basicPlot2D(g,casted.getRightSide(),IN_TERMS_OF_Y,plotWindowParams,windowSize);
+				int equType = EQU;
+				if(expr instanceof Greater) equType = GREATER;
+				if(expr instanceof Less) equType = LESS;
+				
+				if(QuickMath.getLeftSide(expr).equals(Y)) {
+					basicPlot2D(g,QuickMath.getRightSide(expr),plotWindowParams,windowSize,IN_TERMS_OF_X,equType);
+				}else if(QuickMath.getLeftSide(expr).equals(X)) {
+					basicPlot2D(g,QuickMath.getRightSide(expr),plotWindowParams,windowSize,IN_TERMS_OF_Y,equType);
 				}else {
-					equPlot2D(g,casted,4,plotWindowParams,windowSize);
+					equPlot2D(g,expr,plotWindowParams,windowSize,detail);
 				}
 			}else if(expr instanceof ExprList || expr instanceof Sequence){
-				ExprList subList = new ExprList();
-				for(int j = 0;j<expr.size();j++) {
-					subList.add( expr.get(j));
-				}
-				renderPlots2D(g,subList,plotWindowParams,windowSize);
+				Sequence subList = Sequence.cast(expr);
+				renderPlots2D(g,subList,plotWindowParams,windowSize,detail);
+			}else if(expr.typeName().equals("point")) {
+				double x = expr.get(0).convertToFloat(new ExprList()).real;
+				double y = expr.get(1).convertToFloat(new ExprList()).real;
+				int extX = convertToExternalPositionX(x,plotWindowParams,windowSize );
+				int extY = convertToExternalPositionY(y,plotWindowParams,windowSize );
+				
+				g.fillOval(extX-4, extY-4, 8, 8);
+				
 			}else {
-				basicPlot2D(g,expr,IN_TERMS_OF_X,plotWindowParams,windowSize);
+				basicPlot2D(g,expr,plotWindowParams,windowSize,IN_TERMS_OF_X,EQU);
 			}
 		}
 	}
 	
-	public static BufferedImage renderGraph2D(ExprList stack,PlotWindowParams plotWindowParams,Dimension windowSize,Color backgroundColor,Color foregroundColor) {
+	public static BufferedImage renderGraph2D(Sequence stack,PlotWindowParams plotWindowParams,Dimension windowSize,Color backgroundColor,Color foregroundColor,int detail) {
 		BufferedImage out = new BufferedImage((int)windowSize.getWidth(),(int)windowSize.getHeight(),BufferedImage.TYPE_INT_RGB);
 		
 		Graphics g = out.createGraphics();
@@ -205,7 +248,7 @@ public class Plot extends JPanel{
 		g2.setStroke(new BasicStroke(4));
 		
 		
-		renderPlots2D(g,stack,plotWindowParams,windowSize);
+		renderPlots2D(g,stack,plotWindowParams,windowSize,detail);
 		DecimalFormat numberFormat = new DecimalFormat("#.000");
 		
 		g.setColor(foregroundColor);
@@ -268,7 +311,7 @@ public class Plot extends JPanel{
 		}
 	}
 	
-	public static BufferedImage renderGraph3D(ExprList stack,PlotWindowParams plotWindowParams,Dimension windowSize,Color backgroundColor,Color foregroundColor,int resolution) {
+	public static BufferedImage renderGraph3D(Sequence stack,PlotWindowParams plotWindowParams,Dimension windowSize,Color backgroundColor,Color foregroundColor,int resolution) {
 		BufferedImage out = new BufferedImage((int)windowSize.getWidth(),(int)windowSize.getHeight(),BufferedImage.TYPE_INT_RGB);
 		
 		Graphics g = out.createGraphics();
@@ -333,11 +376,11 @@ public class Plot extends JPanel{
 					yPos = newYPos;
 					zPos = newZPos;
 					
-					yPos+=3.5;//shift
+					yPos+=3.5;//shift away from camera
 					
 					Point p = points[yIndex][xIndex];
 					
-					p.x = 2*windowSize.width*xPos/yPos;
+					p.x = 2*windowSize.width*xPos/yPos;//points further away get closer to horizon point
 					p.y = yPos;
 					p.z = 2*windowSize.width*zPos/yPos;
 				}
@@ -379,19 +422,73 @@ public class Plot extends JPanel{
 		return out;
 	}
 	
-	private static Var y = QuickMath.var("y"),x = QuickMath.var("x");
-	void renderGraphWithMouse(Graphics graphics,ExprList stack,int mode) {//everything, the background the plots
-		BufferedImage graphImage = null;
+	public static BufferedImage renderGraphComplex(Sequence stack,PlotWindowParams plotWindowParams,Dimension windowSize,int detail) {
+		BufferedImage out = new BufferedImage((int)windowSize.getWidth(),(int)windowSize.getHeight(),BufferedImage.TYPE_INT_RGB);
+		Graphics g = out.createGraphics();
+		
+		if(stack.size() > 0) {
+
+			Expr expr = stack.get(stack.size()-1);
+			
+			Equ varDef = QuickMath.equ(QuickMath.var("z"),QuickMath.floatExpr(0));
+			ExprList varDefs = new ExprList();
+			varDefs.add(varDef);
+			
+			for(int pixelX = 0;pixelX < windowSize.width;pixelX+=detail) {
+				for(int pixelY = 0;pixelY < windowSize.height;pixelY+=detail) {
+					
+					double real = convertToInternalPositionX(pixelX,plotWindowParams,windowSize);
+					double imag = convertToInternalPositionY(pixelY,plotWindowParams,windowSize);
+					
+					((FloatExpr)varDef.getRightSide()).value.set(new ComplexFloat(real,imag));
+					ComplexFloat result = expr.convertToFloat(varDefs);
+					
+					double mag = ComplexFloat.mag(result).real;
+					double angle = ComplexFloat.angle(result).real;
+					
+					{//squeeze
+						mag = mag/(mag+1.0);
+						angle = (angle%(2*Math.PI))/(2*Math.PI);
+					}
+					
+					Color pixelColor = Color.getHSBColor((float)angle, 1.0f, (float)mag);
+					g.setColor(pixelColor);
+					g.fillRect(pixelX, pixelY, detail, detail);
+					
+				}
+			}
+		}
+		g.dispose();
+		return out;
+	}
+	
+	BufferedImage graphImage = null;
+	int lastStackHash = 0;
+	
+	void renderGraphWithMouse(Graphics graphics,Sequence stack,int mode) {//everything, the background the plots
+		int stackHash = stack.hashCode();
+		if(stackHash != lastStackHash) {//stack changed can't re-use graphImage
+			graphImage = null;
+			lastStackHash = stackHash;
+		}
+		int defaultDetail = 4;
+		int defaultResolution = 48;
 		if(mode == MODE_2D) {
-			graphImage = renderGraph2D(stack,plotParams,getSize(),backgroundColor,foregroundColor);
+			if(graphImage == null) graphImage = renderGraph2D(stack,plotParams,getSize(),backgroundColor,foregroundColor,defaultDetail);
 		
 			graphics.drawImage(graphImage,0,0,null);
 			graphics.setColor(foregroundColor);
 			graphics.drawString("x: "+(float)convertToInternalPositionX(mouseX,plotParams,getSize()), mouseX+40, mouseY);
 			graphics.drawString("y: "+(float)convertToInternalPositionY(mouseY,plotParams,getSize()), mouseX+40, mouseY+20);
 		}else if(mode == MODE_3D) {
-			graphImage = renderGraph3D(stack,plotParams,getSize(),backgroundColor,foregroundColor,48);
+			if(graphImage == null) graphImage = renderGraph3D(stack,plotParams,getSize(),backgroundColor,foregroundColor,defaultResolution);
 			graphics.drawImage(graphImage,0,0,null);
+		}else if(mode == MODE_COMPLEX) {
+			if(graphImage == null) graphImage = renderGraphComplex(stack,plotParams,getSize(),defaultDetail);
+		
+			graphics.drawImage(graphImage,0,0,null);
+			graphics.drawString("R: "+(float)convertToInternalPositionX(mouseX,plotParams,getSize()), mouseX+40, mouseY);
+			graphics.drawString("I: "+(float)convertToInternalPositionY(mouseY,plotParams,getSize()), mouseX+40, mouseY+20);
 		}
 	}
 	
@@ -428,7 +525,7 @@ public class Plot extends JPanel{
 			public void mouseExited(MouseEvent e) {
 			}
 		});
-		addMouseMotionListener(new MouseMotionListener() {
+		addMouseMotionListener(new MouseMotionListener() {//mouse panning around graph
 
 			void update(MouseEvent e) {
 				pMouseX = mouseX;
@@ -437,7 +534,7 @@ public class Plot extends JPanel{
 				mouseY = e.getY();
 				
 				if(mousePressed) {
-					if(mode == MODE_2D) {
+					if(mode == MODE_2D || mode == MODE_COMPLEX) {
 						double panX = (pMouseX-mouseX)/(double)getWidth()*(plotParams.xMax-plotParams.xMin);
 						double panY = (pMouseY-mouseY)/(double)getHeight()*(plotParams.yMax-plotParams.yMin);
 						plotParams.xMin+=panX;
@@ -448,6 +545,7 @@ public class Plot extends JPanel{
 						plotParams.zRot-=((double)pMouseX-mouseX)/100.0;
 						plotParams.xRot+=((double)pMouseY-mouseY)/100.0;
 					}
+					graphImage = null;
 				}
 				
 				repaint();
@@ -465,13 +563,13 @@ public class Plot extends JPanel{
 			}
 			
 		});
-		addMouseWheelListener(new MouseWheelListener() {
+		addMouseWheelListener(new MouseWheelListener() {//scroll to zoom in and out
 
 			@Override
 			public void mouseWheelMoved(MouseWheelEvent e) {
 				double scrollAmount = e.getPreciseWheelRotation();
 				double slower = 1.0/25.0;
-				if(mode == MODE_2D) {
+				if(mode == MODE_2D || mode == MODE_COMPLEX) {
 					plotParams.xMin = plotParams.xMin+(convertToInternalPositionX(mouseX,plotParams,getSize())-plotParams.xMin)*(scrollAmount*slower);
 					plotParams.xMax = plotParams.xMax-(plotParams.xMax-convertToInternalPositionX(mouseX,plotParams,getSize()))*(scrollAmount*slower);
 					
@@ -488,7 +586,7 @@ public class Plot extends JPanel{
 					plotParams.zMax*=(1.0-scrollAmount*slower);
 					
 				}
-				
+				graphImage = null;
 				repaint();
 			}
 			

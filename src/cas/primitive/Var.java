@@ -6,7 +6,42 @@ import cas.Expr;
 public class Var extends Expr{
 	
 	private static final long serialVersionUID = -3581525014075161068L;
+	public static class Assumptions{
+		private boolean integer = false;
+		private boolean complex = true;
+		
+		public void makeInteger() {
+			integer = true;
+			complex = false;
+		}
+		public void makeReal() {
+			complex = false;
+			integer = false;
+		}
+		
+		public void makeComplex() {
+			complex = true;
+			integer = false;
+		}
+		public boolean isComplex() {
+			return complex;
+		}
+		public boolean isReal() {
+			return !complex;
+		}
+		public boolean isInteger() {
+			return integer;
+		}
+		public Assumptions copy() {
+			Assumptions out = new Assumptions();
+			out.integer = integer;
+			out.complex = complex;
+			return out;
+		}
+	}
+	
 	public String name;
+	public Assumptions assumptions = null;
 	
 	public static final Var PI = pi();
 	public static final Var E = e();
@@ -19,8 +54,7 @@ public class Var extends Expr{
 	 * for non generic variables this is the defined value for the constant
 	 */
 	public ComplexFloat valuef = new ComplexFloat(0,0);
-	
-	public Var(String name){
+	private void specialVars(String name) {
 		if(name.equals("pi")){
 			generic = false;
 			valuef.real = Math.PI;
@@ -34,7 +68,20 @@ public class Var extends Expr{
 			generic = false;
 			valuef.real = 0.0000000001;
 		}
+	}
+	
+	public Var(String name,Assumptions assumptions){
+		specialVars(name);
 		this.name = name;
+		this.assumptions = assumptions;
+		
+		flags.sorted = true;
+	}
+	public Var(String name) {
+		specialVars(name);
+		this.name = name;
+		this.assumptions = new Assumptions();
+		
 		flags.sorted = true;
 	}
 
@@ -49,7 +96,9 @@ public class Var extends Expr{
 	}
 	@Override
 	public Expr copy() {
-		return new Var(name);
+		Var out = new Var(name);
+		out.assumptions = assumptions.copy();
+		return out;
 	}
 
 	@Override

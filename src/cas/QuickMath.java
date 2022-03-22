@@ -1108,6 +1108,34 @@ public class QuickMath {
 		return new long[] {n,d};
 	}
 	
+	public static Expr getLeftSide(Expr e) {
+		if(e instanceof Equ) {
+			return ((Equ)e).getLeftSide();
+		}
+		if(e instanceof Less) {
+			return ((Less)e).getLeftSide();
+		}
+		if(e instanceof Greater) {
+			return ((Greater)e).getLeftSide();
+		}
+		
+		return null;
+	}
+	
+	public static Expr getRightSide(Expr e) {
+		if(e instanceof Equ) {
+			return ((Equ)e).getRightSide();
+		}
+		if(e instanceof Less) {
+			return ((Less)e).getRightSide();
+		}
+		if(e instanceof Greater) {
+			return ((Greater)e).getRightSide();
+		}
+		
+		return null;
+	}
+	
 	static HashMap<String,String> BLToMathMLFunctionNameMap = null;
 	private static void initBLToMathMLFunctionNameMap() {
 		BLToMathMLFunctionNameMap = new HashMap<String,String>();

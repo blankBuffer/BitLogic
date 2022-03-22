@@ -44,11 +44,9 @@ public class CasInfo extends QuickMath implements Serializable{
 	
 	public void setAllowAbs(boolean allowAbs) {
 		this.allowAbs = allowAbs;
-		if(allowAbs) allowComplexNumbers = false;
 	}
 	public void setAllowComplexNumbers(boolean allowComplexNumbers) {
 		this.allowComplexNumbers = allowComplexNumbers;
-		if(allowComplexNumbers) allowAbs = false;
 	}
 	public void setFactorIrrationalRoots(boolean factorIrrationalRoots) {
 		this.factorIrrationalRoots = factorIrrationalRoots;

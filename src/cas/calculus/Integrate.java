@@ -890,50 +890,9 @@ public class Integrate extends Expr{
 		}
 		
 		@Override
-		public Expr applyRuleToExpr(Expr e,CasInfo casInfo) {
-			
-			Expr expr = e.get();
+		public Expr applyRuleToExpr(Expr expr,CasInfo casInfo) {
 			
 			if(expr.containsType("integrate") || expr.contains(var("0u"))) return expr;//obviously in the middle of processing if you encounter u
-			
-			Integrate original = (Integrate)e.get(1);
-			Var v = original.getVar();
-			
-			/*
-			 * sometimes the signs become incorrect after integration, this attempts to fix that issue
-			 */
-			if(casInfo.allowAbs()){
-				double shift = Math.scalb(2.0, -8);
-				Equ equLeft = equ(v,floatExpr(-shift));
-				
-				boolean leftNegOnOriginal = original.get().convertToFloat(exprList(equLeft)).negativeAndReal();
-				boolean leftNegOnFinal = diff(expr,v).convertToFloat(exprList(equLeft)).negativeAndReal();
-				
-				boolean flipLeft = leftNegOnOriginal^leftNegOnFinal;
-				
-				
-				Equ equRight = equ(v,floatExpr(shift));
-				
-				boolean rightNegOnOriginal = original.get().convertToFloat(exprList(equRight)).negativeAndReal();
-				boolean rightNegOnFinal = diff(expr,v).convertToFloat(exprList(equRight)).negativeAndReal();
-				
-				boolean flipRight = rightNegOnOriginal^rightNegOnFinal;
-				
-				if(flipLeft && flipRight) {
-					expr = neg(expr);
-				}
-				
-				if(flipLeft ^ flipRight) {
-					
-					Expr atZero = expr.replace(equ(v,num(0))).simplify(casInfo);
-					
-					if(flipLeft && !flipRight) {
-						expr = div(prod(sub(expr,atZero),abs(v)),v);
-					}else if(!flipLeft && flipRight){
-						expr = div(prod(sub(expr,atZero),abs(v),num(-1)),v);
-					}
-				}
-			}
 			
 			if(!casInfo.allowComplexNumbers()) {
 				expr = applyAbs(expr,casInfo);
