@@ -467,6 +467,32 @@ public class Integrate extends Expr{
 			return e;
 		}
 		
+		public int countNegatives(Expr e) {//counts the number of negative numbers in the expression
+			if(e instanceof Num) return (e.negative() ? 1 : 0);
+			int sum = 0;
+			
+			for(int i = 0;i<e.size();i++) {
+				sum+=countNegatives(e.get(i));
+			}
+			
+			return sum;
+		}
+		public Expr leastNegative(ExprList exprs) {
+			Expr least = exprs.get(0);
+			int leastCount = countNegatives(exprs.get(0));
+			
+			for(int i = 1;i<exprs.size();i++) {
+				Expr current = exprs.get(i);
+				int count = countNegatives(current);
+				if(count < leastCount) {
+					 leastCount = count;
+					 least = current;
+				}
+			}
+			
+			return least;
+		}
+		
 		Var uSubVar;
 		
 		@Override
@@ -530,7 +556,7 @@ public class Integrate extends Expr{
 						}else {//oof we need to solve for x
 							Expr solved = solve(equ(uSubVar,u),integ.getVar()).simplify(casInfo);
 							if(solved instanceof ExprList) {
-								solved = solved.get(solved.size()-1);//last element is usually positive
+								solved = leastNegative((ExprList)solved);//choose the solution with the least amount of negatives
 							}
 							if(!(solved instanceof Solve)) {
 								solved = ((Equ)solved).getRightSide();

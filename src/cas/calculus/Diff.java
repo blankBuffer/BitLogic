@@ -19,6 +19,8 @@ public class Diff extends Expr{
 	
 	static Rule baseCase = new Rule("diff(x,x)->1","derivative of x");
 	static Rule logCase = new Rule("diff(ln(a),x)->diff(a,x)/a","derivative of log");
+	static Rule rootCase = new Rule("diff(a^(k/n),x)->(diff(a,x)*k)/(a^((-k+n)/n)*n)","~contains({k,n},x)","derivative of root");
+	static Rule invRootCase = new Rule("diff(1/a^(k/n),x)->(-diff(a,x)*k)/(a^((k+n)/n)*n)","~contains({k,n},x)","derivative of root");
 	static Rule powCase = new Rule("diff(a^b,x)->a^b*diff(ln(a)*b,x)","power rule");
 	static Rule sinCase = new Rule("diff(sin(a),x)->cos(a)*diff(a,x)","derivative of sine");
 	static Rule cosCase = new Rule("diff(cos(a),x)->-sin(a)*diff(a,x)","derivative of cosine");
@@ -82,6 +84,8 @@ public class Diff extends Expr{
 				StandardRules.linearOperator,
 				derivOfProd,
 				logCase,
+				rootCase,
+				invRootCase,
 				powCase,
 				sinCase,
 				cosCase,

@@ -7,10 +7,11 @@ import ui.UI;
 
 public class Main extends QuickMath{
 	
+	@SuppressWarnings("resource")
 	public static void runScript(String fileName,boolean verbose) {
 		long startingInstructionCount = Expr.ruleCallCount;
 		long oldTime = System.nanoTime();
-		Scanner sc;
+		Scanner sc = null;
 		int currentLine = 0;
 		try {
 			sc = new Scanner(new File(fileName));
@@ -35,6 +36,7 @@ public class Main extends QuickMath{
 		} catch (Exception e) {
 			e.printStackTrace();
 			System.out.println("fail at line: "+currentLine);
+			if(sc != null) sc.close();
 			return;
 		}
 		long delta = System.nanoTime() - oldTime;

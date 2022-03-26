@@ -62,6 +62,7 @@ public class Ask extends QuickMath{
 		}
 	}
 	
+	@SuppressWarnings("resource")
 	public static void loadBasicQuestions() {
 		try {
 			Scanner scanner = new Scanner(new File("resources/QnA.txt"));

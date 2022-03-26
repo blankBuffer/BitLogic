@@ -44,12 +44,8 @@ public class Div extends Expr{
 
 		@Override
 		public Expr applyRuleToExpr(Expr e,CasInfo casInfo){
-			Div div = null;
-			if(e instanceof Div){
-				div = (Div)e;
-			}else{
-				return e;
-			}
+			Div div = (Div)e;
+			
 			if(!Limit.zeroOrEpsilon(div.getDenom())){
 				if(Limit.isEpsilon(div.getNumer())){
 					return prod(div.getNumer(),div.getDenom()).simplify(casInfo);
@@ -92,12 +88,7 @@ public class Div extends Expr{
 
 		@Override
 		public Expr applyRuleToExpr(Expr e,CasInfo casInfo){
-			Div div = null;
-			if(e instanceof Div){
-				div = (Div)e;
-			}else{
-				return e;
-			}
+			Div div = (Div)e;
 			
 			boolean prodInTrig = false;
 			boolean nonProdInTrig = false;
@@ -137,7 +128,6 @@ public class Div extends Expr{
 		@Override
 		public Expr applyRuleToExpr(Expr e,CasInfo casInfo){
 			Div div = (Div)e;
-			
 			Prod numerProd = Prod.cast(div.getNumer()), denomProd = Prod.cast(div.getDenom());
 			
 			outer:for(int i = 0;i < numerProd.size();i++) {
@@ -178,7 +168,7 @@ public class Div extends Expr{
 						j--;
 						continue inner;
 						
-					}else if(numerPower.getExpo().equals(denomPower.getExpo()) && numerPower.getBase() instanceof Num && denomPower.getBase() instanceof Num){//both denoms are the same
+					}else if(numerPower.getExpo().equals(denomPower.getExpo()) && isPositiveRealNum(numerPower.getBase()) && isPositiveRealNum(denomPower.getBase())){//both denoms are the same
 						Expr resTest = div(numerPower.getBase(),denomPower.getBase()).simplify(casInfo);
 						if(resTest instanceof Num) {//10^x/2^x -> 5^x
 							numerProd.set(i, pow(resTest,numerPower.getExpo()));
@@ -187,7 +177,7 @@ public class Div extends Expr{
 							continue inner;
 						}else if(resTest instanceof Div) {//2^x/10^x -> 1/5^x
 							if(((Div)resTest).getNumer().equals(Num.ONE)) {
-								denomProd.set(i, pow( ((Div)resTest).getDenom() ,numerPower.getExpo()));
+								denomProd.set(j,pow( ((Div)resTest).getDenom() ,numerPower.getExpo()));
 								numerProd.remove(i);
 								i--;
 								continue outer;
@@ -673,6 +663,60 @@ public class Div extends Expr{
 		}
 	};
 	
+	static Rule transferNegative = new Rule("transfer the invalid negative to the other side of fraction") {
+		private static final long serialVersionUID = 1L;//sqrt(-2)/sqrt(x) -> sqrt(2)/sqrt(-x)
+		
+		Expr negativeRootNum;
+		Expr negativeRootNumCond;
+		
+		public void init() {
+			negativeRootNum = createExpr("a^(b/c)");
+			negativeRootNumCond = createExpr("isType(a,num)&eval(a<0)");
+		}
+		
+		@Override
+		public Expr applyRuleToExpr(Expr e,CasInfo casInfo){
+			Div div = (Div)e;
+			
+			Prod numer = Prod.cast(div.getNumer());
+			Prod denom = Prod.cast(div.getDenom());
+			
+			outer:for(int i = 0;i<numer.size();i++) {//numer variant
+				if(Rule.similarWithCondition(negativeRootNum, numer.get(i), negativeRootNumCond)) {
+					Power numerRoot = (Power)numer.get(i);
+					
+					for(int j = 0;j<denom.size();j++) {
+						if(denom.get(j) instanceof Power && ((Power)denom.get(j)).getExpo().equals(numerRoot.getExpo()) && ((Power)denom.get(j)).getBase().containsVars() ) {
+							Power denomPow = (Power)denom.get(j);
+							denomPow.setBase(neg(denomPow.getBase()));
+							numerRoot.setBase( numerRoot.getBase().strangeAbs(casInfo) );
+							continue outer;
+						}
+					}
+					
+				}
+			}
+			
+			outer:for(int i = 0;i<denom.size();i++) {//denom variant
+				if(Rule.similarWithCondition(negativeRootNum, denom.get(i), negativeRootNumCond)) {
+					Power denomRoot = (Power)denom.get(i);
+					
+					for(int j = 0;j<numer.size();j++) {
+						if(numer.get(j) instanceof Power && ((Power)numer.get(j)).getExpo().equals(denomRoot.getExpo()) && ((Power)numer.get(j)).getBase().containsVars() ) {
+							Power numerPow = (Power)numer.get(j);
+							numerPow.setBase(neg(numerPow.getBase()));
+							denomRoot.setBase( denomRoot.getBase().strangeAbs(casInfo) );
+							continue outer;
+						}
+					}
+					
+				}
+			}
+			
+			return div;
+		}
+	};
+	
 	static Sequence ruleSequence = null;
 	
 	public static void loadRules(){
@@ -685,6 +729,7 @@ public class Div extends Expr{
 				absInDenom,
 				expandRoots,
 				cancelOutTerms,
+				transferNegative,
 				reSimpNumerAndDenom,//to reverse expandRoots process
 				rationalize,
 				rationalize2,

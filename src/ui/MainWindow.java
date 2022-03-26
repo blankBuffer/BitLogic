@@ -19,6 +19,8 @@ import javax.imageio.ImageIO;
 import javax.swing.*;
 import javax.swing.event.CaretEvent;
 import javax.swing.event.CaretListener;
+import javax.swing.event.ChangeEvent;
+import javax.swing.event.ChangeListener;
 import javax.swing.text.AttributeSet;
 import javax.swing.text.BadLocationException;
 import javax.swing.text.SimpleAttributeSet;
@@ -615,6 +617,15 @@ public class MainWindow extends JFrame{
 				clearTerminal = clearTerminalCheckBox.isSelected();
 			}
 		};
+		JLabel scrollSpeedLabel = new JLabel("zoom scroll speed");
+		JSlider scrollSpeedSlider = new JSlider(1,100,(int)(plot.scrollSpeed*400.0));
+		ChangeListener scrollSpeedChange = new ChangeListener() {
+			@Override
+			public void stateChanged(ChangeEvent e) {
+				plot.scrollSpeed = scrollSpeedSlider.getValue()/400.0;
+			}
+		};
+		
 		JPanel themeSetter = new JPanel();
 		JLabel backgroundLabel = new JLabel("background");
 		JTextField br = new JTextField(String.valueOf(BACKGROUND_COLOR_DEFAULT.getRed()),3),bg = new JTextField(String.valueOf(BACKGROUND_COLOR_DEFAULT.getGreen()),3),bb = new JTextField(String.valueOf(BACKGROUND_COLOR_DEFAULT.getBlue()),3);
@@ -641,11 +652,18 @@ public class MainWindow extends JFrame{
 		UIOptionsPanel() {
 			allComponents.add(this);
 			allComponents.add(keepOnTopCheckBox);
+			allComponents.add(scrollSpeedLabel);
+			allComponents.add(scrollSpeedSlider);
 			allComponents.add(clearTerminalCheckBox);
 			
 			keepOnTopCheckBox.addActionListener(keepOnTopUpdate);
 			clearTerminalCheckBox.addActionListener(clearTerminalUpdate);
 			setTheme.addActionListener(themeUpdate);
+			scrollSpeedSlider.addChangeListener(scrollSpeedChange);
+			
+			scrollSpeedSlider.setPaintTicks(true);
+			scrollSpeedSlider.setSnapToTicks(true);
+			scrollSpeedSlider.setMajorTickSpacing(10);
 			
 			keepOnTopUpdate.actionPerformed(null);
 			themeUpdate.actionPerformed(null);
@@ -662,6 +680,8 @@ public class MainWindow extends JFrame{
 			
 			add(keepOnTopCheckBox);
 			add(clearTerminalCheckBox);
+			add(scrollSpeedLabel);
+			add(scrollSpeedSlider);
 			add(themeSetter);
 		}
 		
@@ -693,6 +713,7 @@ public class MainWindow extends JFrame{
 		return Integer.valueOf(line.substring(line.lastIndexOf(':')+1));
 	}
 	
+	@SuppressWarnings("resource")
 	void loadPrefs() {
 		try {
 			Scanner defsReader = new Scanner(new File("resources/prefs.txt"));

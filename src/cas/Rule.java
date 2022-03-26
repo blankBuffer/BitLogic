@@ -1,22 +1,6 @@
 package cas;
 
 import java.util.ArrayList;
-/*
- * rules are used to describe any expression transformation
- * it can either be hard coded or use a pattern with the option of a condition
- * a rule with a pattern is described in a string "before_state->after_state" the arrow -> signifies the transformation
- * a condition can check weather some variables are in a range and you can have it in a boolean algebra statement
- * 
- * a typical rule used in this CAS can be written as follows 
- * 
- * Rule myRule = new Rule("x/x->1","~eval(x=0)","x divided by x",Rule.EASY);
- * 
- * the eval checks if a given statement is true or not eval(2=3) gives false but eval(2=2) gives true
- * any eval with a variable returns true
- * 
- * the main reason for specifying the difficulty is for filtering out stupid simple rules from a simplify dump. 
- * It's an arbitrary decision and you may not agree with my difficulty scoring but its not really important
- */
 import java.util.Random;
 
 import cas.bool.*;
@@ -27,6 +11,22 @@ import cas.primitive.*;
 import cas.programming.*;
 import cas.special.*;
 import cas.trig.*;
+
+
+/*
+ * rules are used to describe any expression transformation
+ * it can either be hard coded or use a pattern with the option of a condition
+ * a rule with a pattern is described in a string "before_state->after_state" the arrow -> signifies the transformation
+ * a condition can check weather some variables are in a range and you can have it in a boolean algebra statement
+ * 
+ * a typical rule used in this CAS can be written as follows 
+ * 
+ * Rule myRule = new Rule("x/x->1","~eval(x=0)","x divided by x");
+ * 
+ * the eval checks if a given statement is true or not eval(2=3) gives false but eval(2=2) gives true
+ * any eval with a variable returns true
+ * 
+ */
 
 public class Rule extends Expr{
 	private static final long serialVersionUID = 5928512201641990677L;

@@ -44,12 +44,52 @@ public class Power extends Expr{
 	private static Rule expOfLambertW = new Rule("e^(lambertW(x))->x/lambertW(x)","e to lambert w");
 	private static Rule expOfLambertWProd = new Rule("e^(lambertW(x)*n)->x^n/lambertW(x)^n","e to lambert w product");
 	private static Rule powerOfOne = new Rule("a^1->a","exponent is one");
-	private static Rule fracInBase = new Rule("(a/b)^n->a^n/b^n","base is a fraction");
 	private static Rule sqrtOneMinusSin = new Rule("sqrt(1-sin(x))->sqrt(2)*sin(pi/4-x/2)","sqrt of 1 minus sin");
 	private static Rule sqrtOneMinusCos = new Rule("sqrt(1-cos(x))->sqrt(2)*sin(x/2)","sqrt of 1 minus cos");
 	private static Rule sqrtOnePlusSin = new Rule("sqrt(1+sin(x))->sqrt(2)*cos(pi/4-x/2)","sqrt of 1 plus sin");
 	private static Rule sqrtOnePlusCos = new Rule("sqrt(1+cos(x))->sqrt(2)*cos(x/2)","sqrt of 1 plus cos");
 	private static Rule baseOfPowerIsAbsExpoEven = new Rule("abs(a)^b->a^b","~isType(result(b/2),div)&~allowComplexNumbers()","base of power is absolute value and exponent is divisible by 2");
+	
+	private static Rule fracInBase = new Rule("base is a fraction") {
+		private static final long serialVersionUID = 1L;
+
+		@Override
+		public Expr applyRuleToExpr(Expr e,CasInfo casInfo){
+			Power power = (Power)e;
+			
+			boolean root = power.getExpo() instanceof Div;
+			
+			if(power.getBase() instanceof Div) {
+				Div innerDiv = (Div)power.getBase();
+				boolean defaultCase = casInfo.allowComplexNumbers();
+				boolean flipSignsAndApply = false;
+				if(root && innerDiv.negative() && !defaultCase) {
+					boolean numerHasVars = innerDiv.getNumer().containsVars();
+					boolean denomHasVars = innerDiv.getDenom().containsVars();
+					
+					if(numerHasVars && !denomHasVars) {
+						if(innerDiv.getDenom().negative()) {
+							flipSignsAndApply = true;
+						}else defaultCase = true;
+					}else if(denomHasVars && !numerHasVars) {
+						if(innerDiv.getNumer().negative()) {
+							flipSignsAndApply = true;
+						}else defaultCase = true;
+					}else if(numerHasVars && denomHasVars) {
+						defaultCase = true;
+					}
+				}else defaultCase = true;
+				
+				if(defaultCase) {
+					return div(pow(innerDiv.getNumer(),power.getExpo()),pow(innerDiv.getDenom(),power.getExpo())).simplify(casInfo);
+				}else if(flipSignsAndApply) {
+					return div(pow(neg(innerDiv.getNumer()),power.getExpo()),pow(neg(innerDiv.getDenom()),power.getExpo())).simplify(casInfo);
+				}
+			}
+			
+			return power;
+		}
+	};
 	
 	private static Rule oneToExpo = new Rule("base is one"){
 		private static final long serialVersionUID = 1L;
@@ -227,7 +267,7 @@ public class Power extends Expr{
 		@Override
 		public Expr applyRuleToExpr(Expr e,CasInfo casInfo){
 			Power pow = (Power)e;
-			if(pow.getBase() instanceof Num && !(pow.getExpo() instanceof Num)) {
+			if(isPositiveRealNum(pow.getBase())&& !(pow.getExpo() instanceof Num)) {
 				
 				pow.setExpo(distr(pow.getExpo()).simplify(casInfo));//distribute exponent
 				
@@ -479,7 +519,7 @@ public class Power extends Expr{
 		}
 	};
 	
-	static Rule rootNumSimp = new Rule("root of a number") {
+	static Rule rootNumSimp = new Rule("root of a number") {//apply roots to numbers
 		private static final long serialVersionUID = 1L;
 		
 		@Override
@@ -512,7 +552,7 @@ public class Power extends Expr{
 							return prod( pow(num(outerNum),expoDiv.getNumer()).simplify(casInfo), pow(num(num.divide(factor)),expoDiv) );
 							
 						}
-					}else if(casInfo.allowComplexNumbers() && denomNum.equals(Num.TWO)){//square root of a complex or negative number
+					}else if(casInfo.allowComplexNumbers() && denomNum.equals(Num.TWO) && expoDiv.getNumer().equals(Num.ONE)){//square root of a complex or negative number
 						BigInteger sumOfSquares = baseNum.realValue.pow(2).add(baseNum.imagValue.pow(2));
 						BigInteger root = sumOfSquares.sqrt();
 						

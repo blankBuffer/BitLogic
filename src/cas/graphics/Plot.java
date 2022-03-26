@@ -25,6 +25,7 @@ public class Plot extends JPanel{
 	StackEditor stackEditor;
 	public static final int MODE_2D = 0,MODE_3D = 1,MODE_COMPLEX = 2;
 	public int mode = MODE_2D;
+	public double scrollSpeed = 0.15;
 	
 	public static class PlotWindowParams{
 		
@@ -462,7 +463,7 @@ public class Plot extends JPanel{
 		return out;
 	}
 	
-	BufferedImage graphImage = null;
+	BufferedImage graphImage = null;//cached plot image so it does not redraw when nothing changes
 	int lastStackHash = 0;
 	
 	void renderGraphWithMouse(Graphics graphics,Sequence stack,int mode) {//everything, the background the plots
@@ -568,22 +569,21 @@ public class Plot extends JPanel{
 			@Override
 			public void mouseWheelMoved(MouseWheelEvent e) {
 				double scrollAmount = e.getPreciseWheelRotation();
-				double slower = 1.0/25.0;
 				if(mode == MODE_2D || mode == MODE_COMPLEX) {
-					plotParams.xMin = plotParams.xMin+(convertToInternalPositionX(mouseX,plotParams,getSize())-plotParams.xMin)*(scrollAmount*slower);
-					plotParams.xMax = plotParams.xMax-(plotParams.xMax-convertToInternalPositionX(mouseX,plotParams,getSize()))*(scrollAmount*slower);
+					plotParams.xMin = plotParams.xMin+(convertToInternalPositionX(mouseX,plotParams,getSize())-plotParams.xMin)*(scrollAmount*scrollSpeed);
+					plotParams.xMax = plotParams.xMax-(plotParams.xMax-convertToInternalPositionX(mouseX,plotParams,getSize()))*(scrollAmount*scrollSpeed);
 					
-					plotParams.yMin = plotParams.yMin+(convertToInternalPositionY(mouseY,plotParams,getSize())-plotParams.yMin)*(scrollAmount*slower);
-					plotParams.yMax = plotParams.yMax-(plotParams.yMax-convertToInternalPositionY(mouseY,plotParams,getSize()))*(scrollAmount*slower);
+					plotParams.yMin = plotParams.yMin+(convertToInternalPositionY(mouseY,plotParams,getSize())-plotParams.yMin)*(scrollAmount*scrollSpeed);
+					plotParams.yMax = plotParams.yMax-(plotParams.yMax-convertToInternalPositionY(mouseY,plotParams,getSize()))*(scrollAmount*scrollSpeed);
 				}else if(mode == MODE_3D) {
-					plotParams.xMin*=(1.0-scrollAmount*slower);
-					plotParams.xMax*=(1.0-scrollAmount*slower);
+					plotParams.xMin*=(1.0-scrollAmount*scrollSpeed);
+					plotParams.xMax*=(1.0-scrollAmount*scrollSpeed);
 					
-					plotParams.yMin*=(1.0-scrollAmount*slower);
-					plotParams.yMax*=(1.0-scrollAmount*slower);
+					plotParams.yMin*=(1.0-scrollAmount*scrollSpeed);
+					plotParams.yMax*=(1.0-scrollAmount*scrollSpeed);
 					
-					plotParams.zMin*=(1.0-scrollAmount*slower);
-					plotParams.zMax*=(1.0-scrollAmount*slower);
+					plotParams.zMin*=(1.0-scrollAmount*scrollSpeed);
+					plotParams.zMax*=(1.0-scrollAmount*scrollSpeed);
 					
 				}
 				graphImage = null;

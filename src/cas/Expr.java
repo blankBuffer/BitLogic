@@ -511,6 +511,7 @@ public abstract class Expr extends QuickMath implements Serializable{
 		}
 	}
 	
+	@SuppressWarnings("resource")
 	public static void serializedSaveExpr(Expr expr,String fileName)throws IOException{
 	    FileOutputStream fos = new FileOutputStream("saves/"+fileName);
 	    ObjectOutputStream oos = new ObjectOutputStream(fos);
@@ -518,6 +519,7 @@ public abstract class Expr extends QuickMath implements Serializable{
 	    oos.close();
 	}
 
+	@SuppressWarnings("resource")
 	public static Expr serializedOpenExpr(String fileName)throws IOException, ClassNotFoundException{
 	   FileInputStream fin = new FileInputStream("saves/"+fileName);
 	   ObjectInputStream ois = new ObjectInputStream(fin);
