@@ -10,6 +10,7 @@ import cas.CasInfo;
 import cas.StandardRules;
 import cas.bool.BoolState;
 import cas.primitive.*;
+import cas.special.Gamma;
 
 public class Limit extends Expr{
 	private static final long serialVersionUID = 3302019973998257065L;
@@ -433,6 +434,73 @@ public class Limit extends Expr{
 		
 	};
 	
+	static Rule sterlingTransformation = new Rule("sterling approximation for gamma") {
+		private static final long serialVersionUID = 1L;
+		
+		Expr toSterling;
+		
+		@Override
+		public void init() {
+			toSterling = createExpr("((x-1)^((2*x-1)/2)*sqrt(2*pi))/e^(x-1)").simplify(CasInfo.normal);
+		}
+		
+		public Expr replace(Expr e) {
+			boolean changed = false;
+			if(e instanceof Gamma) {
+				return toSterling.replace(equ(var("x"),e.get()));
+			}else if(e instanceof Prod) {
+				for(int i = 0;i<e.size();i++) {
+					if(e.get(i) instanceof Gamma) {
+						e.set(i, toSterling.replace(equ(var("x"),e.get(i).get())));
+						changed = true;
+					}else if(e.get(i) instanceof Power) {
+						Power innerPower = (Power)e.get(i);
+						if(innerPower.getBase() instanceof Gamma) {
+							changed = true;
+							innerPower.setBase(toSterling.replace(equ(var("x"),innerPower.getBase().get())));
+						}
+					}
+				}
+				if(changed) return e;
+			}else if(e instanceof Power) {
+				Power innerPower = (Power)e;
+				if(innerPower.getBase() instanceof Gamma) {
+					changed = true;
+					innerPower.setBase(toSterling.replace(equ(var("x"),innerPower.getBase().get())));
+				}
+				if(changed) return e;
+			}
+			return null;
+		}
+		
+		@Override
+		public Expr applyRuleToExpr(Expr e,CasInfo casInfo){
+			Limit lim = (Limit)e;
+			
+			if(!lim.getValue().equals(Var.INF)) return lim;
+			
+			if(lim.getExpr() instanceof Div) {
+				boolean changed = false;
+				Div innerDiv = (Div)lim.getExpr();
+				
+				Expr newNumer = replace(innerDiv.getNumer());
+				if(newNumer != null) {
+					innerDiv.setNumer(newNumer);
+					changed = true;
+				}
+				Expr newDenom = replace(innerDiv.getDenom());
+				if(newDenom != null) {
+					innerDiv.setDenom(newDenom);
+					changed = true;
+				}
+				
+				if(changed)lim.setExpr(lim.getExpr().simplify(casInfo));
+				
+			}
+			return lim;
+		}
+	};
+	
 	static Sequence ruleSequence = null;
 	
 	public static void loadRules(){
@@ -444,6 +512,7 @@ public class Limit extends Expr{
 				differentDegreePolysInDiv,
 				polyCase,
 				crazyRootSubtraction,
+				sterlingTransformation,
 				lhopitalsRuleDiv,
 				directSubst
 		);

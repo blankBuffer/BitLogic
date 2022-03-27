@@ -669,6 +669,7 @@ public class Div extends Expr{
 		Expr negativeRootNum;
 		Expr negativeRootNumCond;
 		
+		@Override
 		public void init() {
 			negativeRootNum = createExpr("a^(b/c)");
 			negativeRootNumCond = createExpr("isType(a,num)&eval(a<0)");

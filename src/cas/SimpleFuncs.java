@@ -43,13 +43,18 @@ public class SimpleFuncs extends QuickMath{
 				return sum;
 			}else if(e instanceof Power){
 				Power casted = (Power)e;
+				casted.setBase(fullExpand.applyRuleToExpr(casted.getBase(), casInfo));
 				if( isPositiveRealNum(casted.getExpo()) && casted.getBase() instanceof Sum){
 					Expr result = multinomial(casted.getBase(),(Num)casted.getExpo(),casInfo);
 					return result.simplify(casInfo);
 				}
+			}else if(e instanceof Div) {
+				Div innerDiv = (Div)e;
+				innerDiv.setNumer(fullExpand.applyRuleToExpr(innerDiv.getNumer(), casInfo));
+				return distr(innerDiv).simplify(casInfo);
 			}
 			
-			return e;
+			return e.simplify(casInfo);
 		}
 	};
 	

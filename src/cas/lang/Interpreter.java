@@ -239,9 +239,10 @@ public class Interpreter extends QuickMath{
 				
 			}
 		}
+		
 		if(tokens.size() == 2) {//reading functions	
 			String op = tokens.get(0);
-			if(op.matches("[a-zA-Z]+")) {
+			if(op.matches("[a-zA-Z]+") && !tokens.get(1).equals("!")) {
 				if(op.isBlank()) throw new Exception("confusing parenthesis");
 				Expr params = Params.cast( createExprFromToken(tokens.get(1)));
 				
@@ -315,7 +316,6 @@ public class Interpreter extends QuickMath{
 			if(symbol == '<') return equLess(leftSide,rightSide);
 			
 		}
-		
 		if(tokens.contains("?") && tokens.contains(":")) {//ternary case
 			
 			int questionMarkIndex = tokens.indexOf("?");
@@ -413,7 +413,6 @@ public class Interpreter extends QuickMath{
 			for(ArrayList<String> group:tokenGroups) dot.add( createExprFromTokens(group) );
 			return dot;
 		}
-		
 		if(tokens.contains("*") || tokens.contains("/")) {
 			tokens.add("*");
 			Expr numerProd = new Prod();
