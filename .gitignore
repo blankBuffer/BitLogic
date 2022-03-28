@@ -3,5 +3,6 @@ bin/
 .classpath
 .project
 *.swp
+*.swo
 rmArch
 *.DS_Store

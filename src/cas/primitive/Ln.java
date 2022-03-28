@@ -174,6 +174,52 @@ public class Ln extends Expr{
 		}
 	};
 	
+	public static Rule gcdExponent = new Rule("ln has common exponent that can be factored"){
+		private static final long serialVersionUID = 1L;
+		
+		@Override
+		public Expr applyRuleToExpr(Expr e,CasInfo casInfo) {
+			Ln log = (Ln)e;
+			if(log.get() instanceof Prod) {
+				Prod innerProd = (Prod)log.get();
+				for(int i = 0;i<innerProd.size();i++) {
+					boolean badForm = false;
+					if(innerProd.get(i) instanceof Num) {
+						Power pp = perfectPower((Num)innerProd.get(i));
+						if(pp.getExpo().equals(Num.ONE)) badForm = true;	
+						else innerProd.set(i,pp);
+					}
+					badForm|=!(innerProd.get(i) instanceof Power);
+					
+					if(badForm) {
+						log.simplifyChildren(casInfo);
+						return log;
+					}
+				}
+				Expr gcd = new Gcd();
+				for(int i = 0;i<innerProd.size();i++) {
+					Power current = (Power)innerProd.get(i);
+					
+					gcd.add(current.getExpo());
+					
+				}
+				gcd = gcd.simplify(casInfo);
+				if(gcd.equals(Num.ONE)) {
+					log.simplifyChildren(casInfo);
+					return log;
+				}
+				for(int i = 0;i<innerProd.size();i++) {
+					Power current = (Power)innerProd.get(i);
+					current.setExpo(div(current.getExpo(),gcd));
+				}
+				innerProd.flags.simple = false;
+				return prod(gcd,ln(innerProd)).simplify(casInfo);
+				
+			}
+			return log;
+		}
+	};
+	
 	static Sequence ruleSequence = null;
 	
 	public static void loadRules(){
@@ -189,6 +235,7 @@ public class Ln extends Expr{
 				factorInnerReal,
 				logWithSums,
 				logOfPerfectPower,
+				gcdExponent,
 				powToProd
 		);
 		Rule.initRules(ruleSequence);

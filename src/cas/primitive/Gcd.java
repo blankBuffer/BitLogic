@@ -22,7 +22,7 @@ public class Gcd extends Expr{
 			Div fracCoefA = Div.cast(aSep.get());
 			Div fracCoefB = Div.cast(bSep.get());
 			
-			subGcd.add(div( num(((Num)fracCoefA.getNumer()).gcd().gcd(((Num)fracCoefB.getNumer()).gcd())) ,num(((Num)fracCoefA.getDenom()).gcd().gcd(((Num)fracCoefB.getDenom()).gcd())) ));
+			subGcd.add(Div.unCast(div( num(((Num)fracCoefA.getNumer()).gcd().gcd(((Num)fracCoefB.getNumer()).gcd())) ,num(((Num)fracCoefA.getDenom()).gcd().gcd(((Num)fracCoefB.getDenom()).gcd())) )));
 			
 			if(a instanceof Div || b instanceof Div) {
 				Div aDiv = Div.cast(a);
@@ -66,13 +66,21 @@ public class Gcd extends Expr{
 					}
 				}
 			}
-			
+			//remove ones
+			for(int i = 0;i<subGcd.size();i++) {
+				if(subGcd.get(i).equals(Num.ONE)) {
+					subGcd.remove(i);
+					i--;
+				}
+			}
 			return Prod.unCast(subGcd);
 		}
 		
 		@Override
 		public Expr applyRuleToExpr(Expr e,CasInfo casInfo) {
 			Gcd gcd = (Gcd)e;
+			
+			if(gcd.size() == 1) return gcd.get();
 			
 			for(int i = 0;i<gcd.size();i++) {
 				if(gcd.get(i) instanceof Sum) {
