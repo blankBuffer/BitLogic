@@ -72,4 +72,12 @@ public class FloatExpr extends Expr{
 	public String typeName() {
 		return "floatExpr";
 	}
+
+	@Override
+	public String help() {
+		return "floatExpr expression\n"
+				+ "examples\n"
+				+ "approx(2.2+5.3)->7.5\n"
+				+ "7.123";
+	}
 }

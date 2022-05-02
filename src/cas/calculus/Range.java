@@ -45,10 +45,14 @@ public class Range extends Expr{
 			
 			ExprList criticalPoints = new ExprList();
 			
-			for(int i = 0;i<solutions.size();i++) criticalPoints.add(solutions.get(i));
-			for(int i = 0;i<derivativeSolutions.size();i++) criticalPoints.add(derivativeSolutions.get(i));
+			for(int i = 0;i<solutions.size();i++) {
+				if(!solutions.get(i).containsType("solve")) criticalPoints.add(solutions.get(i));
+			}
+			for(int i = 0;i<derivativeSolutions.size();i++) {
+				if(!derivativeSolutions.get(i).containsType("solve")) criticalPoints.add(derivativeSolutions.get(i));
+			}
 			
-			return criticalPoints;
+			return ExprList.cast(criticalPoints.simplify(casInfo));
 		}
 		
 		Expr maximum(Expr e,ExprList criticalPoints,CasInfo casInfo) {
@@ -88,7 +92,7 @@ public class Range extends Expr{
 			
 			
 			ExprList criticalPoints = getCriticalPoints(range.getExpr(),range.getVar(),casInfo);
-			
+			criticalPoints.println();
 			
 			{//remove criticalPoints outside domain
 				ComplexFloat minApprox = range.getMin().convertToFloat(exprList());
@@ -144,6 +148,14 @@ public class Range extends Expr{
 	@Override
 	public String typeName() {
 		return "range";
+	}
+
+	@Override
+	public String help() {
+		return "range(min,max,expression,variable) function calculates the range of the expression under a domain\n"
+				+ "examples\n"
+				+ "range(-inf,inf,sin(x),x)->{-1,1}\n"
+				+ "range(-1,1,x*sin(x)+x,x)";
 	}
 	
 }

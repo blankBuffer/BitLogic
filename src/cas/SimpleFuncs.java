@@ -109,6 +109,9 @@ public class SimpleFuncs extends QuickMath{
 	
 	static Func sortExpr = new Func("sortExpr",1);
 	
+	static Func delete = new Func("delete",1);
+	static Func help = new Func("help",1);
+	
 	public static void loadRules(){
 		tree.simplifyChildren = false;
 		tree.ruleSequence.add(new Rule("show the tree of the expression"){
@@ -341,14 +344,16 @@ public class SimpleFuncs extends QuickMath{
 					return bool(casted.getLeftSide().exactlyEquals(casted.getRightSide()));
 				}else if(f.get() instanceof Less) {
 					Less casted = (Less)f.get();
-					if(casted.containsVars()) return bool(true);
+					
 					boolean equal = casted.getLeftSide().exactlyEquals(casted.getRightSide());
+					if(casted.containsVars()) return bool(!equal);
 					
 					return bool(!equal && casted.getLeftSide().convertToFloat(exprList()).real < casted.getRightSide().convertToFloat(exprList()).real );
 				}else if(f.get() instanceof Greater) {
 					Greater casted = (Greater)f.get();
-					if(casted.containsVars()) return bool(true);
+					
 					boolean equal = casted.getLeftSide().exactlyEquals(casted.getRightSide());
+					if(casted.containsVars()) return bool(!equal);
 					
 					return bool(!equal && casted.getLeftSide().convertToFloat(exprList()).real > casted.getRightSide().convertToFloat(exprList()).real );
 				}else if(f.get() instanceof BoolState) {
@@ -803,6 +808,29 @@ public class SimpleFuncs extends QuickMath{
 			}
 		});
 		
+		delete.simplifyChildren = false;
+		delete.ruleSequence.add(new Rule("delete variable or function") {
+			private static final long serialVersionUID = 1L;
+			
+			@Override
+			public Expr applyRuleToExpr(Expr e,CasInfo casInfo) {
+				Expr inner = e.get();
+				
+				if(inner instanceof Var)casInfo.definitions.removeVar(inner.toString());
+				else if(inner instanceof Func) casInfo.definitions.removeFunc(inner.typeName());
+				return Interpreter.SUCCESS;
+			}
+		});
+		
+		help.simplifyChildren = false;
+		help.ruleSequence.add(new Rule("help function") {
+			private static final long serialVersionUID = 1L;
+			@Override
+			public Expr applyRuleToExpr(Expr e,CasInfo casInfo) {
+				
+				return var(e.get().help());
+			}
+		});
 	}
 	
 	private static ArrayList<String> functionNames = new ArrayList<String>();
@@ -863,6 +891,9 @@ public class SimpleFuncs extends QuickMath{
 		addFunc(similar);
 		addFunc(fastSimilar);
 		addFunc(sortExpr);
+		
+		addFunc(delete);
+		addFunc(help);
 		
 		for(String s:simpleFuncs.keySet()) {
 			functionNames.add(s);

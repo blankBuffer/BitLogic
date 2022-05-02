@@ -41,6 +41,7 @@ public class Func extends Expr{
 	}
 	public Sequence ruleSequence = sequence();
 	public FloatFunc toFloatFunc = null;
+	public String helpMessage = "no help message";
 	
 	@Override
 	public Expr copy() {
@@ -86,6 +87,11 @@ public class Func extends Expr{
 	@Override
 	public String typeName() {
 		return name;
+	}
+
+	@Override
+	public String help() {
+		return helpMessage;
 	}
 	
 }

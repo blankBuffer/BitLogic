@@ -713,7 +713,6 @@ public class MainWindow extends JFrame{
 		return Integer.valueOf(line.substring(line.lastIndexOf(':')+1));
 	}
 	
-	@SuppressWarnings("resource")
 	void loadPrefs() {
 		try {
 			Scanner defsReader = new Scanner(new File("resources/prefs.txt"));

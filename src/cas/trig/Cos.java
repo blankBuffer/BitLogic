@@ -127,4 +127,11 @@ public class Cos extends Expr{
 	public String typeName() {
 		return "cos";
 	}
+	@Override
+	public String help() {
+		return "cos(x) is the cosine function\n"
+				+ "examples\n"
+				+ "cos(0)->1\n"
+				+ "cos(asin(x))->sqrt(1-x^2)";
+	}
 }

@@ -73,7 +73,6 @@ public class Solve extends Expr{
 			subtractiveZero = new Rule("subtracting two same functions") {
 				private static final long serialVersionUID = 1L;
 				
-				Rule[] cases;
 				@Override
 				public void init() {
 					cases = new Rule[] {
@@ -100,7 +99,6 @@ public class Solve extends Expr{
 			rootCases = new Rule("solving with roots") {
 				private static final long serialVersionUID = 1L;
 				
-				Rule[] cases;
 				@Override
 				public void init() {
 					cases = new Rule[] {
@@ -134,7 +132,6 @@ public class Solve extends Expr{
 			sinCosSumCase = new Rule("solving equations with summed sin and cos") {
 				private static final long serialVersionUID = 1L;
 				
-				Rule[] cases;
 				@Override
 				public void init() {
 					cases = new Rule[] {
@@ -155,7 +152,6 @@ public class Solve extends Expr{
 			lambertWCases = new Rule("solving with lambert w") {
 				private static final long serialVersionUID = 1L;
 				
-				Rule[] cases;
 				@Override
 				public void init() {
 					cases = new Rule[] {
@@ -262,7 +258,6 @@ public class Solve extends Expr{
 			
 			inverseFunctionCase = new Rule("inverse function case") {
 				private static final long serialVersionUID = 1L;
-				Rule[] cases;
 				@Override
 				public void init() {
 					cases = new Rule[] {
@@ -490,7 +485,7 @@ public class Solve extends Expr{
 					e = ((Rule)loopedSequence.get(i)).applyRuleToExpr(solve, casInfo);
 					if(!(e instanceof Solve)) break;
 					solve = (Solve)e;
-					if(solve.getEqu().getLeftSide().equals(solve.getVar())) {
+					if(solve.getEqu().getLeftSide().equals(solve.getVar()) && !solve.getEqu().getRightSide().contains(solve.getVar())) {
 						return solve.getEqu();
 					}
 				}
@@ -686,6 +681,13 @@ public class Solve extends Expr{
 	@Override
 	public String typeName() {
 		return "solve";
+	}
+	@Override
+	public String help() {
+		return "solve(equation,variable) the algebraic solver\n"
+				+ "examples\n"
+				+ "solve(x^x=2,x)->x=ln(2)/lambertW(ln(2))\n"
+				+ "solve(x^2=2,x)->[x=-sqrt(2),x=sqrt(2)]";
 	}
 
 }

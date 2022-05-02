@@ -634,4 +634,12 @@ public class Sum extends Expr{
 	public String typeName() {
 		return "sum";
 	}
+
+	@Override
+	public String help() {
+		return "+ operator\n"
+				+ "examples\n"
+				+ "2+3->5\n"
+				+ "x+x+y->2*x+y";
+	}
 }

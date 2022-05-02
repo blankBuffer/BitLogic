@@ -9,8 +9,6 @@ public class Power extends Expr{
 	
 	private static final long serialVersionUID = 3916987907762535821L;
 	
-	
-	
 	public void setBase(Expr base) {
 		set(0, base);
 	}
@@ -746,5 +744,12 @@ public class Power extends Expr{
 	@Override
 	public String typeName() {
 		return "power";
+	}
+	@Override
+	public String help() {
+		return "^ operator\n"
+				+ "examples\n"
+				+ "2^3->8\n"
+				+ "sin(x)^2+cos(x)^2->1";
 	}
 }

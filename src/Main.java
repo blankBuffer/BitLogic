@@ -7,7 +7,6 @@ import ui.UI;
 
 public class Main extends QuickMath{
 	
-	@SuppressWarnings("resource")
 	public static void runScript(String fileName,boolean verbose) {
 		long startingInstructionCount = Expr.ruleCallCount;
 		long oldTime = System.nanoTime();

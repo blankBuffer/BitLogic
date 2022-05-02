@@ -82,5 +82,12 @@ public class Not extends Expr{
 	public String typeName() {
 		return "not";
 	}
+	@Override
+	public String help() {
+		return "~ operator\n"
+				+ "examples\n"
+				+ "~true->false\n"
+				+ "~(~x)->x";
+	}
 
 }

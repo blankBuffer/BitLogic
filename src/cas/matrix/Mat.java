@@ -112,4 +112,11 @@ public class Mat extends Expr{
 	public String typeName() {
 		return "mat";
 	}
+	@Override
+	public String help() {
+		return "matrix expression\n"
+				+ "examples\n"
+				+ "2*mat({{1,2},{3,4}})->mat({{2,4},{6,8}})\n"
+				+ "(mat({{1,3},{5,8}})).(mat({{8,2},{1,5}}))->mat({{11,17},{48,50}})";
+	}
 }

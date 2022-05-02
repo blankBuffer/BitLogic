@@ -3,7 +3,6 @@ package cas.trig;
 import cas.ComplexFloat;
 import cas.Expr;
 import cas.Rule;
-import cas.CasInfo;
 import cas.StandardRules;
 import cas.primitive.ExprList;
 import cas.primitive.Sequence;
@@ -22,7 +21,6 @@ public class Atan extends Expr{
 	static Rule inverseUnitCircle = new Rule("asin unit circle"){
 		private static final long serialVersionUID = 1L;
 		
-		Rule[] cases;
 		@Override
 		public void init(){
 			cases = new Rule[]{
@@ -33,14 +31,6 @@ public class Atan extends Expr{
 				new Rule("atan(inf)->pi/2-epsilon","arctan of infinity"),
 			};
 			Rule.initRules(cases);
-		}
-		
-		@Override
-		public Expr applyRuleToExpr(Expr e,CasInfo casInfo){
-			for(Rule r:cases){
-				e = r.applyRuleToExpr(e, casInfo);
-			}
-			return e;
 		}
 		
 	};
@@ -70,6 +60,13 @@ public class Atan extends Expr{
 	
 	@Override
 	public String typeName() {
-		return "acos";
+		return "atan";
+	}
+	@Override
+	public String help() {
+		return "atan(x) is the arc tangent function\n"
+				+ "examples\n"
+				+ "atan(1)->pi/4\n"
+				+ "atan(tan(x))->x";
 	}
 }

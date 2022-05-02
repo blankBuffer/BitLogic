@@ -116,4 +116,11 @@ public class Tan extends Expr{
 	public String typeName() {
 		return "tan";
 	}
+	@Override
+	public String help() {
+		return "tan(x) is the tangent function\n"
+				+ "examples\n"
+				+ "tan(0)->0\n"
+				+ "tan(pi/6)->sqrt(3)/3";
+	}
 }

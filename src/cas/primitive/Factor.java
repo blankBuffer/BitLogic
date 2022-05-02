@@ -409,5 +409,12 @@ public class Factor extends Expr{
 	public String typeName() {
 		return "factor";
 	}
+	@Override
+	public String help() {
+		return "factor(x) is the factor computer\n"
+				+ "examples\n"
+				+ "factor(x*a+x*b)->x*(a+b)\n"
+				+ "factor(x^2-x-6)->(x-3)*(x+2)";
+	}
 	
 }

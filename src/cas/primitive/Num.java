@@ -186,4 +186,12 @@ public class Num extends Expr{
 	public String typeName() {
 		return "num";
 	}
+
+	@Override
+	public String help() {
+		return "number expression\n"
+				+ "examples\n"
+				+ "2+3->5\n"
+				+ "x+2*x->3*x";
+	}
 }

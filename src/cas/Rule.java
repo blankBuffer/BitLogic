@@ -35,6 +35,7 @@ public class Rule extends Expr{
 	private String patternStr = null;//pattern as a string before initialization
 	private String conditionStr = null;//condition as a string before initialization
 	
+	public Rule[] cases = null;
 	
 	/*
 	 * the transformation description with a before and after state
@@ -88,6 +89,10 @@ public class Rule extends Expr{
 		this.pattern.getLeftSide().sort();
 		this.name = name;
 	}
+	public Rule(Rule[] cases,String name) {
+		this.name = name;
+		this.cases = cases;
+	}
 	public Rule(String name){
 		this.name = name;
 	}
@@ -99,6 +104,9 @@ public class Rule extends Expr{
 	public void init(){
 		if(patternStr != null) {
 			pattern = (Becomes) createExpr(patternStr);
+		}
+		
+		if(pattern != null) {
 			pattern.getLeftSide().sort();//sort the patterns left side into a standardized order
 			
 			patternParts = generateTemplateParts(pattern.getLeftSide());
@@ -106,9 +114,9 @@ public class Rule extends Expr{
 			
 			allPatternBasedRules.add(this);
 		}
-		if(conditionStr != null) {
-			condition = createExpr(conditionStr);
-		}
+		
+		if(conditionStr != null) condition = createExpr(conditionStr);
+		if(cases != null) Rule.initRules(cases);
 	}
 	
 	@Override
@@ -311,30 +319,35 @@ public class Rule extends Expr{
 	}
 	
 	public Expr applyRuleToExpr(Expr expr,CasInfo casInfo){
-		
-		if(fastSimilarExpr(pattern.getLeftSide(),expr)) {
-			Sequence parts = sequence();
-			
-			boolean match = checkForMatches(matchingSetsForPattern,parts,pattern.getLeftSide(),expr);
-			if(!match) {
-				return expr;
+		if(cases == null) {
+			if(fastSimilarExpr(pattern.getLeftSide(),expr)) {
+				Sequence parts = sequence();
+				
+				boolean match = checkForMatches(matchingSetsForPattern,parts,pattern.getLeftSide(),expr);
+				if(!match) {
+					return expr;
+				}
+				ExprList equs = makeEqusFromParts(patternParts,parts);
+				
+				if(condition != null) {
+					Expr condition = this.condition.replace(equs);
+					condition = condition.simplify(casInfo);
+					if(!condition.simplify(casInfo).equals(BoolState.TRUE)) return expr;
+				}
+				
+				Expr out = pattern.getRightSide().replace(equs);
+				if(pattern.getLeftSide().getClass() == pattern.getRightSide().getClass()) {
+					out.simplifyChildren(casInfo);
+				}else {
+					out = out.simplify(casInfo);
+				}
+				return out;
+				
 			}
-			ExprList equs = makeEqusFromParts(patternParts,parts);
-			
-			if(condition != null) {
-				Expr condition = this.condition.replace(equs);
-				condition = condition.simplify(casInfo);
-				if(!condition.simplify(casInfo).equals(BoolState.TRUE)) return expr;
+		}else {
+			for(Rule r:cases){
+				expr = r.applyRuleToExpr(expr, casInfo);
 			}
-			
-			Expr out = pattern.getRightSide().replace(equs);
-			if(pattern.getLeftSide().getClass() == pattern.getRightSide().getClass()) {
-				out.simplifyChildren(casInfo);
-			}else {
-				out = out.simplify(casInfo);
-			}
-			return out;
-			
 		}
 		return expr;
 	}
@@ -448,5 +461,9 @@ public class Rule extends Expr{
 	@Override
 	public String typeName() {
 		return "rule";
+	}
+	@Override
+	public String help() {
+		return "rule expression is a transformation";
 	}
 }

@@ -255,4 +255,11 @@ public class Ln extends Expr{
 	public String typeName() {
 		return "ln";
 	}
+	@Override
+	public String help() {
+		return "ln(x) the natural logarithm function\n"
+				+ "examples\n"
+				+ "ln(x^2)->2*ln(x)\n"
+				+ "ln(100)/ln(10)->2";
+	}
 }

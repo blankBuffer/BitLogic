@@ -142,4 +142,12 @@ public class Var extends Expr{
 	public String typeName() {
 		return "var";
 	}
+
+	@Override
+	public String help() {
+		return "variable expression\n"
+				+ "examples\n"
+				+ "x\n"
+				+ "x+x+y->2*x+y";
+	}
 }

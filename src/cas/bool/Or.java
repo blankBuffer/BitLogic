@@ -528,4 +528,12 @@ public class Or extends Expr{
 	public String typeName() {
 		return "or";
 	}
+
+	@Override
+	public String help() {
+		return "| operator\n"
+				+ "examples\n"
+				+ "true|false->true\n"
+				+ "x|~x->true";
+	}
 }

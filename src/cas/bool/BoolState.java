@@ -64,4 +64,12 @@ public class BoolState extends Expr{
 		return "boolState";
 	}
 
+	@Override
+	public String help() {
+		return "bool expression\n"
+				+ "examples\n"
+				+ "true|false->true\n"
+				+ "contains(x^2,y)->false";
+	}
+
 }

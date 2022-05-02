@@ -50,4 +50,12 @@ public class Sequence extends Expr{
 	public String typeName() {
 		return "sequence";
 	}
+
+	@Override
+	public String help() {
+		return "list expression that can contain repeats\n"
+				+ "examples\n"
+				+ "{2,2,3}\n"
+				+ "next({1,2,3,4,5},4)->{6,7,8,9}";
+	}
 }

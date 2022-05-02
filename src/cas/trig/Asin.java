@@ -3,7 +3,6 @@ package cas.trig;
 import cas.ComplexFloat;
 import cas.Expr;
 import cas.Rule;
-import cas.CasInfo;
 import cas.StandardRules;
 import cas.primitive.ExprList;
 import cas.primitive.Sequence;
@@ -18,7 +17,6 @@ public class Asin extends Expr{
 	static Rule inverseUnitCircle = new Rule("asin unit circle"){
 		private static final long serialVersionUID = 1L;
 		
-		Rule[] cases;
 		@Override
 		public void init(){
 			cases = new Rule[]{
@@ -31,20 +29,11 @@ public class Asin extends Expr{
 			Rule.initRules(cases);
 		}
 		
-		@Override
-		public Expr applyRuleToExpr(Expr e,CasInfo casInfo){
-			for(Rule r:cases){
-				e = r.applyRuleToExpr(e, casInfo);
-			}
-			return e;
-		}
-		
 	};
 	
 	static Rule arcsinWithSqrt = new Rule("arcsin with square root"){
 		private static final long serialVersionUID = 1L;
 		
-		Rule[] cases;
 		@Override
 		public void init(){
 			cases = new Rule[]{
@@ -54,14 +43,6 @@ public class Asin extends Expr{
 				new Rule("asin(sqrt(x+b))->asin(1-2*x-2*b)/-2+pi/4","arcsin with square root"),
 			};
 			Rule.initRules(cases);
-		}
-		
-		@Override
-		public Expr applyRuleToExpr(Expr e,CasInfo casInfo){
-			for(Rule r:cases){
-				e = r.applyRuleToExpr(e, casInfo);
-			}
-			return e;
 		}
 	};
 	
@@ -96,6 +77,13 @@ public class Asin extends Expr{
 	@Override
 	public String typeName() {
 		return "asin";
+	}
+	@Override
+	public String help() {
+		return "asin(x) is the arc sine function\n"
+				+ "examples\n"
+				+ "asin(0)->0\n"
+				+ "asin(cos(x))->pi/2-x";
 	}
 
 }

@@ -121,5 +121,12 @@ public class IntegrateOver extends Expr {
 	public String typeName() {
 		return "integrateOver";
 	}
+	@Override
+	public String help() {
+		return "integrateOver(min,max,function,variable) the definite integration computer\n"
+				+ "examples\n"
+				+ "integrateOver(1,2,x*sqrt(x+2),x)->(2*sqrt(3))/5+32/15\n"
+				+ "integrateOver(0,pi,sin(x),x)->2";
+	}
 
 }

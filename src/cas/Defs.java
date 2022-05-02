@@ -22,6 +22,7 @@ public class Defs extends QuickMath implements Serializable{
 	public void addFuncRule(Becomes def) {
 		String name = ((Func)def.getLeftSide()).name;
 		Rule r = new Rule(def, "function definition");
+		r.init();
 		if(!functionsRule.containsKey(name)) functionsRule.put(name, r);
 		else functionsRule.replace(name, r);
 		functionsRule.put(name, r);
@@ -41,6 +42,7 @@ public class Defs extends QuickMath implements Serializable{
 	public void removeFunc(String name) {
 		functionsRule.remove(name);
 	}
+	
 	public void clear() {
 		varDefs.clear();
 		functionsRule.clear();

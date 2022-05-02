@@ -47,4 +47,11 @@ public class Equ extends Expr{
 	public String typeName() {
 		return "equ";
 	}
+	@Override
+	public String help() {
+		return "= opertator\n"
+				+ "examples\n"
+				+ "x=y\n"
+				+ "solve(x^2=2,x)->[x=-sqrt(2),x=sqrt(2)]";
+	}
 }

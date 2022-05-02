@@ -18,7 +18,8 @@ public class LambertW extends Expr {
 	
 	static Rule hasInverse = new Rule("lambertW(x*e^x)->x","lambert w of product exponential");
 	static Rule productWithLog = new Rule("lambertW(x*ln(x))->ln(x)","lambert w of product of logs");
-	static Rule isNegOne = new Rule("lambertW((-1)/e)->-1","lambert w of -1/e");
+	static Rule isNegOneOverE = new Rule("lambertW((-1)/e)->-1","lambert w of -1/e");
+	static Rule isZero = new Rule("lambertW(0)->0","lambert w pf 0");
 	static Rule ratioLog = new Rule("lambertW((-ln(x))/x)->-ln(x)","lambert w of -ln(x) over x");
 	
 	static Rule crazyProductRule = new Rule("crazy product rule"){
@@ -101,7 +102,8 @@ public class LambertW extends Expr {
 	public static void loadRules(){
 		ruleSequence = sequence(
 				hasInverse,
-				isNegOne,
+				isNegOneOverE,
+				isZero,
 				productWithLog,
 				ratioLog,
 				crazyProductRule
@@ -120,7 +122,7 @@ public class LambertW extends Expr {
 	@Override
 	public ComplexFloat convertToFloat(ExprList varDefs) {
 		FloatExpr x = floatExpr(get().convertToFloat(varDefs));
-		if(x.value.real<-1.0/Math.E) return ComplexFloat.ZERO;
+		if(x.value.real<-1.0/Math.E || x.value.closeToZero()) return ComplexFloat.ZERO;
 		Solve expr = solve(equ(x,prod(var("y"),exp(var("y")))),var("y"));
 		expr.INITIAL_GUESS = Math.log( x.value.real+1)*3.0/4.0;
 		return expr.convertToFloat(varDefs);
@@ -129,5 +131,12 @@ public class LambertW extends Expr {
 	@Override
 	public String typeName() {
 		return "lambertW";
+	}
+	@Override
+	public String help() {
+		return "lambertW(x) is the lambert w function\n"
+				+ "examples\n"
+				+ "lambertW(-1/e)->-1\n"
+				+ "lambertW(x*e^x)->x";
 	}
 }

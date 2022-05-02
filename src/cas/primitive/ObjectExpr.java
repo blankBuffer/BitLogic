@@ -49,4 +49,9 @@ public class ObjectExpr extends Expr{//behaves like variables
 	public String typeName() {
 		return "objectExpr";
 	}
+
+	@Override
+	public String help() {
+		return "object expression";
+	}
 }

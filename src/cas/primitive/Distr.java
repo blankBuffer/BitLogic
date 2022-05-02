@@ -112,5 +112,12 @@ public class Distr extends Expr{
 	public String typeName() {
 		return "distr";
 	}
+	@Override
+	public String help() {
+		return "distr(x) is the distribute computer\n"
+				+ "examples\n"
+				+ "distr(x*(a+b))->x*a+x*b\n"
+				+ "distr((x-3)*(x+2))->x^2-x-6";
+	}
 
 }

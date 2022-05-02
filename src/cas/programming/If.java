@@ -37,4 +37,9 @@ public class If extends Expr{
 	public String typeName() {
 		return "if";
 	}
+	@Override
+	public String help() {
+		// TODO Auto-generated method stub
+		return null;
+	}
 }

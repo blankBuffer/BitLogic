@@ -52,4 +52,12 @@ public class Becomes extends Expr{
 	public String typeName() {
 		return "becomes";
 	}
+
+	@Override
+	public String help() {
+		return "-> operator\n"
+				+ "examples\n"
+				+ "f(k)->k^2\n"
+				+ "sin(pi)->0";
+	}
 }

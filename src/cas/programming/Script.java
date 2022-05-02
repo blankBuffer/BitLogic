@@ -59,4 +59,10 @@ public class Script extends Expr{
 	public String typeName() {
 		return "script";
 	}
+
+	@Override
+	public String help() {
+		// TODO Auto-generated method stub
+		return null;
+	}
 }

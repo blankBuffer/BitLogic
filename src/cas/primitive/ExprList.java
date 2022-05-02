@@ -126,4 +126,12 @@ public class ExprList extends Expr{
 		return "exprList";
 	}
 
+	@Override
+	public String help() {
+		return "list expression contains unique expressions\n"
+				+ "examples\n"
+				+ "[2,3]\n"
+				+ "solve(x^2=2,x)->[x=-sqrt(2),x=sqrt(2)]";
+	}
+
 }

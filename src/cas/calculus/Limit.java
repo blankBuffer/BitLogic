@@ -533,4 +533,12 @@ public class Limit extends Expr{
 	public String typeName() {
 		return "limit";
 	}
+
+	@Override
+	public String help() {
+		return "limit(function,variable->value) the limit computer\n"
+				+ "examples\n"
+				+ "limit(sin(x)/x,x->0)->1\n"
+				+ "limit(e^x/ln(x),x->inf)->inf";
+	}
 }

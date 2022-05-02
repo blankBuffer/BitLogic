@@ -41,4 +41,11 @@ public class Params extends Expr{
 	public String typeName() {
 		return "params";
 	}
+	@Override
+	public String help() {
+		return "params expression holds parameters for functions\n"
+				+ "examples\n"
+				+ "choose(5,2)->10\n"
+				+ "2,3";
+	}
 }

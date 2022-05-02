@@ -140,4 +140,12 @@ public class Diff extends Expr{
 	public String typeName() {
 		return "diff";
 	}
+
+	@Override
+	public String help() {
+		return "diff(function,variable) the derivative computer\n"
+				+ "examples\n"
+				+ "diff(sin(2*x+1),x)->cos(2*x+1)*2\n"
+				+ "diff(x^n,x)->n*x^(n-1)";
+	}
 }

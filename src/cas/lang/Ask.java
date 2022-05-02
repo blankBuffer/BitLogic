@@ -62,7 +62,6 @@ public class Ask extends QuickMath{
 		}
 	}
 	
-	@SuppressWarnings("resource")
 	public static void loadBasicQuestions() {
 		try {
 			Scanner scanner = new Scanner(new File("resources/QnA.txt"));
@@ -709,6 +708,18 @@ public class Ask extends QuickMath{
 		}
 	}
 	
+	static void applyChooseKeyword(ArrayList<String> tokens) {
+		for(int i = 0;i<tokens.size();i++) {
+			if(tokens.get(i).equals("choose")) {
+				tokens.set(i-1, "choose("+tokens.get(i-1)+","+tokens.get(i+1)+")");
+				
+				tokens.remove(i);
+				tokens.remove(i);
+				i--;
+			}
+		}
+	}
+	
 	static void reformulate(ArrayList<String> tokens) {
 		if(DEBUG){
 			System.out.println("before reformulate");
@@ -718,6 +729,7 @@ public class Ask extends QuickMath{
 		applyWordReplacement(tokens);
 		removeDuplicateOperators(tokens);
 		fractionalReading(tokens);
+		applyChooseKeyword(tokens);
 		numberNounPair(tokens);
 		nounOwnership(tokens);
 		combineTrailingOperatorTokens(tokens);

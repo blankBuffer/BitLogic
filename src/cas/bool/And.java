@@ -227,4 +227,12 @@ public class And extends Expr{
 	public String typeName() {
 		return "and";
 	}
+
+	@Override
+	public String help() {
+		return "& operator\n"
+				+ "examples\n"
+				+ "true&false->false\n"
+				+ "x&~x->false";
+	}
 }

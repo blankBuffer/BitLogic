@@ -52,6 +52,7 @@ integrate(pi*(6-6*x^2)^2,x)
 integrate(x/(x^2+1),x)
 integrate(x^2*atan(x),x)
 integrate(x^3/(9-4*x^2)^(3/2),x)
+integrate(lambertW(x)/((lambertW(x)+1)*x),x)
 #diff
 repDiff(x^x,x,5)
 diff(sin(x)*x^2+x^x,x)

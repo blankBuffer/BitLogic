@@ -74,4 +74,12 @@ public class Ternary extends Expr{
 	public String typeName() {
 		return "ternary";
 	}
+
+	@Override
+	public String help() {
+		return "condition?if_true:if_false operator\n"
+				+ "examples\n"
+				+ "2+3->5\n"
+				+ "x+x+y->2*x+y";
+	}
 }

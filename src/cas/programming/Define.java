@@ -72,4 +72,12 @@ public class Define extends Expr{
 	public String typeName() {
 		return "define";
 	}
+
+	@Override
+	public String help() {
+		return ":= operator\n"
+				+ "examples\n"
+				+ "x:=2\n"
+				+ "f(x):=x^2";
+	}
 }

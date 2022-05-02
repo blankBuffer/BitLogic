@@ -43,7 +43,6 @@ public class Abs extends Expr{
 			return abs;
 		}
 		
-		Rule[] cases;
 		Expr basicSinProd,basicCosProd,basicAbsProd;
 		
 		@Override
@@ -275,6 +274,14 @@ public class Abs extends Expr{
 	@Override
 	public String typeName() {
 		return "abs";
+	}
+
+	@Override
+	public String help() {
+		return "abs(x) is the absolute value function\n"
+				+ "examples\n"
+				+ "abs(-5)->5\n"
+				+ "abs(2+3*i)->sqrt(13)";
 	}
 
 }

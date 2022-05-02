@@ -42,7 +42,7 @@ public abstract class Expr extends QuickMath implements Serializable{
 	private ArrayList<Expr> subExpr = new ArrayList<Expr>();//many expression types have sub expressions like sums
 	
 	public abstract Sequence getRuleSequence();
-	@SuppressWarnings("static-method")
+	public abstract String help();
 	public Rule getDoneRule() {//post processing rule
 		return null;
 	}
@@ -154,7 +154,6 @@ public abstract class Expr extends QuickMath implements Serializable{
 		
 	}
 	
-	@SuppressWarnings("static-method")
 	public Var getVar(){
 		return null;
 	}
@@ -511,7 +510,6 @@ public abstract class Expr extends QuickMath implements Serializable{
 		}
 	}
 	
-	@SuppressWarnings("resource")
 	public static void serializedSaveExpr(Expr expr,String fileName)throws IOException{
 	    FileOutputStream fos = new FileOutputStream("saves/"+fileName);
 	    ObjectOutputStream oos = new ObjectOutputStream(fos);
@@ -519,7 +517,6 @@ public abstract class Expr extends QuickMath implements Serializable{
 	    oos.close();
 	}
 
-	@SuppressWarnings("resource")
 	public static Expr serializedOpenExpr(String fileName)throws IOException, ClassNotFoundException{
 	   FileInputStream fin = new FileInputStream("saves/"+fileName);
 	   ObjectInputStream ois = new ObjectInputStream(fin);

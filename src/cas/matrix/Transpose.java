@@ -121,4 +121,12 @@ public class Transpose extends Expr{
 	public String typeName() {
 		return "transpose";
 	}
+
+	@Override
+	public String help() {
+		return "transpose(x) is matrix transpose computer\n"
+				+ "examples\n"
+				+ "transpose(mat({{1,2},{3,4}}))->mat({{1,3},{2,4}})\n"
+				+ "transpose(a.b)->transpose(b).transpose(a)";
+	}
 }

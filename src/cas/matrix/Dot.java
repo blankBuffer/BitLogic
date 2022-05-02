@@ -112,4 +112,12 @@ public class Dot extends Expr{
 	public String typeName() {
 		return "dot";
 	}
+
+	@Override
+	public String help() {
+		return ". opertator\n"
+				+ "examples\n"
+				+ "(mat({{1,3},{5,8}})).(mat({{8,2},{1,5}}))->mat({{11,17},{48,50}})\n"
+				+ "transpose(x.y)->transpose(y).transpose(x)";
+	}
 }

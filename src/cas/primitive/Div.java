@@ -862,4 +862,11 @@ public class Div extends Expr{
 	public String typeName() {
 		return "div";
 	}
+	@Override
+	public String help() {
+		return "/ opertator\n"
+				+ "examples\n"
+				+ "2/4->1/2\n"
+				+ "x/x^2->1/x";
+	}
 }

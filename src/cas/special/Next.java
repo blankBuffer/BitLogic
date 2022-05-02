@@ -469,4 +469,12 @@ public class Next extends Expr{
 	public String typeName() {
 		return "next";
 	}
+
+	@Override
+	public String help() {
+		return "next(sequence) the sequence predictor\n"
+				+ "examples\n"
+				+ "next({1,1,2,3,5},4)->{8,13,21,34}\n"
+				+ "next({x/2,x^2/4,x^3/8,x^4/16},4)->{x^5/32,x^6/64,x^7/128,x^8/256}";
+	}
 }

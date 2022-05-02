@@ -126,4 +126,12 @@ public class Gcd extends Expr{
 		return "gcd";
 	}
 
+	@Override
+	public String help() {
+		return "gcd(a,b) is the greatest common divisor computer\n"
+				+ "examples\n"
+				+ "gcd(4*x^2*y,2*x*y)->2*x*y\n"
+				+ "gcd(10,4)->2";
+	}
+
 }

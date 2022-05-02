@@ -101,5 +101,12 @@ public class Gamma extends Expr{
 	public String typeName() {
 		return "gamma";
 	}
+	@Override
+	public String help() {
+		return "gamma(x) is the gamma function\n"
+				+ "examples\n"
+				+ "gamma(4)->6\n"
+				+ "gamma(3/2)->sqrt(pi)/2";
+	}
 
 }

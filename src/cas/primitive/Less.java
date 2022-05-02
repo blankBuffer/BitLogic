@@ -47,4 +47,11 @@ public class Less extends Expr{
 	public String typeName() {
 		return "less";
 	}
+	@Override
+	public String help() {
+		return "< operator\n"
+				+ "examples\n"
+				+ "eval(2<3)->true\n"
+				+ "eval(2*x<2*x)->false";
+	}
 }

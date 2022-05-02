@@ -112,7 +112,7 @@ public class Sin extends Expr{
 		}
 		
 	};
-
+	
 	@Override
 	public ComplexFloat convertToFloat(ExprList varDefs) {
 		return ComplexFloat.sin(get().convertToFloat(varDefs));
@@ -140,5 +140,12 @@ public class Sin extends Expr{
 	@Override
 	public String typeName() {
 		return "sin";
+	}
+	@Override
+	public String help() {
+		return "sin(x) is the sine function\n"
+				+ "examples\n"
+				+ "sin(0)->0\n"
+				+ "sin(pi/6)->1/2";
 	}
 }

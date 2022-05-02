@@ -37,7 +37,6 @@ public class Acos extends Expr{
 	static Rule inverseUnitCircle = new Rule("unit circle for arccos"){
 		private static final long serialVersionUID = 1L;
 		
-		Rule[] cases;
 		@Override
 		public void init(){
 			cases = new Rule[]{
@@ -49,20 +48,11 @@ public class Acos extends Expr{
 			};
 			Rule.initRules(cases);
 		}
-		
-		@Override
-		public Expr applyRuleToExpr(Expr e,CasInfo casInfo){
-			for(Rule r:cases){
-				e = r.applyRuleToExpr(e, casInfo);
-			}
-			return e;
-		}
 	};
 	
 	static Rule arccosWithSqrt = new Rule("arcsin with square root"){
 		private static final long serialVersionUID = 1L;
 		
-		Rule[] cases;
 		@Override
 		public void init(){
 			cases = new Rule[]{
@@ -72,14 +62,6 @@ public class Acos extends Expr{
 				new Rule("acos(sqrt(x+b))->asin(1-2*x-2*b)/2+pi/4","arcsin with square root"),
 			};
 			Rule.initRules(cases);
-		}
-		
-		@Override
-		public Expr applyRuleToExpr(Expr e,CasInfo casInfo){
-			for(Rule r:cases){
-				e = r.applyRuleToExpr(e, casInfo);
-			}
-			return e;
 		}
 	};
 	
@@ -110,5 +92,12 @@ public class Acos extends Expr{
 	@Override
 	public String typeName() {
 		return "acos";
+	}
+	@Override
+	public String help() {
+		return "acos(x) is the arc cosine function\n"
+				+ "examples\n"
+				+ "acos(0)->pi/2\n"
+				+ "acos(cos(x))->x";
 	}
 }

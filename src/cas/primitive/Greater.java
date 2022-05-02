@@ -47,4 +47,11 @@ public class Greater extends Expr{
 	public String typeName() {
 		return "greater";
 	}
+	@Override
+	public String help() {
+		return "> operator\n"
+				+ "examples\n"
+				+ "eval(3>2)->true\n"
+				+ "eval(2*x>2*x)->false";
+	}
 }

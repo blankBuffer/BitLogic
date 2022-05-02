@@ -49,4 +49,11 @@ public class Approx extends Expr{
 	public String typeName() {
 		return "approx";
 	}
+	@Override
+	public String help() {
+		return "approx(x) is floating point approximation\n"
+				+ "examples\n"
+				+ "approx(pi)->3.141592653589793\n"
+				+ "approx(sqrt(i))->0.7071067811865476+0.7071067811865475*i";
+	}
 }

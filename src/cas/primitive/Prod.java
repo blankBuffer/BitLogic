@@ -836,4 +836,12 @@ public class Prod extends Expr{
 	public String typeName() {
 		return "prod";
 	}
+
+	@Override
+	public String help() {
+		return "* operator\n"
+				+ "examples\n"
+				+ "2*3->6\n"
+				+ "x*x*y->x^2*y";
+	}
 }
