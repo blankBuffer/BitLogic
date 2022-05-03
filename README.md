@@ -4,9 +4,9 @@ homepage with download
 
 https://blankbuffer.github.io/BitLogic/
 
-youtube demo
+video demo
 
-https://www.youtube.com/watch?v=wxWfP2_URYQ
+![demo](https://user-images.githubusercontent.com/64857525/166407784-4cd3b8d9-fced-4492-9589-079108b39f98.gif)
 
 **Features**
 
