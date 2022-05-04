@@ -30,43 +30,58 @@ public class Integrate extends Expr{
 		return cases;
 	}
 	
-	static Rule zeroCase = new Rule("integrate(0,x)->0","integral of zero");
-	static Rule oneCase = new Rule("integrate(1,x)->x","integral of one");
-	static Rule varCase = new Rule("integrate(x,x)->x^2/2","integral of variable");
+	static Rule polynomial = new Rule(new Rule[] {
+			new Rule("integrate(1,x)->x","integral of a 1"),
+			new Rule("integrate(x,x)->x^2/2","integral of the variable"),
+			new Rule(autoGenerateCases("integrate(1/lin,x)","ln(lin)","integral of inverse"),"integral of the inverse"),
+			new Rule(autoGenerateCases("integrate(lin^n,x)","lin^(n+1)/(n+1)","reverse power rule"),"reverse power rule"),
+			new Rule(autoGenerateCases("integrate(1/lin^n,x)","-1/(lin^(n-1)*(n-1))","reverse inverse power rule"),"reverse inverse power rule"),
+	},"polynomial integration rules");
 	
-	static Rule invRule = new Rule(autoGenerateCases("integrate(1/lin,x)","ln(lin)","integral of inverse"),"integral of the inverse");
+	static Rule logCases = new Rule(autoGenerateCases("integrate(ln(lin),x)","ln(lin)*lin-lin","integral of the natural log"),"integral of the natural log");
 	
-	static Rule logCase = new Rule("integrate(ln(x),x)->ln(x)*x-x","integral of the log");
+	static Rule basicTrig = new Rule(new Rule[] {
+			new Rule(autoGenerateCases("integrate(sin(lin),x)","-cos(lin)","integral of sin"),"integral of the sin"),
+			new Rule(autoGenerateCases("integrate(cos(lin),x)","sin(lin)","integral of cos"),"integral of the cos"),
+			new Rule(autoGenerateCases("integrate(tan(lin),x)","-ln(cos(lin))","integral of the tan"),"integral of the tan"),
+			new Rule(autoGenerateCases("integrate(1/sin(lin),x)","ln(1-cos(lin))-ln(sin(lin))","integral of 1 over sin"),"integral of 1 over sin"),
+			new Rule(autoGenerateCases("integrate(1/cos(lin),x)","ln(1+sin(lin))-ln(cos(lin))","integral of 1 over cos"),"integral of 1 over cos"),
+			new Rule(autoGenerateCases("integrate(1/tan(lin),x)","ln(sin(lin))","integral of 1 over tan"),"integral of 1 over tan"),
+			
+	},"basic trigonometric integration rules");
 	
-	static Rule absCase = new Rule("integrate(abs(x),x)->x*abs(x)/2","integral of the absolute value");
-	static Rule absProdCase = new Rule("integrate(abs(x)*x,x)->x^2*abs(x)/3","integral of product with the absolute value");
-	static Rule absPowerCase = new Rule("integrate(abs(x)*x^n,x)->(x^(n+1)*abs(x))/(n+2)","~contains(n,x)","integral of the power of absolute value");
+	static Rule singleTrigPower = new Rule(new Rule[] {
+			new Rule("integrate(sin(x)^n,x)->-sin(x)^(n-1)*cos(x)/n+(n-1)/n*integrate(sin(x)^(n-2),x)","eval(n>1)&~contains(n,x)","integral of sin to the n"),
+			new Rule("integrate(1/sin(x)^n,x)->-sin(x)^(1-n)*cos(x)/(n-1)+(n-2)*integrate(1/sin(x)^(n-2),x)/(n-1)","eval(n>1)&~contains(n,x)","integral of 1 over sin to the n"),
+			new Rule("integrate(cos(x)^n,x)->cos(x)^(n-1)*sin(x)/n+(n-1)/n*integrate(cos(x)^(n-2),x)","eval(n>1)&~contains(n,x)","integral of cos to the n"),
+			new Rule("integrate(1/cos(x)^n,x)->cos(x)^(1-n)*sin(x)/(n-1)+(n-2)*integrate(1/cos(x)^(n-2),x)/(n-1)","eval(n>1)&~contains(n,x)","integral of 1 over cos to the n"),
+			new Rule("integrate(tan(x)^n,x)->tan(x)^(n-1)/(n-1)-integrate(tan(x)^(n-2),x)","eval(n>1)&~contains(n,x)","integral of tan to the n"),
+			new Rule("integrate(1/tan(x)^n,x)->tan(x)^(1-n)/(1-n)-integrate(1/tan(x)^(n-2),x)","eval(n>1)&~contains(n,x)","integral of 1 over tan to the n"),
+	},"power of a trig function");
 	
-	static Rule cosCases = new Rule(autoGenerateCases("integrate(cos(lin),x)","sin(lin)","integral of cos"),"integral of the cos");
-	static Rule cosPowerCase = new Rule("integrate(cos(x)^n,x)->cos(x)^(n-1)*sin(x)/n+(n-1)/n*integrate(cos(x)^(n-2),x)","eval(n>1)&~contains(n,x)","integral of cos to the n");
-	static Rule cosInvPowerCase = new Rule("integrate(1/cos(x)^n,x)->cos(x)^(1-n)*sin(x)/(n-1)+(n-2)*integrate(1/cos(x)^(n-2),x)/(n-1)","eval(n>1)&~contains(n,x)","integral of 1 over cos to the n");
+	static Rule absPolynomial = new Rule(new Rule[] {
+			new Rule("integrate(abs(x),x)->x*abs(x)/2","integral of the absolute value"),
+			new Rule("integrate(abs(x)*x,x)->x^2*abs(x)/3","integral of product with the absolute value"),
+			new Rule("integrate(abs(x)*x^n,x)->(x^(n+1)*abs(x))/(n+2)","~contains(n,x)","integral of the power of absolute value"),
+	},"polynomials with absolute values");
 	
-	static Rule sinCases = new Rule(autoGenerateCases("integrate(sin(lin),x)","-cos(lin)","integral of sin"),"integral of the sin");
-	static Rule sinPowerCase = new Rule("integrate(sin(x)^n,x)->-sin(x)^(n-1)*cos(x)/n+(n-1)/n*integrate(sin(x)^(n-2),x)","eval(n>1)&~contains(n,x)","integral of sin to the n");
-	static Rule sinInvPowerCase = new Rule("integrate(1/sin(x)^n,x)->-sin(x)^(1-n)*cos(x)/(n-1)+(n-2)*integrate(1/sin(x)^(n-2),x)/(n-1)","eval(n>1)&~contains(n,x)","integral of 1 over sin to the n");
+	static Rule inverseTrig = new Rule(new Rule[] {
+			new Rule("integrate(atan(x),x)->x*atan(x)+ln(x^2+1)/-2","integral of arctan"),
+			new Rule("integrate(asin(x),x)->x*asin(x)+sqrt(1-x^2)","integral of arcsin"),
+			new Rule("integrate(acos(x),x)->x*acos(x)-sqrt(1-x^2)","integral of arccos"),
+	},"integral of the inverse trigonometric functions");
 	
-	static Rule tanCase = new Rule("integrate(tan(x),x)->-ln(cos(x))","integral of tan");
-	static Rule tanPowerCase = new Rule("integrate(tan(x)^n,x)->tan(x)^(n-1)/(n-1)-integrate(tan(x)^(n-2),x)","eval(n>1)&~contains(n,x)","integral of tan to the n");
-	static Rule tanInvPowerCase = new Rule("integrate(1/tan(x)^n,x)->tan(x)^(1-n)/(1-n)-integrate(1/tan(x)^(n-2),x)","eval(n>1)&~contains(n,x)","integral of 1 over tan to the n");
+	static Rule sinTanProd = new Rule(new Rule[] {
+			new Rule("integrate(sin(x)*tan(x),x)->-sin(x)+-ln(cos(x))+ln(sin(x)+1)","integral of sin times tan"),
+			new Rule("integrate(1/(tan(x)*sin(x)),x)->-1/sin(x)","integral of 1 over tan times sin"),
+			
+	},"sin tan product integrals");
 	
-	static Rule atanCase = new Rule("integrate(atan(x),x)->x*atan(x)+ln(x^2+1)/-2","integral of arctan");
-	
-	static Rule cscCase = new Rule("integrate(1/sin(x),x)->ln(1-cos(x))-ln(sin(x))","integral of 1 over sin");
-	static Rule secCase = new Rule("integrate(1/cos(x),x)->ln(1+sin(x))-ln(cos(x))","integral of 1 over cos");
-	static Rule cotCase = new Rule("integrate(1/tan(x),x)->ln(sin(x))","integral of 1 over tan");
-	
-	static Rule cotCscCase = new Rule("integrate(1/(tan(x)*sin(x)),x)->-1/sin(x)","integral of 1 over tan times sin");
-	
-	static Rule arcsinCase = new Rule("integrate(asin(x),x)->x*asin(x)+sqrt(1-x^2)","integral of arcsin");
-	
-	static Rule sinCosProdCase = new Rule("integrate(sin(a)*cos(b),x)->integrate(sin(a+b),x)/2+integrate(sin(a-b),x)/2","eval(degree(a,x)=1)&eval(degree(b,x)=1)","integral of sin cos product");
-	static Rule sinSinProdCase = new Rule("integrate(sin(a)*sin(b),x)->integrate(cos(a-b),x)/2-integrate(cos(a+b),x)/2","eval(degree(a,x)=1)&eval(degree(b,x)=1)","integral of sin cos product");
-	static Rule cosCosProdCase = new Rule("integrate(cos(a)*cos(b),x)->integrate(cos(a+b),x)/2+integrate(cos(a-b),x)/2","eval(degree(a,x)=1)&eval(degree(b,x)=1)","integral of sin cos product");
+	static Rule specialSinCosProd = new Rule(new Rule[] {
+			new Rule("integrate(sin(a)*cos(b),x)->integrate(sin(a+b),x)/2+integrate(sin(a-b),x)/2","eval(degree(a,x)=1)&eval(degree(b,x)=1)","integral of sin cos product"),
+			new Rule("integrate(sin(a)*sin(b),x)->integrate(cos(a-b),x)/2-integrate(cos(a+b),x)/2","eval(degree(a,x)=1)&eval(degree(b,x)=1)","integral of sin sin product"),
+			new Rule("integrate(cos(a)*cos(b),x)->integrate(cos(a+b),x)/2+integrate(cos(a-b),x)/2","eval(degree(a,x)=1)&eval(degree(b,x)=1)","integral of cos cos product"),
+	},"product of two trigonometric functions with different linear equations");
 	
 	static Rule loopingIntegrals = new Rule(new Rule[] {
 			new Rule("integrate(sin(a*x)*b^(c*x),x)->c*ln(b)*sin(a*x)*b^(c*x)/(a^2+c^2*ln(b)^2)-a*cos(a*x)*b^(c*x)/(a^2+c^2*ln(b)^2)","~contains({a,b,c},x)","integral of looping sine"),
@@ -101,8 +116,17 @@ public class Integrate extends Expr{
 			new Rule("integrate(1/(sqrt(x+b)*x),x)->ln(1-sqrt(x+b)/sqrt(b))/sqrt(b)-ln(1+sqrt(x+b)/sqrt(b))/sqrt(b)","~contains(b,x)&(eval(b>0)|allowComplexNumbers())","power over sqrt"),
 	},"1 over power times sqrt");
 	
-	static Rule reversePowerRule = new Rule(autoGenerateCases("integrate(lin^n,x)","lin^(n+1)/(n+1)","reverse power rule"),"reverse power rule");
-	static Rule inversePowerRule = new Rule(autoGenerateCases("integrate(1/lin^n,x)","-1/(lin^(n-1)*(n-1))","reverse inverse power rule"),"reverse inverse power rule");
+	static Rule integralForArcsin = new Rule(new Rule[]{
+			new Rule("integrate(1/sqrt(a-x^2),x)->asin(x/sqrt(a))","~contains(a,x)","simple integral leading to arcsin"),
+			new Rule("integrate(1/sqrt(a+b*x^2),x)->asin((sqrt(-b)*x)/sqrt(a))/sqrt(-b)","(eval(b<0)|allowComplexNumbers())&~contains({a,b},x)","simple integral leading to arcsin"),
+	},"integrals leading to arcsin");
+	
+	static Rule sinCosProdReduction = new Rule(new Rule[] {
+			new Rule("integrate(sin(x)^m*cos(x)^n,x)->sin(x)^(m+1)*cos(x)^(n-1)/(m+n)+(n-1)/(m+n)*integrate(sin(x)^m*cos(x)^(n-2),x)","~contains({n,m},x)&eval(n>1)&eval(m>1)&eval(n>m)","trig reduction formula"),
+			new Rule("integrate(sin(x)^m*cos(x)^n,x)->-sin(x)^(m-1)*cos(x)^(n+1)/(m+n)+(m-1)/(m+n)*integrate(sin(x)^(m-2)*cos(x)^n,x)","~contains({n,m},x)&eval(n>1)&eval(m>1)&(eval(m>n)|eval(m=n))","trig reduction formula"),
+			new Rule("integrate(1/(sin(x)^m*cos(x)^n),x)->1/((n-1)*sin(x)^(m-1)*cos(x)^(n-1))+(m+n-2)/(n-1)*integrate(1/(sin(x)^m*cos(x)^(n-2)),x)","~contains({n,m},x)&eval(n>1)&eval(m>1)&eval(n>m)","trig reduction formula"),
+			new Rule("integrate(1/(sin(x)^m*cos(x)^n),x)->-1/((m-1)*sin(x)^(m-1)*cos(x)^(n-1))+(m+n-2)/(m-1)*integrate(1/(sin(x)^(m-2)*cos(x)^n),x)","~contains({n,m},x)&eval(n>1)&eval(m>1)&(eval(m>n)|eval(m=n))","trig reduction formula"),
+	},"product of sin and cos powers");
 	
 	static Rule inverseQuadratic = new Rule("inverse quadratic"){//robust
 		private static final long serialVersionUID = 1L;
@@ -183,11 +207,6 @@ public class Integrate extends Expr{
 		}
 		
 	};
-	
-	static Rule integralForArcsin = new Rule(new Rule[]{
-			new Rule("integrate(1/sqrt(a-x^2),x)->asin(x/sqrt(a))","~contains(a,x)","simple integral leading to arcsin"),
-			new Rule("integrate(1/sqrt(a+b*x^2),x)->asin((sqrt(-b)*x)/sqrt(a))/sqrt(-b)","(eval(b<0)|allowComplexNumbers())&~contains({a,b},x)","simple integral leading to arcsin"),
-	},"integrals leading to arcsin");
 	
 	static Rule integrationByParts = new Rule("integration by parts"){
 		private static final long serialVersionUID = 1L;
@@ -489,14 +508,8 @@ public class Integrate extends Expr{
 	
 	static Rule psudoTrigSub = new Rule(new Rule[]{
 			
-			new Rule("integrate(x^2/sqrt(a+b*x^2),x)->a*asin((x*sqrt(-b))/sqrt(a))/(2*(-b)^(3/2))+x*sqrt(a-(-b)*x^2)/(2*b)","(eval(b<0)|allowComplexNumbers())&~contains({a,b},x)","trig sub"),
-			
-			new Rule("integrate(sqrt(a+b*x^2)/x^2,x)->b*asin(sqrt(-b)*x/sqrt(a))/sqrt(-b)-sqrt(a+b*x^2)/x","(eval(b<0)|allowComplexNumbers())&~contains({a,b},x)","trig sub"),
-			
-			new Rule("integrate(sqrt(a+b*x^2),x)->a*asin(x*sqrt(-b)/sqrt(a))/(2*sqrt(-b))+x*sqrt(a+b*x^2)/2","(eval(b<0)|allowComplexNumbers())&~contains({a,b},x)","trig sub"),
-			
-			new Rule("integrate(sqrt(a+b*x^2),x)->x*sqrt(b)*sqrt(a+b*x^2)/(2*sqrt(b))+a*ln(sqrt(a+b*x^2)+x*sqrt(b))/(2*sqrt(b))","(eval(b>0)|allowComplexNumbers())&~contains({a,b},x)","trig sub"),
-			new Rule("integrate(sqrt(a+x^2),x)->x*sqrt(a+x^2)/2+a*ln(sqrt(a+x^2)+x)/2","~contains(a,x)","trig sub"),
+			new Rule("integrate(x^n/sqrt(a+b*x^2),x)->a^(n/2)/(-b)^((n+1)/2)*subst(integrate(sin(0k)^n,0k),0k=asin(sqrt(-b/a)*x))","(eval(b<0)|allowComplexNumbers())&~contains({a,b},x)&isType(n,num)","trig sub"),
+			new Rule("integrate(sqrt(a+b*x^2)/x^n,x)->(-b)^((n-1)/2)/a^((n-2)/2)*subst(integrate(1/sin(0k)^n,0k)-integrate(1/sin(0k)^(n-2),0k),0k=asin(sqrt(-b/a)*x))","(eval(b<0)|allowComplexNumbers())&~contains({a,b},x)&eval(n>1)&isType(n,num)","trig sub"),
 			
 			new Rule("integrate(1/sqrt(a+b*x^2),x)->ln(x*sqrt(b)+sqrt(a+b*x^2))/(2*sqrt(b))-ln(sqrt(a+b*x^2)-x*sqrt(b))/(2*sqrt(b))","(eval(a>0)&eval(b>0)|allowComplexNumbers())&~contains({a,b},x)","trig sub"),
 			new Rule("integrate(1/sqrt(a+x^2),x)->ln(x+sqrt(a+x^2))/2-ln(sqrt(a+x^2)-x)/2","(eval(a>0)|allowComplexNumbers())&~contains(a,x)","trig sub"),
@@ -556,71 +569,6 @@ public class Integrate extends Expr{
 			return integ;
 		}
 		
-	};
-	
-	static Rule sinCosProdPowersCase = new Rule("product of sin and cos powers") {
-		private static final long serialVersionUID = 1L;
-		
-		Expr sinPowTemplate,cosPowTemplate;
-		
-		@Override
-		public void init() {
-			sinPowTemplate = createExpr("sin(x)^n");
-			cosPowTemplate = createExpr("cos(x)^n");
-		}
-		
-		@Override
-		public Expr applyRuleToExpr(Expr e,CasInfo casInfo) {
-			Integrate integ = (Integrate)e;
-			
-			if(integ.get() instanceof Prod && integ.get().size() == 2) {
-				Prod innerProd = (Prod)integ.get();
-				Power sinPow = null;
-				Power cosPow = null;
-				//extraction
-				for(int i = 0;i<2;i++) {
-					if(Rule.fastSimilarExpr(sinPowTemplate, innerProd.get(i))) {
-						sinPow = (Power)innerProd.get(i);
-					}else if(Rule.fastSimilarExpr(cosPowTemplate, innerProd.get(i))) {
-						cosPow = (Power)innerProd.get(i);
-					}
-				}
-				if(sinPow == null || cosPow == null) return integ;
-				boolean check = isPositiveRealNum(cosPow.getExpo()) && isPositiveRealNum(sinPow.getExpo()) && sinPow.getBase().get().equals(cosPow.getBase().get());
-				if(!check) return integ;
-				
-				Sequence polyCoef = polyExtract(sinPow.getBase().get(),integ.getVar(),casInfo);
-				if(polyCoef == null) return integ;
-				Expr coef = null;
-				if(polyCoef.size() == 2) {
-					coef = polyCoef.get(1);
-				}
-				if(coef == null) return integ;
-				
-				Num m = num(((Num)cosPow.getExpo()).realValue.shiftRight(1));
-				Num n = (Num)sinPow.getExpo();
-				Expr needsExpand = prod(  pow(sub(num(1),pow(var("0u"),num(2))),m),pow(var("0u"),n)  );
-				Expr expanded = SimpleFuncs.fullExpand.applyRuleToExpr(needsExpand, casInfo);
-				if(!isPlainPolynomial(expanded, var("0u"))) return integ;
-				
-				Expr out = null;
-				if(((Num)cosPow.getExpo()).realValue.mod(BigInteger.TWO).equals(BigInteger.ONE)) {//odd case
-					//cos(x)^(2*m+1)*sin(x)^n = (1-sin(x)^2)^m*sin(x)^n*cos(x)
-					//u=sin(x)
-					//integrate(cos(x)^(2*m+1)*sin(x)^n,x) = integrate((1-u^2)^m*u^n,u)
-					out = div(integrate(expanded,var("0u")).simplify(casInfo).replace(equ( var("0u") , sinPow.getBase() )),coef);
-				}else {//even case
-					//cos(x)^(2*m)*sin(x)^n = (1-sin(x)^2)^m*sin(x)^n
-					//u=sin(x)
-					//(1-u^2)*u^n
-					out = div(integrate(expanded.replace(equ( var("0u") , sinPow.getBase() )),integ.getVar()).simplify(casInfo),coef);
-				}
-				return out.simplify(casInfo);
-				
-			}
-			
-			return integ;
-		}
 	};
 	
 	static Rule weierstrassSub = new Rule("weierstrass substitution") {
@@ -684,52 +632,28 @@ public class Integrate extends Expr{
 	public static void loadRules(){
 		ruleSequence = sequence(
 				
-				zeroCase,
-				oneCase,
 				StandardRules.pullOutConstants,
-				varCase,
-				invRule,
-				reversePowerRule,
-				inversePowerRule,
+				polynomial,
+				logCases,
 				inverseQuadratic,
 				inverseQuadraticSimple,
 				inverseQuadraticSimple2,
-				logCase,
+				absPolynomial,
 				
-				absCase,
-				absProdCase,
-				absPowerCase,
+				basicTrig,
+				singleTrigPower,
+				inverseTrig,
 				
-				cosCases,
-				cosPowerCase,
-				cosInvPowerCase,
+				specialSinCosProd,
 				
-				sinCases,
-				sinPowerCase,
-				sinInvPowerCase,
+				sinCosProdReduction,
 				
-				tanCase,
-				tanPowerCase,
-				tanInvPowerCase,
-				
-				sinCosProdCase,
-				sinSinProdCase,
-				cosCosProdCase,
-				
-				sinCosProdPowersCase,
-				
-				cotCscCase,
+				sinTanProd,
 				inverseQuadraticToNReduction,
-				atanCase,
 				
 				loopingIntegrals,
 				
-				cscCase,
-				secCase,
-				cotCase,
-				
 				sqrtOfQuadratic,
-				arcsinCase,
 				recursivePowerOverSqrt,
 				recursiveInvPowerOverSqrt,
 				

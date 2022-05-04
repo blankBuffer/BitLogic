@@ -11,78 +11,91 @@ momentum\m*v|5
 what,acceleration:second derivative of position with respect to time|5
 what,velocity:first derivative of position with respect to time|5
 help:Supported Math functions`sin,cos,tan`diff(#expr,#var) for derivative`integrate(#expr,#var) for anti-derivatuve`integrateOver(#left-bound,#right-bound,#expr,#var)`solve(#eq,#var) for solving an equation`distr(#expr) distributes an expression`factor(#expr) to factor an expression`approx(#expr,[#variable-defs-list]) to approximate expression|3
-What,point:a single location in space|7
-What,line,segment:a section of a line between two points on that line|7
-What,line:a straight one-dimensional figure with no thickness, extending infinitely in two directions|7
-What,ray:a line that extends infinitely in one direction but ends at a single point in the other|7
-What,angle:a point from which two rays (or line segments) extend from|7
-What,acute:an angle measured less than 90 degrees|8
-What,obtuse:an angle measured more than 90 degrees|8
-What,right,angle:an angle measured exactly 90 degrees|8
-What,perpendicular:two intersecting lines that form a right angle|8
-What,parallel:two lines in Euclidean spaces that never intersect and never diverge|8
-What,5th,postulate:no. No no no no no. Don’t go down that path.|5
-What,polygon:a closed figure in 2d space bounded by line segments and angles|7
-What,polytope:a closed figure in space bounded by lines segments, planes, hyperplanes, or others. An n-dimensional generalization of a polygon, polyhedron, polychoron, etc.|7
-What,polyhedron:a closed figure in 3d space bounded by faces and edges.|7
-What,polychoron:a closed figure in 4d space bounded by cells and faces|7
-What,triangle:a polygon with 3 sides and angles|7
-What,quadrilateral:a polygon with 4 sides and angles|7
-What,rectangle:a quadrilateral with only right angles and two pairs of parallel edges, opposite eachother|7
-What,square:a quadrilateral with equal length sides and only right angles|7
-What,trapezoid:a quadrilateral with two parallel sides, with one parallel side being shorter than the other|7
-What,rhombus:a quadrilateral with two pairs of parallel sides|7
-What,pentagon:a polygon with 5 sides and angles|7
-What,hexagon:a polygon with 6 sides and angles|7
-What,heptagon:a polygon with 7 sides and angles|7
-What,octagon:a polygon with 8 sides and angles|7
-What,nonagon:a polygon with 9 sides and angles|7
-What,decagon:a polygon with 10 sides and angles|7
-What,hexahectaenneacontakaiheptagon:Colorado|7
-What,with,3,sides:a triangle is a shape with 3 sides|10
-What,with,4,sides:a quadrilateral is a shape with 4 sides|10
-What,with,5,sides:a pentagon is a shape with 5 sides|10
-What,with,6,sides:a hexagon is a shape with 6 sides|10
-What,with,7,sides:a heptagon is a shape with 7 sides|10
-What,with,8,sides:an octagon is a shape with 8 sides|10
-What,with,9,sides:a nonagon is a shape with 9 sides|10
-What,with,10 sides:a decagon is a shape with 10 sides|10
-What,circle:a set of points in 2d space defined by being a set distance (radius) from a single point (focus)|7
-What,ellipse:a set of points in 2d space such that the sum of the distances from each point to two set points (the foci) is always equal to a set value, or an elongated circle|7
-What,sphere:a set of points in 3d space defined by being a set distance (radius) from a single point (focus)|7
-What,tetrahedron:a regular polyhedron with 4 faces, each being an equilateral triangle|7
-What,cube:a regular polyhedron with 6 faces, each being a square|7
-What,octagon:a regular polyhedron with 8 faces, each being an equilateral triangle|7
-What,dodecahedron:a regular polyhedron with 12 faces, each being an equilateral triangle|7
-What,icosahedron:a regular polyhedron with 20 faces, each being an equilateral triangle|7
-What,prism:a prism is a 3d shape formed by extruding a face|8
-What,pyramid:a pyramid is a 3d shape formed by extruding the angles of a face up to single point, forming triangular sides|8
-What,simplex:a k-dimensional generalization of the 2 dimensional triangle and the 3 dimensional tetrahedron, specifically when referring to higher dimensions (k > 4), or the username of the person who wrote this!|7
-What,5,cell:a regular polychoron with 5 cells, each being a tetrahedron|8
-What,16,cell:a regular polychoron with 16 cells, each being a tetrahedron|8
-What,8,cell:a regular polychoron with 8 cells, each being a cube|8
-What,hypercube:a regular polychoron with 8 cells, each being a cube|7
-What,24,cell:a regular polychoron with 24 cells, each being an octahedron|8
-What,120,cell:a regular polychoron with 120 cells, each being a dodecahedron|8
-What,600,cell:an absolute BEAST of a polychoron. This bad boy hogs all the tetrahedral cells. 600 of them, to be exact|8
-What,addition:a process which takes two or more values and finds the combined linear value, or sum|7
-What,subtraction:a process which takes two or more values and finds the linear reduction of one value from the other, or difference|7
-What,multiplication:a process which adds a given value to itself a number of times equal to another value. The result is called the product|7
-What,division:a process which finds the number of times a given value can be added to itself before it equals another value. The result is called the quotient|7
-What,sum:the result of addition|7
-What,difference:the result of subtraction|7
-What,product:the result of multiplication|7
-What,quotient:the result of division|7
-What,sin:(shortened sine) trigonometric function corresponding to measure of the leg opposite the angle divided by the measure of the hypotenuse|7
-What,sine:trigonometric function corresponding to measure of the leg opposite the angle divided by the measure of the hypotenuse|7
-What,cos:(shortened cosine) trigonometric function corresponding to measure of the leg adjacent the angle divided by the measure of the hypotenuse|7
-What,cosine:trigonometric function corresponding to measure of the leg adjacent the angle divided by the measure of the hypotenuse|7
-What,tan:(shortened tangent) trigonometric function corresponding to measure of the leg opposite the angle divided by the measure of the leg adjacent|7
-What,tangent:trigonometric function corresponding to measure of the leg opposite the angle divided by the measure of the leg adjacent|7
-What,theta:a common symbol for the measure of an angle|7
-What,pi:a transcendental number related to the circumference of a circle. Approximates to 3.14159265359|7
-What,e:a transcendental number related to exponential growth. Approximates to 2.718281828459045|7
-What,tau:a number used by idiots who are incapable of multiplying by two on the fly|7
-What,polar,coordinates:a method of representing vectors visually. Defines each vector as an angle (or multiple engles) and a magnitude|8
-What,Cartesian,coordinates:a method of representing vectors visually. Defines each vector as a series of distances from an origin|8
-What,Euclidean,Geometry:a mathematical system proposed by Euclid, generally accepted as the simplest geometrical system. Notably, it postulates that parallel lines remain equal distances and never approach or diverge|8
+what,point:a single location in space|7
+what,line,segment:a section of a line between two points on that line|7
+what,line:a straight one-dimensional figure with no thickness, extending infinitely in two directions|7
+what,ray:a line that extends infinitely in one direction but ends at a single point in the other|7
+what,angle:a point from which two rays (or line segments) extend from|7
+what,acute:an angle measured less than 90 degrees|8
+what,obtuse:an angle measured more than 90 degrees|8
+what,right,angle:an angle measured exactly 90 degrees|8
+what,perpendicular:two intersecting lines that form a right angle|8
+what,parallel:two lines in Euclidean spaces that never intersect and never diverge|8
+what,5th,postulate:no. No no no no no. Don’t go down that path.|5
+what,polygon:a closed figure in 2d space bounded by line segments and angles|7
+what,polytope:a closed figure in space bounded by lines segments, planes, hyperplanes, or others. An n-dimensional generalization of a polygon, polyhedron, polychoron, etc.|7
+what,polyhedron:a closed figure in 3d space bounded by faces and edges.|7
+what,polychoron:a closed figure in 4d space bounded by cells and faces|7
+what,area,triangle\(b*h)/2|10
+what,triangle:a polygon with 3 sides and angles|7
+what,quadrilateral:a polygon with 4 sides and angles|7
+what,area,rectangle\b*h|10
+what,rectangle:a quadrilateral with only right angles and two pairs of parallel edges, opposite eachother|7
+what,area,square\l^2|10
+what,square:a quadrilateral with equal length sides and only right angles|7
+what,trapezoid:a quadrilateral with two parallel sides, with one parallel side being shorter than the other|7
+what,rhombus:a quadrilateral with two pairs of parallel sides|7
+what,pentagon:a polygon with 5 sides and angles|7
+what,hexagon:a polygon with 6 sides and angles|7
+what,heptagon:a polygon with 7 sides and angles|7
+what,octagon:a polygon with 8 sides and angles|7
+what,nonagon:a polygon with 9 sides and angles|7
+what,decagon:a polygon with 10 sides and angles|7
+what,hexahectaenneacontakaiheptagon:Colorado|7
+what,with,3,sides:a triangle is a shape with 3 sides|10
+what,with,4,sides:a quadrilateral is a shape with 4 sides|10
+what,with,5,sides:a pentagon is a shape with 5 sides|10
+what,with,6,sides:a hexagon is a shape with 6 sides|10
+what,with,7,sides:a heptagon is a shape with 7 sides|10
+what,with,8,sides:an octagon is a shape with 8 sides|10
+what,with,9,sides:a nonagon is a shape with 9 sides|10
+what,with,10 sides:a decagon is a shape with 10 sides|10
+what,area,circle\pi*r^2|10
+what,circle:a set of points in 2d space defined by being a set distance (radius) from a single point (focus)|7
+what,eccentricity,ellipse\sqrt(1-b^2/a^2)|8
+what,foci,ellipse\[sqrt(a^2-b^2),-sqrt(a^2-b)]|8
+what,formula,ellipse\(x-x1)^2/a^2+(y-y1)^2/b^2=1|8
+what,ellipse:a set of points in 2d space such that the sum of the distances from each point to two set points (the foci) is always equal to a set value, or an elongated circle|7
+what,sphere:a set of points in 3d space defined by being a set distance (radius) from a single point (focus)|7
+what,tetrahedron:a regular polyhedron with 4 faces, each being an equilateral triangle|7
+what,cube:a regular polyhedron with 6 faces, each being a square|7
+what,octagon:a regular polyhedron with 8 faces, each being an equilateral triangle|7
+what,dodecahedron:a regular polyhedron with 12 faces, each being an equilateral triangle|7
+what,icosahedron:a regular polyhedron with 20 faces, each being an equilateral triangle|7
+what,prism:a prism is a 3d shape formed by extruding a face|8
+what,pyramid:a pyramid is a 3d shape formed by extruding the angles of a face up to single point, forming triangular sides|8
+what,simplex:a k-dimensional generalization of the 2 dimensional triangle and the 3 dimensional tetrahedron, specifically when referring to higher dimensions (k > 4), or the username of the person who wrote this!|7
+what,5,cell:a regular polychoron with 5 cells, each being a tetrahedron|8
+what,16,cell:a regular polychoron with 16 cells, each being a tetrahedron|8
+what,8,cell:a regular polychoron with 8 cells, each being a cube|8
+what,hypercube:a regular polychoron with 8 cells, each being a cube|7
+what,24,cell:a regular polychoron with 24 cells, each being an octahedron|8
+what,120,cell:a regular polychoron with 120 cells, each being a dodecahedron|8
+what,600,cell:an absolute BEAST of a polychoron. This bad boy hogs all the tetrahedral cells. 600 of them, to be exact|8
+what,addition:a process which takes two or more values and finds the combined linear value, or sum|7
+what,subtraction:a process which takes two or more values and finds the linear reduction of one value from the other, or difference|7
+what,multiplication:a process which adds a given value to itself a number of times equal to another value. The result is called the product|7
+what,division:a process which finds the number of times a given value can be added to itself before it equals another value. The result is called the quotient|7
+what,sum:the result of addition|7
+what,difference:the result of subtraction|7
+what,product:the result of multiplication|7
+what,quotient:the result of division|7
+what,sin:(shortened sine) trigonometric function corresponding to measure of the leg opposite the angle divided by the measure of the hypotenuse|7
+what,sine:trigonometric function corresponding to measure of the leg opposite the angle divided by the measure of the hypotenuse|7
+what,cos:(shortened cosine) trigonometric function corresponding to measure of the leg adjacent the angle divided by the measure of the hypotenuse|7
+what,cosine:trigonometric function corresponding to measure of the leg adjacent the angle divided by the measure of the hypotenuse|7
+what,tan:(shortened tangent) trigonometric function corresponding to measure of the leg opposite the angle divided by the measure of the leg adjacent|7
+what,tangent:trigonometric function corresponding to measure of the leg opposite the angle divided by the measure of the leg adjacent|7
+what,theta:a common symbol for the measure of an angle|7
+what,pi:a transcendental number related to the circumference of a circle. Approximates to 3.14159265359|7
+what,e:a transcendental number related to exponential growth. Approximates to 2.718281828459045|7
+what,tau:a number used by idiots who are incapable of multiplying by two on the fly|7
+what,polar,coordinates:a method of representing vectors visually. Defines each vector as an angle (or multiple engles) and a magnitude|8
+what,Cartesian,coordinates:a method of representing vectors visually. Defines each vector as a series of distances from an origin|8
+what,euclidean,geometry:a mathematical system proposed by Euclid, generally accepted as the simplest geometrical system. Notably, it postulates that parallel lines remain equal distances and never approach or diverge|8
+what,eulers,identity\e^(i*theta)=cos(theta)+i*sin(theta)|8
+what,linear\m*x+b|8
+what,formula,parabola\(x-x1)^2=a*(y-y1)|8
+what,focus,parabola\y1+1/(4*a)|8
+what,directrix,parabola\y1+1/(-4*a)|8
+what,parabola:the curve created when a plane intersects a cone where the plane is parallel to the slope of the cone. This is also the set of points where the distance away from a given point (focus) and given line (directrix) are equal|8

@@ -529,8 +529,8 @@ public class Div extends Expr{
 		}
 	};
 	
-	static Rule rationalize = new Rule("a/b^(m/n)->a*b^((n-m)/n)/b","isType(b,num)&isType(m,num)","rationalize denom");
-	static Rule rationalize2 = new Rule("a/(k*b^(m/n))->a*b^((n-m)/n)/(k*b)","isType(b,num)&isType(k,num)&isType(m,num)","rationalize denom");
+	static Rule rationalize = new Rule("a/b^(m/n)->a*b^((n-m)/n)/b","isType(b,num)&isType(m,num)&eval(b>0)","rationalize denom");
+	static Rule rationalize2 = new Rule("a/(k*b^(m/n))->a*b^((n-m)/n)/(k*b)","isType(b,num)&isType(k,num)&isType(m,num)&eval(b>0)","rationalize denom");
 	
 	static Rule divWithMatrix = new Rule("divisions with a matrix") {
 		private static final long serialVersionUID = 1L;
@@ -687,7 +687,8 @@ public class Div extends Expr{
 					Power numerRoot = (Power)numer.get(i);
 					
 					for(int j = 0;j<denom.size();j++) {
-						if(denom.get(j) instanceof Power && ((Power)denom.get(j)).getExpo().equals(numerRoot.getExpo()) && ((Power)denom.get(j)).getBase().containsVars() ) {
+						Expr compare = denom.get(j);
+						if(compare instanceof Power && ((Power)compare).getExpo().equals(numerRoot.getExpo()) && (((Power)compare).getBase().containsVars() || isNegativeRealNum(((Power)compare).getBase()) ) ) {
 							Power denomPow = (Power)denom.get(j);
 							denomPow.setBase(neg(denomPow.getBase()));
 							numerRoot.setBase( numerRoot.getBase().strangeAbs(casInfo) );
@@ -703,7 +704,8 @@ public class Div extends Expr{
 					Power denomRoot = (Power)denom.get(i);
 					
 					for(int j = 0;j<numer.size();j++) {
-						if(numer.get(j) instanceof Power && ((Power)numer.get(j)).getExpo().equals(denomRoot.getExpo()) && ((Power)numer.get(j)).getBase().containsVars() ) {
+						Expr compare = numer.get(j);
+						if(compare instanceof Power && ((Power)compare).getExpo().equals(denomRoot.getExpo()) && (((Power)compare).getBase().containsVars() || isNegativeRealNum(((Power)compare).getBase()) ) ) {
 							Power numerPow = (Power)numer.get(j);
 							numerPow.setBase(neg(numerPow.getBase()));
 							denomRoot.setBase( denomRoot.getBase().strangeAbs(casInfo) );

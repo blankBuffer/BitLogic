@@ -50,7 +50,8 @@ public class Ask extends QuickMath{
 			outer:for(String key:requiredKeys) {//tokens need to have same order as required keys
 				
 				for(int i = min;i<tokens.size();i++){
-					if(tokens.get(i).equals(key)){
+					String token = tokens.get(i).replace("'", "").toLowerCase();
+					if(token.equals(key)){
 						min = i;
 						continue outer;
 					}

@@ -486,6 +486,9 @@ public class QuickMath {
 	public static boolean isPositiveRealNum(Expr e) {
 		return isRealNum(e) && !e.negative();
 	}
+	public static boolean isNegativeRealNum(Expr e) {
+		return isRealNum(e) && e.negative();
+	}
 	
 	public static Sequence polyExtract(Expr expr,Var v,CasInfo casInfo) {
 		BigInteger maxDegree = BigInteger.valueOf(16);

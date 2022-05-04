@@ -31,6 +31,8 @@ import cas.trig.*;
 public class Rule extends Expr{
 	private static final long serialVersionUID = 5928512201641990677L;
 	
+	private static int ruleCount = 0;
+	
 	public String name = null;//name or description of the rule
 	private String patternStr = null;//pattern as a string before initialization
 	private String conditionStr = null;//condition as a string before initialization
@@ -78,23 +80,28 @@ public class Rule extends Expr{
 	public Rule(String pattern,String name){
 		patternStr = pattern;
 		this.name = name;
+		ruleCount++;
 	}
 	public Rule(String pattern,String condition,String name){
 		patternStr = pattern;
 		conditionStr = condition;
 		this.name = name;
+		ruleCount++;
 	}
 	public Rule(Becomes pattern,String name){
 		this.pattern = pattern;
 		this.pattern.getLeftSide().sort();
 		this.name = name;
+		ruleCount++;
 	}
 	public Rule(Rule[] cases,String name) {
 		this.name = name;
 		this.cases = cases;
+		ruleCount++;
 	}
 	public Rule(String name){
 		this.name = name;
+		ruleCount++;
 	}
 	
 	/*
@@ -443,7 +450,7 @@ public class Rule extends Expr{
 		SimpleFuncs.FUNCTION_UNLOCKED = true;
 		
 		long endTime = System.nanoTime();
-		System.out.println("done loading Rules! took "+((endTime-startTime)/1000000.0)+" ms");
+		System.out.println("done loading "+ruleCount+" Rules! took "+((endTime-startTime)/1000000.0)+" ms");
 		
 		loadingPercent = 100;
 		LOADED = true;
