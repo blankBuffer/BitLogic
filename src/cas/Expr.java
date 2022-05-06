@@ -414,6 +414,15 @@ public abstract class Expr extends QuickMath implements Serializable{
 		subExpr.clear();
 	}
 	
+	private int priorityNum(Expr e) {
+		int priority = 0;
+		
+		if(e.typeName().equals("var")) priority = 2;
+		else if(e.typeName().equals("num")) priority = 1;
+		else priority = e.typeName().hashCode();
+		
+		return Math.abs(priority);
+	}
 	
 	public void sort(ArrayList<VarCount> varcounts) {
 		if(!flags.sorted) {
@@ -425,9 +434,11 @@ public abstract class Expr extends QuickMath implements Serializable{
 				boolean wasSimple = flags.simple;
 				
 				final ArrayList<VarCount> varcountsConst = varcounts;
-				subExpr.sort(new Comparator<Expr>() {//sort based on variable frequency then type priority then by complexity
+				subExpr.sort(new Comparator<Expr>() {//sort based on variable frequency then type priority then by complexity then by priority of child comparison
 					@Override
 					public int compare(Expr first, Expr second) {
+						
+						if(first instanceof Num && second instanceof Num) return ((Num)first).realValue.compareTo(((Num)second).realValue);
 						
 						if(first instanceof Var && second instanceof Var) {
 							for(int i = 0;i<varcountsConst.size();i++) {
@@ -445,25 +456,27 @@ public abstract class Expr extends QuickMath implements Serializable{
 							}
 						}
 						
-						int fPriority = 0;
-						int sPriority = 0;
-						
-						if(first.typeName().equals("var")) fPriority = 2;
-						else if(first.typeName().equals("num")) fPriority = 1;
-						if(second.typeName().equals("var")) sPriority = 2;
-						else if(second.typeName().equals("num")) sPriority = 1;
-						
-						if(fPriority == 0) fPriority = first.typeName().hashCode();
-						if(sPriority == 0) sPriority = second.typeName().hashCode();
+						int fPriority = priorityNum(first);
+						int sPriority = priorityNum(second);
 						
 						if(fPriority != sPriority) {
-							return -Integer.compare(Math.abs(fPriority), Math.abs(sPriority));
+							return -Integer.compare(fPriority, sPriority);
 						}
 						int fComplexity = first.complexity();
 						int sComplexity = second.complexity();
 						
 						if(fComplexity != sComplexity) {
 							return -Integer.compare(fComplexity, sComplexity);
+						}
+						
+						if(fComplexity>1 && sComplexity>1) {
+							int minSize = Math.min(first.size(),second.size());
+							for(int i = 0;i<minSize;i++) {//search for a difference in type
+								int comparison = compare(first.get(i), second.get(i));
+								if(comparison != 0) {
+									return comparison;
+								}
+							}
 						}
 						
 						return 0;

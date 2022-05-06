@@ -122,11 +122,16 @@ public class Integrate extends Expr{
 	},"integrals leading to arcsin");
 	
 	static Rule sinCosProdReduction = new Rule(new Rule[] {
-			new Rule("integrate(sin(x)^m*cos(x)^n,x)->sin(x)^(m+1)*cos(x)^(n-1)/(m+n)+(n-1)/(m+n)*integrate(sin(x)^m*cos(x)^(n-2),x)","~contains({n,m},x)&eval(n>1)&eval(m>1)&eval(n>m)","trig reduction formula"),
-			new Rule("integrate(sin(x)^m*cos(x)^n,x)->-sin(x)^(m-1)*cos(x)^(n+1)/(m+n)+(m-1)/(m+n)*integrate(sin(x)^(m-2)*cos(x)^n,x)","~contains({n,m},x)&eval(n>1)&eval(m>1)&(eval(m>n)|eval(m=n))","trig reduction formula"),
-			new Rule("integrate(1/(sin(x)^m*cos(x)^n),x)->1/((n-1)*sin(x)^(m-1)*cos(x)^(n-1))+(m+n-2)/(n-1)*integrate(1/(sin(x)^m*cos(x)^(n-2)),x)","~contains({n,m},x)&eval(n>1)&eval(m>1)&eval(n>m)","trig reduction formula"),
-			new Rule("integrate(1/(sin(x)^m*cos(x)^n),x)->-1/((m-1)*sin(x)^(m-1)*cos(x)^(n-1))+(m+n-2)/(m-1)*integrate(1/(sin(x)^(m-2)*cos(x)^n),x)","~contains({n,m},x)&eval(n>1)&eval(m>1)&(eval(m>n)|eval(m=n))","trig reduction formula"),
+			new Rule("integrate(sin(x)^m*cos(x)^n,x)->sin(x)^(m+1)*cos(x)^(n-1)/(m+n)+(n-1)/(m+n)*integrate(sin(x)^m*cos(x)^(n-2),x)","eval(n>m)&isType(m,num)&isType(n,num)","trig reduction formula"),
+			new Rule("integrate(sin(x)^m*cos(x)^n,x)->-sin(x)^(m-1)*cos(x)^(n+1)/(m+n)+(m-1)/(m+n)*integrate(sin(x)^(m-2)*cos(x)^n,x)","(eval(m>n)|eval(m=n))&isType(m,num)&isType(n,num)","trig reduction formula"),
+			new Rule("integrate(1/(sin(x)^m*cos(x)^n),x)->1/((n-1)*sin(x)^(m-1)*cos(x)^(n-1))+(m+n-2)/(n-1)*integrate(1/(sin(x)^m*cos(x)^(n-2)),x)","eval(n>m)&isType(m,num)&isType(n,num)","trig reduction formula"),
+			new Rule("integrate(1/(sin(x)^m*cos(x)^n),x)->-1/((m-1)*sin(x)^(m-1)*cos(x)^(n-1))+(m+n-2)/(m-1)*integrate(1/(sin(x)^(m-2)*cos(x)^n),x)","(eval(m>n)|eval(m=n))&isType(m,num)&isType(n,num)","trig reduction formula"),
 	},"product of sin and cos powers");
+	
+	static Rule sinTanProdReduction = new Rule(new Rule[] {
+			new Rule("integrate(sin(x)^m*tan(x)^n,x)->sin(x)^m*tan(x)^(n-1)/(n-1)-(n+m-1)/(n-1)*integrate(sin(x)^m*tan(x)^(n-2),x)","isType(m,num)&isType(n,num)","trig reduction formula"),
+			new Rule("integrate(1/(sin(x)^m*tan(x)^n),x)->-1/((n+m-1)*tan(x)^(n-1)*sin(x)^m)-(n-1)/(n+m-1)*integrate(1/(sin(x)^m*tan(x)^(n-2)),x)","isType(m,num)&isType(n,num)","trig reduction formula"),
+	},"product of sin and tan powers");
 	
 	static Rule inverseQuadratic = new Rule("inverse quadratic"){//robust
 		private static final long serialVersionUID = 1L;
@@ -507,18 +512,26 @@ public class Integrate extends Expr{
 	};
 	
 	static Rule psudoTrigSub = new Rule(new Rule[]{
+			//!!! a>0 might not be entirely correct for the first 2 rules
 			
-			new Rule("integrate(x^n/sqrt(a+b*x^2),x)->a^(n/2)/(-b)^((n+1)/2)*subst(integrate(sin(0k)^n,0k),0k=asin(sqrt(-b/a)*x))","(eval(b<0)|allowComplexNumbers())&~contains({a,b},x)&isType(n,num)","trig sub"),
-			new Rule("integrate(sqrt(a+b*x^2)/x^n,x)->(-b)^((n-1)/2)/a^((n-2)/2)*subst(integrate(1/sin(0k)^n,0k)-integrate(1/sin(0k)^(n-2),0k),0k=asin(sqrt(-b/a)*x))","(eval(b<0)|allowComplexNumbers())&~contains({a,b},x)&eval(n>1)&isType(n,num)","trig sub"),
+			//x^n/sqrt(1-x^2) generalization
+			new Rule("integrate(x^n/sqrt(a+b*x^2),x)->a^(n/2)/(-b)^((n+1)/2)*subst(integrate(sin(0k)^n,0k),0k=asin(sqrt(-b/a)*x))","(eval(b<0)&eval(a>0)|allowComplexNumbers())&~contains({a,b},x)&isType(n,num)","trig sub"),
+			//sqrt(1-x^2)/x^n generalization
+			new Rule("integrate(sqrt(a+b*x^2)/x^n,x)->(-b)^((n-1)/2)/a^((n-2)/2)*subst(integrate(1/sin(0k)^n,0k)-integrate(1/sin(0k)^(n-2),0k),0k=asin(sqrt(-b/a)*x))","(eval(b<0)&eval(a>0)|allowComplexNumbers())&~contains({a,b},x)&eval(n>1)&isType(n,num)","trig sub"),
 			
-			new Rule("integrate(1/sqrt(a+b*x^2),x)->ln(x*sqrt(b)+sqrt(a+b*x^2))/(2*sqrt(b))-ln(sqrt(a+b*x^2)-x*sqrt(b))/(2*sqrt(b))","(eval(a>0)&eval(b>0)|allowComplexNumbers())&~contains({a,b},x)","trig sub"),
-			new Rule("integrate(1/sqrt(a+x^2),x)->ln(x+sqrt(a+x^2))/2-ln(sqrt(a+x^2)-x)/2","(eval(a>0)|allowComplexNumbers())&~contains(a,x)","trig sub"),
+			//sqrt(1+x^2)/x^n generalization
+			new Rule("integrate(sqrt(a*x^2+b)/x^n,x)->a^((n-1)/2)/b^((n-2)/2)*subst(integrate(1/(cos(0k)^3*tan(0k)^n),0k),0k=atan(sqrt(a/b)*x))","~contains({a,b},x)&(eval(a>0)&eval(b>0)|allowComplexNumbers())&isType(n,num)","trig sub"),
+			new Rule("integrate(sqrt(x^2+b)/x^n,x)->1/b^((n-2)/2)*subst(integrate(1/(cos(0k)^3*tan(0k)^n),0k),0k=atan(x/sqrt(b)))","~contains(b,x)&(eval(b>0)|allowComplexNumbers())&isType(n,num)","trig sub"),
 			
-			new Rule("integrate(sqrt(x^2+a)/x^4,x)->-(x^2+a)^(3/2)/(3*a*x^3)","~contains(a,x)","trig sub"),
-			new Rule("integrate(sqrt(b*x^2+a)/x^4,x)->-(b*x^2+a)^(3/2)/(3*a*x^3)","~contains({a,b},x)","trig sub"),
+			//sqrt(x^2-1)/x^n generalization
+			new Rule("integrate(sqrt(a*x^2+b)/x^n,x)->a^((n-1)/2)/(-b)^((n-2)/2)*subst(integrate(cos(0k)^(n-3)*sin(0k)^2,0k),0k=acos(sqrt(-b)/(sqrt(a)*x)))","~contains({a,b},x)&(eval(a>0)&(eval(-b<a)|eval(-b=a))|allowComplexNumbers())&isType(n,num)","trig sub"),
+			new Rule("integrate(sqrt(x^2+b)/x^n,x)->1/(-b)^((n-2)/2)*subst(integrate(cos(0k)^(n-3)*sin(0k)^2,0k),0k=acos(sqrt(-b)/x))","~contains(b,x)&(eval(-b<1)|eval(b=-1)|allowComplexNumbers())&isType(n,num)","trig sub"),
 			
-			new Rule("integrate(sqrt(x^2+a)/x^3,x)->-sqrt(x^2+a)/(2*x^2)+atan(sqrt(x^2+a)/sqrt(-a))/(2*sqrt(-a))","(eval(a<0)|allowComplexNumbers())&~contains(a,x)","trig sub"),
-			new Rule("integrate(sqrt(b*x^2+a)/x^3,x)->-sqrt(b*x^2+a)/(2*x^2)+atan(sqrt(b*x^2+a)/sqrt(-a))/(2*sqrt(-a))","(eval(a<0)|allowComplexNumbers())&~contains({a,b},x)","trig sub"),
+			//x^n/sqrt(1+x^2) generalization
+			//new Rule("integrate(x^n/sqrt(a*x^2+b),x)->b^(n/2)/a^((n+1)/2)*subst(integrate(tan(0k)^n/cos(0k),0k),0k=atan(sqrt(a/b)*x))","~contains({a,b},x)&(eval(a>0)&eval(b>0)|allowComplexNumbers())&isType(n,num)","trig sub"),
+			
+			//new Rule("integrate(1/sqrt(a+b*x^2),x)->ln(x*sqrt(b)+sqrt(a+b*x^2))/(2*sqrt(b))-ln(sqrt(a+b*x^2)-x*sqrt(b))/(2*sqrt(b))","(eval(a>0)&eval(b>0)|allowComplexNumbers())&~contains({a,b},x)","trig sub"),
+			//new Rule("integrate(1/sqrt(a+x^2),x)->ln(x+sqrt(a+x^2))/2-ln(sqrt(a+x^2)-x)/2","(eval(a>0)|allowComplexNumbers())&~contains(a,x)","trig sub"),
 			
 	},"psudo trig substitution");
 	
@@ -647,6 +660,7 @@ public class Integrate extends Expr{
 				specialSinCosProd,
 				
 				sinCosProdReduction,
+				sinTanProdReduction,
 				
 				sinTanProd,
 				inverseQuadraticToNReduction,
