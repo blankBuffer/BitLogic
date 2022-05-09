@@ -53,7 +53,7 @@ what,with,10 sides:a decagon is a shape with 10 sides|10
 what,area,circle\pi*r^2|10
 what,circle:a set of points in 2d space defined by being a set distance (radius) from a single point (focus)|7
 what,eccentricity,ellipse\sqrt(1-b^2/a^2)|8
-what,foci,ellipse\[sqrt(a^2-b^2),-sqrt(a^2-b)]|8
+what,foci,ellipse\[sqrt(a^2-b^2),-sqrt(a^2-b^2)]|8
 what,formula,ellipse\(x-x1)^2/a^2+(y-y1)^2/b^2=1|8
 what,ellipse:a set of points in 2d space such that the sum of the distances from each point to two set points (the foci) is always equal to a set value, or an elongated circle|7
 what,sphere:a set of points in 3d space defined by being a set distance (radius) from a single point (focus)|7
