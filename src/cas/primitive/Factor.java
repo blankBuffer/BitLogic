@@ -113,20 +113,22 @@ public class Factor extends Expr{
 			
 			if(expr instanceof Sum) {
 				Sequence coefs = null;
-				Var x = mostCommonVar(expr);
+				Expr x = mostCommonVar(expr);
 				if(x!=null) {
-					coefs = polyExtract(expr, x,casInfo);
+					coefs = polyExtract(expr, (Var)x,casInfo);
 				}
 				
 				if(coefs != null) {
-					if(coefs.size() == 3) {//quadratic
+					if(coefs.size() >= 3 && coefs.size()%2 == 1) {//quadratic form
 						//check discriminant
 						for(int i = 0;i<coefs.size();i++) {
 							if(!(coefs.get(i) instanceof Num)) {
 								return e;
+							}else if(i != 0&& i != coefs.size()-1 && i != (coefs.size()-1)/2 && !coefs.get(i).equals(Num.ZERO)) {//all between coefficients should be zero
+								return e;
 							}
 						}
-						Num a =  (Num)coefs.get(2),b = (Num)coefs.get(1),c = (Num)coefs.get(0);
+						Num a =  (Num)coefs.get(coefs.size()-1),b = (Num)coefs.get((coefs.size()-1)/2),c = (Num)coefs.get(0);
 						
 						if(!casInfo.allowComplexNumbers() && (a.isComplex() || b.isComplex() || c.isComplex())) return e;
 						
@@ -144,6 +146,8 @@ public class Factor extends Expr{
 							
 							
 							Expr out = new Prod();
+							
+							x = pow(x,num((coefs.size()-1)/2));
 							
 							Prod twoAX = prod(num(2),a,x);
 							out.add( sum(twoAX,b.copy(),prod(num(-1),discrNumSqrt)) );

@@ -43,6 +43,7 @@ public abstract class Expr extends QuickMath implements Serializable{
 	
 	public abstract Sequence getRuleSequence();
 	public abstract String help();
+	@SuppressWarnings("static-method")
 	public Rule getDoneRule() {//post processing rule
 		return null;
 	}
@@ -154,6 +155,7 @@ public abstract class Expr extends QuickMath implements Serializable{
 		
 	}
 	
+	@SuppressWarnings("static-method")
 	public Var getVar(){
 		return null;
 	}
@@ -414,7 +416,7 @@ public abstract class Expr extends QuickMath implements Serializable{
 		subExpr.clear();
 	}
 	
-	private int priorityNum(Expr e) {
+	private static int priorityNum(Expr e) {
 		int priority = 0;
 		
 		if(e.typeName().equals("var")) priority = 2;
