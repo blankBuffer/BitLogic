@@ -40,7 +40,7 @@ public class MainWindow extends JFrame{
 	
 	final int WINDOW_WIDTH = 900,WINDOW_HEIGHT = 500;
 	
-	private static int WINDOW_INSTANCE_COUNT = 0;
+	static int WINDOW_INSTANCE_COUNT = 0;
 	
 	void closeWindow() {
 		if(WINDOW_INSTANCE_COUNT == 1) {
@@ -59,11 +59,11 @@ public class MainWindow extends JFrame{
 	
 	boolean clearTerminal = true;
 	
-	boolean KEEP_WINDOW_ON_TOP_DEFAULT = false;
+	boolean KEEP_WINDOW_ON_TOP = false;
 	boolean SHOW_PLOT_DEFAULT = true;
 	static final int _2D = 0,_3D = 1,_COMPLEX = 2;
 	int PLOT_MODE_DEFAULT = _2D;
-	Color BACKGROUND_COLOR_DEFAULT = new Color(255,255,255),FOREGROUND_COLOR_DEFAULT = new Color(0,0,0);
+	Color BACKGROUND_COLOR = new Color(255,255,255),FOREGROUND_COLOR = new Color(0,0,0);
 	Font font = new Font(null,0,16);
 	
 	ArrayList<JComponent> allComponents = new ArrayList<JComponent>();
@@ -603,11 +603,13 @@ public class MainWindow extends JFrame{
 	class UIOptionsPanel extends JPanel{
 		private static final long serialVersionUID = -4037663936986002307L;
 		
-		JCheckBox keepOnTopCheckBox = new JCheckBox("window on top",KEEP_WINDOW_ON_TOP_DEFAULT);
+		JCheckBox keepOnTopCheckBox = new JCheckBox("window on top",KEEP_WINDOW_ON_TOP);
 		ActionListener keepOnTopUpdate = new ActionListener() {
 			@Override
 			public void actionPerformed(ActionEvent e) {
-				MainWindow.this.setAlwaysOnTop(keepOnTopCheckBox.isSelected());
+				boolean selected = keepOnTopCheckBox.isSelected();
+				MainWindow.this.setAlwaysOnTop(selected);
+				KEEP_WINDOW_ON_TOP = selected;
 			}
 		};
 		JCheckBox clearTerminalCheckBox = new JCheckBox("clear terminal",clearTerminal);
@@ -628,9 +630,9 @@ public class MainWindow extends JFrame{
 		
 		JPanel themeSetter = new JPanel();
 		JLabel backgroundLabel = new JLabel("background");
-		JTextField br = new JTextField(String.valueOf(BACKGROUND_COLOR_DEFAULT.getRed()),3),bg = new JTextField(String.valueOf(BACKGROUND_COLOR_DEFAULT.getGreen()),3),bb = new JTextField(String.valueOf(BACKGROUND_COLOR_DEFAULT.getBlue()),3);
+		JTextField br = new JTextField(String.valueOf(BACKGROUND_COLOR.getRed()),3),bg = new JTextField(String.valueOf(BACKGROUND_COLOR.getGreen()),3),bb = new JTextField(String.valueOf(BACKGROUND_COLOR.getBlue()),3);
 		JLabel foregroundLabel = new JLabel("foreground");
-		JTextField fr = new JTextField(String.valueOf(FOREGROUND_COLOR_DEFAULT.getRed()),3),fg = new JTextField(String.valueOf(FOREGROUND_COLOR_DEFAULT.getGreen()),3),fb = new JTextField(String.valueOf(FOREGROUND_COLOR_DEFAULT.getBlue()),3);
+		JTextField fr = new JTextField(String.valueOf(FOREGROUND_COLOR.getRed()),3),fg = new JTextField(String.valueOf(FOREGROUND_COLOR.getGreen()),3),fb = new JTextField(String.valueOf(FOREGROUND_COLOR.getBlue()),3);
 		JButton setTheme = new JButton("set theme");
 		ActionListener themeUpdate = new ActionListener() {
 			@Override
@@ -648,6 +650,13 @@ public class MainWindow extends JFrame{
 				}
 			}
 		};
+		JButton drawingBoardButton = new JButton("drawing board");
+		ActionListener makeDrawingBoard = new ActionListener(){
+			@Override
+			public void actionPerformed(ActionEvent e) {
+				new DrawingBoard(MainWindow.this);
+			}
+		};
 		
 		UIOptionsPanel() {
 			allComponents.add(this);
@@ -655,11 +664,13 @@ public class MainWindow extends JFrame{
 			allComponents.add(scrollSpeedLabel);
 			allComponents.add(scrollSpeedSlider);
 			allComponents.add(clearTerminalCheckBox);
+			allComponents.add(drawingBoardButton);
 			
 			keepOnTopCheckBox.addActionListener(keepOnTopUpdate);
 			clearTerminalCheckBox.addActionListener(clearTerminalUpdate);
 			setTheme.addActionListener(themeUpdate);
 			scrollSpeedSlider.addChangeListener(scrollSpeedChange);
+			drawingBoardButton.addActionListener(makeDrawingBoard);
 			
 			scrollSpeedSlider.setPaintTicks(true);
 			scrollSpeedSlider.setSnapToTicks(true);
@@ -678,11 +689,13 @@ public class MainWindow extends JFrame{
 			themeSetter.add(fb);
 			themeSetter.add(setTheme);
 			
+			
 			add(keepOnTopCheckBox);
 			add(clearTerminalCheckBox);
 			add(scrollSpeedLabel);
 			add(scrollSpeedSlider);
 			add(themeSetter);
+			add(drawingBoardButton);
 		}
 		
 	}
@@ -718,12 +731,12 @@ public class MainWindow extends JFrame{
 			Scanner defsReader = new Scanner(new File("resources/prefs.txt"));
 			
 			clearTerminal = getBoolInLine(defsReader.nextLine());
-			KEEP_WINDOW_ON_TOP_DEFAULT = getBoolInLine(defsReader.nextLine());
+			KEEP_WINDOW_ON_TOP = getBoolInLine(defsReader.nextLine());
 			SHOW_PLOT_DEFAULT = getBoolInLine(defsReader.nextLine());
 			PLOT_MODE_DEFAULT = getIntInLine(defsReader.nextLine());
 			
-			BACKGROUND_COLOR_DEFAULT = new Color(getIntInLine(defsReader.nextLine()),getIntInLine(defsReader.nextLine()),getIntInLine(defsReader.nextLine()));
-			FOREGROUND_COLOR_DEFAULT = new Color(getIntInLine(defsReader.nextLine()),getIntInLine(defsReader.nextLine()),getIntInLine(defsReader.nextLine()));
+			BACKGROUND_COLOR = new Color(getIntInLine(defsReader.nextLine()),getIntInLine(defsReader.nextLine()),getIntInLine(defsReader.nextLine()));
+			FOREGROUND_COLOR = new Color(getIntInLine(defsReader.nextLine()),getIntInLine(defsReader.nextLine()),getIntInLine(defsReader.nextLine()));
 			
 			defsReader.close();
 		} catch (FileNotFoundException e) {

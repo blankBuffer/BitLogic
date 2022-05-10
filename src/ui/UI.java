@@ -9,7 +9,7 @@ import cas.programming.StackEditor;
 
 public class UI {
 	
-	public static final String VERSION = "1.6.23";
+	public static final String VERSION = "1.6.24";
 	public static final String CRED = "Benjamin Currie @2021-2022 v "+VERSION+" , java runtime version: "+System.getProperty("java.version");
 	
 	public static final String fancyIntro() {
@@ -33,8 +33,8 @@ public class UI {
 		System.out.println("type \"quit\" and hit ENTER to quit");
 		Rule.loadRules();
 		StackEditor editor = new StackEditor();
-		BufferedReader bf = new BufferedReader(new
-		        InputStreamReader(System.in));
+		BufferedReader bf = new BufferedReader(new InputStreamReader(System.in));
+		MainWindow.WINDOW_INSTANCE_COUNT = 1;//the terminal counts as a window
 		while(true) {
 			System.out.print("> ");
 			String s = null;
