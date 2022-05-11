@@ -10,6 +10,7 @@ import cas.StandardRules;
 import cas.primitive.Div;
 import cas.primitive.ExprList;
 import cas.primitive.Num;
+import cas.primitive.Prod;
 import cas.primitive.Sequence;
 import cas.primitive.Sum;
 import cas.primitive.Var;
@@ -21,7 +22,7 @@ public class Sin extends Expr{
 	static Rule sinOfArctan = new Rule("sin(atan(x))->x/sqrt(1+x^2)","sin of arctan");
 	static Rule sinOfAsin = new Rule("sin(asin(x))->x","sin contains inverse");
 	static Rule sinOfAcos = new Rule("sin(acos(x))->sqrt(1-x^2)","sin of arccos");
-
+	
 	public Sin(){}//
 	public Sin(Expr a) {
 		add(a);
@@ -39,8 +40,15 @@ public class Sin extends Expr{
 			Expr innerExpr = sin.get();
 			if(innerExpr.equals(num(0))) {
 				return num(0);
-			}else if(innerExpr.equals(Var.PI))
+			}else if(innerExpr.equals(Var.PI)) {
 				return num(0);
+			}else if(innerExpr instanceof Prod && innerExpr.size() == 2) {
+				if(innerExpr.get(1).equals(Var.PI) && isRealNum(innerExpr.get(0))) {
+					return num(0);
+				}else if(innerExpr.get(0).equals(Var.PI) && isRealNum(innerExpr.get(1))) {
+					return num(0);
+				}
+			}
 			if(innerExpr instanceof Div && innerExpr.contains(Var.PI)){
 				Div frac = ((Div)innerExpr).ratioOfUnitCircle();
 				

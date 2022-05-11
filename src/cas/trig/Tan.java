@@ -33,6 +33,12 @@ public class Tan extends Expr{
 			Expr innerExpr = tan.get();
 			if(innerExpr.equals(num(BigInteger.ZERO)) || innerExpr.equals(Var.PI)) {
 				return num(0);
+			}else if(innerExpr instanceof Prod && innerExpr.size() == 2) {
+				if(innerExpr.get(1).equals(Var.PI) && isRealNum(innerExpr.get(0))) {
+					return num(0);
+				}else if(innerExpr.get(0).equals(Var.PI) && isRealNum(innerExpr.get(1))) {
+					return num(0);
+				}
 			}if(innerExpr instanceof Div && innerExpr.contains(Var.PI)){
 				Div frac = ((Div)innerExpr).ratioOfUnitCircle();
 				

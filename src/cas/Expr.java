@@ -442,7 +442,7 @@ public abstract class Expr extends QuickMath implements Serializable{
 						
 						if(first instanceof Num && second instanceof Num) return ((Num)first).realValue.compareTo(((Num)second).realValue);
 						
-						if(first instanceof Var && second instanceof Var) {
+						if(first instanceof Var && second instanceof Var) {//sort for frequency
 							for(int i = 0;i<varcountsConst.size();i++) {
 								VarCount vc = varcountsConst.get(i);
 								

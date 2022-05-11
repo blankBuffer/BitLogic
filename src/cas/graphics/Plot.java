@@ -464,13 +464,24 @@ public class Plot extends JPanel{
 	}
 	
 	BufferedImage graphImage = null;//cached plot image so it does not redraw when nothing changes
-	int lastStackHash = 0;
+	int lastGraphHash = 0;
 	
 	void renderGraphWithMouse(Graphics graphics,Sequence stack,int mode) {//everything, the background the plots
+		//create hash
 		int stackHash = stack.hashCode();
-		if(stackHash != lastStackHash) {//stack changed can't re-use graphImage
+		
+		stackHash+=Double.hashCode(plotParams.xMin)*908305804;
+		stackHash+=Double.hashCode(plotParams.xMax)*879128337;
+		stackHash+=Double.hashCode(plotParams.yMin)*281830831;
+		stackHash+=Double.hashCode(plotParams.yMax)*897672383;
+		stackHash+=Double.hashCode(plotParams.zMin)*563629913;
+		stackHash+=Double.hashCode(plotParams.zMax)*729783957;
+		stackHash+=getWidth();
+		stackHash+=getHeight();
+		
+		if(stackHash != lastGraphHash) {//stack changed can't re-use graphImage
 			graphImage = null;
-			lastStackHash = stackHash;
+			lastGraphHash = stackHash;
 		}
 		int defaultDetail = 4;
 		int defaultResolution = 48;

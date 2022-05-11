@@ -10,6 +10,7 @@ import cas.StandardRules;
 import cas.primitive.Div;
 import cas.primitive.ExprList;
 import cas.primitive.Num;
+import cas.primitive.Prod;
 import cas.primitive.Sequence;
 import cas.primitive.Sum;
 import cas.primitive.Var;
@@ -41,9 +42,15 @@ public class Cos extends Expr{
 			Expr out = cos;
 			if(innerExpr.equals(num(0))) {
 				out = num(1);
-			}else if(innerExpr.equals(Var.PI))
+			}else if(innerExpr.equals(Var.PI)) {
 				out = num(-1);
-			if(innerExpr instanceof Div && innerExpr.contains(Var.PI)){
+			}else if(innerExpr instanceof Prod && innerExpr.size() == 2) {
+				if(innerExpr.get(1).equals(Var.PI) && isRealNum(innerExpr.get(0)) ) {
+					return ((Num)innerExpr.get(0)).realValue.mod(BigInteger.TWO).equals(BigInteger.ZERO) ? num(1) : num(-1);
+				}else if(innerExpr.get(0).equals(Var.PI) && isRealNum(innerExpr.get(1))) {
+					return ((Num)innerExpr.get(1)).realValue.mod(BigInteger.TWO).equals(BigInteger.ZERO) ? num(1) : num(-1);
+				}
+			}if(innerExpr instanceof Div && innerExpr.contains(Var.PI)){
 				Div frac =((Div)innerExpr).ratioOfUnitCircle();
 				
 				if(frac!=null) {
