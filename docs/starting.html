@@ -1,0 +1,79 @@
+<html>
+    <body>
+	   <h1>Getting Started</h1>
+	   
+	    <h2>System requirements</h2>
+	    <ul>
+	        <li>Java Version 17+ (sudo apt install openjdk-17-jre)</li>
+	        <li>rlwrap (sudo apt install rlwrap)</li>
+	    </ul>
+	    <h2>Launching in Terminal</h2>
+	    <p>There are some options no-gui and clear-term.<br>
+	    The no-gui starts the jar file without a user interface.<br>
+	    The clear-term makes it so the terminal screen is cleared after each stack command which looks better.</p>
+	    <ul>
+	        <p>open a terminal and go in the directory containing startJar</p>
+	        <li>./startJar no-gui</li>
+	        <li>java -jar no-gui</li>
+	        <pr>or</p>
+	        <li>./startJar no-gui clear-term</li>
+	        <li>java -jar no-gui clear-term</li>
+	    </ul>
+        <h2>
+        Launching with GUI</h2>
+        <p>On MacOS you can just double click the jar file or click on startJar and it should launch<br>
+        <p>On some linux systems you can just double click the startJar file. If this does not work open a terminal and execute</p>
+        </p>
+        <ul>
+	        <li>./startJar</li>
+	        <p>or</p>
+	        <li>java -jar BitLogic.jar</li>
+	    </ul>
+	   <h2>Learning the UI</h2>
+	   <p>
+	   When you first launch the application you should get a window with a graph on the right and on the left some empty areas and a result button.<br>
+	   The text field on the left of the result button is where all your input commands and formulas will be typed.<br>
+	   To graph x^2 just type "x^2" into the text field and hit enter.<br>
+	   You should see the graph pop up and the x^2 expression written big in a box right above the result button and input text field.<br>
+	   This is the expression rendering area. If you click on the equation it gets copied into the clipboard.<br>
+	   This lets you see your input rendered in pretty math notaion.<br>
+	   At the top is where your stack sits. This is where all your expressions are stored.
+	   </p>
+	   <h4>Graphics Tab</h4>
+	   <p>
+	   This is where you can control how the graph is rendered.<br>
+	   The show plot check box can control if the graph is shown in the Main View.<br>
+	   The drop down can let you choose from different graphing modes.<br>
+	   For an explenation for the different modes go to the <a href="plot.html">plotting equations</a><br>
+	   the "get window" button loads the current window position and loads it into the x-min, x-max ... <br>
+	   the "set window" button would load from the x-min, x-max ... to the graph window.<br>
+	   The "reset" button sets x-min x-max and all other dimensions to -10 and 10.
+	   
+	   </p>
+	   
+	   <h4>CAS Options Tab</h4>
+	   <p>
+	   In this tab there are two check boxes.<br>
+	   the "allow complex numbers" check box makes it so sqrt(-1) -> i and sqrt(-4)->2*i it also changes the way functions are integrated.<br>
+	   The "allow abs(x)" check box when disabled turns abs(x)->x. This can possibly improve integration result.<br>
+	   </p>
+	   <h4>UI Options</h4>
+	   <p>
+	   The "window on top" check box makes it so that the window is always on top of other windows.<br>
+	   The clear terminal check box makes it so every output command into the stack view is cleared. It is recommended to keep it on.<br>
+	   The zoom scroll speed slider is to set the speed at which your scroll wheel changes the zoom level in the plot.<br>
+	   </p>
+	   
+	   <h4>Drawing Board</h4>
+	   <p>
+	   In the UI Options Tab there is a "drawing board" button creates a new instace of a drawing board.<br>
+	   This is a special drawing panel as it is infinite in size.<br>
+	   You pan around the board using the arrow keys.<br>
+	   You clear the board by hitting the 'c' key.<br>
+	   The left mouse button is the pen.<br>
+	   The eraser is the right mouse button.
+	   
+	   </p>
+	   
+    </body>
+</html>

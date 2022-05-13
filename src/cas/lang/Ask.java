@@ -18,6 +18,7 @@ import java.util.TimeZone;
 import cas.*;
 import cas.graphics.Plot;
 import cas.primitive.*;
+import ui.UI;
 
 public class Ask extends QuickMath{
 	
@@ -390,21 +391,25 @@ public class Ask extends QuickMath{
 	}
 	
 	static void combineTrailingOperatorTokens(ArrayList<String> tokens){//'2^ 3' -> '2^3'
+		
 		for(int i = 0;i<tokens.size()-1;i++) {
 			String s = tokens.get(i);
-			boolean functionalForm = tokens.get(i+1).charAt(0) == '(';
 			char leftEndChar = s.charAt(s.length()-1);
-			boolean leftHasOperator = leftEndChar != ')' && Interpreter.isOperator(String.valueOf(leftEndChar));
+			boolean leftHasOperator = !Interpreter.isRightBracket(leftEndChar) && Interpreter.isOperator(String.valueOf(leftEndChar));
 			char rightStartChar = tokens.get(i+1).charAt(0);
-			boolean rightHasOperator = Interpreter.isOperator(String.valueOf(rightStartChar)) && rightStartChar != '[' && rightStartChar != '~';
+			boolean rightHasOperator = Interpreter.isOperator(String.valueOf(rightStartChar)) && !Interpreter.isLeftBracket(rightStartChar) && rightStartChar != '~';
 			
-			if( (leftHasOperator || rightHasOperator)&&!functionalForm || functionalForm && oneParameterFunction(s) ) {
+			boolean eitherIsFunctionName = SimpleFuncs.isFunc(s) || SimpleFuncs.isFunc(tokens.get(i+1));
+			
+			if( (leftHasOperator || rightHasOperator) && !eitherIsFunctionName ) {
+				//System.out.println(tokens.get(i)+" , "+tokens.get(i+1));
 				tokens.set(i,tokens.get(i)+tokens.get(i+1));
 				tokens.remove(i+1);
 				i--;
 			}
 			
 		}
+		
 	}
 	
 	static void applyFunctionKeywords(ArrayList<String> tokens){
@@ -483,71 +488,43 @@ public class Ask extends QuickMath{
 	}
 	
 	static void specialFunctions(ArrayList<String> tokens){
-		
 		//special cases
 		for(int i = tokens.size()-1;i>=0;i--) {
-			if(tokens.get(i).equals("diff") || tokens.get(i).equals("integrate") || tokens.get(i).equals("solve")) {
+			if(tokens.get(i).equals("diff") || tokens.get(i).equals("integrate") || tokens.get(i).equals("solve") || tokens.get(i).equals("approx")) {
+				int indexOfExpr = indexOfExpr(i+1,5,tokens);
 				
-				int indexOfExpr = indexOfExpr(i,3,tokens);
 				if(indexOfExpr != -1) {
-					
 					String v = "x";
-					
 					String min = null,max = null;
+					String expr = tokens.get(indexOfExpr);
 					
-					
-					for(int j = i;j<i+10&&j<tokens.size()-3;j++) {
-						if(tokens.get(j).equals("from")) {
-							min = tokens.get(j+1);
-							max = tokens.get(j+3);
-							
-							for(int k = 3;k>=0;k--){
-								tokens.remove(j+k);
-							}
-							break;
-						}
+					int indexOfFrom = tokens.indexOf("from");
+					if(indexOfFrom != -1) {
+						min = tokens.get(indexOfFrom+1);
+						max = tokens.get(indexOfFrom+3);
 					}
 					
-					
-					for(int j = i;j<i+10&&j<tokens.size()-2;j++) {//find name of variable to be used
-						if(tokens.get(j).equals("respect")) {
-							
-							v = tokens.get(j+2);
-							
-							for(int k = 2;k>=0;k--){
-								tokens.remove(j+k);
-							}
-							break;
-						}
+					int indexOfRespect = tokens.indexOf("respect");
+					if(indexOfRespect != -1) {
+						v  = tokens.get(indexOfRespect+2);
 					}
 					
-					String ex = tokens.get(indexOfExpr);
-					if(tokens.get(i).equals("solve")) {
-						if(!ex.contains("=")) {
-							ex+="=0";
-						}
+					for(int j = tokens.size()-1;j>i;j--) {
+						tokens.remove(j);
 					}
 					
-					if(tokens.get(i).equals("integrate") && min != null) {
-						tokens.set(indexOfExpr,"integrateOver("+min+","+max+","+ex+","+v+")");
-					}else tokens.set(indexOfExpr,tokens.get(i)+"("+ex+","+v+")");
-					
-					tokens.remove(i);
-					
-				}
-				
-				
-			}else if(tokens.get(i).equals("approx")) {
-				tokens.remove(i);
-				int indexOfExpr = indexOfExpr(i,3,tokens);
-				
-				if(indexOfExpr != -1) {
-					tokens.set(indexOfExpr, "approx("+tokens.get(indexOfExpr)+")");
+					if(tokens.get(i).equals("approx")) {
+						tokens.set(i, "approx("+expr+")");
+					}else if(min != null) {
+						tokens.set(i, "integrateOver("+min+","+max+","+expr+","+v+")");
+					}else {
+						tokens.set(i, tokens.get(i)+"("+expr+","+v+")");
+					}
+					return;
 				}
 				
 			}
 		}
-		
 	}
 	
 	static void unitReading(ArrayList<String> tokens){
@@ -635,6 +612,7 @@ public class Ask extends QuickMath{
 		wordToDig.put("thousand","1000");
 		wordToDig.put("million","1000000");
 		wordToDig.put("billion","1000000000");
+		wordToDig.put("trillion","1000000000000");
 	}
 	static void constructNumbers(ArrayList<String> tokens) {
 		for(int i = 0;i<tokens.size();i++) {
@@ -721,11 +699,76 @@ public class Ask extends QuickMath{
 		}
 	}
 	
+	static int parenConsistentScore(String token) {
+		int count = 0;
+		for(int i = 0;i<token.length();i++) {
+			if(token.charAt(i) == '(') {
+				count ++;
+			}else if(token.charAt(i) == ')') {
+				count --;
+			}
+		}
+		return count;
+	}
+	
+	static void recursiveReading(ArrayList<String> tokens) {//uses paren to find sub expressions
+		outer:for(int i = 0;i < tokens.size();i++) {
+			String token = tokens.get(i);
+			
+			int parenConsistentScore = parenConsistentScore(token);
+			
+			if(parenConsistentScore>0 &&token.charAt(0) == '(') {
+				
+				for(int j = i+1;j<tokens.size();j++) {
+					String otherToken = tokens.get(j);
+					parenConsistentScore += parenConsistentScore(otherToken);
+					if(parenConsistentScore == 0 && otherToken.charAt(otherToken.length()-1) == ')') {
+						ArrayList<String> subTokens = new ArrayList<String>();
+						
+						for(int k = i;k <= j;k++) {
+							subTokens.add(tokens.get(k));
+						}
+						String startToken = subTokens.get(0);
+						subTokens.set(0, startToken.substring(1));
+						String endToken = subTokens.get(subTokens.size()-1);
+						subTokens.set(subTokens.size()-1, endToken.substring(0, endToken.length()-1));
+						
+						reformulate(subTokens);
+						
+						if(subTokens.size() == 1) {
+							for(int k = i;k < j;k++) {
+								tokens.remove(i);
+							}
+							tokens.set(i,"("+subTokens.get(0)+")");	
+						}
+						continue outer;
+					}
+				}
+			}
+		}
+	}
+	
+	static void removeWhatIs(ArrayList<String> tokens) {
+		if(tokens.get(0).equals("what")) {
+			tokens.remove(0);
+		}else return;
+		if(tokens.get(0).equals("is")) {
+			tokens.remove(0);
+		}else return;
+		if(tokens.get(0).equals("the")) {
+			tokens.remove(0);
+		}
+	}
+	
+	
 	static void reformulate(ArrayList<String> tokens) {
 		if(DEBUG){
 			System.out.println("before reformulate");
 			System.out.println(tokens);
 		}
+		recursiveReading(tokens);
+		
+		removeWhatIs(tokens);
 		constructNumbers(tokens);
 		applyWordReplacement(tokens);
 		removeDuplicateOperators(tokens);
@@ -735,6 +778,7 @@ public class Ask extends QuickMath{
 		nounOwnership(tokens);
 		combineTrailingOperatorTokens(tokens);
 		applyFunctionKeywords(tokens);
+		combineTrailingOperatorTokens(tokens);
 		specialFunctions(tokens);
 		combineTrailingOperatorTokens(tokens);
 		
@@ -762,8 +806,7 @@ public class Ask extends QuickMath{
 		for(String s:tokensArray) {
 			if(!s.isEmpty()) tokens.add(s);
 		}
-		//
-		
+		//		
 		reformulate(tokens);
 		
 		Expr maybeResponse = goThroughProgrammedResponses(tokens);
@@ -777,41 +820,8 @@ public class Ask extends QuickMath{
 		
 		ArrayList<Integer> indexes = indexOfExpressions(tokens);
 		
-		//rpn like english
-		
-		if(tokens.contains("add") || tokens.contains("sum")) {
-			Sum out = new Sum();
-			for (int i:indexes) {
-				Expr toBeAdded = Interpreter.createExprWithThrow(tokens.get(i));
-				if(toBeAdded instanceof ExprList) {
-					for (int j = 0;j<toBeAdded.size();j++) {
-						out.add(toBeAdded.get(j));
-					}
-				}else {
-					out.add(toBeAdded);
-				}
-			}
-			return out;
-		}
-		
-		if(tokens.contains("multiply") || tokens.contains("product")) {
-			Prod out = new Prod();
-			for (int i:indexes) {
-				Expr toBeAdded = Interpreter.createExprWithThrow(tokens.get(i));
-				if(toBeAdded instanceof ExprList) {
-					for (int j = 0;j<toBeAdded.size();j++) {
-						out.add(toBeAdded.get(j));
-					}
-				}else {
-					out.add(toBeAdded);
-				}
-			}
-			return out;
-		}
-		//
-		
 		if(tokens.contains("about") || tokens.contains("creator")) {
-			return var("Benjamin Currie @2021");
+			return var(UI.CRED);
 		}
 		
 		if(tokens.size() == 1) {

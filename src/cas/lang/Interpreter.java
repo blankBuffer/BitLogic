@@ -63,9 +63,13 @@ public class Interpreter extends QuickMath{
 		return m.matches();
 	}
 	
-	public static boolean isBracket(char ch) {
+	public static boolean isLeftBracket(char ch) {
 		return ch == '[' || ch == '{' || ch == '(';
 	}
+	public static boolean isRightBracket(char ch) {
+		return ch == ']' || ch == '}' || ch == ')';
+	}
+	
 	public static int indexOfMatchingBracket(String s,int startIndex) throws Exception {
 		char startingChar = s.charAt(startIndex);
 		char endingChar = 0;
@@ -86,8 +90,8 @@ public class Interpreter extends QuickMath{
 				result = i;
 			}
 		}
-		if(result == -1) throw new Exception("missing bracket: '"+endingChar+"' try "+s+endingChar);
-		if(count != 0) {
+		if(result < 0) throw new Exception("missing bracket: '"+endingChar+"' try "+s+endingChar);
+		if(count > 0) {
 			String rewrite = s.substring(0,result)+s.substring(result+1,s.length());
 			throw new Exception("too many brackets: '"+endingChar+"' try "+rewrite);
 		}
@@ -218,7 +222,7 @@ public class Interpreter extends QuickMath{
 					return var(string);
 				}
 			}
-			if( isBracket(string.charAt(0)) ) {//token is in brackets
+			if( isLeftBracket(string.charAt(0)) ) {//token is in brackets
 				
 				String subPart = string.substring(1,string.length()-1);
 				
@@ -477,7 +481,7 @@ public class Interpreter extends QuickMath{
 				if(!currentToken.isEmpty()) tokens.add(currentToken);
 				currentToken = "";
 				tokens.add(Character.toString(currentChar));
-			}else if(isBracket(currentChar)) {
+			}else if(isLeftBracket(currentChar)) {
 				if(!currentToken.isEmpty()) tokens.add(currentToken);
 				currentToken = "";
 				int endIndex = indexOfMatchingBracket(string,i);

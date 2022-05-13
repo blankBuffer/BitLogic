@@ -67,6 +67,8 @@ public class Unit extends QuickMath{
 		//weight/force
 		unitNames.add("kilogram");
 		unitNames.add("kilograms");
+		unitNames.add("kilo");
+		unitNames.add("kilos");
 		unitNames.add("kg");
 		unitNames.add("pound");
 		unitNames.add("pounds");
@@ -186,7 +188,7 @@ public class Unit extends QuickMath{
 			return Type.ce;
 		}
 		//weight/force
-		else if(s.equals("kg") || s.equals("kilogram")){
+		else if(s.equals("kg") || s.equals("kilogram") || s.equals("kilo")){
 			return Type.kg;
 		}else if(s.equals("lb") || s.equals("pound")){
 			return Type.lb;

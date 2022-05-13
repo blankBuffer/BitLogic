@@ -1,0 +1,54 @@
+<html>
+    <body>
+	   <h1>Learning the Stack command-line</h1>
+	   <p>
+	   The stack is a buffer where all the equations you are currently working with can be created and manipulated.<br>
+	   The best way to start learning to use this is by an example.<br>
+	   <h2>Example</h2>
+	   Suppose we wanted to create the expression "integrate(x^2*sin(x)/3,x)"<br>
+	   The way we construct this formula in a stack based way is to work your way out.<br>
+	   We first start by making the x^2 term.<br><br>
+	   
+	   type "x" hit ENTER<br>
+	   type "2" hit ENTER<br>
+	   type "^" hit ENTER<br><br>
+	   
+	   In the stack you should see "x^2"<br><br>
+	   
+	   Next we are going to make the sin(x) term<br><br>
+	   
+	   type "x" hit ENTER<br>
+	   type "sin" hit ENTER<br><br>
+	   
+	   You should see "x^2" in the first element in the stack and "sin(x)" as the second element in the stack.<br>
+	   We are going to multiply the two terms together and divide by 3<br><br>
+	   
+	   type "*" hit ENTER<br>
+	   type "3" hit ENTER<br>
+	   type "/" hit ENTER<br><br>
+	   
+	   You should now see "(x^2*sin(x))/3"<br><br>
+	   
+	   Now to integrate the expression<br><br>
+	   
+	   type "x" hit ENTER<br>
+	   type "integrate" hit ENTER<br><br>
+	    
+	   You now have the expression "integrate((x^2*sin(x))/3,x)"<br>
+	   To get the result type "r" or "result" and hit ENTER<br>
+	   The last element on the stack should now be the answer to that integral.<br>
+	   </p>
+	   
+	   <h2>Special Stack Features</h2>
+	   
+	   <p>
+	   While the method above might seem complicated to make an integral, it is not the only way to create that expression. You could have easily just typed "integrate((x^2*sin(x))/3,x)" directly and it would have worked too. The point was to show that you can combine different pieces of expressions together.<br>
+	   <h4>English based interpreter</h4>
+	   Amazingly you can also ask that integral problem in a english like question.<br>
+	   In the command line you can write something like...<br>
+	   "What is the integral of x squared over three times sin of x in terms of x"<br>
+	   and it would add integrate((x^2*sin(x))/3,x) to the stack.<br>
+	   </p>
+	   
+	   </body>
+</html>
