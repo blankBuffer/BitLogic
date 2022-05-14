@@ -27,8 +27,8 @@ public class Acos extends Expr{
 		public Expr applyRuleToExpr(Expr e,CasInfo casInfo){
 			Acos acos = (Acos)e;
 			if(acos.get().negative()){
-				Expr result = sum(neg(acos(acos.get().strangeAbs(casInfo))),pi()).simplify(casInfo);
-				return result;
+				Expr result = sum(neg(acos( neg(acos.get()).simplify(casInfo) )),pi());
+				return result.simplify(casInfo);
 			}
 			return acos;
 		}

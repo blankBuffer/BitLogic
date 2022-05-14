@@ -339,6 +339,14 @@ public class StackEditor extends QuickMath {
 		stack = stackOld;
 		stackOld = temp;
 	}
+	
+	public void define() {
+		if (sLast() == null)
+			return;
+
+		stack.set(size() - 2, define(sLast(), stack.get(size() - 1)));
+		stack.remove(size() - 1);
+	}
 
 	public int command(String command) {
 
@@ -348,10 +356,7 @@ public class StackEditor extends QuickMath {
 		}
 		try {
 			if (!command.equals("undo")) {
-				stackOld.clear();
-				for (int i = 0; i < size(); i++) {
-					stackOld.add(stack.get(i).copy());
-				}
+				stackOld = (Sequence) stack.copy();
 			} 
 			if(command.equals("undo")){
 				undo();
@@ -389,6 +394,8 @@ public class StackEditor extends QuickMath {
 				equLess();
 			} else if (command.equals("->")) {
 				becomes();
+			} else if (command.equals(":=")) {
+				define();
 			} else if (command.equals("[")) {
 				createList();
 			} else if (command.equals("]")) {

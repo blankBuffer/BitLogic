@@ -612,20 +612,12 @@ public class Integrate extends Expr{
 			}
 			return null;
 		}
-		String[] trigTypes;
 		ExprList subs;
 		Expr addedDeriv;
 		@Override
 		public void init() {
-			trigTypes = new String[] {"sin","cos","tan","asin","acos","atan"};
 			subs = (ExprList)createExpr("[sin(0a)=(2*0t)/(1+0t^2),cos(0a)=(1-0t^2)/(1+0t^2)]");
 			addedDeriv = createExpr("2/(0t^2+1)");
-		}
-		boolean containsTrig(Expr e) {
-			for(String type:trigTypes) {
-				if(e.containsType(type)) return true;
-			}
-			return false;
 		}
 		
 		
@@ -657,6 +649,23 @@ public class Integrate extends Expr{
 		
 	};
 	
+	static Rule shouldExpand = new Rule("should expand") {//there is a power with trig function in base sum. Should expand as it saves alot of time
+		private static final long serialVersionUID = 1L;
+		
+		@Override
+		public Expr applyRuleToExpr(Expr e,CasInfo casInfo) {
+			Integrate integ = (Integrate)e;
+			if(integ.get() instanceof Power) {
+				Power inner = (Power)integ.get();
+				
+				if(inner.getExpo() instanceof Num && inner.getBase() instanceof Sum && containsTrig(inner.getBase()) ) {
+					integ.set(0, SimpleFuncs.fullExpand.applyRuleToExpr(integ.get(), casInfo) );
+				}
+			}
+			return integ;
+		}
+	};
+	
 	static Sequence ruleSequence = null;
 	
 	public static void loadRules(){
@@ -682,6 +691,9 @@ public class Integrate extends Expr{
 				
 				sinTanProd,
 				tanOverCos,
+				
+				shouldExpand,
+				
 				inverseQuadraticToNReduction,
 				
 				loopingIntegrals,
@@ -690,7 +702,7 @@ public class Integrate extends Expr{
 				recursivePowerOverSqrt,
 				recursiveInvPowerOverSqrt,
 				
-				weierstrassSub,
+				
 				
 				psudoTrigSub,
 				integralForArcsin,
@@ -702,6 +714,7 @@ public class Integrate extends Expr{
 				integrationByParts,
 				normalUSub,
 				integrationByPartsSpecial,
+				weierstrassSub,
 				fullExpandInner,
 				StandardRules.linearOperator
 				

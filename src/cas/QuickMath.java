@@ -1086,6 +1086,14 @@ public class QuickMath {
 		return terms;
 	}
 	
+	private static String[] trigTypes = new String[] {"sin","cos","tan","asin","acos","atan"};
+	public static boolean containsTrig(Expr e) {
+		for(String type:trigTypes) {
+			if(e.containsType(type)) return true;
+		}
+		return false;
+	}
+	
 	public static long[] toFraction(double num) {//from https://begriffs.com/pdf/dec2frac.pdf
 		if( ((long)num)-num == 0.0) return new long[] {(long)num,1};
 		double z = num;

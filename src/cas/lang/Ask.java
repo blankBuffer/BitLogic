@@ -181,6 +181,7 @@ public class Ask extends QuickMath{
 		
 		//solve
 		replacement.put("solution","solve");
+		replacement.put("solutions","solve");
 		replacement.put("roots","solve");
 		replacement.put("root","solve");
 		
@@ -513,6 +514,10 @@ public class Ask extends QuickMath{
 						tokens.remove(j);
 					}
 					
+					if(tokens.get(i).equals("solve") && !expr.contains("=")) {
+						expr+="=0";
+					}
+					
 					if(tokens.get(i).equals("approx")) {
 						tokens.set(i, "approx("+expr+")");
 					}else if(min != null) {
@@ -752,7 +757,7 @@ public class Ask extends QuickMath{
 		if(tokens.get(0).equals("what")) {
 			tokens.remove(0);
 		}else return;
-		if(tokens.get(0).equals("is")) {
+		if(tokens.get(0).equals("is") || tokens.get(0).equals("are")) {
 			tokens.remove(0);
 		}else return;
 		if(tokens.get(0).equals("the")) {
