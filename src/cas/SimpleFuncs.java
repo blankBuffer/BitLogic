@@ -409,7 +409,7 @@ public class SimpleFuncs extends QuickMath{
 			@SuppressWarnings("unused")
 			@Override
 			public Expr applyRuleToExpr(Expr e,CasInfo casInfo) {
-				new ui.MainWindow();
+				new ui.CalcWindow();
 				
 				return var("done");
 			}

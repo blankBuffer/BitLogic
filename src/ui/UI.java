@@ -34,7 +34,7 @@ public class UI {
 		Rule.loadRules();
 		StackEditor editor = new StackEditor();
 		BufferedReader bf = new BufferedReader(new InputStreamReader(System.in));
-		MainWindow.WINDOW_INSTANCE_COUNT = 1;//the terminal counts as a window
+		CalcWindow.WINDOW_INSTANCE_COUNT = 1;//the terminal counts as a window
 		while(true) {
 			System.out.print("> ");
 			String s = null;
@@ -56,7 +56,7 @@ public class UI {
 	@SuppressWarnings("unused")
 	public static void startGraphicalInterface() {
 		System.out.println(UI.fancyIntro());
-		new MainWindow();
+		new AppChooser();
 	}
 	
 }

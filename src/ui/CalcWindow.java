@@ -35,7 +35,7 @@ import cas.graphics.Plot;
 import cas.lang.Interpreter;
 import cas.programming.StackEditor;
 
-public class MainWindow extends JFrame{
+public class CalcWindow extends JFrame{
 	private static final long serialVersionUID = -8082018637717346472L;
 	
 	final int WINDOW_WIDTH = 900,WINDOW_HEIGHT = 500;
@@ -152,7 +152,7 @@ public class MainWindow extends JFrame{
 					Clipboard clipBoard = Toolkit.getDefaultToolkit().getSystemClipboard();
 					TransferableImage transImage = new TransferableImage(exprImg);
 					clipBoard.setContents(transImage, null);
-					JOptionPane.showMessageDialog(MainWindow.this, "copied image to clipboard");
+					JOptionPane.showMessageDialog(CalcWindow.this, "copied image to clipboard");
 				}
 			}
 			@Override
@@ -608,7 +608,7 @@ public class MainWindow extends JFrame{
 			@Override
 			public void actionPerformed(ActionEvent e) {
 				boolean selected = keepOnTopCheckBox.isSelected();
-				MainWindow.this.setAlwaysOnTop(selected);
+				CalcWindow.this.setAlwaysOnTop(selected);
 				KEEP_WINDOW_ON_TOP = selected;
 			}
 		};
@@ -654,7 +654,7 @@ public class MainWindow extends JFrame{
 		ActionListener makeDrawingBoard = new ActionListener(){
 			@Override
 			public void actionPerformed(ActionEvent e) {
-				new DrawingBoard(MainWindow.this);
+				new DrawingBoard(CalcWindow.this);
 			}
 		};
 		
@@ -751,9 +751,9 @@ public class MainWindow extends JFrame{
 		panel.setLayout(new BoxLayout(panel,BoxLayout.Y_AXIS));
 		try {
 			panel.add(new JLabel(new ImageIcon(ImageIO.read(new File("resources/BitLogicLogo_tiny.jpg")))));
-		} catch (IOException e2) {
+		} catch (Exception e) {
 			// TODO Auto-generated catch block
-			e2.printStackTrace();
+			e.printStackTrace();
 		}
 		panel.add(progressBar);
 		progressBarWindow.add(panel);
@@ -774,25 +774,20 @@ public class MainWindow extends JFrame{
 						Thread.sleep(15);
 					} catch (InterruptedException e) {e.printStackTrace();}
 				}
+				progressBarWindow.dispose();
 			}
 		};
 		progressBarThread.start();
-		Rule.loadRules();
-		try {
-			progressBarThread.join();
-		} catch (InterruptedException e1) {
-			e1.printStackTrace();
-		}
-		progressBarWindow.dispose();
+		Thread rulesLoader = new Thread() {
+			public void run() {
+				Rule.loadRules();
+			}
+		};
+		rulesLoader.start();
 	}
 
-	public MainWindow(){
+	public CalcWindow(){
 		super("BitLogic "+UI.VERSION);
-		try {
-			UIManager.setLookAndFeel(UIManager.getCrossPlatformLookAndFeelClassName());
-		} catch (Exception e) {
-			e.printStackTrace();
-		}
 		currentStack = new StackEditor();
 		plot = new Plot(currentStack);
 		mainViewPanel = new JPanel();

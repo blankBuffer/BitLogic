@@ -1,5 +1,4 @@
-bin/
-*.class
+BitLogic.jar
 .classpath
 .project
 *.swp
@@ -7,3 +6,5 @@ bin/
 rmArch
 *.DS_Store
 bitLogicArch.zip
+bitLogicArch/
+bin/

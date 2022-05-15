@@ -15,7 +15,7 @@ public class DrawingBoard extends JFrame{
 	int panX = 0,panY = 0;
 	int ERASER_SIZE = 42;
 	int LINE_THICKNESS = 3;
-	MainWindow mainWindowRef = null;
+	CalcWindow calcWindowRef = null;
 	
 	class ImageZone{//a region the can be draw on that has position
 		BufferedImage image;
@@ -26,7 +26,7 @@ public class DrawingBoard extends JFrame{
 			this.x = x;
 			this.y = y;
 			Graphics g = image.createGraphics();
-			g.setColor(mainWindowRef.BACKGROUND_COLOR);
+			g.setColor(calcWindowRef.BACKGROUND_COLOR);
 			g.fillRect(0, 0, TILE_SIZE, TILE_SIZE);
 			g.dispose();
 		}
@@ -93,7 +93,7 @@ public class DrawingBoard extends JFrame{
 			Graphics2D g = mainZone.image.createGraphics();
 			
 			g.setStroke(new BasicStroke(LINE_THICKNESS));
-			g.setColor(mainWindowRef.FOREGROUND_COLOR);
+			g.setColor(calcWindowRef.FOREGROUND_COLOR);
 			g.drawLine(mouse.x-shiftX, mouse.y-shiftY, pMouse.x-shiftX, pMouse.y-shiftY);
 			g.dispose();
 			
@@ -103,7 +103,7 @@ public class DrawingBoard extends JFrame{
 			g = edgeZone.image.createGraphics();
 			
 			g.setStroke(new BasicStroke(LINE_THICKNESS));
-			g.setColor(mainWindowRef.FOREGROUND_COLOR);
+			g.setColor(calcWindowRef.FOREGROUND_COLOR);
 			g.drawLine(mouse.x-shiftX, mouse.y-shiftY, pMouse.x-shiftX, pMouse.y-shiftY);
 			g.dispose();
 			
@@ -111,7 +111,7 @@ public class DrawingBoard extends JFrame{
 			Graphics2D g = mainZone.image.createGraphics();
 			
 			g.setStroke(new BasicStroke(LINE_THICKNESS));
-			g.setColor(mainWindowRef.FOREGROUND_COLOR);
+			g.setColor(calcWindowRef.FOREGROUND_COLOR);
 			int shiftX = mainZone.x+panX,shiftY = mainZone.y+panY;
 			g.drawLine(mouse.x-shiftX, mouse.y-shiftY, pMouse.x-shiftX, pMouse.y-shiftY);
 			g.dispose();
@@ -139,23 +139,23 @@ public class DrawingBoard extends JFrame{
 			int shiftX = zone.x+panX,shiftY = zone.y+panY;
 			
 			Graphics g = zone.image.createGraphics();
-			g.setColor(mainWindowRef.BACKGROUND_COLOR);
+			g.setColor(calcWindowRef.BACKGROUND_COLOR);
 			g.fillOval(mouse.x-shiftX-ERASER_SIZE/2, mouse.y-shiftY-ERASER_SIZE/2,ERASER_SIZE,ERASER_SIZE);
 			g.dispose();
 		}
 	}
 	
-	public DrawingBoard(MainWindow mainWindow) {
+	public DrawingBoard(CalcWindow calcWindow) {
 		super("infinite drawing board");
-		mainWindowRef = mainWindow;
+		calcWindowRef = calcWindow;
 		this.setSize(600, 600);
-		this.setAlwaysOnTop(mainWindow.KEEP_WINDOW_ON_TOP);
+		this.setAlwaysOnTop(calcWindow.KEEP_WINDOW_ON_TOP);
 		
 		JPanel panel = new JPanel() {
 			private static final long serialVersionUID = -1233355333293061090L;
 			@Override
 			public void paintComponent(Graphics g) {
-				g.setColor(mainWindowRef.BACKGROUND_COLOR);
+				g.setColor(calcWindowRef.BACKGROUND_COLOR);
 				g.fillRect(0, 0, getWidth(), getHeight());
 				
 				paintZones(g);//draw the paint zones
@@ -237,7 +237,7 @@ public class DrawingBoard extends JFrame{
 		Thread repaintThread = new Thread() {
 			@Override
 			public void run() {
-				while(DrawingBoard.this.isVisible() && mainWindowRef.isVisible()) {
+				while(DrawingBoard.this.isVisible() && calcWindowRef.isVisible()) {
 					mouse = panel.getMousePosition();
 					if(mousePressed && mouse != null && pMouse != null) {
 						if(buttonNumber == 1) {//left click mouse used for pen
