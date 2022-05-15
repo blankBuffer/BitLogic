@@ -40,18 +40,6 @@ public class CalcWindow extends JFrame{
 	
 	final int WINDOW_WIDTH = 900,WINDOW_HEIGHT = 500;
 	
-	static int WINDOW_INSTANCE_COUNT = 0;
-	
-	void closeWindow() {
-		if(WINDOW_INSTANCE_COUNT == 1) {
-			System.out.println("closing...");
-			System.exit(0);
-		}else {
-			dispose();
-			WINDOW_INSTANCE_COUNT--;
-		}
-	}
-	
 	StackEditor currentStack;
 	Plot plot;
 	JPanel mainViewPanel;
@@ -342,7 +330,7 @@ public class CalcWindow extends JFrame{
 		ActionListener resultButtonUpdate = new ActionListener() {
 			@Override
 			public void actionPerformed(ActionEvent e) {
-				if(currentStack.command("result") == StackEditor.QUIT) closeWindow();
+				if(currentStack.command("result") == StackEditor.QUIT) dispose();
 				
 				terminalOutUpdate.actionPerformed(null);
 			}
@@ -359,7 +347,7 @@ public class CalcWindow extends JFrame{
 				String terminalInText = terminalIn.getText();
 				
 				int stackCode = currentStack.command(terminalInText);
-				if(stackCode == StackEditor.QUIT) closeWindow();
+				if(stackCode == StackEditor.QUIT) dispose();
 				else if(stackCode == StackEditor.INPUT_ERROR) {}
 				if(stackCode == StackEditor.FINISHED) {
 					terminalIn.setText("");
@@ -650,13 +638,6 @@ public class CalcWindow extends JFrame{
 				}
 			}
 		};
-		JButton drawingBoardButton = new JButton("drawing board");
-		ActionListener makeDrawingBoard = new ActionListener(){
-			@Override
-			public void actionPerformed(ActionEvent e) {
-				new DrawingBoard(CalcWindow.this);
-			}
-		};
 		
 		UIOptionsPanel() {
 			allComponents.add(this);
@@ -664,13 +645,11 @@ public class CalcWindow extends JFrame{
 			allComponents.add(scrollSpeedLabel);
 			allComponents.add(scrollSpeedSlider);
 			allComponents.add(clearTerminalCheckBox);
-			allComponents.add(drawingBoardButton);
 			
 			keepOnTopCheckBox.addActionListener(keepOnTopUpdate);
 			clearTerminalCheckBox.addActionListener(clearTerminalUpdate);
 			setTheme.addActionListener(themeUpdate);
 			scrollSpeedSlider.addChangeListener(scrollSpeedChange);
-			drawingBoardButton.addActionListener(makeDrawingBoard);
 			
 			scrollSpeedSlider.setPaintTicks(true);
 			scrollSpeedSlider.setSnapToTicks(true);
@@ -695,7 +674,6 @@ public class CalcWindow extends JFrame{
 			add(scrollSpeedLabel);
 			add(scrollSpeedSlider);
 			add(themeSetter);
-			add(drawingBoardButton);
 		}
 		
 	}
@@ -779,6 +757,7 @@ public class CalcWindow extends JFrame{
 		};
 		progressBarThread.start();
 		Thread rulesLoader = new Thread() {
+			@Override
 			public void run() {
 				Rule.loadRules();
 			}
@@ -805,7 +784,7 @@ public class CalcWindow extends JFrame{
 			public void windowOpened(WindowEvent e) {}
 			@Override
 			public void windowClosing(WindowEvent e) {
-				closeWindow();
+				dispose();
 			}
 			@Override
 			public void windowClosed(WindowEvent e) {}
@@ -822,7 +801,6 @@ public class CalcWindow extends JFrame{
 		
 		setVisible(true);
 		
-		WINDOW_INSTANCE_COUNT++;
 		loadRulesWindow();
 	}
 

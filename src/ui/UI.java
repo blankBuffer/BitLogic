@@ -9,8 +9,10 @@ import cas.programming.StackEditor;
 
 public class UI {
 	
-	public static final String VERSION = "1.6.26";
+	public static final String VERSION = "1.7.0";
 	public static final String CRED = "Benjamin Currie @2021-2022 v "+VERSION+" , java runtime version: "+System.getProperty("java.version");
+	
+	static int WINDOW_COUNT = 0;
 	
 	public static final String fancyIntro() {
 		String img = ""
@@ -34,7 +36,6 @@ public class UI {
 		Rule.loadRules();
 		StackEditor editor = new StackEditor();
 		BufferedReader bf = new BufferedReader(new InputStreamReader(System.in));
-		CalcWindow.WINDOW_INSTANCE_COUNT = 1;//the terminal counts as a window
 		while(true) {
 			System.out.print("> ");
 			String s = null;
