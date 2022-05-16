@@ -197,6 +197,21 @@ public class TriangleSolver extends JFrame{
 				if(!bSideEmpty) bSide = Double.parseDouble(bSideText);
 				if(!cSideEmpty) cSide = Double.parseDouble(cSideText);
 				
+				//c=sqrt(a^2+b^2-2*a*b*cos(c_angle))
+				
+				if(!cAngleEmpty && !aSideEmpty && !bSideEmpty && cSideEmpty) {
+					cSide = Math.sqrt( aSide*aSide+bSide*bSide-2*aSide*bSide*Math.cos(cAngle) );
+					cSideEmpty = false;
+				}
+				if(!bAngleEmpty && !aSideEmpty && !cSideEmpty && bSideEmpty) {
+					bSide = Math.sqrt( aSide*aSide+cSide*cSide-2*aSide*cSide*Math.cos(bAngle) );
+					bSideEmpty = false;
+				}
+				if(!aAngleEmpty && !cSideEmpty && !bSideEmpty && aSideEmpty) {
+					aSide = Math.sqrt( cSide*cSide+bSide*bSide-2*cSide*bSide*Math.cos(aAngle) );
+					aSideEmpty = false;
+				}
+				
 				//cosine law
 				if(cAngleEmpty && !aSideEmpty && !bSideEmpty && !cSideEmpty) {//c_angle=acos((a^2+b^2-c^2)/(2*a*b))
 					cAngle = Math.acos( (aSide*aSide+bSide*bSide-cSide*cSide)/(2*aSide*bSide) );

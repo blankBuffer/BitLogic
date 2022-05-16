@@ -112,6 +112,8 @@ public class SimpleFuncs extends QuickMath{
 	static Func delete = new Func("delete",1);
 	static Func help = new Func("help",1);
 	
+	static Func fSolve = new Func("fSolve",2);
+	
 	public static void loadRules(){
 		tree.simplifyChildren = false;
 		tree.ruleSequence.add(new Rule("show the tree of the expression"){
@@ -831,6 +833,25 @@ public class SimpleFuncs extends QuickMath{
 				return var(e.get().help());
 			}
 		});
+		
+		fSolve.ruleSequence.add(new Rule("floating point solver") {
+			private static final long serialVersionUID = 1L;
+			
+			@Override
+			public Expr applyRuleToExpr(Expr e,CasInfo casInfo) {
+				Sequence poly = polyExtract(e.get(0), (Var)e.get(1) ,casInfo);
+				Sequence solutions = new Sequence();
+				
+				if(poly!=null) {
+					ArrayList<Double> solutionsArrayList = Solve.polySolve(poly);
+					for(double solution:solutionsArrayList) {
+						solutions.add(floatExpr(solution));
+					}
+				}
+				
+				return solutions;
+			}
+		});
 	}
 	
 	private static ArrayList<String> functionNames = new ArrayList<String>();
@@ -894,6 +915,8 @@ public class SimpleFuncs extends QuickMath{
 		
 		addFunc(delete);
 		addFunc(help);
+		
+		addFunc(fSolve);
 		
 		for(String s:simpleFuncs.keySet()) {
 			functionNames.add(s);
