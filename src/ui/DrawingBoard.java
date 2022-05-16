@@ -424,7 +424,7 @@ public class DrawingBoard extends JFrame{
 				for(int y = yMin;y<=yMax;y+=TILE_SIZE) {
 					for(ImageZone zone:zones) {
 						if(zone.containsPoint(x, y)) {
-							g.drawImage(zone.image,x,y,TILE_SIZE,TILE_SIZE,null);
+							g.drawImage(zone.image,x-xMin,y-yMin,TILE_SIZE,TILE_SIZE,null);
 							continue;
 						}
 					}

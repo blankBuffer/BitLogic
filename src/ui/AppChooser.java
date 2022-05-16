@@ -18,6 +18,7 @@ public class AppChooser extends JFrame{
 	JButton quitButton = new JButton("quit");
 	JButton startMainCalculator = new JButton("start main calculator");
 	JButton startDrawingBoard = new JButton("start drawing board");
+	JButton startTriangleSolver = new JButton("start triangle solver");
 	
 	public AppChooser() {
 		super("choose Application");
@@ -56,6 +57,13 @@ public class AppChooser extends JFrame{
 			@Override
 			public void actionPerformed(ActionEvent e) {
 				new DrawingBoard();
+			}
+		});
+		appChoicePanel.add(startTriangleSolver);
+		startTriangleSolver.addActionListener(new ActionListener() {
+			@Override
+			public void actionPerformed(ActionEvent e) {
+				new TriangleSolver();
 			}
 		});
 		
