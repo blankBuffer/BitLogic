@@ -4,10 +4,10 @@
 #"`" <- acts like a newline for the response
 #the following questions made by Emmett Jonke and Benjamin Currie
 what,is,number:a measurement of quantity|6
-quadratic,formula\[x=(-b+sqrt(b^2-4*a*c))/(2*a),x=(-b-sqrt(b^2-4*a*c))/(2*a)]|8
+what,quadratic,formula\[x=(-b+sqrt(b^2-4*a*c))/(2*a),x=(-b-sqrt(b^2-4*a*c))/(2*a)]|8
 what,quadratic\a*x^2+b*x+c|8
 what,cubic\a*x^3+b*x^2+c*x+d|8
-momentum\m*v|5
+what,momentum\m*v|5
 what,acceleration:second derivative of position with respect to time|5
 what,velocity:first derivative of position with respect to time|5
 help:Supported Math functions`sin,cos,tan`diff(#expr,#var) for derivative`integrate(#expr,#var) for anti-derivatuve`integrateOver(#left-bound,#right-bound,#expr,#var)`solve(#eq,#var) for solving an equation`distr(#expr) distributes an expression`factor(#expr) to factor an expression`approx(#expr,[#variable-defs-list]) to approximate expression|3

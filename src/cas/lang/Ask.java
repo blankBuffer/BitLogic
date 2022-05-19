@@ -811,13 +811,12 @@ public class Ask extends QuickMath{
 		for(String s:tokensArray) {
 			if(!s.isEmpty()) tokens.add(s);
 		}
-		//		
-		reformulate(tokens);
-		
 		Expr maybeResponse = goThroughProgrammedResponses(tokens);
 		if(maybeResponse != null){
 			return maybeResponse;
 		}
+		//		
+		reformulate(tokens);
 		
 		if(tokens.get(tokens.size()-1).equals("test")) {
 			return var("working!");

@@ -2,4 +2,4 @@
 
 mkdir saves
 
-javac src/*.java src/cas/*.java src/cas/bool/*.java src/cas/calculus/*.java src/cas/graphics/*.java src/cas/lang/*.java src/cas/matrix/*.java src/cas/primitive/*.java src/cas/programming/*.java src/cas/special/*.java src/cas/trig/*.java src/ui/*.java -d bin
+javac $(find ./src -name *.java) -d bin
