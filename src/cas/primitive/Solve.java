@@ -519,27 +519,19 @@ public class Solve extends Expr{
 	static Rule solveSetCase = new Rule("solve a set of equations") {
 		private static final long serialVersionUID = 1L;
 		
-		ExprList removeAnEq(ExprList equs,Var v,CasInfo casInfo,Sequence removed) {//remove an equation reducing the problem
+		void removeAnEq(ExprList equs,Var v,CasInfo casInfo,Sequence removed) {//remove an equation reducing the problem
 			for(int i = 0;i<equs.size();i++) {
 				Expr solution = solve((Equ)equs.get(i),v).simplify(casInfo);
-				if(solution instanceof ExprList) {
-					solution = solution.get();
-				}else if(solution instanceof Solve) {
-					continue;
-				}
+				if(solution instanceof ExprList) solution = solution.get();
+				else if(solution instanceof Solve) continue;
 				
-				ExprList out = new ExprList();
-				for(int j = 0;j<equs.size();j++) {
-					if(i == j) continue;
-					
-					out.add(equs.get(j).replace((Equ)solution));
-					
-				}
-				removed.add(equs.get(i));
-				return out;
+				removed.add(solution);
+				equs.remove(i);
 				
+				for(int j = 0;j<equs.size();j++) equs.set(j,equs.get(j).replace((Equ)solution));
+				
+				return;
 			}
-			return null;
 		}
 		
 		@Override
@@ -548,16 +540,14 @@ public class Solve extends Expr{
 			
 			if(!solve.manyEqus()) return solve;
 			
-			ExprList equs = solve.getEqus();
 			ExprList vars = solve.getVars();
 			
-			ExprList reduced = equs;
+			ExprList reduced = solve.getEqus();
 			Sequence removed = new Sequence();//keep reducing problem
 			for(int i = 0;i<vars.size()-1;i++) {
 				Var v = (Var)vars.get(i);
-				reduced = removeAnEq(reduced,v,casInfo,removed);
+				removeAnEq(reduced,v,casInfo,removed);
 			}
-			
 			//solve the last variable
 			Expr solution = solve((Equ)reduced.get(),(Var)vars.get(vars.size()-1)).simplify(casInfo);
 			if(solution instanceof ExprList) {
@@ -571,14 +561,8 @@ public class Solve extends Expr{
 			
 			//work backwards
 			for(int i = removed.size()-1;i>=0;i--) {
-				Equ currentEq = (Equ)removed.get(i).replace(variableSolutions);
-				solution = solve(currentEq,(Var)vars.get(i)).simplify(casInfo);
-				if(solution instanceof ExprList) {
-					solution = solution.get();
-				}else if(solution instanceof Solve) {
-					return solve;
-				}
-				variableSolutions.add(solution);
+				Equ currentEq = (Equ)(removed.get(i).replace(variableSolutions).simplify(casInfo));
+				variableSolutions.add(currentEq);
 			}
 			
 			return variableSolutions;//done
