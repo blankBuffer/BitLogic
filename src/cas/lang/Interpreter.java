@@ -231,11 +231,11 @@ public class Interpreter extends QuickMath{
 				
 				if(string.startsWith("(")) {
 					return outExpr;
-				}else if(string.startsWith("{")){
+				}else if(string.startsWith("[")){
 					if(outExpr instanceof Params) return Sequence.cast(outExpr);
 					else if(outExpr == null) return sequence();
 					return sequence(outExpr);
-				}else if(string.startsWith("[")){
+				}else if(string.startsWith("{")){
 					if(outExpr instanceof Params) return ExprList.cast(outExpr);
 					else if(outExpr == null) return exprList();
 					return exprList(outExpr);

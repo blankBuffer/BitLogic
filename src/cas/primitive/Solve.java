@@ -126,22 +126,13 @@ public class Solve extends Expr{
 				@Override
 				public void init() {
 					cases = new Rule[] {
-							new Rule("sqrt(x)-sqrt(x+a)=k->x=(k^2-a)^2/(4*k^2)","sum of linear square roots"),
-							new Rule("sqrt(x+a)-sqrt(x)=k->x=(k^2-a)^2/(4*k^2)","sum of linear square roots"),
-							new Rule("sqrt(x+a)+sqrt(x)=k->x=(k^2-a)^2/(4*k^2)","sum of linear square roots"),
+							new Rule("sqrt(a)+sqrt(b)=c->4*a*b-expand((c^2-b-a)^2)=0","sum of linear square roots"),
+							new Rule("m*sqrt(a)+n*sqrt(b)=c->4*a*b*m^2*n^2-expand((c^2-b*n^2-a*m^2)^2)=0","sum of linear square roots"),
 							
-							new Rule("x+sqrt(x+a)=y->[x=(sqrt(4*a+4*y+1)+2*y+1)/2,x=(-sqrt(4*a+4*y+1)+2*y+1)/2]","sum of linear square roots"),
-							new Rule("x-sqrt(x+a)=y->[x=(sqrt(4*a+4*y+1)+2*y+1)/2,x=(-sqrt(4*a+4*y+1)+2*y+1)/2]","sum of linear square roots"),
-							new Rule("sqrt(x+a)-x=y->[x=(sqrt(4*a-4*y+1)-2*y+1)/2,x=(-sqrt(4*a-4*y+1)-2*y+1)/2]","sum of linear square roots"),
+							new Rule("m*sqrt(a)+sqrt(b)=c->4*a*b*m^2-expand((c^2-b-a*m^2)^2)=0","sum of linear square roots"),
 							
-							new Rule("y*x+sqrt(a+m*x+b*x^2)=z->[x=(sqrt(-4*a*b+4*a*y^2+4*b*z^2+m^2+4*m*y*z)+m+2*y*z)/(2*(y^2-b)),x=(-sqrt(-4*a*b+4*a*y^2+4*b*z^2+m^2+4*m*y*z)+m+2*y*z)/(2*(y^2-b))]","linear plus square root of quadratic"),
-							new Rule("y*x-sqrt(a+m*x+b*x^2)=z->[x=(sqrt(-4*a*b+4*a*y^2+4*b*z^2+m^2+4*m*y*z)+m+2*y*z)/(2*(y^2-b)),x=(-sqrt(-4*a*b+4*a*y^2+4*b*z^2+m^2+4*m*y*z)+m+2*y*z)/(2*(y^2-b))]","linear plus square root of quadratic"),
-							new Rule("-y*x+sqrt(a+m*x+b*x^2)=z->[x=(sqrt(-4*a*b+4*a*y^2+4*b*z^2+m^2+4*m*y*z)+m+2*y*z)/(2*(b-y^2)),x=(-sqrt(-4*a*b+4*a*y^2+4*b*z^2+m^2+4*m*y*z)+m+2*y*z)/(2*(b-y^2))]","linear plus square root of quadratic"),
-							
-							new Rule("y*x+k*sqrt(a+m*x+b*x^2)=z->[x=(-sqrt(-4*a*b*k^4+4*a*k^2*y^2+4*b*k^2*z^2+k^4*m^2+4*k^2*m*y*z)-k^2*m-2*y*z)/(2*(b*k^2-y^2)),x=(sqrt(-4*a*b*k^4+4*a*k^2*y^2+4*b*k^2*z^2+k^4*m^2+4*k^2*m*y*z)-k^2*m-2*y*z)/(2*(b*k^2-y^2))]","linear plus square root of quadratic"),
-							new Rule("y*x-k*sqrt(a+m*x+b*x^2)=z->[x=(-sqrt(-4*a*b*k^4+4*a*k^2*y^2+4*b*k^2*z^2+k^4*m^2+4*k^2*m*y*z)-k^2*m-2*y*z)/(2*(b*k^2-y^2)),x=(sqrt(-4*a*b*k^4+4*a*k^2*y^2+4*b*k^2*z^2+k^4*m^2+4*k^2*m*y*z)-k^2*m-2*y*z)/(2*(b*k^2-y^2))]","linear plus square root of quadratic"),
-							new Rule("-y*x+k*sqrt(a+m*x+b*x^2)=z->[x=(-sqrt(-4*a*b*k^4+4*a*k^2*y^2+4*b*k^2*z^2+k^4*m^2+4*k^2*m*y*z)-k^2*m-2*y*z)/(-2*(b*k^2-y^2)),x=(sqrt(-4*a*b*k^4+4*a*k^2*y^2+4*b*k^2*z^2+k^4*m^2+4*k^2*m*y*z)-k^2*m-2*y*z)/(-2*(b*k^2-y^2))]","linear plus square root of quadratic"),
-							
+							new Rule("a+sqrt(b)=c->b-expand((c-a)^2)=0","root sum"),
+							new Rule("a+k*sqrt(b)=c->k^2*b-expand((c-a)^2)=0","root sum"),
 					};
 					Rule.initRules(cases);
 				}
@@ -196,7 +187,7 @@ public class Solve extends Expr{
 				}
 			};
 			
-			Expr quadAns = createExpr("[x=(-b+sqrt(b^2+4*a*c))/(2*a),x=(-b-sqrt(b^2+4*a*c))/(2*a)]");
+			Expr quadAns = createExpr("{x=(-b+sqrt(b^2+4*a*c))/(2*a),x=(-b-sqrt(b^2+4*a*c))/(2*a)}");
 			
 			quadraticCase = new Rule("solving quadratics") {
 				private static final long serialVersionUID = 1L;
@@ -283,9 +274,9 @@ public class Solve extends Expr{
 					cases = new Rule[] {
 							new Rule("ln(a)=b->a=e^b","log case for solve"),
 							
-							new Rule("sin(a)=b->[a=asin(b),a=pi-asin(b)]","sin case for solve"),
-							new Rule("cos(a)=b->[a=acos(b),a=-acos(b)]","cos case for solve"),
-							new Rule("tan(a)=b->[a=atan(b),a=atan(b)-pi]","tan case for solve"),
+							new Rule("sin(a)=b->{a=asin(b),a=pi-asin(b)}","sin case for solve"),
+							new Rule("cos(a)=b->{a=acos(b),a=-acos(b)}","cos case for solve"),
+							new Rule("tan(a)=b->{a=atan(b),a=atan(b)-pi}","tan case for solve"),
 							
 							new Rule("asin(a)=b->a=sin(b)","tan case for solve"),
 							new Rule("acos(a)=b->a=cos(b)","tan case for solve"),
@@ -544,20 +535,11 @@ public class Solve extends Expr{
 			
 			ExprList reduced = solve.getEqus();
 			Sequence removed = new Sequence();//keep reducing problem
-			for(int i = 0;i<vars.size()-1;i++) {
+			for(int i = 0;i<vars.size();i++) {
 				Var v = (Var)vars.get(i);
 				removeAnEq(reduced,v,casInfo,removed);
 			}
-			//solve the last variable
-			Expr solution = solve((Equ)reduced.get(),(Var)vars.get(vars.size()-1)).simplify(casInfo);
-			if(solution instanceof ExprList) {
-				solution = solution.get();
-			}else if(solution instanceof Solve) {
-				return solve;
-			}
-			
 			ExprList variableSolutions = new ExprList();
-			variableSolutions.add(solution);
 			
 			//work backwards
 			for(int i = removed.size()-1;i>=0;i--) {
@@ -752,7 +734,7 @@ public class Solve extends Expr{
 		return "solve(equation,variable) the algebraic solver\n"
 				+ "examples\n"
 				+ "solve(x^x=2,x)->x=ln(2)/lambertW(ln(2))\n"
-				+ "solve(x^2=2,x)->[x=-sqrt(2),x=sqrt(2)]";
+				+ "solve(x^2=2,x)->{x=-sqrt(2),x=sqrt(2)}";
 	}
 
 }

@@ -37,12 +37,12 @@ public class Sequence extends Expr{
 	@Override
 	public String toString() {
 		String out = "";
-		out+="{";
+		out+="[";
 		for(int i = 0;i<size();i++) {
 			out+=get(i);
 			if(i != size()-1) out+=",";
 		}
-		out+="}";
+		out+="]";
 		return out;
 	}
 	
@@ -55,7 +55,7 @@ public class Sequence extends Expr{
 	public String help() {
 		return "list expression that can contain repeats\n"
 				+ "examples\n"
-				+ "{2,2,3}\n"
-				+ "next({1,2,3,4,5},4)->{6,7,8,9}";
+				+ "[2,2,3]\n"
+				+ "next([1,2,3,4,5],4)->[6,7,8,9]";
 	}
 }

@@ -396,9 +396,9 @@ public class StackEditor extends QuickMath {
 				becomes();
 			} else if (command.equals(":=")) {
 				define();
-			} else if (command.equals("[")) {
+			} else if (command.equals("{")) {
 				createList();
-			} else if (command.equals("]")) {
+			} else if (command.equals("}")) {
 				addToList();
 			} else if (command.equals("break")) {
 				breakApart();

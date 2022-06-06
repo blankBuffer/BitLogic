@@ -22,7 +22,7 @@ public class Integrate extends Expr{
 		String case1 = before.replace("lin", "(b*x)")+"->("+after.replace("lin", "(b*x)")+")/b";
 		cases[1] = new Rule(case1,"~contains(b,x)",name);
 		String case2 = before.replace("lin", "(a+b*x)")+"->("+after.replace("lin", "(a+b*x)")+")/b";
-		cases[2] = new Rule(case2,"~contains({a,b},x)",name);
+		cases[2] = new Rule(case2,"~contains([a,b],x)",name);
 		String case3 = before.replace("lin", "(x+a)")+"->"+after.replace("lin", "(x+a)");
 		cases[3] = new Rule(case3,"~contains(a,x)",name);
 		
@@ -89,41 +89,41 @@ public class Integrate extends Expr{
 	},"product of two trigonometric functions with different linear equations");
 	
 	static Rule loopingIntegrals = new Rule(new Rule[] {
-			new Rule("integrate(sin(a*x)*b^(c*x),x)->c*ln(b)*sin(a*x)*b^(c*x)/(a^2+c^2*ln(b)^2)-a*cos(a*x)*b^(c*x)/(a^2+c^2*ln(b)^2)","~contains({a,b,c},x)","integral of looping sine"),
-			new Rule("integrate(sin(a*x)*b^x,x)->ln(b)*sin(a*x)*b^x/(a^2+ln(b)^2)-a*cos(a*x)*b^x/(a^2+ln(b)^2)","~contains({a,b},x)","integral of looping sine"),
-			new Rule("integrate(sin(x)*b^(c*x),x)->c*ln(b)*sin(x)*b^(c*x)/(1+c^2*ln(b)^2)-cos(x)*b^(c*x)/(1+c^2*ln(b)^2)","~contains({b,c},x)","integral of looping sine"),
+			new Rule("integrate(sin(a*x)*b^(c*x),x)->c*ln(b)*sin(a*x)*b^(c*x)/(a^2+c^2*ln(b)^2)-a*cos(a*x)*b^(c*x)/(a^2+c^2*ln(b)^2)","~contains([a,b,c],x)","integral of looping sine"),
+			new Rule("integrate(sin(a*x)*b^x,x)->ln(b)*sin(a*x)*b^x/(a^2+ln(b)^2)-a*cos(a*x)*b^x/(a^2+ln(b)^2)","~contains([a,b],x)","integral of looping sine"),
+			new Rule("integrate(sin(x)*b^(c*x),x)->c*ln(b)*sin(x)*b^(c*x)/(1+c^2*ln(b)^2)-cos(x)*b^(c*x)/(1+c^2*ln(b)^2)","~contains([b,c],x)","integral of looping sine"),
 			new Rule("integrate(sin(x)*b^x,x)->ln(b)*sin(x)*b^x/(1+ln(b)^2)-cos(x)*b^x/(1+ln(b)^2)","~contains(b,x)","integral of looping sine"),
 			
-			new Rule("integrate(sin(x+k)*b^x,x)->ln(b)*sin(x+k)*b^x/(1+ln(b)^2)-cos(x+k)*b^x/(1+ln(b)^2)","~contains({k,b},x)","integral of looping sine"),
-			new Rule("integrate(sin(a*x+k)*b^x,x)->ln(b)*sin(a*x+k)*b^x/(a^2+ln(b)^2)-a*cos(a*x+k)*b^x/(a^2+ln(b)^2)","~contains({a,k,b},x)","integral of looping sine"),
+			new Rule("integrate(sin(x+k)*b^x,x)->ln(b)*sin(x+k)*b^x/(1+ln(b)^2)-cos(x+k)*b^x/(1+ln(b)^2)","~contains([k,b],x)","integral of looping sine"),
+			new Rule("integrate(sin(a*x+k)*b^x,x)->ln(b)*sin(a*x+k)*b^x/(a^2+ln(b)^2)-a*cos(a*x+k)*b^x/(a^2+ln(b)^2)","~contains([a,k,b],x)","integral of looping sine"),
 			
 			
-			new Rule("integrate(cos(a*x)*b^(c*x),x)->a*sin(a*x)*b^(c*x)/(a^2+c^2*ln(b)^2)+c*ln(b)*cos(a*x)*b^(c*x)/(a^2+c^2*ln(b)^2)","~contains({a,b,c},x)","integral of looping cosine"),
-			new Rule("integrate(cos(a*x)*b^x,x)->a*sin(a*x)*b^x/(a^2+ln(b)^2)+ln(b)*cos(a*x)*b^x/(a^2+ln(b)^2)","~contains({a,b},x)","integral of looping cosine"),
-			new Rule("integrate(cos(x)*b^(c*x),x)->sin(x)*b^(c*x)/(1+c^2*ln(b)^2)+c*ln(b)*cos(x)*b^(c*x)/(1+c^2*ln(b)^2)","~contains({b,c},x)","integral of looping cosine"),
+			new Rule("integrate(cos(a*x)*b^(c*x),x)->a*sin(a*x)*b^(c*x)/(a^2+c^2*ln(b)^2)+c*ln(b)*cos(a*x)*b^(c*x)/(a^2+c^2*ln(b)^2)","~contains([a,b,c],x)","integral of looping cosine"),
+			new Rule("integrate(cos(a*x)*b^x,x)->a*sin(a*x)*b^x/(a^2+ln(b)^2)+ln(b)*cos(a*x)*b^x/(a^2+ln(b)^2)","~contains([a,b],x)","integral of looping cosine"),
+			new Rule("integrate(cos(x)*b^(c*x),x)->sin(x)*b^(c*x)/(1+c^2*ln(b)^2)+c*ln(b)*cos(x)*b^(c*x)/(1+c^2*ln(b)^2)","~contains([b,c],x)","integral of looping cosine"),
 			new Rule("integrate(cos(x)*b^x,x)->sin(x)*b^x/(1+ln(b)^2)+ln(b)*cos(x)*b^x/(1+ln(b)^2)","~contains(b,x)","integral of looping cosine"),
 			
-			new Rule("integrate(cos(x+k)*b^x,x)->sin(x+k)*b^x/(1+ln(b)^2)+ln(b)*cos(x+k)*b^x/(1+ln(b)^2)","~contains({k,b},x)","integral of looping cosine"),
-			new Rule("integrate(cos(a*x+k)*b^x,x)->a*sin(a*x+k)*b^x/(a^2+ln(b)^2)+ln(b)*cos(a*x+k)*b^x/(a^2+ln(b)^2)","~contains({a,k,b},x)","integral of looping cosine"),
+			new Rule("integrate(cos(x+k)*b^x,x)->sin(x+k)*b^x/(1+ln(b)^2)+ln(b)*cos(x+k)*b^x/(1+ln(b)^2)","~contains([k,b],x)","integral of looping cosine"),
+			new Rule("integrate(cos(a*x+k)*b^x,x)->a*sin(a*x+k)*b^x/(a^2+ln(b)^2)+ln(b)*cos(a*x+k)*b^x/(a^2+ln(b)^2)","~contains([a,k,b],x)","integral of looping cosine"),
 	},"looping integrals");
 	
 	static Rule recursivePowerOverSqrt = new Rule(new Rule[] {
-		new Rule("integrate(x^n/sqrt(a*x+b),x)->(2*x^n*sqrt(a*x+b))/(a*(2*n+1))-(2*n*b*integrate(x^(n-1)/sqrt(a*x+b),x))/(a*(2*n+1))","~contains({n,a,b},x)","power over sqrt"),
-		new Rule("integrate(x^n/sqrt(x+b),x)->(2*x^n*sqrt(x+b))/(2*n+1)-(2*n*b*integrate(x^(n-1)/sqrt(x+b),x))/(2*n+1)","~contains({n,b},x)","power over sqrt"),
-		new Rule("integrate(x/sqrt(a*x+b),x)->(2*x*sqrt(a*x+b))/(a*3)-(2*b*integrate(1/sqrt(a*x+b),x))/(a*3)","~contains({a,b},x)","power over sqrt"),
+		new Rule("integrate(x^n/sqrt(a*x+b),x)->(2*x^n*sqrt(a*x+b))/(a*(2*n+1))-(2*n*b*integrate(x^(n-1)/sqrt(a*x+b),x))/(a*(2*n+1))","~contains([n,a,b],x)","power over sqrt"),
+		new Rule("integrate(x^n/sqrt(x+b),x)->(2*x^n*sqrt(x+b))/(2*n+1)-(2*n*b*integrate(x^(n-1)/sqrt(x+b),x))/(2*n+1)","~contains([n,b],x)","power over sqrt"),
+		new Rule("integrate(x/sqrt(a*x+b),x)->(2*x*sqrt(a*x+b))/(a*3)-(2*b*integrate(1/sqrt(a*x+b),x))/(a*3)","~contains([a,b],x)","power over sqrt"),
 		new Rule("integrate(x/sqrt(x+b),x)->(2*x*sqrt(x+b))/3-(2*b*integrate(1/sqrt(x+b),x))/3","~contains(b,x)","power over sqrt"),
 	},"power over sqrt");
 	
 	static Rule recursiveInvPowerOverSqrt = new Rule(new Rule[] {
-			new Rule("integrate(1/(sqrt(a*x+b)*x^n),x)->(-sqrt(a*x+b))/((n-1)*b*x^(n-1))-(a*(2*n-3)*integrate(1/(sqrt(a*x+b)*x^(n-1)),x))/(2*b*(n-1))","~contains({a,b,n},x)","power over sqrt"),
-			new Rule("integrate(1/(sqrt(a*x+b)*x),x)->ln(1-sqrt(a*x+b)/sqrt(b))/sqrt(b)-ln(1+sqrt(a*x+b)/sqrt(b))/sqrt(b)","~contains({a,b},x)&(eval(b>0)|allowComplexNumbers())","power over sqrt"),
-			new Rule("integrate(1/(sqrt(x+b)*x^n),x)->(-sqrt(x+b))/((n-1)*b*x^(n-1))-((2*n-3)*integrate(1/(sqrt(x+b)*x^(n-1)),x))/(2*b*(n-1))","~contains({b,n},x)","power over sqrt"),
+			new Rule("integrate(1/(sqrt(a*x+b)*x^n),x)->(-sqrt(a*x+b))/((n-1)*b*x^(n-1))-(a*(2*n-3)*integrate(1/(sqrt(a*x+b)*x^(n-1)),x))/(2*b*(n-1))","~contains([a,b,n],x)","power over sqrt"),
+			new Rule("integrate(1/(sqrt(a*x+b)*x),x)->ln(1-sqrt(a*x+b)/sqrt(b))/sqrt(b)-ln(1+sqrt(a*x+b)/sqrt(b))/sqrt(b)","~contains([a,b],x)&(eval(b>0)|allowComplexNumbers())","power over sqrt"),
+			new Rule("integrate(1/(sqrt(x+b)*x^n),x)->(-sqrt(x+b))/((n-1)*b*x^(n-1))-((2*n-3)*integrate(1/(sqrt(x+b)*x^(n-1)),x))/(2*b*(n-1))","~contains([b,n],x)","power over sqrt"),
 			new Rule("integrate(1/(sqrt(x+b)*x),x)->ln(1-sqrt(x+b)/sqrt(b))/sqrt(b)-ln(1+sqrt(x+b)/sqrt(b))/sqrt(b)","~contains(b,x)&(eval(b>0)|allowComplexNumbers())","power over sqrt"),
 	},"1 over power times sqrt");
 	
 	static Rule integralForArcsin = new Rule(new Rule[]{
 			new Rule("integrate(1/sqrt(a-x^2),x)->asin(x/sqrt(a))","~contains(a,x)","simple integral leading to arcsin"),
-			new Rule("integrate(1/sqrt(a+b*x^2),x)->asin((sqrt(-b)*x)/sqrt(a))/sqrt(-b)","(eval(b<0)|allowComplexNumbers())&~contains({a,b},x)","simple integral leading to arcsin"),
+			new Rule("integrate(1/sqrt(a+b*x^2),x)->asin((sqrt(-b)*x)/sqrt(a))/sqrt(-b)","(eval(b<0)|allowComplexNumbers())&~contains([a,b],x)","simple integral leading to arcsin"),
 	},"integrals leading to arcsin");
 	
 	static Rule sinCosProdReduction = new Rule(new Rule[] {
@@ -190,11 +190,11 @@ public class Integrate extends Expr{
 	
 	// these are the reverse process of diff(atan(x^n),x) -> (n-1)*x^(n-1)/(x^(2*n)+1) 
 	static Rule inverseQuadraticUSub = new Rule(new Rule[] {
-			new Rule("integrate(x^a/(x^b+c),x)->atan(x^(a+1)/sqrt(c))/((a+1)*sqrt(c))","eval(b/(a+1)=2)&(eval(c>0)|allowComplexNumbers())&~contains({a,b,c},x)","inverse quadratic with u sub"),
-			new Rule("integrate(x^a/(d*x^b+c),x)->atan((x^(a+1)*sqrt(d))/sqrt(c))/((a+1)*sqrt(d*c))","eval(b/(a+1)=2)&(eval(c*d>0)|allowComplexNumbers())&~contains({a,b,c,d},x)","inverse quadratic with u sub"),
+			new Rule("integrate(x^a/(x^b+c),x)->atan(x^(a+1)/sqrt(c))/((a+1)*sqrt(c))","eval(b/(a+1)=2)&(eval(c>0)|allowComplexNumbers())&~contains([a,b,c],x)","inverse quadratic with u sub"),
+			new Rule("integrate(x^a/(d*x^b+c),x)->atan((x^(a+1)*sqrt(d))/sqrt(c))/((a+1)*sqrt(d*c))","eval(b/(a+1)=2)&(eval(c*d>0)|allowComplexNumbers())&~contains([a,b,c,d],x)","inverse quadratic with u sub"),
 			
-			new Rule("integrate(x/(x^b+c),x)->atan(x^2/sqrt(c))/(2*sqrt(c))","eval(b/2=2)&(eval(c>0)|allowComplexNumbers())&~contains({b,c},x)","inverse quadratic with u sub"),
-			new Rule("integrate(x/(d*x^b+c),x)->atan((x^2*sqrt(d))/sqrt(c))/(2*sqrt(d*c))","eval(b/2=2)&(eval(c*d>0)|allowComplexNumbers())&~contains({b,c,d},x)","inverse quadratic with u sub"),
+			new Rule("integrate(x/(x^b+c),x)->atan(x^2/sqrt(c))/(2*sqrt(c))","eval(b/2=2)&(eval(c>0)|allowComplexNumbers())&~contains([b,c],x)","inverse quadratic with u sub"),
+			new Rule("integrate(x/(d*x^b+c),x)->atan((x^2*sqrt(d))/sqrt(c))/(2*sqrt(d*c))","eval(b/2=2)&(eval(c*d>0)|allowComplexNumbers())&~contains([b,c,d],x)","inverse quadratic with u sub"),
 	},"reverse to arctan with power");
 	
 	static Rule inverseQuadraticToNReduction = new Rule("1 over quadratic to the n") {
@@ -529,27 +529,27 @@ public class Integrate extends Expr{
 	static Rule psudoTrigSub = new Rule(new Rule[]{
 			
 			//x^n/sqrt(1-x^2) generalization
-			new Rule("integrate(x^n/sqrt(a+b*x^2),x)->a^(n/2)/(-b)^((n+1)/2)*subst(integrate(sin(0k)^n,0k),0k=asin(sqrt(-b/a)*x))","(eval(b<0)&eval(a>0)&(eval(-b<a)|eval(-b=a))|allowComplexNumbers())&~contains({a,b},x)&isType(n,num)","trig sub"),
+			new Rule("integrate(x^n/sqrt(a+b*x^2),x)->a^(n/2)/(-b)^((n+1)/2)*subst(integrate(sin(0k)^n,0k),0k=asin(sqrt(-b/a)*x))","(eval(b<0)&eval(a>0)&(eval(-b<a)|eval(-b=a))|allowComplexNumbers())&~contains([a,b],x)&isType(n,num)","trig sub"),
 			//sqrt(1-x^2)/x^n generalization
-			new Rule("integrate(sqrt(a+b*x^2)/x^n,x)->(-b)^((n-1)/2)/a^((n-2)/2)*subst(integrate(1/sin(0k)^n,0k)-integrate(1/sin(0k)^(n-2),0k),0k=asin(sqrt(-b/a)*x))","(eval(b<0)&eval(a>0)&(eval(-b<a)|eval(-b=a))|allowComplexNumbers())&~contains({a,b},x)&eval(n>1)&isType(n,num)","trig sub"),
+			new Rule("integrate(sqrt(a+b*x^2)/x^n,x)->(-b)^((n-1)/2)/a^((n-2)/2)*subst(integrate(1/sin(0k)^n,0k)-integrate(1/sin(0k)^(n-2),0k),0k=asin(sqrt(-b/a)*x))","(eval(b<0)&eval(a>0)&(eval(-b<a)|eval(-b=a))|allowComplexNumbers())&~contains([a,b],x)&eval(n>1)&isType(n,num)","trig sub"),
 			
 			//sqrt(1+x^2)/x^n generalization
-			new Rule("integrate(sqrt(a*x^2+b)/x^n,x)->a^((n-1)/2)/b^((n-2)/2)*subst(integrate(1/(cos(0k)^3*tan(0k)^n),0k),0k=atan(sqrt(a/b)*x))","~contains({a,b},x)&(eval(a>0)&eval(b>0)|allowComplexNumbers())&isType(n,num)","trig sub"),
+			new Rule("integrate(sqrt(a*x^2+b)/x^n,x)->a^((n-1)/2)/b^((n-2)/2)*subst(integrate(1/(cos(0k)^3*tan(0k)^n),0k),0k=atan(sqrt(a/b)*x))","~contains([a,b],x)&(eval(a>0)&eval(b>0)|allowComplexNumbers())&isType(n,num)","trig sub"),
 			new Rule("integrate(sqrt(x^2+b)/x^n,x)->1/b^((n-2)/2)*subst(integrate(1/(cos(0k)^3*tan(0k)^n),0k),0k=atan(x/sqrt(b)))","~contains(b,x)&(eval(b>0)|allowComplexNumbers())&isType(n,num)","trig sub"),
 			
 			//x^n/sqrt(1+x^2) generalization
-			new Rule("integrate(x^n/sqrt(a*x^2+b),x)->b^(n/2)/a^((n+1)/2)*subst(integrate(tan(0k)^n/cos(0k),0k),0k=atan(sqrt(a/b)*x))","~contains({a,b},x)&(eval(a>0)&eval(b>0)|allowComplexNumbers())&isType(n,num)","trig sub"),
+			new Rule("integrate(x^n/sqrt(a*x^2+b),x)->b^(n/2)/a^((n+1)/2)*subst(integrate(tan(0k)^n/cos(0k),0k),0k=atan(sqrt(a/b)*x))","~contains([a,b],x)&(eval(a>0)&eval(b>0)|allowComplexNumbers())&isType(n,num)","trig sub"),
 			new Rule("integrate(x^n/sqrt(x^2+b),x)->b^(n/2)*subst(integrate(tan(0k)^n/cos(0k),0k),0k=atan(x/sqrt(b)))","~contains(b,x)&(eval(b>0)|allowComplexNumbers())&isType(n,num)","trig sub"),
 			
 			//sqrt(x^2-1)/x^n generalization
-			new Rule("integrate(sqrt(a*x^2+b)/x^n,x)->a^((n-1)/2)/(-b)^((n-2)/2)*subst(integrate(cos(0k)^(n-3)*sin(0k)^2,0k),0k=acos(sqrt(-b)/(sqrt(a)*x)))","~contains({a,b},x)&(eval(a>0)&(eval(-b<a)|eval(-b=a))|allowComplexNumbers())&isType(n,num)","trig sub"),
+			new Rule("integrate(sqrt(a*x^2+b)/x^n,x)->a^((n-1)/2)/(-b)^((n-2)/2)*subst(integrate(cos(0k)^(n-3)*sin(0k)^2,0k),0k=acos(sqrt(-b)/(sqrt(a)*x)))","~contains([a,b],x)&(eval(a>0)&(eval(-b<a)|eval(-b=a))|allowComplexNumbers())&isType(n,num)","trig sub"),
 			new Rule("integrate(sqrt(x^2+b)/x^n,x)->1/(-b)^((n-2)/2)*subst(integrate(cos(0k)^(n-3)*sin(0k)^2,0k),0k=acos(sqrt(-b)/x))","~contains(b,x)&(eval(-b<1)|eval(b=-1)|allowComplexNumbers())&isType(n,num)","trig sub"),
 			
 			//x^n/sqrt(x^2-1) generalization
-			new Rule("integrate(x^n/sqrt(a*x^2+b),x)->(-b)^(n/2)/a^((n+1)/2)*subst(integrate(1/cos(0t)^(n+1),0t),0t=acos(sqrt(-b)/(sqrt(a)*x)))","~contains({a,b},x)&(eval(a>0)&(eval(-b<a)|eval(-b=a))|allowComplexNumbers())&isType(n,num)",""),
+			new Rule("integrate(x^n/sqrt(a*x^2+b),x)->(-b)^(n/2)/a^((n+1)/2)*subst(integrate(1/cos(0t)^(n+1),0t),0t=acos(sqrt(-b)/(sqrt(a)*x)))","~contains([a,b],x)&(eval(a>0)&(eval(-b<a)|eval(-b=a))|allowComplexNumbers())&isType(n,num)",""),
 			new Rule("integrate(x^n/sqrt(x^2+b),x)->(-b)^(n/2)*subst(integrate(1/cos(0t)^(n+1),0t),0t=acos(sqrt(-b)/x))","~contains(b,x)&(eval(-b<1)|eval(b=-1)|allowComplexNumbers())&isType(n,num)",""),
 			
-			new Rule("integrate(1/sqrt(a+b*x^2),x)->ln(x*sqrt(b)+sqrt(a+b*x^2))/(2*sqrt(b))-ln(sqrt(a+b*x^2)-x*sqrt(b))/(2*sqrt(b))","(eval(a>0)&eval(b>0)|allowComplexNumbers())&~contains({a,b},x)","trig sub"),
+			new Rule("integrate(1/sqrt(a+b*x^2),x)->ln(x*sqrt(b)+sqrt(a+b*x^2))/(2*sqrt(b))-ln(sqrt(a+b*x^2)-x*sqrt(b))/(2*sqrt(b))","(eval(a>0)&eval(b>0)|allowComplexNumbers())&~contains([a,b],x)","trig sub"),
 			new Rule("integrate(1/sqrt(a+x^2),x)->ln(x+sqrt(a+x^2))/2-ln(sqrt(a+x^2)-x)/2","(eval(a>0)|allowComplexNumbers())&~contains(a,x)","trig sub"),
 			
 	},"psudo trig substitution");
@@ -618,7 +618,7 @@ public class Integrate extends Expr{
 		Expr addedDeriv;
 		@Override
 		public void init() {
-			subs = (ExprList)createExpr("[sin(0a)=(2*0t)/(1+0t^2),cos(0a)=(1-0t^2)/(1+0t^2)]");
+			subs = (ExprList)createExpr("{sin(0a)=(2*0t)/(1+0t^2),cos(0a)=(1-0t^2)/(1+0t^2)}");
 			addedDeriv = createExpr("2/(0t^2+1)");
 		}
 		

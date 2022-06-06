@@ -361,11 +361,11 @@ public class ExprRender extends QuickMath{//sort of a wrap of the image type but
 				setHeight(Math.max(parameters.getHeight(),fontSize()));
 				
 				if(e instanceof ExprList) {
-					leftBrac.makeString("[",getHeight());
-					rightBrac.makeString("]",getHeight());
-				}else {
 					leftBrac.makeString("{",getHeight());
 					rightBrac.makeString("}",getHeight());
+				}else {
+					leftBrac.makeString("[",getHeight());
+					rightBrac.makeString("]",getHeight());
 				}
 				
 				setWidth(getFontWidth()+parameters.getWidth()+getFontWidth());
