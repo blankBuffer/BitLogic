@@ -18,22 +18,13 @@ public class Atan extends Expr{
 		add(expr);
 	}
 	
-	static Rule inverseUnitCircle = new Rule("asin unit circle"){
-		private static final long serialVersionUID = 1L;
-		
-		@Override
-		public void init(){
-			cases = new Rule[]{
-				new Rule("atan(0)->0","arctan of zero"),
-				new Rule("atan(1)->pi/4","arctan of one"),
-				new Rule("atan(sqrt(3))->pi/3","arctan of root 3"),
-				new Rule("atan(sqrt(3)/3)->pi/6","arctan of root 3 over 3"),
-				new Rule("atan(inf)->pi/2-epsilon","arctan of infinity"),
-			};
-			Rule.initRules(cases);
-		}
-		
-	};
+	static Rule inverseUnitCircle = new Rule(new Rule[]{
+			new Rule("atan(0)->0","arctan of zero"),
+			new Rule("atan(1)->pi/4","arctan of one"),
+			new Rule("atan(sqrt(3))->pi/3","arctan of root 3"),
+			new Rule("atan(sqrt(3)/3)->pi/6","arctan of root 3 over 3"),
+			new Rule("atan(inf)->pi/2-epsilon","arctan of infinity"),
+	},"asin unit circle");
 	
 	static Sequence ruleSequence = null;
 	

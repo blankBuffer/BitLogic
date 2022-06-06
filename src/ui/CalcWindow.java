@@ -747,8 +747,8 @@ public class CalcWindow extends JFrame{
 				while(loading) {
 					
 					try {
-						progressBar.setValue((int)Rule.loadingPercent);
-						if(Rule.loadingPercent == 100) loading = false;
+						progressBar.setValue((int)Rule.getLoadingPercent());
+						if(Rule.getLoadingPercent() == 100) loading = false;
 						Thread.sleep(15);
 					} catch (InterruptedException e) {e.printStackTrace();}
 				}
@@ -759,7 +759,7 @@ public class CalcWindow extends JFrame{
 		Thread rulesLoader = new Thread() {
 			@Override
 			public void run() {
-				Rule.loadRules();
+				Rule.loadCompileSimplifyRules();
 			}
 		};
 		rulesLoader.start();

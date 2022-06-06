@@ -43,7 +43,7 @@ public abstract class Expr extends QuickMath implements Serializable{
 	
 	public abstract Sequence getRuleSequence();
 	public abstract String help();
-	@SuppressWarnings("static-method")
+	
 	public Rule getDoneRule() {//post processing rule
 		return null;
 	}
@@ -90,7 +90,7 @@ public abstract class Expr extends QuickMath implements Serializable{
 		}
 	}
 	
-	public static boolean USE_RECUSION_SAFTEY = false;
+	public static boolean USE_RECUSION_SAFTEY = true;
 	
 	public static long ruleCallCount = 0;
 	public static int RECURSION_SAFETY;
@@ -99,8 +99,8 @@ public abstract class Expr extends QuickMath implements Serializable{
 		if(Thread.currentThread().isInterrupted()) return null;
 		Expr toBeSimplified = copy();
 		if(flags.simple) return toBeSimplified;
-		
-		if(this instanceof Var) return casInfo.definitions.getVar(toString());
+		//this.println();
+		if(this instanceof Var) return casInfo.definitions.getVar(toString());//find variable in definitions
 		if(this instanceof Func && getRuleSequence().size() == 0) {
 			Rule r = casInfo.definitions.getFuncRule( ((Func)toBeSimplified ).name );
 			if(r!=null) {
@@ -155,7 +155,6 @@ public abstract class Expr extends QuickMath implements Serializable{
 		
 	}
 	
-	@SuppressWarnings("static-method")
 	public Var getVar(){
 		return null;
 	}
@@ -521,6 +520,20 @@ public abstract class Expr extends QuickMath implements Serializable{
 			if(!temp.flags.simple) {
 				temp = temp.simplify(casInfo);
 				subExpr.set(i, temp);
+			}
+		}
+	}
+	
+	public void simplifyChildren(CasInfo casInfo,String ignoredType) {
+		for(int i = 0;i<subExpr.size();i++) {
+			Expr temp = subExpr.get(i);
+			if(!temp.flags.simple) {
+				if(temp.containsType(ignoredType)) {
+					temp.simplifyChildren(casInfo, ignoredType);
+				}else {
+					temp = temp.simplify(casInfo);
+					subExpr.set(i, temp);
+				}
 			}
 		}
 	}

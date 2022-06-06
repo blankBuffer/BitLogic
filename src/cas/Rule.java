@@ -75,7 +75,7 @@ public class Rule extends Expr{
 	 * list of all pattern based rules in the CAS
 	 * we store it so that we can simplify the patterns before being used
 	 */
-	private static ArrayList<Rule> allPatternBasedRules = new ArrayList<Rule>();
+	private static Sequence allPatternBasedRules = sequence();
 	
 	public Rule(String pattern,String name){
 		patternStr = pattern;
@@ -104,11 +104,15 @@ public class Rule extends Expr{
 		ruleCount++;
 	}
 	
+	
 	/*
 	 * loads the rule from the 'patternStr' string to the 'pattern' expression
 	 * loads the condition from the 'conditionStr' string to the 'condition' expression
 	 */
 	public void init(){
+		
+		//System.out.println(this);
+		
 		if(patternStr != null) {
 			pattern = (Becomes) createExpr(patternStr);
 		}
@@ -124,6 +128,7 @@ public class Rule extends Expr{
 		
 		if(conditionStr != null) condition = createExpr(conditionStr);
 		if(cases != null) Rule.initRules(cases);
+		
 	}
 	
 	@Override
@@ -326,6 +331,7 @@ public class Rule extends Expr{
 	}
 	
 	public Expr applyRuleToExpr(Expr expr,CasInfo casInfo){
+		
 		if(cases == null) {
 			if(fastSimilarExpr(pattern.getLeftSide(),expr)) {
 				Sequence parts = sequence();
@@ -359,18 +365,19 @@ public class Rule extends Expr{
 		return expr;
 	}
 	
-	private static boolean LOADED = false;
-	public static boolean isLoaded() {
-		return LOADED;
+	private static boolean ALL_LOADED = false;
+	public static boolean isAllLoaded() {
+		return ALL_LOADED;
 	}
 	
-	public static volatile float loadingPercent = 0;
-	public static void loadRules(){
-		if(LOADED) return;
-		System.out.println("loading CAS rules...");
-		long startTime = System.nanoTime();
-		
-		random = new Random(761234897);
+	
+	
+	private static volatile float loadingPercent = 0;
+	public static float getLoadingPercent() {
+		return loadingPercent;
+	}
+	
+	private static void loadTypeRules() {
 		StandardRules.loadRules();
 		
 		loadingPercent = 10;
@@ -434,14 +441,30 @@ public class Rule extends Expr{
 		loadingPercent = 70;
 		
 		SimpleFuncs.loadRules();
+	}
+	
+	public static void loadCompileSimplifyRules(){//loads and simpoifies everything, faster runtime, ,much slower runtime
+		if(ALL_LOADED) return;
+		System.out.println("loading CAS rules...");
+		long startTime = System.nanoTime();
+		
+		random = new Random(761234897);
+		
+		loadTypeRules();
 		
 		float incr = 20.0f/allPatternBasedRules.size();
-		for(Rule r:allPatternBasedRules) {
-			if(!r.pattern.getRightSide().containsType(r.pattern.getLeftSide().typeName())) {
+		
+		
+		for(int i = 0;i<allPatternBasedRules.size();i++) {//simplify
+			Rule r = (Rule)allPatternBasedRules.get(i);
+			if(!r.pattern.getRightSide().containsType(r.pattern.getLeftSide().typeName())) {//avoid recursion
 				r.pattern.setRightSide(r.pattern.getRightSide().simplify(CasInfo.normal));
+			}else {
+				r.pattern.getRightSide().simplifyChildren(CasInfo.normal, r.pattern.getLeftSide().typeName());
 			}
 			loadingPercent+=incr;
 		}
+		
 		
 		loadingPercent = 90;
 		
@@ -453,7 +476,7 @@ public class Rule extends Expr{
 		System.out.println("done loading "+ruleCount+" Rules! took "+((endTime-startTime)/1000000.0)+" ms");
 		
 		loadingPercent = 100;
-		LOADED = true;
+		ALL_LOADED = true;
 	}
 	
 	@Override

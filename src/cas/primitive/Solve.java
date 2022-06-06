@@ -14,22 +14,46 @@ public class Solve extends Expr{
 		add(v);
 	}
 	
+	public Solve(ExprList equs,ExprList vars) {
+		add(equs);
+		add(vars);
+	}
+	
 	@Override
 	public Var getVar() {
 		return (Var)get(1);
+	}
+	
+	public ExprList getVars() {
+		return (ExprList)get(1);
 	}
 	
 	Equ getEqu() {
 		return (Equ)get();
 	}
 	
+	ExprList getEqus() {
+		return (ExprList)get();
+	}
+	
 	void setEqu(Equ e) {
 		set(0,e);
 	}
 	
+	void setEqus(ExprList equs) {
+		set(0,equs);
+	}
+	
+	public boolean singleEq() {
+		return get() instanceof Equ;
+	}
+	public boolean manyEqus() {
+		return get() instanceof ExprList;
+	}
+	
 	static Sequence ruleSequence;
 	
-	static Rule solvedCase = new Rule("solved equation") {
+	static Rule solveSingleEqCase = new Rule("solved equation") {
 		private static final long serialVersionUID = 1L;
 		
 		Sequence loopedSequence;
@@ -172,14 +196,10 @@ public class Solve extends Expr{
 				}
 			};
 			
-			quadraticCase = new Rule("") {
+			Expr quadAns = createExpr("[x=(-b+sqrt(b^2+4*a*c))/(2*a),x=(-b-sqrt(b^2+4*a*c))/(2*a)]");
+			
+			quadraticCase = new Rule("solving quadratics") {
 				private static final long serialVersionUID = 1L;
-				
-				Expr ans;
-				@Override
-				public void init() {
-					ans = createExpr("[x=(-b+sqrt(b^2+4*a*c))/(2*a),x=(-b-sqrt(b^2+4*a*c))/(2*a)]");
-				}
 				
 				@Override
 				public Expr applyRuleToExpr(Expr e,CasInfo casInfo){
@@ -225,7 +245,7 @@ public class Solve extends Expr{
 							//a*x^2+b*x=c
 							//x = -b+sqrt(b^2+4*a*c)/2a
 							
-							Expr answer = ans.replace( exprList( equ(var("a"),a),equ(var("b"),b),equ(var("c"),c),equ(var("x"),varPart) ) );
+							Expr answer = quadAns.replace( exprList( equ(var("a"),a),equ(var("b"),b),equ(var("c"),c),equ(var("x"),varPart) ) );
 							
 							for(int i = 0;i<answer.size();i++) {
 								answer.set(i, solve( (Equ)answer.get(i) ,v));
@@ -479,6 +499,8 @@ public class Solve extends Expr{
 		public Expr applyRuleToExpr(Expr e,CasInfo casInfo){
 			Expr oldState = null;
 			Solve solve = (Solve)e;
+			if(!solve.singleEq()) return e;
+			
 			while(!solve.getEqu().equals(oldState)) {
 				oldState = solve.getEqu().copy();
 				for(int i = 0;i<loopedSequence.size();i++) {
@@ -494,9 +516,79 @@ public class Solve extends Expr{
 		}
 	};
 	
+	static Rule solveSetCase = new Rule("solve a set of equations") {
+		private static final long serialVersionUID = 1L;
+		
+		ExprList removeAnEq(ExprList equs,Var v,CasInfo casInfo,Sequence removed) {//remove an equation reducing the problem
+			for(int i = 0;i<equs.size();i++) {
+				Expr solution = solve((Equ)equs.get(i),v).simplify(casInfo);
+				if(solution instanceof ExprList) {
+					solution = solution.get();
+				}else if(solution instanceof Solve) {
+					continue;
+				}
+				
+				ExprList out = new ExprList();
+				for(int j = 0;j<equs.size();j++) {
+					if(i == j) continue;
+					
+					out.add(equs.get(j).replace((Equ)solution));
+					
+				}
+				removed.add(equs.get(i));
+				return out;
+				
+			}
+			return null;
+		}
+		
+		@Override
+		public Expr applyRuleToExpr(Expr e,CasInfo casInfo){
+			Solve solve = (Solve)e;
+			
+			if(!solve.manyEqus()) return solve;
+			
+			ExprList equs = solve.getEqus();
+			ExprList vars = solve.getVars();
+			
+			ExprList reduced = equs;
+			Sequence removed = new Sequence();//keep reducing problem
+			for(int i = 0;i<vars.size()-1;i++) {
+				Var v = (Var)vars.get(i);
+				reduced = removeAnEq(reduced,v,casInfo,removed);
+			}
+			
+			//solve the last variable
+			Expr solution = solve((Equ)reduced.get(),(Var)vars.get(vars.size()-1)).simplify(casInfo);
+			if(solution instanceof ExprList) {
+				solution = solution.get();
+			}else if(solution instanceof Solve) {
+				return solve;
+			}
+			
+			ExprList variableSolutions = new ExprList();
+			variableSolutions.add(solution);
+			
+			//work backwards
+			for(int i = removed.size()-1;i>=0;i--) {
+				Equ currentEq = (Equ)removed.get(i).replace(variableSolutions);
+				solution = solve(currentEq,(Var)vars.get(i)).simplify(casInfo);
+				if(solution instanceof ExprList) {
+					solution = solution.get();
+				}else if(solution instanceof Solve) {
+					return solve;
+				}
+				variableSolutions.add(solution);
+			}
+			
+			return variableSolutions;//done
+		}
+	};
+	
 	public static void loadRules() {
 		ruleSequence = sequence(
-				solvedCase
+				solveSingleEqCase,
+				solveSetCase
 		);
 		Rule.initRules(ruleSequence);
 	}
@@ -506,28 +598,17 @@ public class Solve extends Expr{
 		return ruleSequence;
 	}
 	
-	@Override
-	public String toString() {
-		String out = "";
-		out+="solve(";
-		out+=getEqu().toString();
-		out+=',';
-		out+=getVar().toString();
-		out+=')';
-		return out;
-	}
-	
 	public double INITIAL_GUESS = 1;
 	@Override
 	public ComplexFloat convertToFloat(ExprList varDefs) {//newton's method
-		
 		FloatExpr guess = floatExpr(INITIAL_GUESS);
-		Expr expr = sub(getEqu().getLeftSide(),getEqu().getRightSide());
-		expr = sub(getVar(),div(expr,diff(expr,getVar())));
-		ExprList varDefs2 = exprList(equ(getVar(),guess));
+		if(singleEq()){
+			Expr expr = sub(getEqu().getLeftSide(),getEqu().getRightSide());
+			expr = sub(getVar(),div(expr,diff(expr,getVar())));
+			ExprList varDefs2 = exprList(equ(getVar(),guess));
 		
-		for(int i = 0;i<16;i++) guess.value = expr.convertToFloat(varDefs2);
-		
+			for(int i = 0;i<16;i++) guess.value = expr.convertToFloat(varDefs2);
+		}
 		return guess.value;
 	}
 	

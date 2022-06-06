@@ -188,12 +188,14 @@ public class Integrate extends Expr{
 		
 	};
 	
-	/*
-	 * these are the reverse process of diff(atan(x^n),x) -> (n-1)*x^(n-1)/(x^(2*n)+1)
-	 */
-	
-	static Rule inverseQuadraticSimple = new Rule("integrate(x^a/(x^b+c),x)->atan(x^(a+1)/sqrt(c))/((a+1)*sqrt(c))","eval(b/(a+1)=2)&(eval(c>0)|allowComplexNumbers())&~contains({a,b,c},x)","inverse quadratic with u sub");
-	static Rule inverseQuadraticSimple2 = new Rule("integrate(x^a/(d*x^b+c),x)->atan((x^(a+1)*sqrt(d))/sqrt(c))/((a+1)*sqrt(d*c))","eval(b/(a+1)=2)&(eval(c*d>0)|allowComplexNumbers())&~contains({a,b,c,d},x)","inverse quadratic with u sub");
+	// these are the reverse process of diff(atan(x^n),x) -> (n-1)*x^(n-1)/(x^(2*n)+1) 
+	static Rule inverseQuadraticUSub = new Rule(new Rule[] {
+			new Rule("integrate(x^a/(x^b+c),x)->atan(x^(a+1)/sqrt(c))/((a+1)*sqrt(c))","eval(b/(a+1)=2)&(eval(c>0)|allowComplexNumbers())&~contains({a,b,c},x)","inverse quadratic with u sub"),
+			new Rule("integrate(x^a/(d*x^b+c),x)->atan((x^(a+1)*sqrt(d))/sqrt(c))/((a+1)*sqrt(d*c))","eval(b/(a+1)=2)&(eval(c*d>0)|allowComplexNumbers())&~contains({a,b,c,d},x)","inverse quadratic with u sub"),
+			
+			new Rule("integrate(x/(x^b+c),x)->atan(x^2/sqrt(c))/(2*sqrt(c))","eval(b/2=2)&(eval(c>0)|allowComplexNumbers())&~contains({b,c},x)","inverse quadratic with u sub"),
+			new Rule("integrate(x/(d*x^b+c),x)->atan((x^2*sqrt(d))/sqrt(c))/(2*sqrt(d*c))","eval(b/2=2)&(eval(c*d>0)|allowComplexNumbers())&~contains({b,c,d},x)","inverse quadratic with u sub"),
+	},"reverse to arctan with power");
 	
 	static Rule inverseQuadraticToNReduction = new Rule("1 over quadratic to the n") {
 		private static final long serialVersionUID = 1L;
@@ -675,8 +677,7 @@ public class Integrate extends Expr{
 				polynomial,
 				logCases,
 				inverseQuadratic,
-				inverseQuadraticSimple,
-				inverseQuadraticSimple2,
+				inverseQuadraticUSub,
 				absPolynomial,
 				
 				basicTrig,

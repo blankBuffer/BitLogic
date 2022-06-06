@@ -44,6 +44,8 @@ public class Factor extends Expr{
 				Num degree = num(coefs.size()-1);
 				if(degree.realValue.compareTo(BigInteger.TWO) == -1) return e;
 				
+				if(coefs.containsType("sum")) return e;
+				
 				Expr highestDegreeCoef = coefs.get(coefs.size()-1);
 				Expr lowestDegreeCoef = coefs.get(0);
 				
@@ -228,7 +230,8 @@ public class Factor extends Expr{
 					Power termPower = Power.cast(subTerm);
 					
 					if(!Div.cast(termPower.getExpo()).isNumericalAndReal()) {
-						termPower = pow(termPower,num(1));
+						Sequence parts = seperateCoef(termPower.getExpo());
+						termPower = pow(pow(termPower.getBase(),parts.get(1)),parts.get(0));
 					}
 					
 					Num minExpoNum = getNumerOfPower(termPower);
@@ -247,7 +250,8 @@ public class Factor extends Expr{
 							Power otherTermPower = Power.cast(otherSubTerm);
 							
 							if(!Div.cast(otherTermPower.getExpo()).isNumericalAndReal()) {
-								otherTermPower = pow(otherTermPower,num(1));
+								Sequence parts = seperateCoef(otherTermPower.getExpo());
+								otherTermPower = pow(pow(otherTermPower.getBase(),parts.get(1)),parts.get(0));
 							}
 							
 							if(otherTermPower.getBase().equals(termPower.getBase())) {

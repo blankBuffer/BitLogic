@@ -211,6 +211,10 @@ public class QuickMath {
 	public static Solve solve(Equ e,Var v) {
 		return new Solve(e,v);
 	}
+	public static Solve solve(ExprList e,ExprList v) {
+		return new Solve(e,v);
+	}
+	
 	public static Power exp(Expr expr) {
 		return pow(e(),expr);
 	}
@@ -1147,17 +1151,17 @@ public class QuickMath {
 		return null;
 	}
 	
-	static HashMap<String,String> BLToMathMLFunctionNameMap = null;
+	static HashMap<String,String> BLToLatexFunctionNameMap = null;
 	private static void initBLToMathMLFunctionNameMap() {
-		BLToMathMLFunctionNameMap = new HashMap<String,String>();
+		BLToLatexFunctionNameMap = new HashMap<String,String>();
 		//based on class names
-		BLToMathMLFunctionNameMap.put("log","ln");
-		BLToMathMLFunctionNameMap.put("asin","arcsin");
-		BLToMathMLFunctionNameMap.put("acos","arccos");
-		BLToMathMLFunctionNameMap.put("atan","arctan");
+		BLToLatexFunctionNameMap.put("log","ln");
+		BLToLatexFunctionNameMap.put("asin","arcsin");
+		BLToLatexFunctionNameMap.put("acos","arccos");
+		BLToLatexFunctionNameMap.put("atan","arctan");
 	}
-	public static String generateMathML(Expr e) {
-		if(BLToMathMLFunctionNameMap == null) initBLToMathMLFunctionNameMap();
+	public static String generateLatex(Expr e) {
+		if(BLToLatexFunctionNameMap == null) initBLToMathMLFunctionNameMap();
 		String out = "";
 		String leftParen = "\\left( ";
 		String rightParen = "\\right) ";
@@ -1169,14 +1173,14 @@ public class QuickMath {
 			for(int i = 0;i<e.size();i++) {
 				boolean paren = e.get(i) instanceof Sum;
 				if(paren) out+=leftParen;
-				out+=generateMathML(e.get(i));
+				out+=generateLatex(e.get(i));
 				if(paren) out+=rightParen;
 				if(i!=e.size()-1) out+="\\cdot ";
 			}
 		}else if(e instanceof Sum) {
 			for(int i = 0;i<e.size();i++) {
-				if(i!=0)out+=generateMathML(e.get(i).strangeAbs(CasInfo.normal));
-				else out+=generateMathML(e.get(i));
+				if(i!=0)out+=generateLatex(e.get(i).strangeAbs(CasInfo.normal));
+				else out+=generateLatex(e.get(i));
 				if(i!=e.size()-1) {
 					if(e.get(i+1).negative()) out+="-";
 					else out+="+";
@@ -1184,9 +1188,9 @@ public class QuickMath {
 			}
 		}else if(e instanceof Div) {
 			out+="\\frac{";
-			out+=generateMathML(((Div)e).getNumer());
+			out+=generateLatex(((Div)e).getNumer());
 			out+="}{";
-			out+=generateMathML(((Div)e).getDenom());
+			out+=generateLatex(((Div)e).getDenom());
 			out+="}";
 		}else if(e instanceof Power) {
 			Power casted = (Power)e;
@@ -1194,44 +1198,44 @@ public class QuickMath {
 			boolean parenBase = false;
 			if(casted.getBase() instanceof Sum || casted.getBase() instanceof Prod || casted.getBase() instanceof Power || (casted.getBase() instanceof Num && casted.getBase().negative())) parenBase = true;
 			if(parenBase) out+=leftParen;
-			out+=generateMathML(casted.getBase());
+			out+=generateLatex(casted.getBase());
 			if(parenBase) out+=rightParen;
 			out+="}^{";
 			boolean parenExpo= false;
 			if(casted.getExpo() instanceof Sum || casted.getExpo() instanceof Prod || casted.getExpo() instanceof Power) parenExpo = true;
 			if(parenExpo) out+=leftParen;
-			out+=generateMathML(casted.getExpo());
+			out+=generateLatex(casted.getExpo());
 			if(parenExpo) out+=rightParen;
 			out+="}";
 		}else if(e instanceof Equ) {
 			Equ casted = (Equ)e;
-			out+=generateMathML( casted.getLeftSide() );
+			out+=generateLatex( casted.getLeftSide() );
 			out+="=";
-			out+=generateMathML( casted.getRightSide() );
+			out+=generateLatex( casted.getRightSide() );
 		}else if(e instanceof IntegrateOver) {
 			IntegrateOver casted = (IntegrateOver)e;
 			out+="\\int_{";
-			out+=generateMathML(casted.getMin());
+			out+=generateLatex(casted.getMin());
 			out+="}^{";
-			out+=generateMathML(casted.getMax());
+			out+=generateLatex(casted.getMax());
 			out+="}{";
-			out+=generateMathML(casted.getExpr());
-			out+=" d"+generateMathML(casted.getVar());
+			out+=generateLatex(casted.getExpr());
+			out+=" d"+generateLatex(casted.getVar());
 			out+="}";
 		}else if(e instanceof Diff) {
 			Diff casted = (Diff)e;
 			out+="\\frac{d}{d";
 			out+=casted.getVar().toString();
 			out+="}"+leftParen;
-			out+=generateMathML(casted.get());
+			out+=generateLatex(casted.get());
 			out+=rightParen;
 		}else{
 			String BLfunctionName = e.getClass().getSimpleName().toLowerCase();
-			String repl = BLToMathMLFunctionNameMap.get(BLfunctionName);
+			String repl = BLToLatexFunctionNameMap.get(BLfunctionName);
 			if(repl == null) repl = BLfunctionName;
 			
 			out+="\\"+repl+leftParen;
-			out+=generateMathML(e.get());
+			out+=generateLatex(e.get());
 			out+=rightParen;
 		}
 		

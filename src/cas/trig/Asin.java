@@ -14,37 +14,20 @@ public class Asin extends Expr{
 	static Rule asinSinCase = new Rule("asin(sin(x))->x","arcsin of the sin");
 	static Rule asinCosCase = new Rule("asin(cos(x))->-x+pi/2","arcsin of cosine");
 
-	static Rule inverseUnitCircle = new Rule("asin unit circle"){
-		private static final long serialVersionUID = 1L;
-		
-		@Override
-		public void init(){
-			cases = new Rule[]{
-				new Rule("asin(0)->0","arcsin of zero"),
-				new Rule("asin(1)->pi/2","arcsin of one"),
-				new Rule("asin(sqrt(2)/2)->pi/4","arcsin of root 2 over 2"),
-				new Rule("asin(1/2)->pi/6","arcsin of a half"),
-				new Rule("asin(sqrt(3)/2)->pi/3","arcsin of root 3 over 2"),
-			};
-			Rule.initRules(cases);
-		}
-		
-	};
+	static Rule inverseUnitCircle = new Rule(new Rule[]{
+			new Rule("asin(0)->0","arcsin of zero"),
+			new Rule("asin(1)->pi/2","arcsin of one"),
+			new Rule("asin(sqrt(2)/2)->pi/4","arcsin of root 2 over 2"),
+			new Rule("asin(1/2)->pi/6","arcsin of a half"),
+			new Rule("asin(sqrt(3)/2)->pi/3","arcsin of root 3 over 2"),
+	},"asin unit circle");
 	
-	static Rule arcsinWithSqrt = new Rule("arcsin with square root"){
-		private static final long serialVersionUID = 1L;
-		
-		@Override
-		public void init(){
-			cases = new Rule[]{
-				new Rule("asin(sqrt(a*x+b)/c)->asin((c^2-2*a*x-2*b)/c^2)/-2+pi/4","arcsin with square root"),
-				new Rule("asin(sqrt(x+b)/c)->asin((c^2-2*x-2*b)/c^2)/-2+pi/4","arcsin with square root"),
-				new Rule("asin(sqrt(a*x+b))->asin(1-2*a*x-2*b)/-2+pi/4","arcsin with square root"),
-				new Rule("asin(sqrt(x+b))->asin(1-2*x-2*b)/-2+pi/4","arcsin with square root"),
-			};
-			Rule.initRules(cases);
-		}
-	};
+	static Rule arcsinWithSqrt = new Rule(new Rule[]{
+			new Rule("asin(sqrt(a*x+b)/c)->asin((c^2-2*a*x-2*b)/c^2)/-2+pi/4","arcsin with square root"),
+			new Rule("asin(sqrt(x+b)/c)->asin((c^2-2*x-2*b)/c^2)/-2+pi/4","arcsin with square root"),
+			new Rule("asin(sqrt(a*x+b))->asin(1-2*a*x-2*b)/-2+pi/4","arcsin with square root"),
+			new Rule("asin(sqrt(x+b))->asin(1-2*x-2*b)/-2+pi/4","arcsin with square root"),
+	},"arcsin with square root");
 	
 	public Asin(){}//
 	public Asin(Expr expr) {

@@ -36,7 +36,8 @@ public class Power extends Expr{
 	private static Rule expoOfZero = new Rule("a^0->1","~eval(a=0)","exponent is zero");
 	private static Rule isI = new Rule("sqrt(-1)->i","allowComplexNumbers()","is equal to i");
 	private static Rule eToLn = new Rule("e^ln(a)->a","e to ln");
-	private static Rule eToFracLn = new Rule("e^(ln(a)/b)->a^(1/b)","e to fraction with ln");
+	private static Rule eToFracLnNumer = new Rule("e^(ln(a)/b)->a^(1/b)","e to fraction with ln where ln in numerator");
+	private static Rule isEPower = new Rule("a^(b/ln(a))->e^b","can be turned into power base e");
 	private static Rule zeroToExpo = new Rule("0^x->0","~eval(x=0)","base is zero");
 	private static Rule baseToLn = new Rule("a^ln(b)->e^(ln(a)*ln(b))","base not e and expo has log");
 	private static Rule expOfLambertW = new Rule("e^(lambertW(x))->x/lambertW(x)","e to lambert w");
@@ -647,15 +648,16 @@ public class Power extends Expr{
 				baseHasPowerAbs,
 				baseOfPowerIsAbsExpoEven,
 				
-				powerOfOne,
-				expoOfZero,
-				
 				negativeExpoToInv,
 				
 				eToLn,
 				baseToLn,
-				eToFracLn,
+				eToFracLnNumer,
+				isEPower,
 				logInExpoProdToBase,
+				
+				powerOfOne,
+				expoOfZero,
 				
 				expOfLambertW,
 				expOfLambertWProd,

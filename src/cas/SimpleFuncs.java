@@ -13,7 +13,7 @@ import cas.bool.*;
 public class SimpleFuncs extends QuickMath{
 
 	private static HashMap<String,Func> simpleFuncs = new HashMap<String,Func>();
-	static boolean FUNCTION_UNLOCKED = false;
+	static boolean FUNCTION_UNLOCKED = false;//ability to create new functions on the fly, must be turned off during loading of CAS to prevent spelling errors
 	
 	public static Rule fullExpand = new Rule("full expand"){
 		private static final long serialVersionUID = 1L;
@@ -72,7 +72,7 @@ public class SimpleFuncs extends QuickMath{
 	static Func save = new Func("save",2);
 	static Func open = new Func("open",1);
 	static Func conv = new Func("conv",3);
-	static Func mathML = new Func("mathML",1);
+	static Func latex = new Func("latex",1);
 	static Func subst = new Func("subst",2);
 	static Func eval = new Func("eval",1);
 	static Func expand = new Func("expand",1);
@@ -308,15 +308,15 @@ public class SimpleFuncs extends QuickMath{
 			}
 		});
 		
-		mathML.simplifyChildren = false;
-		mathML.ruleSequence.add(new Rule("math markup language conversion") {
+		latex.simplifyChildren = false;
+		latex.ruleSequence.add(new Rule("LaTeX language conversion") {
 			private static final long serialVersionUID = 1L;
 			
 			@Override
 			public Expr applyRuleToExpr(Expr e,CasInfo casInfo) {
 				Func f = (Func)e;
 				
-				return var(generateMathML(f.get()));
+				return var(generateLatex(f.get()));
 			}
 		});
 		
@@ -408,7 +408,6 @@ public class SimpleFuncs extends QuickMath{
 		gui.ruleSequence.add(new Rule("opens a new window") {
 			private static final long serialVersionUID = 1L;
 			
-			@SuppressWarnings("unused")
 			@Override
 			public Expr applyRuleToExpr(Expr e,CasInfo casInfo) {
 				new ui.CalcWindow();
@@ -852,6 +851,10 @@ public class SimpleFuncs extends QuickMath{
 				return solutions;
 			}
 		});
+		
+		for(String funcName :simpleFuncs.keySet()) {
+			Rule.initRules(simpleFuncs.get(funcName).ruleSequence );
+		}
 	}
 	
 	private static ArrayList<String> functionNames = new ArrayList<String>();
@@ -877,7 +880,7 @@ public class SimpleFuncs extends QuickMath{
 		addFunc(save);
 		addFunc(open);
 		addFunc(conv);
-		addFunc(mathML);
+		addFunc(latex);
 		addFunc(subst);
 		addFunc(eval);
 		addFunc(expand);
@@ -1033,7 +1036,9 @@ public class SimpleFuncs extends QuickMath{
 		
 		if(funcName.equals("gcd")) return gcd(params);
 		
-		if(funcName.equals("solve")) return solve((Equ)params[0],(Var)params[1]);
+		if(funcName.equals("solve") && params[0] instanceof Equ) return solve((Equ)params[0],(Var)params[1]);
+		if(funcName.equals("solve") && params[0] instanceof ExprList) return solve((ExprList)params[0],(ExprList)params[1]);
+		
 		if(funcName.equals("diff")) return diff(params[0],(Var)params[1]);
 		if(funcName.equals("integrate")) return integrate(params[0],(Var)params[1]);
 		

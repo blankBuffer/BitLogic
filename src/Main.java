@@ -8,6 +8,7 @@ import ui.UI;
 public class Main extends QuickMath{
 	
 	public static void runScript(String fileName,boolean verbose) {
+		Rule.loadCompileSimplifyRules();
 		long startingInstructionCount = Expr.ruleCallCount;
 		long oldTime = System.nanoTime();
 		Scanner sc = null;
@@ -43,11 +44,6 @@ public class Main extends QuickMath{
 		System.out.println((Expr.ruleCallCount-startingInstructionCount)+" - instructions called");
 	}
 	
-	static void testRegion() {
-		Rule.loadRules();
-		runScript("bitLogicTest.bl",true);
-	}
-	
 	public static void main(String[] args) {
 		int gui = 1;
 		boolean clearTerm = false;
@@ -59,13 +55,19 @@ public class Main extends QuickMath{
 			else if(arg.equals("clear-term")) clearTerm = true;
 			else if(arg.equals("-s")) {
 				runScript(args[i+1], true);
-				i++;
+				System.exit(0);
+			}else if(arg.equals("-e")) {
+				Rule.loadCompileSimplifyRules();
+				try {
+					String q = args[i+1];
+					System.out.println("question: "+q);
+					System.out.println(Ask.ask(q).simplify(CasInfo.normal));
+				} catch (Exception e) {
+					e.printStackTrace();
+				}
+				System.exit(0);
 			}
 		}
-		
-		
-		//testRegion();
-		
 		
 		if(gui == 1) UI.startGraphicalInterface();
 		else if(gui == 2) UI.startCommandLineInterface(clearTerm);

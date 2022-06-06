@@ -41,7 +41,7 @@ public class Ask extends QuickMath{
 			this.wordLimit = wordLimit;
 		}
 		
-		Expr getResponse(@SuppressWarnings("unused") ArrayList<String> tokens){//can be override to get custom response
+		Expr getResponse(ArrayList<String> tokens){//can be override to get custom response
 			return def;
 		}
 		
@@ -64,7 +64,14 @@ public class Ask extends QuickMath{
 		}
 	}
 	
+	static private boolean loaded = false;
+	
+	public static boolean isLoaded() {
+		return loaded;
+	}
+	
 	public static void loadBasicQuestions() {
+		if(loaded) return;
 		try {
 			Scanner scanner = new Scanner(new File("resources/QnA.txt"));
 			System.out.println("loading questions...");
@@ -105,6 +112,7 @@ public class Ask extends QuickMath{
 				
 			}
 			scanner.close();
+			loaded = true;
 			System.out.println("done loading "+questionsLoadedCount+" questions");
 		} catch (FileNotFoundException e) {
 			System.err.println("unable to load questions file");
@@ -276,7 +284,6 @@ public class Ask extends QuickMath{
 				int indexOfExpr = indexOfExpr(0,tokens.size(),tokens);
 				if(indexOfExpr != -1){
 					String sidesQuantity = tokens.get(indexOfExpr);
-					sidesQuantity = sidesQuantity.substring(0,sidesQuantity.indexOf('*'));
 					long sides = Long.parseLong(sidesQuantity);
 					
 					return num((int)Math.floor(Math.random()*sides+1.0));
@@ -574,6 +581,7 @@ public class Ask extends QuickMath{
 	}
 	
 	static Expr goThroughProgrammedResponses(ArrayList<String> tokens){
+		loadBasicQuestions();
 		for(Question q:questions) {
 			Expr res = q.hasResult(tokens);
 			if(res != null) {

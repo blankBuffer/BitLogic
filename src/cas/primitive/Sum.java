@@ -528,6 +528,7 @@ public class Sum extends Expr{
 	static Sequence ruleSequence = null;
 	
 	public static void loadRules(){
+		
 		ruleSequence = sequence(
 				sumWithInf,
 				distrSubProds,
