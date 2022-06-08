@@ -839,7 +839,7 @@ public class SimpleFuncs extends QuickMath{
 			@Override
 			public Expr applyRuleToExpr(Expr e,CasInfo casInfo) {
 				Sequence poly = polyExtract(e.get(0), (Var)e.get(1) ,casInfo);
-				Sequence solutions = new Sequence();
+				ExprList solutions = new ExprList();
 				
 				if(poly!=null) {
 					ArrayList<Double> solutionsArrayList = Solve.polySolve(poly);
