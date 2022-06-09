@@ -115,9 +115,9 @@ public class BoolCompress extends Expr{
 
 	@Override
 	public String help() {
-		return "boolCompress(x) is the boolean expression compressorr\n"
+		return "boolCompress(x) is the boolean expression compressor\n"
 				+ "examples\n"
-				+ "boolCompress(a|)->x*(a+b)\n"
+				+ "boolCompress(x&a|x&b)->x&(a|b)\n"
 				+ "boolCompress(~x&~y&~r&w|~x&~r&~y&k)->~(y|~w&~k|r|x)";
 	}
 

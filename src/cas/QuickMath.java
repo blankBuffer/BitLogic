@@ -287,6 +287,9 @@ public class QuickMath {
 	public static BoolCompress boolCompress(Expr e) {
 		return new BoolCompress(e);
 	}
+	public static BoolTableToExpr boolTableToExpr(ExprList table, ExprList vars) {
+		return new BoolTableToExpr(table,vars);
+	}
 	public static Sequence sequence(Expr... exprs) {
 		Sequence out = new Sequence();
 		for(Expr e:exprs) {

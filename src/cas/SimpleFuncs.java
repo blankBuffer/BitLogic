@@ -963,6 +963,9 @@ public class SimpleFuncs extends QuickMath{
 		numberOfParams.put("transpose", 1);
 		numberOfParams.put("next", 2);
 		
+		numberOfParams.put("boolCompress", 1);
+		numberOfParams.put("boolTableToExpr", 2);
+		
 		for(String s:numberOfParams.keySet()) {
 			functionNames.add(s);
 		}
@@ -1048,6 +1051,7 @@ public class SimpleFuncs extends QuickMath{
 		if(funcName.equals("range")) return range(params[0],params[1],params[2],(Var)params[3]);
 		
 		if(funcName.equals("boolCompress")) return boolCompress(params[0]);
+		if(funcName.equals("boolTableToExpr")) return boolTableToExpr((ExprList)params[0],(ExprList)params[1]);
 		
 		if(!FUNCTION_UNLOCKED) throw new Exception("no function by the name: "+funcName);//allow making new functions on the fly
 		
