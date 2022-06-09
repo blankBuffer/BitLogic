@@ -284,6 +284,9 @@ public class QuickMath {
 	public static Range range(Expr min,Expr max,Expr e,Var v) {
 		return new Range(min,max,e,v);
 	}
+	public static BoolCompress boolCompress(Expr e) {
+		return new BoolCompress(e);
+	}
 	public static Sequence sequence(Expr... exprs) {
 		Sequence out = new Sequence();
 		for(Expr e:exprs) {

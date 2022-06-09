@@ -245,7 +245,7 @@ public class Or extends Expr{
 		}
 		return -1;
 	}
-	static Rule redundance = new Rule("redundant factors"){
+	static Rule redundance = new Rule("redundant factors"){//~b&a|~c&a|a&b&c -> a ,calculation
 		private static final long serialVersionUID = 1L;
 
 		class BucketInfo{
@@ -535,5 +535,12 @@ public class Or extends Expr{
 				+ "examples\n"
 				+ "true|false->true\n"
 				+ "x|~x->true";
+	}
+
+	public static Expr unCast(Expr e) {
+		if(e instanceof Or && e.size() == 1) {
+			return e.get();
+		}
+		return e;
 	}
 }

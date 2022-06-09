@@ -235,4 +235,11 @@ public class And extends Expr{
 				+ "true&false->false\n"
 				+ "x&~x->false";
 	}
+
+	public static Expr unCast(Expr e) {
+		if(e instanceof And && e.size() == 1) {
+			return e.get();
+		}
+		return e;
+	}
 }

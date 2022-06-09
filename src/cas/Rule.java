@@ -391,6 +391,7 @@ public class Rule extends Expr{
 		
 		Asin.loadRules();
 		Atan.loadRules();
+		BoolCompress.loadRules();
 		Cos.loadRules();
 		Define.loadRules();
 		Diff.loadRules();

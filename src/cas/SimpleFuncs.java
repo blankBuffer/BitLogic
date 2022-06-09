@@ -1047,6 +1047,8 @@ public class SimpleFuncs extends QuickMath{
 		if(funcName.equals("limit")) return limit(params[0],(Becomes)params[1]);
 		if(funcName.equals("range")) return range(params[0],params[1],params[2],(Var)params[3]);
 		
+		if(funcName.equals("boolCompress")) return boolCompress(params[0]);
+		
 		if(!FUNCTION_UNLOCKED) throw new Exception("no function by the name: "+funcName);//allow making new functions on the fly
 		
 		
