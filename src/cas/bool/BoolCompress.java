@@ -16,7 +16,7 @@ public class BoolCompress extends Expr{
 	static Rule group = new Rule("group the factorable components") {
 		private static final long serialVersionUID = 1L;
 		
-		static int termHasPart(Expr term,Expr part) {
+		int termHasPart(Expr term,Expr part) {
 			if(term instanceof And) {
 				for(int i = 0;i < term.size();i++) {
 					if(term.get(i).equals(part)) return i;
@@ -26,7 +26,7 @@ public class BoolCompress extends Expr{
 			return -1;
 		}
 		
-		static void groupTermsWithSimilarPart(Or in,Expr part,CasInfo casInfo) {
+		void groupTermsWithSimilarPart(Or in,Expr part,CasInfo casInfo) {
 			int count = 0;
 			
 			for(int i = 0;i < in.size();i++) {
