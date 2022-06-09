@@ -290,8 +290,6 @@ public class Factor extends Expr{
 					for(int i = 0;i<expr.size();i++) {
 						expr.set(i, div(expr.get(i),factors).simplify(casInfo));
 					}
-					//System.out.println(expr);
-					//
 					expr = Prod.combine(factors, factor(expr).simplify(casInfo));
 					
 					return expr;

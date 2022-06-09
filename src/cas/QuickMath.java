@@ -57,7 +57,9 @@ public class QuickMath {
 		
 		@Override
 		public int compareTo(VarCount other) {
-			return -Integer.compare(count, other.count);
+			int comparison = -Integer.compare(count, other.count);
+			if(comparison == 0) return Integer.compare(v.hashCode(), other.v.hashCode());//if two variabls have the same count use the hash to sort instead
+			return comparison;
 		}
 	}
 	

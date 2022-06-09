@@ -99,7 +99,6 @@ public abstract class Expr extends QuickMath implements Serializable{
 		if(Thread.currentThread().isInterrupted()) return null;
 		Expr toBeSimplified = copy();
 		if(flags.simple) return toBeSimplified;
-		//this.println();
 		if(this instanceof Var) return casInfo.definitions.getVar(toString());//find variable in definitions
 		if(this instanceof Func && getRuleSequence().size() == 0) {
 			Rule r = casInfo.definitions.getFuncRule( ((Func)toBeSimplified ).name );

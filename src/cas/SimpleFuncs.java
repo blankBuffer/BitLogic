@@ -114,6 +114,8 @@ public class SimpleFuncs extends QuickMath{
 	
 	static Func fSolve = new Func("fSolve",2);
 	
+	static Func fastEquals = new Func("fastEquals",2);
+	
 	public static void loadRules(){
 		tree.simplifyChildren = false;
 		tree.ruleSequence.add(new Rule("show the tree of the expression"){
@@ -852,6 +854,17 @@ public class SimpleFuncs extends QuickMath{
 			}
 		});
 		
+		fastEquals.simplifyChildren = false;
+		fastEquals.ruleSequence.add(new Rule("faste comparison") {
+			private static final long serialVersionUID = 1L;
+			
+			@Override
+			public Expr applyRuleToExpr(Expr e,CasInfo casInfo) {
+				
+				return bool(e.get(0).equals(e.get(1)));
+			}
+		});
+		
 		for(String funcName :simpleFuncs.keySet()) {
 			Rule.initRules(simpleFuncs.get(funcName).ruleSequence );
 		}
@@ -920,6 +933,8 @@ public class SimpleFuncs extends QuickMath{
 		addFunc(help);
 		
 		addFunc(fSolve);
+		
+		addFunc(fastEquals);
 		
 		for(String s:simpleFuncs.keySet()) {
 			functionNames.add(s);
