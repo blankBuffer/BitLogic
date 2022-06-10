@@ -445,6 +445,27 @@ public class Rule extends Expr{
 		SimpleFuncs.loadRules();
 	}
 	
+	static ArrayList<String> bannedPreSimplifyFunctions = new ArrayList<String>();
+	private static void loadBannedPreSimplifyFunctions() {
+		bannedPreSimplifyFunctions.add("allowAbs");
+		bannedPreSimplifyFunctions.add("allowComplexNumbers");
+		bannedPreSimplifyFunctions.add("singleSolutionMode");
+		
+		bannedPreSimplifyFunctions.add("size");
+		bannedPreSimplifyFunctions.add("get");
+		bannedPreSimplifyFunctions.add("degree");
+		bannedPreSimplifyFunctions.add("eval");
+		bannedPreSimplifyFunctions.add("expand");
+		bannedPreSimplifyFunctions.add("distr");
+		bannedPreSimplifyFunctions.add("factor");
+		bannedPreSimplifyFunctions.add("isType");
+		bannedPreSimplifyFunctions.add("contains");
+		bannedPreSimplifyFunctions.add("result");
+		bannedPreSimplifyFunctions.add("similar");
+		bannedPreSimplifyFunctions.add("fastEquals");
+		
+	}
+	
 	public static void loadCompileSimplifyRules(){//loads and simpoifies everything, faster runtime, ,much slower runtime
 		if(ALL_LOADED) return;
 		System.out.println("loading CAS rules...");
@@ -456,13 +477,24 @@ public class Rule extends Expr{
 		
 		float incr = 20.0f/allPatternBasedRules.size();
 		
-		
+		loadBannedPreSimplifyFunctions();
 		for(int i = 0;i<allPatternBasedRules.size();i++) {//simplify
 			Rule r = (Rule)allPatternBasedRules.get(i);
-			if(!r.pattern.getRightSide().containsType(r.pattern.getLeftSide().typeName())) {//avoid recursion
-				r.pattern.setRightSide(r.pattern.getRightSide().simplify(CasInfo.normal));
-			}else {
-				r.pattern.getRightSide().simplifyChildren(CasInfo.normal, r.pattern.getLeftSide().typeName());
+			boolean doNotSimplify = false;
+			
+			for(String bannedType:bannedPreSimplifyFunctions) {
+				if(r.pattern.getRightSide().containsType(bannedType)) {
+					doNotSimplify = true;
+					break;
+				}
+			}
+			
+			if(!doNotSimplify) {
+				if(!r.pattern.getRightSide().containsType(r.pattern.getLeftSide().typeName())) {//avoid recursion
+					r.pattern.setRightSide(r.pattern.getRightSide().simplify(CasInfo.normal));
+				}else {
+					r.pattern.getRightSide().simplifyChildren(CasInfo.normal, r.pattern.getLeftSide().typeName());
+				}
 			}
 			loadingPercent+=incr;
 		}

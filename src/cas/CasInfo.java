@@ -8,6 +8,7 @@ public class CasInfo extends QuickMath implements Serializable{
 	private boolean allowComplexNumbers = false;
 	private boolean allowAbs = true;
 	private boolean factorIrrationalRoots = false;
+	private boolean singleSolutionMode = false;
 	public Defs definitions;
 	
 	public CasInfo() {
@@ -16,6 +17,9 @@ public class CasInfo extends QuickMath implements Serializable{
 	public CasInfo(CasInfo casInfo) {
 		allowComplexNumbers = casInfo.allowComplexNumbers;
 		allowAbs = casInfo.allowAbs;
+		factorIrrationalRoots = casInfo.factorIrrationalRoots;
+		singleSolutionMode = casInfo.singleSolutionMode;
+		
 		definitions = casInfo.definitions;
 	}
 	public static CasInfo normal = new CasInfo();
@@ -23,8 +27,9 @@ public class CasInfo extends QuickMath implements Serializable{
 	@Override
 	public String toString() {
 		String out = "";
-		out += "allowComplexNumbers:"+allowComplexNumbers;
-		out += "allowAbs:"+allowAbs;
+		out += "allowComplexNumbers: "+allowComplexNumbers;
+		out += " allowAbs: "+allowAbs;
+		out += " singleSolutionMode: "+singleSolutionMode;
 		return out;
 	}
 	
@@ -51,6 +56,9 @@ public class CasInfo extends QuickMath implements Serializable{
 	public void setFactorIrrationalRoots(boolean factorIrrationalRoots) {
 		this.factorIrrationalRoots = factorIrrationalRoots;
 	}
+	public void setSingleSolutionMode(boolean singleSolutionMode) {
+		this.singleSolutionMode = singleSolutionMode;
+	}
 	
 	public boolean allowAbs() {
 		return allowAbs;
@@ -61,5 +69,9 @@ public class CasInfo extends QuickMath implements Serializable{
 	
 	public boolean factorIrrationalRoots() {
 		return factorIrrationalRoots;
+	}
+	
+	public boolean singleSolutionMode() {
+		return singleSolutionMode;
 	}
 }

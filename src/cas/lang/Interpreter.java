@@ -304,6 +304,16 @@ public class Interpreter extends QuickMath{
 			return becomes(leftSide,rightSide);
 		}
 		
+		if(tokens.contains("?") && tokens.contains(":")) {//ternary case
+			
+			int questionMarkIndex = tokens.indexOf("?");
+			ArrayList<String> toBeEvaled = groupTokens(tokens,0,questionMarkIndex);
+			int colonIndex = tokens.indexOf(":");
+			ArrayList<String> ifTrue = groupTokens(tokens,questionMarkIndex+1,colonIndex);
+			ArrayList<String> ifFalse = groupTokens(tokens,colonIndex+1,tokens.size());
+			return ternary( createExprFromTokens(toBeEvaled),createExprFromTokens(ifTrue),createExprFromTokens(ifFalse) );
+		}
+		
 		if(tokens.contains("=") || tokens.contains(">") || tokens.contains("<")) {//is equation
 			
 			int indexOfEq = tokens.indexOf("=");
@@ -319,15 +329,6 @@ public class Interpreter extends QuickMath{
 			if(symbol == '>') return equGreater(leftSide,rightSide);
 			if(symbol == '<') return equLess(leftSide,rightSide);
 			
-		}
-		if(tokens.contains("?") && tokens.contains(":")) {//ternary case
-			
-			int questionMarkIndex = tokens.indexOf("?");
-			ArrayList<String> toBeEvaled = groupTokens(tokens,0,questionMarkIndex);
-			int colonIndex = tokens.indexOf(":");
-			ArrayList<String> ifTrue = groupTokens(tokens,questionMarkIndex+1,colonIndex);
-			ArrayList<String> ifFalse = groupTokens(tokens,colonIndex+1,tokens.size());
-			return ternary( createExprFromTokens(toBeEvaled),createExprFromTokens(ifTrue),createExprFromTokens(ifFalse) );
 		}
 		
 		if(tokens.contains("|")){

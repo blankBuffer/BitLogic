@@ -92,7 +92,7 @@ public class Solve extends Expr{
 		@Override
 		public void init() {
 			
-			absCase = new Rule("solve(abs(m)=n,x)->[solve(m=-n,x),solve(m=n,x)]","solving absolute value");
+			absCase = new Rule("solve(abs(m)=n,x)->singleSolutionMode()?solve(m=n,x):{solve(m=-n,x),solve(m=n,x)}","solving absolute value");
 			
 			subtractiveZero = new Rule("subtracting two same functions") {
 				private static final long serialVersionUID = 1L;
@@ -188,6 +188,7 @@ public class Solve extends Expr{
 			};
 			
 			Expr quadAns = createExpr("{x=(-b+sqrt(b^2+4*a*c))/(2*a),x=(-b-sqrt(b^2+4*a*c))/(2*a)}");
+			Expr quadSingleAns = createExpr("x=(-b+sqrt(b^2+4*a*c))/(2*a)");
 			
 			quadraticCase = new Rule("solving quadratics") {
 				private static final long serialVersionUID = 1L;
@@ -236,13 +237,20 @@ public class Solve extends Expr{
 							//a*x^2+b*x=c
 							//x = -b+sqrt(b^2+4*a*c)/2a
 							
-							Expr answer = quadAns.replace( exprList( equ(var("a"),a),equ(var("b"),b),equ(var("c"),c),equ(var("x"),varPart) ) );
+							Expr answer = null;
 							
-							for(int i = 0;i<answer.size();i++) {
-								answer.set(i, solve( (Equ)answer.get(i) ,v));
+							if(!casInfo.singleSolutionMode()) {
+								answer = quadAns.replace( exprList( equ(var("a"),a),equ(var("b"),b),equ(var("c"),c),equ(var("x"),varPart) ) );
+								for(int i = 0;i<answer.size();i++) {
+									answer.set(i, solve( (Equ)answer.get(i) ,v));
+								}
+								
+								return answer.simplify(casInfo);
 							}
 							
-							return answer.simplify(casInfo);
+							//if we are in single solution mode
+							answer = quadSingleAns.replace( exprList( equ(var("a"),a),equ(var("b"),b),equ(var("c"),c),equ(var("x"),varPart) ) );
+							solve.setEqu((Equ) answer.simplify(casInfo));
 						}
 					}
 					
@@ -274,9 +282,9 @@ public class Solve extends Expr{
 					cases = new Rule[] {
 							new Rule("ln(a)=b->a=e^b","log case for solve"),
 							
-							new Rule("sin(a)=b->{a=asin(b),a=pi-asin(b)}","sin case for solve"),
-							new Rule("cos(a)=b->{a=acos(b),a=-acos(b)}","cos case for solve"),
-							new Rule("tan(a)=b->{a=atan(b),a=atan(b)-pi}","tan case for solve"),
+							new Rule("sin(a)=b->singleSolutionMode()?a=asin(b):{a=asin(b),a=pi-asin(b)}","sin case for solve"),
+							new Rule("cos(a)=b->singleSolutionMode()?a=acos(b):{a=acos(b),a=-acos(b)}","cos case for solve"),
+							new Rule("tan(a)=b->singleSolutionMode()?a=atan(b):{a=atan(b),a=atan(b)-pi}","tan case for solve"),
 							
 							new Rule("asin(a)=b->a=sin(b)","tan case for solve"),
 							new Rule("acos(a)=b->a=cos(b)","tan case for solve"),
@@ -322,7 +330,7 @@ public class Solve extends Expr{
 						if(baseHasVar && !expoHasVar) {
 							Div frac = Div.cast(pow.getExpo());
 							
-							boolean plusMinus = frac.isNumericalAndReal() && ((Num)frac.getNumer()).realValue.mod(BigInteger.TWO).equals(BigInteger.ZERO);
+							boolean plusMinus = !casInfo.singleSolutionMode() && frac.isNumericalAndReal() && ((Num)frac.getNumer()).realValue.mod(BigInteger.TWO).equals(BigInteger.ZERO);
 							
 							Equ newEqu = (Equ)rootCase.applyRuleToExpr(solve.getEqu(), casInfo);
 							
@@ -380,7 +388,8 @@ public class Solve extends Expr{
 							}
 						}
 						if(solutions.size()>0) {
-							return solutions;
+							if(!casInfo.singleSolutionMode()) return solutions;
+							return solutions.get();
 						}
 					}
 					
@@ -511,8 +520,11 @@ public class Solve extends Expr{
 		private static final long serialVersionUID = 1L;
 		
 		void removeAnEq(ExprList equs,Var v,CasInfo casInfo,Sequence removed) {//remove an equation reducing the problem
+			CasInfo singleSolutionModeCasInfo = new CasInfo(casInfo);
+			singleSolutionModeCasInfo.setSingleSolutionMode(true);
+			
 			for(int i = 0;i<equs.size();i++) {
-				Expr solution = solve((Equ)equs.get(i),v).simplify(casInfo);
+				Expr solution = solve((Equ)equs.get(i),v).simplify(singleSolutionModeCasInfo);
 				if(solution instanceof ExprList) solution = solution.get();
 				else if(solution instanceof Solve) continue;
 				
@@ -528,16 +540,19 @@ public class Solve extends Expr{
 		@Override
 		public Expr applyRuleToExpr(Expr e,CasInfo casInfo){
 			Solve solve = (Solve)e;
+			solve.sort();//always solve in the same way regardless of input order
 			
 			if(!solve.manyEqus()) return solve;
 			
 			ExprList vars = solve.getVars();
 			
-			ExprList reduced = solve.getEqus();
+			ExprList reduced = (ExprList) solve.getEqus().copy();
 			Sequence removed = new Sequence();//keep reducing problem
 			for(int i = 0;i<vars.size();i++) {
 				Var v = (Var)vars.get(i);
+				int oldSize = reduced.size();
 				removeAnEq(reduced,v,casInfo,removed);
+				if(oldSize == reduced.size()) return e;//did not reduce, stop solve
 			}
 			ExprList variableSolutions = new ExprList();
 			

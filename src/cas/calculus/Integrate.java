@@ -230,6 +230,18 @@ public class Integrate extends Expr{
 	
 	static Rule integrationByParts = new Rule("integration by parts"){
 		private static final long serialVersionUID = 1L;
+		
+		boolean isTypeExtended(Expr e,String typeName) {//is that type or a power with base of that type
+			if(e.typeName().equals(typeName)) {
+				return true;
+			}else if(e instanceof Power) {
+				Power casted = (Power)e;
+				
+				return casted.getExpo() instanceof Num && casted.getBase().typeName().equals(typeName);
+			}
+			return false;
+		}
+		
 		final int OKAY = 0,GOOD = 1,GREAT = 2,BEST = 3;
 
 		@Override
@@ -248,20 +260,22 @@ public class Integrate extends Expr{
 				for(int i = 0;i < innerProd.size();i++) {
 					int currentConfidence = -1;
 					
-					if(innerProd.get(i) instanceof Ln){
+					Expr current = innerProd.get(i);
+					
+					if(isTypeExtended(current,"ln")){
 						currentConfidence = BEST;
-					}else if(innerProd.get(i) instanceof Atan || innerProd.get(i) instanceof Asin || innerProd.get(i) instanceof Acos){
+					}else if(isTypeExtended(current,"atan") || isTypeExtended(current,"asin") || isTypeExtended(current,"acos")){
 						currentConfidence = GREAT;
-					}else if(!denomIsFunc){
-						Power pow = Power.cast(innerProd.get(i));
+					}else if(!denomIsFunc){//polynomial
+						Power pow = Power.cast(current);
 						if(isPlainPolynomial(pow.getBase(),integ.getVar()) && pow.getBase().contains(integ.getVar())) {
 							if(isPositiveRealNum(pow.getExpo())){
 								currentConfidence = GOOD;
-							}else{
+							}else{//root
 								//System.out.println(pow);
 								Div frac = Div.cast(pow.getExpo());
 								if(frac!=null && frac.isNumericalAndReal()) {
-									if(!degree(pow.getBase(),integ.getVar()).equals(BigInteger.ONE)) return integ;//dangerous because square root does not have linear term
+									if(!degree(pow.getBase(),integ.getVar()).equals(BigInteger.ONE)) return integ;//dangerous because square root does not have linear term, derivative of a square root with non linear base only increase the complexity
 									if(((Num)frac.getNumer()).realValue.signum() == 1) {
 										fractionalPowerCount++;
 										confidence = OKAY;
@@ -376,32 +390,6 @@ public class Integrate extends Expr{
 			return e;
 		}
 		
-		public int countNegatives(Expr e) {//counts the number of negative numbers in the expression
-			if(e instanceof Num) return (e.negative() ? 1 : 0);
-			int sum = 0;
-			
-			for(int i = 0;i<e.size();i++) {
-				sum+=countNegatives(e.get(i));
-			}
-			
-			return sum;
-		}
-		public Expr leastNegative(ExprList exprs) {
-			Expr least = exprs.get(0);
-			int leastCount = countNegatives(exprs.get(0));
-			
-			for(int i = 1;i<exprs.size();i++) {
-				Expr current = exprs.get(i);
-				int count = countNegatives(current);
-				if(count < leastCount) {
-					 leastCount = count;
-					 least = current;
-				}
-			}
-			
-			return least;
-		}
-		
 		Var uSubVar;
 		
 		@Override
@@ -463,9 +451,11 @@ public class Integrate extends Expr{
 								return out.simplify(casInfo);
 							}
 						}else {//oof we need to solve for x
-							Expr solved = solve(equ(uSubVar,u),integ.getVar()).simplify(casInfo);
-							if(solved instanceof ExprList) {
-								solved = leastNegative((ExprList)solved);//choose the solution with the least amount of negatives
+							CasInfo singleSolutionModeCasInfo = new CasInfo(casInfo);
+							singleSolutionModeCasInfo.setSingleSolutionMode(true);
+							Expr solved = solve(equ(uSubVar,u),integ.getVar()).simplify(singleSolutionModeCasInfo);
+							if(solved instanceof ExprList) {//just in case single solution mode accidently returns a list
+								solved = solved.get();
 							}
 							if(!(solved instanceof Solve)) {
 								solved = ((Equ)solved).getRightSide();

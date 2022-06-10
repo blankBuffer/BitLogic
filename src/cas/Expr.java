@@ -187,7 +187,7 @@ public abstract class Expr extends QuickMath implements Serializable{
 			
 			if(otherCasted.size() == size()) {//make sure they are the same size
 				
-				if(this.commutative && !flags.sorted){
+				if(this.commutative){
 					boolean usedIndex[] = new boolean[size()];//keep track of what indices have been used
 					int length = otherCasted.size();//length of the lists
 					
