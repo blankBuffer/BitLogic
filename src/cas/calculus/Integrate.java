@@ -146,6 +146,47 @@ public class Integrate extends Expr{
 			new Rule("integrate(cos(x)/tan(x)^n,x)->-cos(x)/((n-1)*tan(x)^(n-1))-n/(n-1)*integrate(cos(x)/tan(x)^(n-2),x)","isType(n,num)","trig reduction formula"),
 	},"tan power over cos power");
 	
+	static Rule linearOverQuadratic = new Rule("linear over quadratic integration") {
+		private static final long serialVersionUID = 1L;
+		
+		Expr kPosCase;
+		Expr k;
+		Expr kNegCase;
+		
+		@Override
+		public void init() {
+			k = createExpr("0b^2-4*0a*0c");
+			kPosCase = createExpr("ln(0a*x^2+0b*x+0c)/(2*0a)+0b*ln(sqrt(0k)+2*0a*x+0b)/(2*0a*sqrt(0k))-0b*ln(sqrt(0k)-2*0a*x-0b)/(2*0a*sqrt(0k))");
+			kNegCase = createExpr("ln(0a*x^2+0b*x+0c)/(2*0a)-0b*atan((2*0a*x+0b)/sqrt(-0k))/(0a*sqrt(-0k))");
+		}
+		
+		@Override
+		public Expr applyRuleToExpr(Expr e,CasInfo casInfo){
+			Integrate integ = (Integrate)e;
+			
+			Var v = integ.getVar();
+			if(!(integ.get() instanceof Div)) return e;
+			
+			Div innerDiv = (Div)integ.get();
+			if(!( innerDiv.getNumer().equals(v) && degree(innerDiv.getDenom(),v).equals(BigInteger.TWO) )) return e;
+			Sequence poly = polyExtract(innerDiv.getDenom(),v,casInfo);
+			if(poly == null) return e;
+			Expr c = poly.get(0),b = poly.get(1),a = poly.get(2);
+			ExprList subTable = exprList(equ(var("0a"),a),equ(var("0b"),b),equ(var("0c"),c),equ(var("x"),v));
+
+			Expr k = this.k.replace(subTable).simplify(casInfo);
+			
+			subTable.add(equ(var("0k"),k));
+			
+			if(eval(equGreater(k,num(0))).simplify(casInfo).equals(BoolState.TRUE)) {
+				return this.kPosCase.replace(subTable).simplify(casInfo);
+			}
+			
+			return this.kNegCase.replace(subTable).simplify(casInfo);
+		}
+		
+	};
+	
 	static Rule inverseQuadratic = new Rule("inverse quadratic"){//robust
 		private static final long serialVersionUID = 1L;
 		
@@ -666,6 +707,7 @@ public class Integrate extends Expr{
 				StandardRules.pullOutConstants,
 				polynomial,
 				logCases,
+				linearOverQuadratic,
 				inverseQuadratic,
 				inverseQuadraticUSub,
 				absPolynomial,
