@@ -85,9 +85,11 @@ public class SimpleFuncs extends QuickMath{
 	static Func allowAbs = new Func("allowAbs",0);
 	static Func allowComplexNumbers = new Func("allowComplexNumbers",0);
 	static Func singleSolutionMode = new Func("singleSolutionMode",0);
+	static Func factorIrrationalRoots = new Func("factorIrrationalRoots",0);
 	static Func setAllowAbs = new Func("setAllowAbs",1);
 	static Func setAllowComplexNumbers = new Func("setAllowComplexNumbers",1);
 	static Func setSingleSolutionMode = new Func("setSingleSolutionMode",1);
+	static Func setFactorIrrationalRoots = new Func("setFactorIrrationalRoots",1);
 	
 	static Func sinh = new Func("sinh",1);
 	static Func cosh = new Func("cosh",1);
@@ -482,6 +484,14 @@ public class SimpleFuncs extends QuickMath{
 				return bool(casInfo.singleSolutionMode());
 			}
 		});
+		factorIrrationalRoots.ruleSequence.add(new Rule("allow irrational roots in factoring") {
+			private static final long serialVersionUID = 1L;
+			
+			@Override
+			public Expr applyRuleToExpr(Expr e,CasInfo casInfo) {
+				return bool(casInfo.factorIrrationalRoots());
+			}
+		});
 		
 		setAllowAbs.ruleSequence.add(new Rule("are we allowing absolute values") {
 			private static final long serialVersionUID = 1L;
@@ -509,6 +519,15 @@ public class SimpleFuncs extends QuickMath{
 			public Expr applyRuleToExpr(Expr e,CasInfo casInfo) {
 				casInfo.setSingleSolutionMode( e.get().equals(BoolState.TRUE));
 				return bool(casInfo.singleSolutionMode());
+			}
+		});
+		setFactorIrrationalRoots.ruleSequence.add(new Rule("should solve only return one solution") {
+			private static final long serialVersionUID = 1L;
+			
+			@Override
+			public Expr applyRuleToExpr(Expr e,CasInfo casInfo) {
+				casInfo.setFactorIrrationalRoots( e.get().equals(BoolState.TRUE));
+				return bool(casInfo.factorIrrationalRoots());
 			}
 		});
 		
@@ -925,9 +944,11 @@ public class SimpleFuncs extends QuickMath{
 		addFunc(allowAbs);
 		addFunc(singleSolutionMode);
 		addFunc(allowComplexNumbers);
+		addFunc(factorIrrationalRoots);
 		addFunc(setAllowAbs);
 		addFunc(setAllowComplexNumbers);
 		addFunc(setSingleSolutionMode);
+		addFunc(setFactorIrrationalRoots);
 		
 		addFunc(sinh);
 		addFunc(cosh);

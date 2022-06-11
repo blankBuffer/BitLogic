@@ -324,7 +324,16 @@ public class QuickMath {
 		return true;
 	}
 	
-	public static Expr partialFrac(Expr expr,Var v,CasInfo casInfo) {//being re written, currently disabled
+	public static boolean containsComplexNumbers(Expr e) {
+		if(e instanceof Num) return ((Num)e).isComplex();
+		
+		for(int i = 0;i < e.size();i++) {
+			if(containsComplexNumbers(e.get(i))) return true;
+		}
+		return false;
+	}
+	
+	public static Expr partialFrac(Expr expr,Var v,CasInfo casInfo) {
 		if(expr instanceof Div) {
 			BigInteger negOne = BigInteger.valueOf(-1);
 			Div frac = (Div)expr;
@@ -333,19 +342,49 @@ public class QuickMath {
 			
 			if(numerDegree.equals(negOne) || denomDegree.equals(negOne)) return expr;//not polynomials
 			if(denomDegree.compareTo(numerDegree) != 1) return expr;//denominator needs a greater degree
-			Expr denomFactored = factor(frac.getDenom()).simplify(casInfo);
+			
+			CasInfo factorIrrationalAndComplexRoots = new CasInfo(casInfo);
+			factorIrrationalAndComplexRoots.setFactorIrrationalRoots(true);
+			factorIrrationalAndComplexRoots.setAllowComplexNumbers(true);
+			
+			
+			frac.getDenom().fullFlagReset();//assume to not be simplified so that full factoring can occur
+			Expr denomFactored = factor(frac.getDenom()).simplify(factorIrrationalAndComplexRoots);//factor denominator into hopefully linear terms
+			
+			boolean needsCombination = containsComplexNumbers(denomFactored);
 			
 			Sequence parts = seperateByVar(denomFactored,v);
 			
 			Expr denomCoef = parts.get(0);
 			denomFactored = Prod.cast(parts.get(1));
 			
-			if(!allLinearTerms(denomFactored,v)) return expr;
+			if(!allLinearTerms(denomFactored,v)) return expr;//make sure its a product of linear terms
 			frac.setDenom(denomFactored);
 			
 			Sum out = new Sum();
 			
-			for(int i = 0;i<denomFactored.size();i++){
+			ArrayList<Expr> chara = new ArrayList<Expr>();//a measurement which is useful when combining conjugate denominators
+			
+			for(int i = 0;i<denomFactored.size();i++){//create fraction terms using extended heaviside partial fractions algorithm
+				/*
+				the algorithm works as follows
+				n(x) is a polynomial of lesser degree then the denominator
+				
+				f(x)=n(x)/((x+1)*(a*x+b)^3) this is the expression which will have partial fractions applied
+				
+				let k1(x)=f(x)*(x+1)=n(x)/(a*x+b)^3  which simplifies to all the other terms in the denominator
+				let k2(x)=f(x)*(a*x+b)^3=n(x)/(x+1)
+				
+				let r1 be the solution to the first denominator term namely the root of (x+1)=0 so r1=-1
+				let r2 be the solution to the second denominator term namely the root of (a*x+b) so r2=-b/a
+				
+				the result partial fraction ends up being
+				
+				k1(r1)/(x+1)  +   (k2(r2)/(a^0*0!))/(a*x+b)^3 + (k2'(r2)/(a^1*1!))/(a*x+b)^2 + (k2''(r2)/(a^2*2!))/(a*x+b)^1
+				
+				the pattern works much like the regular cover up method but works for denominators with powers
+				*/
+				
 				Expr currentFunction = frac.copy();
 				((Div)currentFunction).getDenom().remove(i);
 				
@@ -364,7 +403,10 @@ public class QuickMath {
 					
 					Expr functionOut = currentFunction.replace(solution);
 					
-					Expr newTerm = div(functionOut, prod(denomCoef,pow(linearTermCoef,num(j)), num(factorial(j)),pow(currentTerm.getBase(),num(currentExpo))  ) ).simplify(casInfo);
+					chara.add( exprList(num(out.size()),poly.get(0),poly.get(1),num(currentExpo)) );//index , constant , linear coeff, exponent
+					
+					Expr numer = div(functionOut,prod(denomCoef,pow(linearTermCoef,num(j)), num(factorial(j))));
+					Expr newTerm = div(numer,  pow(currentTerm.getBase(),num(currentExpo))  );
 					
 					out.add(newTerm);
 					
@@ -375,7 +417,53 @@ public class QuickMath {
 				}
 				
 			}
+			
+			
+			if(!casInfo.allowComplexNumbers() && needsCombination){//combine complex conjugates
+				HashMap<Integer,Integer> pairs = new HashMap<Integer,Integer>();
+				
+				outer:for(int i = 0;i<chara.size();i++) {
+					Expr current = chara.get(i);
+					
+					for(int j = i+1;j<chara.size();j++) {
+						Expr other = chara.get(j);
+						
+						if( !containsComplexNumbers(other.get(1)) ) {
+							j--;
+							chara.remove(j);
+							continue;
+						}
+						
+						if(current.get(2).equals(other.get(2)) && current.get(3).equals(other.get(3)) && !current.get(1).equals(other.get(1))) {//exponent and variable coefficient same but constant different means it can be combined because they are conjugates
+							pairs.put( ((Num)current.get(0)).realValue.intValue() , ((Num)other.get(0)).realValue.intValue());
+							chara.remove(j);
+							continue outer;
+							
+						}
+					}
+				}
+				
+				for(int key:pairs.keySet()) {
+					int i = key;
+					int j = pairs.get(key);
+					Div first = (Div) out.get(i);
+					Div second = (Div) out.get(j);
+					
+					Expr combinedDenom = pow(distr( prod(((Power)first.getDenom()).getBase(),((Power)second.getDenom()).getBase())  ),((Power)first.getDenom()).getExpo());
+					
+					Expr combinedNumer = sum( prod(first.getNumer(),second.getDenom()) ,  prod(first.getDenom(),second.getNumer()) );
+					
+					out.set(i, div(combinedNumer,combinedDenom));
+					out.set(j, null);//don't want resize of array
+				}
+				
+				for(int i = out.size()-1;i>=0;i--) {
+					if(out.get(i) == null) out.remove(i);
+				}
+				
+			}
 			return out.simplify(casInfo);
+			
 		}
 		return expr;
 	}

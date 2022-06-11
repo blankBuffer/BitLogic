@@ -450,6 +450,7 @@ public class Rule extends Expr{
 		bannedPreSimplifyFunctions.add("allowAbs");
 		bannedPreSimplifyFunctions.add("allowComplexNumbers");
 		bannedPreSimplifyFunctions.add("singleSolutionMode");
+		bannedPreSimplifyFunctions.add("factorIrrationalRoots");
 		
 		bannedPreSimplifyFunctions.add("size");
 		bannedPreSimplifyFunctions.add("get");

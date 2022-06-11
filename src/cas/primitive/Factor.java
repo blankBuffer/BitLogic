@@ -104,6 +104,11 @@ public class Factor extends Expr{
 		}
 	};
 	
+	static Rule quarticRealFactor = new Rule(new Rule[] {
+			new Rule("factor(b*x^4+a)->(sqrt(b)*x^2-b^(1/4)*a^(1/4)*sqrt(2)*x+sqrt(a))*(sqrt(b)*x^2+b^(1/4)*a^(1/4)*sqrt(2)*x+sqrt(a))","factorIrrationalRoots()&eval(a>0)&eval(b>0)","factor quartics using special technique"),
+			new Rule("factor(x^4+a)->(x^2-a^(1/4)*sqrt(2)*x+sqrt(a))*(x^2+a^(1/4)*sqrt(2)*x+sqrt(a))","factorIrrationalRoots()&eval(a>0)","factor quartics using special technique"),
+	},"factor quartics using special technique");
+	
 	static Rule quadraticFactor = new Rule("factor quadratics"){
 		private static final long serialVersionUID = 1L;
 
@@ -124,27 +129,27 @@ public class Factor extends Expr{
 					if(coefs.size() >= 3 && coefs.size()%2 == 1) {//quadratic form
 						//check discriminant
 						for(int i = 0;i<coefs.size();i++) {
-							if(!(coefs.get(i) instanceof Num)) {
+							if(!(coefs.get(i) instanceof Num || casInfo.factorIrrationalRoots())) {//should be a num or factoring irrational roots is allowed
 								return e;
 							}else if(i != 0&& i != coefs.size()-1 && i != (coefs.size()-1)/2 && !coefs.get(i).equals(Num.ZERO)) {//all between coefficients should be zero
 								return e;
 							}
 						}
-						Num a =  (Num)coefs.get(coefs.size()-1),b = (Num)coefs.get((coefs.size()-1)/2),c = (Num)coefs.get(0);
+						Expr a =  coefs.get(coefs.size()-1),b = coefs.get((coefs.size()-1)/2),c = coefs.get(0);
 						
-						if(!casInfo.allowComplexNumbers() && (a.isComplex() || b.isComplex() || c.isComplex())) return e;
+						if(!casInfo.allowComplexNumbers() && ( (a instanceof Num && ((Num)a).isComplex()) || (b instanceof Num && ((Num)b).isComplex()) || (c instanceof Num && ((Num)c).isComplex()) )) return e;
 						
-						Num discrNum = (Num)sum(pow(b,num(2)),prod(num(-4),a,c)).simplify(casInfo);
+						Expr discrNum = sum(pow(b,num(2)),prod(num(-4),a,c)).simplify(casInfo);
 						
-						if( !isPositiveRealNum(discrNum) && !casInfo.allowComplexNumbers()) return e;
+						if( !(isPositiveRealNum(discrNum) || casInfo.allowComplexNumbers() || (!discrNum.negative() && casInfo.factorIrrationalRoots()) ) ) return e;
 						
-						boolean createsComplex = discrNum.isComplex() || discrNum.realValue.signum() == -1;
+						boolean createsComplex = discrNum instanceof Num && (((Num)discrNum).isComplex() || ((Num)discrNum).realValue.signum() == -1);
 						
 						if(createsComplex && !casInfo.allowComplexNumbers() ) return e;
 						
 						Expr discrNumSqrt = sqrt(discrNum).simplify(casInfo);
 						
-						if(!(discrNumSqrt instanceof Num)) return e;
+						if(discrNumSqrt instanceof Num || casInfo.factorIrrationalRoots()) {
 							
 							
 							Expr out = new Prod();
@@ -158,7 +163,7 @@ public class Factor extends Expr{
 							out.add(inv(a.copy()));
 							
 							return out.simplify(casInfo);
-						
+						}
 							
 						
 					}
@@ -391,6 +396,7 @@ public class Factor extends Expr{
 				sumOfCubes,
 				differenceOfCubes,
 				power2Reduction,
+				quarticRealFactor,
 				quadraticFactor,
 				pullOutRoots,
 				reversePascalsTriangle,

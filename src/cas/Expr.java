@@ -90,6 +90,13 @@ public abstract class Expr extends QuickMath implements Serializable{
 		}
 	}
 	
+	public void fullFlagReset() {
+		this.flags.reset();
+		for(Expr e:subExpr) {
+			e.fullFlagReset();
+		}
+	}
+	
 	public static boolean USE_RECUSION_SAFTEY = true;
 	
 	public static long ruleCallCount = 0;

@@ -297,11 +297,18 @@ public class Ask extends QuickMath{
 				Expr equation = null;
 				Plot.PlotWindowParams plotWind = new Plot.PlotWindowParams();
 				
-				boolean _3d = false;
-				int _3dTokenIndex = tokens.indexOf("3d");
-				if(_3dTokenIndex != -1) {
-					_3d = true;
-					tokens.remove(_3dTokenIndex);
+				int plotMode = Plot.MODE_2D;
+				
+				
+				int modeIndex = tokens.indexOf("3d");
+				if(modeIndex != -1) {
+					plotMode = Plot.MODE_3D;
+					tokens.remove(modeIndex);
+				}
+				modeIndex = tokens.indexOf("complex");
+				if(modeIndex != -1) {
+					plotMode = Plot.MODE_COMPLEX;
+					tokens.remove(modeIndex);
 				}
 				
 				int indexOfExpr = indexOfExpr(0,tokens.size(),tokens);
@@ -329,9 +336,11 @@ public class Ask extends QuickMath{
 				}
 				
 				if(equation != null) {
-					if(!_3d)
-						return new ObjectExpr(Plot.renderGraph2D(sequence(equation), plotWind, new Dimension(400,400), new Color(64,64,64), new Color(255,255,255) ,1));
-					return new ObjectExpr(Plot.renderGraph3D(sequence(equation), plotWind, new Dimension(400,400),new Color(64,64,64), new Color(255,255,255), 48));
+					
+					if(plotMode == Plot.MODE_2D) return new ObjectExpr(Plot.renderGraph2D(sequence(equation), plotWind, new Dimension(400,400), new Color(64,64,64), new Color(255,255,255) ,1));
+					else if(plotMode == Plot.MODE_3D) return new ObjectExpr(Plot.renderGraph3D(sequence(equation), plotWind, new Dimension(400,400),new Color(64,64,64), new Color(255,255,255), 48));
+					else if(plotMode == Plot.MODE_COMPLEX) return new ObjectExpr(Plot.renderGraphComplex (sequence(equation), plotWind, new Dimension(400,400),1));
+					
 				}
 				return var("not sure what to plot?");
 			}
