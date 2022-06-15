@@ -303,7 +303,7 @@ public class Integrate extends Expr{
 					
 					Expr current = innerProd.get(i);
 					
-					if(isTypeExtended(current,"ln")){
+					if(isTypeExtended(current,"ln") && !denomIsFunc){
 						currentConfidence = BEST;
 					}else if(isTypeExtended(current,"atan") || isTypeExtended(current,"asin") || isTypeExtended(current,"acos")){
 						currentConfidence = GREAT;

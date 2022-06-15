@@ -153,8 +153,8 @@ public class Plot extends JPanel{
 		varDefs.add(xDef);
 		varDefs.add(yDef);
 		
-		Expr leftSide = QuickMath.getLeftSide(expr);
-		Expr rightSide = QuickMath.getRightSide(expr);
+		Expr leftSide = QuickMath.getLeftSideGeneric(expr);
+		Expr rightSide = QuickMath.getRightSideGeneric(expr);
 		
 		int equType = EQU;
 		if(expr instanceof Greater) equType = GREATER;
@@ -213,10 +213,10 @@ public class Plot extends JPanel{
 				if(expr instanceof Greater) equType = GREATER;
 				if(expr instanceof Less) equType = LESS;
 				
-				if(QuickMath.getLeftSide(expr).equals(Y)) {
-					basicPlot2D(g,QuickMath.getRightSide(expr),plotWindowParams,windowSize,IN_TERMS_OF_X,equType);
-				}else if(QuickMath.getLeftSide(expr).equals(X)) {
-					basicPlot2D(g,QuickMath.getRightSide(expr),plotWindowParams,windowSize,IN_TERMS_OF_Y,equType);
+				if(QuickMath.getLeftSideGeneric(expr).equals(Y)) {
+					basicPlot2D(g,QuickMath.getRightSideGeneric(expr),plotWindowParams,windowSize,IN_TERMS_OF_X,equType);
+				}else if(QuickMath.getLeftSideGeneric(expr).equals(X)) {
+					basicPlot2D(g,QuickMath.getRightSideGeneric(expr),plotWindowParams,windowSize,IN_TERMS_OF_Y,equType);
 				}else {
 					equPlot2D(g,expr,plotWindowParams,windowSize,detail);
 				}

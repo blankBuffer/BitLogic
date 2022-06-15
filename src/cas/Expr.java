@@ -320,7 +320,7 @@ public abstract class Expr extends QuickMath implements Serializable{
 	}
 	
 	
-	public Expr getCoefficient() {//returns numerator coefficient
+	public Expr getCoefficient() {
 		if(this instanceof Prod) {
 			for(int i = 0;i<size();i++) if(get(i) instanceof Num) return get(i).copy();
 		}else if(this instanceof Num) {

@@ -3,6 +3,7 @@ import java.math.BigInteger;
 import java.util.ArrayList;
 
 import cas.*;
+import cas.bool.BoolState;
 
 public class Solve extends Expr{
 	
@@ -10,6 +11,14 @@ public class Solve extends Expr{
 	
 	public Solve(){}//
 	public Solve(Equ e,Var v){
+		add(e);
+		add(v);
+	}
+	public Solve(Greater e,Var v){
+		add(e);
+		add(v);
+	}
+	public Solve(Less e,Var v){
 		add(e);
 		add(v);
 	}
@@ -26,6 +35,23 @@ public class Solve extends Expr{
 	
 	public ExprList getVars() {
 		return (ExprList)get(1);
+	}
+	
+	Expr getComparison(){
+		return get();
+	}
+	
+	void setComparison(Expr c){
+		set(0,c);
+	}
+	
+	void flipComparison(){
+		Expr comp = getComparison();
+		if(comp instanceof Less){
+			setComparison(equGreater( getLeftSideGeneric(comp) , getRightSideGeneric(comp) ));
+		}else if(comp instanceof Greater){
+			setComparison(equLess( getLeftSideGeneric(comp) , getRightSideGeneric(comp) ));
+		}
 	}
 	
 	Equ getEqu() {
@@ -51,18 +77,38 @@ public class Solve extends Expr{
 		return get() instanceof ExprList;
 	}
 	
+	public boolean comparisonEq(){
+		Expr in = get();
+		return in instanceof Greater || in instanceof Less;
+	}
+	
 	static Sequence ruleSequence;
+	
+	public static Expr goThroughEquCases(Expr e,CasInfo casInfo,Rule[] cases) {
+		Solve solve = (Solve)e;
+		Var v = solve.getVar();
+		for(Rule rule:cases) {
+			Expr result = rule.applyRuleToExpr(solve.get(), casInfo);
+			if(result instanceof ExprList) {
+				for(int i = 0;i<result.size();i++){
+					if(result instanceof Equ) result.set(i, solve((Equ)result.get(i),v));
+					if(result instanceof Less) result.set(i, solve((Less)result.get(i),v)  );
+					if(result instanceof Greater) result.set(i, solve((Greater)result.get(i),v)  );
+				}
+				return result.simplify(casInfo);
+			}else{
+				solve.set(0, result );
+			}
+		}
+		return solve;
+	}
 	
 	static Rule solveSingleEqCase = new Rule("solved equation") {
 		private static final long serialVersionUID = 1L;
 		
 		Sequence loopedSequence;
 		
-		Rule moveNonVarPartsInProd;
-		Rule moveNonVarPartsInSum;
 		Rule moveToLeftSide;
-		Rule distrLeftSide;
-		Rule factorLeftSide;
 		Rule rightSideZeroCase;
 		Rule powerCase;
 		Rule inverseFunctionCase;
@@ -73,21 +119,6 @@ public class Solve extends Expr{
 		Rule rootCases;
 		Rule subtractiveZero;
 		Rule absCase;
-		
-		public Expr goThroughEquCases(Expr e,CasInfo casInfo,Rule[] cases) {
-			Solve solve = (Solve)e;
-			Var v = solve.getVar();
-			for(Rule rule:cases) {
-				Expr result = rule.applyRuleToExpr(solve.getEqu(), casInfo);
-				if(result instanceof Equ) {
-					solve.setEqu( (Equ)result );
-				}else if(result instanceof ExprList) {
-					for(int i = 0;i<result.size();i++) result.set(i, solve((Equ)result.get(i),v)  );
-					return result.simplify(casInfo);
-				}
-			}
-			return solve;
-		}
 		
 		@Override
 		public void init() {
@@ -352,19 +383,6 @@ public class Solve extends Expr{
 				}
 			};
 			
-			factorLeftSide = new Rule("factor left side") {
-				private static final long serialVersionUID = 1L;
-				
-				@Override
-				public Expr applyRuleToExpr(Expr e,CasInfo casInfo){
-					Solve solve = (Solve)e;
-					if(solve.getEqu().getLeftSide() instanceof Sum) {
-						solve.getEqu().setLeftSide(factor(solve.getEqu().getLeftSide()).simplify(casInfo));
-					}
-					return solve;
-				}
-			};
-			
 			rightSideZeroCase = new Rule("right side is zero") {
 				private static final long serialVersionUID = 1L;
 				
@@ -397,83 +415,7 @@ public class Solve extends Expr{
 				}
 			};
 			
-			distrLeftSide = new Rule("distribute left side") {
-				private static final long serialVersionUID = 1L;
-				
-				@Override
-				public Expr applyRuleToExpr(Expr e,CasInfo casInfo){
-					Solve solve = (Solve)e;
-					
-					if(solve.getEqu().getLeftSide() instanceof Prod) {
-						solve.getEqu().setLeftSide(distr(solve.getEqu().getLeftSide()).simplify(casInfo));
-					}
-					
-					return solve;
-				}
-			};
-			
 			moveToLeftSide = new Rule("solve(a=b,c)->solve(a-b=0,c)","move everything to the left side");
-			
-			moveNonVarPartsInProd = new Rule("move non var parts to the right side (prod)") {
-				private static final long serialVersionUID = 1L;
-
-				@Override
-				public Expr applyRuleToExpr(Expr e,CasInfo casInfo){
-					Solve solve = (Solve)e;
-					
-					Var v = solve.getVar();
-					
-					if(solve.getEqu().getLeftSide() instanceof Prod) {
-						Prod leftSide = (Prod)solve.getEqu().getLeftSide();
-						
-						Prod rightSide = Prod.cast(solve.getEqu().getRightSide());
-						for(int i = 0;i<leftSide.size();i++) {
-							if(!leftSide.get(i).contains(v)) {
-								Expr temp = leftSide.get(i);
-								
-								leftSide.remove(i);
-								rightSide.add(inv(temp));
-								i--;
-							}
-						}
-						
-						solve.getEqu().setLeftSide(Prod.unCast(leftSide));
-						solve.getEqu().setRightSide(rightSide.simplify(casInfo));
-					}
-					
-					return solve;
-				}
-			};
-			
-			moveNonVarPartsInSum = new Rule("move non var parts to the right side (sum)") {
-				private static final long serialVersionUID = 1L;
-
-				@Override
-				public Expr applyRuleToExpr(Expr e,CasInfo casInfo){
-					Solve solve = (Solve)e;
-					
-					Var v = solve.getVar();
-					
-					if(solve.getEqu().getLeftSide() instanceof Sum) {
-						Sum leftSide = (Sum)solve.getEqu().getLeftSide();
-						
-						Sum rightSide = Sum.cast(solve.getEqu().getRightSide());
-						for(int i = 0;i<leftSide.size();i++) {
-							if(!leftSide.get(i).contains(v)) {
-								Expr temp = leftSide.get(i);
-								leftSide.remove(i);
-								rightSide.add(neg(temp));
-								i--;
-							}
-						}
-						
-						solve.getEqu().setLeftSide(Sum.unCast(leftSide));
-						solve.getEqu().setRightSide(rightSide.simplify(casInfo));
-					}
-					
-					return solve;
-				}
-			};
 			
 			loopedSequence = sequence(
 				rightSideZeroCase,
@@ -501,11 +443,11 @@ public class Solve extends Expr{
 			Solve solve = (Solve)e;
 			if(!solve.singleEq()) return e;
 			
-			while(!solve.getEqu().equals(oldState)) {
+			outer:while(!solve.getEqu().equals(oldState)) {
 				oldState = solve.getEqu().copy();
 				for(int i = 0;i<loopedSequence.size();i++) {
 					e = ((Rule)loopedSequence.get(i)).applyRuleToExpr(solve, casInfo);
-					if(!(e instanceof Solve)) break;
+					if(!(e instanceof Solve)) break outer;
 					solve = (Solve)e;
 					if(solve.getEqu().getLeftSide().equals(solve.getVar()) && !solve.getEqu().getRightSide().contains(solve.getVar())) {
 						return solve.getEqu();
@@ -566,10 +508,220 @@ public class Solve extends Expr{
 		}
 	};
 	
+	public static Rule comparisonSolve = new Rule("solve a comparison"){
+		private static final long serialVersionUID = 1L;
+		
+		Sequence loopedSequence;
+		
+		Rule moveToLeftSide;
+		Rule powerCase;
+		
+		@Override
+		public void init(){
+			moveToLeftSide = new Rule("move everything to the left side"){
+				private static final long serialVersionUID = 1L;
+
+				@Override
+				public void init(){
+					cases = new Rule[]{
+							new Rule("x>y->x-y>0","move everything to the left side"),
+							new Rule("x<y->x-y<0","move everything to the left side"),
+					};
+					Rule.initRules(cases);
+				}
+				@Override
+				public Expr applyRuleToExpr(Expr e,CasInfo casInfo){
+					return goThroughEquCases(e,casInfo,cases);
+				}
+			};
+			
+			powerCase = new Rule("reversing powers"){
+				private static final long serialVersionUID = 1L;
+				
+				Rule expReversal;
+				
+				@Override
+				public void init(){
+					expReversal = new Rule(new Rule[]{
+							new Rule("solve(a^b>c,d)->solve(b>ln(c)/ln(a),d)","exponential comparison reversal"),
+							new Rule("solve(a^b<c,d)->solve(b<ln(c)/ln(a),d)","exponential comparison reversal"),
+					},"exponential comparison reversal");
+					expReversal.init();
+				}
+				
+				@Override
+				public Expr applyRuleToExpr(Expr e,CasInfo casInfo){
+					Solve solve = (Solve)e;
+					
+					Var v = solve.getVar();
+					if(getLeftSideGeneric(solve.getComparison()) instanceof Power){
+						Power leftSide = (Power)getLeftSideGeneric(solve.getComparison());
+						
+						boolean baseHasVar = leftSide.getBase().contains(v), expoHasVar = leftSide.getExpo().contains(v);
+						
+						if(baseHasVar && !expoHasVar){
+							
+							setLeftSideGeneric(solve.getComparison(),leftSide.getBase());
+							setRightSideGeneric(solve.getComparison(), pow(getRightSideGeneric(solve.getComparison()),inv(leftSide.getExpo())).simplify(casInfo) );
+							
+							if( !leftSide.getExpo().containsVars() && eval(equLess(leftSide.getExpo(),num(0))).simplify(casInfo).equals(BoolState.TRUE) ){
+								solve.flipComparison();
+							}
+							
+							Div frac = Div.cast(leftSide.getExpo());
+							
+							boolean twoParts = !casInfo.singleSolutionMode() && frac.isNumericalAndReal() && ((Num)frac.getNumer()).realValue.mod(BigInteger.TWO).equals(BigInteger.ZERO);
+							if(twoParts){
+								Solve negSol = (Solve)solve.copy();
+								negSol.flipComparison();
+								setRightSideGeneric(negSol.getComparison(),neg(getRightSideGeneric(negSol.getComparison())).simplify(casInfo));
+								Expr out = exprList(solve,negSol);
+								return out.simplify(casInfo);
+							}
+						}else if(!baseHasVar && expoHasVar){
+							solve = (Solve) expReversal.applyRuleToExpr(solve, casInfo);
+						}
+						
+					}
+					
+					return solve;
+				}
+			};
+			
+			loopedSequence = sequence(
+					moveToLeftSide,
+					distrLeftSide,
+					moveNonVarPartsInSum,
+					factorLeftSide,
+					moveNonVarPartsInProd,
+					powerCase
+			);
+			Rule.initRules(loopedSequence);
+		}
+		
+		@Override
+		public Expr applyRuleToExpr(Expr e,CasInfo casInfo){
+			Expr oldState = null;
+			Solve solve = (Solve)e;
+			if(!solve.comparisonEq()) return e;
+			
+			outer:while(!solve.getComparison().equals(oldState)) {
+				oldState = solve.getComparison().copy();
+				for(int i = 0;i<loopedSequence.size();i++) {
+					e = ((Rule)loopedSequence.get(i)).applyRuleToExpr(solve, casInfo);
+					if(!(e instanceof Solve)) break outer;
+					solve = (Solve)e;
+					if(getLeftSideGeneric(solve.getComparison()).equals(solve.getVar()) && !getRightSideGeneric(solve.getComparison()).contains(solve.getVar())) {
+						return solve.getComparison();
+					}
+				}
+			}
+			return e;
+		}
+	};
+	
+	//
+	
+	static Rule moveNonVarPartsInSum = new Rule("move non var parts to the right side (sum)"){
+		private static final long serialVersionUID = 1L;
+		
+		@Override
+		public Expr applyRuleToExpr(Expr e,CasInfo casInfo){
+			Solve solve = (Solve)e;
+			Var v = solve.getVar();
+			
+			if(getLeftSideGeneric(solve.getComparison()) instanceof Sum){
+				Sum leftSide = (Sum)getLeftSideGeneric(solve.getComparison());
+				Sum rightSide = Sum.cast(getRightSideGeneric(solve.getComparison()));
+				
+				for(int i = 0;i < leftSide.size();i++){
+					Expr current = leftSide.get(i);
+					
+					if(!current.contains(v)){
+						leftSide.remove(i);
+						rightSide.add(neg(current));
+						i--;
+					}
+				}
+				
+				setLeftSideGeneric(solve.getComparison(),Sum.unCast(leftSide));
+				setRightSideGeneric(solve.getComparison(),rightSide.simplify(casInfo));
+			}
+			
+			return solve;
+		}
+	};
+	
+	static Rule moveNonVarPartsInProd = new Rule("move non var parts to the right side (prod)"){
+		private static final long serialVersionUID = 1L;
+		
+		@Override
+		public Expr applyRuleToExpr(Expr e,CasInfo casInfo){
+			Solve solve = (Solve)e;
+			Var v = solve.getVar();
+			
+			if(getLeftSideGeneric(solve.getComparison()) instanceof Prod){
+				Prod leftSide = (Prod)getLeftSideGeneric(solve.getComparison());
+				Prod rightSide = Prod.cast(getRightSideGeneric(solve.getComparison()));
+				
+				boolean flip = false;
+				boolean isComp = solve.getComparison() instanceof Less || solve.getComparison() instanceof Greater;
+				
+				for(int i = 0;i < leftSide.size();i++){
+					Expr current = leftSide.get(i);
+					
+					if(isComp && !current.containsVars() && eval(equLess(current,num(0))).simplify(casInfo).equals(BoolState.TRUE) ){
+						flip = !flip;
+					}
+					
+					if(!current.contains(v)){
+						leftSide.remove(i);
+						rightSide.add(inv(current));
+						i--;
+					}
+				}
+				
+				setLeftSideGeneric(solve.getComparison(),Sum.unCast(leftSide));
+				setRightSideGeneric(solve.getComparison(),rightSide.simplify(casInfo));
+				if(flip) solve.flipComparison();
+				
+			}
+			
+			return solve;
+		}
+	};
+	
+	static Rule factorLeftSide = new Rule("factor left side") {
+		private static final long serialVersionUID = 1L;
+		
+		@Override
+		public Expr applyRuleToExpr(Expr e,CasInfo casInfo){
+			Solve solve = (Solve)e;
+			if(getLeftSideGeneric(solve.getComparison()) instanceof Sum) {
+				setLeftSideGeneric(solve.getComparison(), factor(getLeftSideGeneric(solve.getComparison())).simplify(casInfo));
+			}
+			return solve;
+		}
+	};
+	static Rule distrLeftSide = new Rule("factor left side") {
+		private static final long serialVersionUID = 1L;
+		
+		@Override
+		public Expr applyRuleToExpr(Expr e,CasInfo casInfo){
+			Solve solve = (Solve)e;
+			if(getLeftSideGeneric(solve.getComparison()) instanceof Sum) {
+				setLeftSideGeneric(solve.getComparison(), distr(getLeftSideGeneric(solve.getComparison())).simplify(casInfo));
+			}
+			return solve;
+		}
+	};
+	
 	public static void loadRules() {
+		
 		ruleSequence = sequence(
 				solveSingleEqCase,
-				solveSetCase
+				solveSetCase,
+				comparisonSolve
 		);
 		Rule.initRules(ruleSequence);
 	}

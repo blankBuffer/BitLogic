@@ -1098,6 +1098,9 @@ public class SimpleFuncs extends QuickMath{
 		
 		if(funcName.equals("solve") && params[0] instanceof Equ) return solve((Equ)params[0],(Var)params[1]);
 		if(funcName.equals("solve") && params[0] instanceof ExprList) return solve((ExprList)params[0],(ExprList)params[1]);
+		if(funcName.equals("solve") && params[0] instanceof Greater) return solve((Greater)params[0],(Var)params[1]);
+		if(funcName.equals("solve") && params[0] instanceof Less) return solve((Less)params[0],(Var)params[1]);
+		
 		
 		if(funcName.equals("diff")) return diff(params[0],(Var)params[1]);
 		if(funcName.equals("integrate")) return integrate(params[0],(Var)params[1]);

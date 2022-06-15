@@ -247,8 +247,8 @@ public class ExprRender extends QuickMath{//sort of a wrap of the image type but
 				graphics.fillRect(getWidth()/2-fractionSpacerWidth/2, numerImg.getHeight(), fractionSpacerWidth, fractionSpacerHeight);
 				drawImage(denomImg,getWidth()/2-denomImg.getWidth()/2,getHeight()-denomImg.getHeight(),denomImg.getWidth(),denomImg.getHeight());
 			}else if(e instanceof Equ || e instanceof Greater || e instanceof Less) {
-				Expr leftSide = getLeftSide(e);
-				Expr rightSide = getRightSide(e);
+				Expr leftSide = getLeftSideGeneric(e);
+				Expr rightSide = getRightSideGeneric(e);
 				
 				ExprImg equImg = newExprImg();
 				equImg.makeString( (e instanceof Equ) ? "=" : ((e instanceof Greater) ? ">" : "<") );

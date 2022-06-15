@@ -213,6 +213,12 @@ public class QuickMath {
 	public static Solve solve(Equ e,Var v) {
 		return new Solve(e,v);
 	}
+	public static Solve solve(Greater e,Var v) {
+		return new Solve(e,v);
+	}
+	public static Solve solve(Less e,Var v) {
+		return new Solve(e,v);
+	}
 	public static Solve solve(ExprList e,ExprList v) {
 		return new Solve(e,v);
 	}
@@ -1219,7 +1225,7 @@ public class QuickMath {
 		return new long[] {n,d};
 	}
 	
-	public static Expr getLeftSide(Expr e) {
+	public static Expr getLeftSideGeneric(Expr e) {
 		if(e instanceof Equ) {
 			return ((Equ)e).getLeftSide();
 		}
@@ -1233,7 +1239,7 @@ public class QuickMath {
 		return null;
 	}
 	
-	public static Expr getRightSide(Expr e) {
+	public static Expr getRightSideGeneric(Expr e) {
 		if(e instanceof Equ) {
 			return ((Equ)e).getRightSide();
 		}
@@ -1247,11 +1253,34 @@ public class QuickMath {
 		return null;
 	}
 	
+	public static void setLeftSideGeneric(Expr expr,Expr ls) {
+		if(expr instanceof Equ) {
+			((Equ)expr).setLeftSide(ls);
+		}
+		if(expr instanceof Less) {
+			((Less)expr).setLeftSide(ls);
+		}
+		if(expr instanceof Greater) {
+			((Greater)expr).setLeftSide(ls);
+		}
+	}
+	
+	public static void setRightSideGeneric(Expr expr,Expr rs) {
+		if(expr instanceof Equ) {
+			((Equ)expr).setRightSide(rs);
+		}
+		if(expr instanceof Less) {
+			((Less)expr).setRightSide(rs);
+		}
+		if(expr instanceof Greater) {
+			((Greater)expr).setRightSide(rs);
+		}
+	}
+	
 	static HashMap<String,String> BLToLatexFunctionNameMap = null;
 	private static void initBLToMathMLFunctionNameMap() {
 		BLToLatexFunctionNameMap = new HashMap<String,String>();
 		//based on class names
-		BLToLatexFunctionNameMap.put("log","ln");
 		BLToLatexFunctionNameMap.put("asin","arcsin");
 		BLToLatexFunctionNameMap.put("acos","arccos");
 		BLToLatexFunctionNameMap.put("atan","arctan");
@@ -1266,12 +1295,28 @@ public class QuickMath {
 		}else if(e instanceof Var || e instanceof Num || e.equals(Var.E)) {
 			out += e.toString();
 		}else if(e instanceof Prod) {
+			e = (Prod)e.copy();//need to bring num to front
+			
+			for(int i = 0;i<e.size();i++){
+				if(e.get(i) instanceof Num){
+					Expr temp = e.get(0);
+					e.set(0,e.get(i));
+					e.set(i, temp);
+					break;
+				}
+			}
+			
+			if(e.get(0).equals(Num.NEG_ONE)){
+				e.remove(0);
+				out+="-";
+			}
+				
 			for(int i = 0;i<e.size();i++) {
 				boolean paren = e.get(i) instanceof Sum;
 				if(paren) out+=leftParen;
 				out+=generateLatex(e.get(i));
 				if(paren) out+=rightParen;
-				if(i!=e.size()-1) out+="\\cdot ";
+				if(i!=e.size()-1) out+=" \\cdot ";
 			}
 		}else if(e instanceof Sum) {
 			for(int i = 0;i<e.size();i++) {
@@ -1290,19 +1335,26 @@ public class QuickMath {
 			out+="}";
 		}else if(e instanceof Power) {
 			Power casted = (Power)e;
-			out+="{";
-			boolean parenBase = false;
-			if(casted.getBase() instanceof Sum || casted.getBase() instanceof Prod || casted.getBase() instanceof Power || (casted.getBase() instanceof Num && casted.getBase().negative())) parenBase = true;
-			if(parenBase) out+=leftParen;
-			out+=generateLatex(casted.getBase());
-			if(parenBase) out+=rightParen;
-			out+="}^{";
-			boolean parenExpo= false;
-			if(casted.getExpo() instanceof Sum || casted.getExpo() instanceof Prod || casted.getExpo() instanceof Power) parenExpo = true;
-			if(parenExpo) out+=leftParen;
-			out+=generateLatex(casted.getExpo());
-			if(parenExpo) out+=rightParen;
-			out+="}";
+			
+			if(Rule.fastSimilarExpr(sqrtObj,e)){
+				out += "\\sqrt{";
+				out+= generateLatex(casted.getBase());
+				out += "}";
+			}else{
+				out+="{";
+				boolean parenBase = false;
+				if(casted.getBase() instanceof Sum || casted.getBase() instanceof Prod || casted.getBase() instanceof Power || (casted.getBase() instanceof Num && casted.getBase().negative())) parenBase = true;
+				if(parenBase) out+=leftParen;
+				out+=generateLatex(casted.getBase());
+				if(parenBase) out+=rightParen;
+				out+="}^{";
+				boolean parenExpo= false;
+				if(casted.getExpo() instanceof Sum || casted.getExpo() instanceof Prod || casted.getExpo() instanceof Power) parenExpo = true;
+				if(parenExpo) out+=leftParen;
+				out+=generateLatex(casted.getExpo());
+				if(parenExpo) out+=rightParen;
+				out+="}";
+			}
 		}else if(e instanceof Equ) {
 			Equ casted = (Equ)e;
 			out+=generateLatex( casted.getLeftSide() );
@@ -1325,6 +1377,10 @@ public class QuickMath {
 			out+="}"+leftParen;
 			out+=generateLatex(casted.get());
 			out+=rightParen;
+		}else if(e instanceof Abs){
+			out+="\\left| ";
+			out+=generateLatex(e.get());
+			out+="\\right| ";
 		}else{
 			String BLfunctionName = e.getClass().getSimpleName().toLowerCase();
 			String repl = BLToLatexFunctionNameMap.get(BLfunctionName);
