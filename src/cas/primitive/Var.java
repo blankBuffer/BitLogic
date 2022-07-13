@@ -53,6 +53,7 @@ public class Var extends Expr{
 	public static final Expr NEG_INF = neg(inf());
 	public static final Var EPSILON = epsilon();
 	public static final Expr NEG_EPSILON = neg(epsilon());
+	public static final Var ERROR = error();
 	
 	/*
 	 * for non generic variables this is the defined value for the constant

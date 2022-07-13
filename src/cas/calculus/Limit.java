@@ -287,12 +287,14 @@ public class Limit extends Expr{
 		public Expr applyRuleToExpr(Expr e,CasInfo casInfo){
 			Limit lim = (Limit)e;
 			
+			Var v = lim.getVar();
+			
 			if(lim.getExpr() instanceof Div && isInf(lim.getValue())) {
 				Div innerDiv = (Div)lim.getExpr();
 				
-				BigInteger numerDegree = degree(innerDiv.getNumer(),lim.getVar());
+				BigInteger numerDegree = degree(innerDiv.getNumer(),v);
 				if(numerDegree.signum() != 1) return lim;
-				BigInteger denomDegree = degree(innerDiv.getDenom(),lim.getVar());
+				BigInteger denomDegree = degree(innerDiv.getDenom(),v);
 				if(denomDegree.signum() != 1) return lim;
 				
 				int comparison = numerDegree.compareTo(denomDegree);
@@ -302,8 +304,10 @@ public class Limit extends Expr{
 					out = limit(innerDiv.getNumer(),lim.getApproaches());
 				}else if(comparison == -1) {
 					out = inv(limit(innerDiv.getDenom(),lim.getApproaches()));
+				}else  if(comparison == 0){
+					out = div(getLeadingCoef(innerDiv.getNumer(),v,casInfo),getLeadingCoef(innerDiv.getDenom(),v,casInfo));
 				}
-				if(out != null) return out.simplify(casInfo);
+				return out.simplify(casInfo);
 			}
 			
 			return lim;
@@ -319,20 +323,12 @@ public class Limit extends Expr{
 			Limit lim = (Limit)e;
 			
 			if(isPolynomialUnstrict(lim.getExpr(), lim.getVar()) && isInf(lim.getValue())) {
-				lim.setExpr(expand(lim.getExpr()).simplify(casInfo));
 				
-				BigInteger degree = degree(lim.getExpr(),lim.getVar());
+				Var v = lim.getVar();
+				Num degree = num(degree(lim.getExpr(),v));
+				Expr coeff = getLeadingCoef(lim.getExpr(),v,casInfo);
 				
-				if(lim.getExpr() instanceof Sum) {
-					
-					Sum innerSum = (Sum)lim.getExpr();
-					for(int i = 0;i<innerSum.size();i++) {
-						if(degree(innerSum.get(i),lim.getVar()).equals(degree)) {
-							return limit(innerSum.get(i),lim.getApproaches()).simplify(casInfo);
-						}
-					}
-					
-				}
+				return prod(coeff,pow(v,degree)).replace(equ(v,lim.getValue())).simplify(casInfo);
 				
 			}
 			
@@ -356,7 +352,7 @@ public class Limit extends Expr{
 	 * 
 	 * the ... terms are the lower order polynomial parts. They don't effect the result
 	 */
-	static Rule crazyRootSubtraction = new Rule("special subtraction of two roots with polynomials inside") {
+	static Rule rootRewrite = new Rule("special way to write roots when they approach infinity") {
 		private static final long serialVersionUID = 1L;
 		
 		Expr rootForm;
@@ -434,6 +430,9 @@ public class Limit extends Expr{
 		
 	};
 	
+	/*
+	 * convert the gamma function to the sterling approximation so that if there is a ration of the two it can be calculated
+	 */
 	static Rule sterlingTransformation = new Rule("sterling approximation for gamma") {
 		private static final long serialVersionUID = 1L;
 		
@@ -441,7 +440,7 @@ public class Limit extends Expr{
 		
 		@Override
 		public void init() {
-			toSterling = createExpr("((x-1)^((2*x-1)/2)*sqrt(2*pi))/e^(x-1)").simplify(CasInfo.normal);
+			toSterling = createExpr("((x-1)^((2*x-1)/2)*sqrt(2*pi))/e^(x-1)").simplify(CasInfo.normal);//the sterling approximation
 		}
 		
 		public Expr replace(Expr e) {
@@ -494,10 +493,70 @@ public class Limit extends Expr{
 					changed = true;
 				}
 				
-				if(changed)lim.setExpr(lim.getExpr().simplify(casInfo));
+				if(changed)lim.setExpr(lim.getExpr().simplify(casInfo));//if it was applied simplify the expression
 				
 			}
 			return lim;
+		}
+	};
+	
+	static Rule biggerFuncCalc = new Rule("function growth comparison"){
+		private static final long serialVersionUID = 1L;
+		
+		boolean posLinFunc(Expr e,Var v,CasInfo casInfo){
+			return degree(e,v).equals(BigInteger.ONE) &&
+					eval(equGreater(getLeadingCoef(e,v,casInfo),num(0))).simplify(casInfo).equals(BoolState.TRUE);
+		}
+		
+		int UNKNOWN = -1,CONST = 0,POLY = 1,EXP = 2,SUPER = 3;//different classes of size
+		
+		int getSizeRank(Expr e,Var v,CasInfo casInfo){
+			e = stripNonVarPartsFromProd(e,v);
+			if(!e.contains(v)) return CONST;
+			if(isPolynomialUnstrict(e, v)) return POLY;
+			if(e instanceof Power && !e.get(0).contains(v) && posLinFunc(e.get(1), v,casInfo) ) return EXP;
+			if(e instanceof Power && posLinFunc(e.get(0),v,casInfo) && posLinFunc(e.get(1),v,casInfo)) return SUPER;
+			return UNKNOWN;//cannot compare too complicated
+		}
+		
+		int compare(Expr a,Expr b,Var v,CasInfo casInfo){//a>b 1 a<b -1 unkown 0
+			
+			int aRank = getSizeRank(a,v,casInfo);
+			if(aRank == UNKNOWN) return 0;
+			
+			int bRank = getSizeRank(b,v,casInfo);
+			if(bRank == UNKNOWN) return 0;
+			
+			return Integer.compare(aRank, bRank);
+		}
+		
+		@Override
+		public Expr applyRuleToExpr(Expr e,CasInfo casInfo){
+			Limit lim = (Limit)e;
+			Var v = lim.getVar();
+			if(lim.getValue().equals(Var.INF)){
+				if(lim.getExpr() instanceof Div){
+					Div casted = (Div)lim.getExpr();
+					int comparison = compare(casted.getNumer(),casted.getDenom(),v,casInfo);
+					if(comparison == 1) return inf();
+					else if(comparison == -1) return epsilon();
+				}else if(lim.getExpr() instanceof Sum){//sum where one term grows much faster than the rest
+					Sum casted = (Sum)lim.getExpr();
+					Expr biggest = casted.get(0);
+					
+					for(int i = 1;i<casted.size();i++){
+						Expr current = casted.get(i);
+						int comparison = compare(biggest,current,v,casInfo);
+						if(comparison == 0) return e;
+						if(comparison == -1){
+							biggest = current;
+						}
+					}
+					
+					return limit(biggest,lim.getApproaches()).simplify(casInfo);
+				}
+			}
+			return e;
 		}
 	};
 	
@@ -507,11 +566,12 @@ public class Limit extends Expr{
 		ruleSequence = sequence(
 				StandardRules.pullOutConstants,
 				commonExpoDiv,
+				biggerFuncCalc,
 				lhopitalsRulePow,
 				limitOfDivWithRoot,
 				differentDegreePolysInDiv,
 				polyCase,
-				crazyRootSubtraction,
+				rootRewrite,
 				sterlingTransformation,
 				lhopitalsRuleDiv,
 				directSubst

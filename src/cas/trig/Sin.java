@@ -23,6 +23,8 @@ public class Sin extends Expr{
 	static Rule sinOfAsin = new Rule("sin(asin(x))->x","sin contains inverse");
 	static Rule sinOfAcos = new Rule("sin(acos(x))->sqrt(1-x^2)","sin of arccos");
 	
+	static Rule sinOfEpsilon = new Rule("sin(epsilon)->epsilon","sin of epsion");
+	
 	public Sin(){}//
 	public Sin(Expr a) {
 		add(a);
@@ -130,6 +132,7 @@ public class Sin extends Expr{
 	
 	public static void loadRules(){
 		ruleSequence = sequence(
+				sinOfEpsilon,
 				sinOfArctan,
 				sinOfAsin,
 				sinOfAcos,

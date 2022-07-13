@@ -23,6 +23,8 @@ public class Cos extends Expr{
 	static Rule cosOfArcsin = new Rule("cos(asin(x))->sqrt(1-x^2)","cos of arcsin");
 	static Rule cosOfArccos = new Rule("cos(acos(x))->x","cos of arccos");
 	
+	static Rule cosOfEpsilon = new Rule("cos(epsilon)->1-epsilon","cos of epsilon");
+	
 	static Rule cosOfAbs = new Rule("cos(abs(x))->cos(x)","cos of arccos");
 
 	public Cos(){}//
@@ -107,6 +109,7 @@ public class Cos extends Expr{
 	
 	public static void loadRules(){
 		ruleSequence = sequence(
+				cosOfEpsilon,
 				cosOfArctan,
 				cosOfArcsin,
 				cosOfArccos,

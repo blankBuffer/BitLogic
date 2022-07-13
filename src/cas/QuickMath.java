@@ -80,6 +80,10 @@ public class QuickMath {
 		return var("epsilon");
 	}
 	
+	public static Var error(){
+		return var("error");
+	}
+	
 	//
 	public static Power pow(Expr a,Expr b) {
 		return new Power(a,b);
@@ -535,7 +539,7 @@ public class QuickMath {
 				if(isPositiveRealNum(casted.getExpo())) {
 					if(casted.getBase().equals(v)) {
 						maxDegree = maxDegree.max(((Num)casted.getExpo()).realValue);
-					}else if(isPlainPolynomial(casted.getBase(),v)) {
+					}else if(isPolynomialUnstrict(casted.getBase(),v)) {
 						maxDegree = maxDegree.max( degree(casted.getBase(),v).multiply(((Num)casted.getExpo()).realValue) );
 					}else return negOne;
 				}else return negOne;
@@ -567,6 +571,9 @@ public class QuickMath {
 		}else if(expr instanceof Power){
 			Power casted = (Power)expr;
 			return isPositiveRealNum(casted.getExpo()) && isPolynomialUnstrict(casted.getBase(),v);
+		}else if(expr instanceof Div){
+			Div casted = (Div)expr;
+			return !casted.getDenom().contains(v) && isPolynomialUnstrict(casted.getNumer(),v);
 		}
 		return false;
 	}
@@ -586,6 +593,49 @@ public class QuickMath {
 		}
 		return true;
 	}
+	public static Expr getLeadingCoef(Expr expr,Var v,CasInfo casInfo){
+		if(isPolynomialUnstrict(expr,v)){
+			if(!expr.contains(v)){
+				return expr;
+			}else if(expr instanceof Div){
+				Div casted = (Div)expr;
+				return div(getLeadingCoef(casted.getNumer(),v,casInfo),casted.getDenom()).simplify(casInfo);
+			}else if(expr instanceof Prod){
+				Prod out = new Prod();
+				for(int i = 0;i<expr.size();i++){
+					out.add(getLeadingCoef(expr.get(i),v,casInfo));
+				}
+				return out.simplify(casInfo);
+			}else if(expr instanceof Power){
+				Power casted = (Power)expr;
+				return pow(getLeadingCoef(casted.getBase(),v,casInfo),casted.getExpo()).simplify(casInfo);
+			}else if(expr instanceof Sum){
+				BigInteger[] degrees = new BigInteger[expr.size()];
+				for(int i = 0;i<expr.size();i++){
+					degrees[i] = degree(expr.get(i),v);
+				}
+				
+				BigInteger maxDegree = BigInteger.ZERO;
+				
+				for(int i = 0;i<degrees.length;i++){
+					BigInteger currentDegree = degrees[i];
+					maxDegree = maxDegree.max(currentDegree);
+				}
+				
+				Sum out = new Sum();
+				for(int i = 0;i<expr.size();i++){
+					if(degrees[i].equals(maxDegree)){
+						out.add( getLeadingCoef(expr.get(i) ,v,casInfo) );
+					}
+				}
+				return out.simplify(casInfo);
+			}else if(expr.equals(v)){
+				return num(1);
+			}
+		}
+		return null;
+	}
+	
 	public static boolean isRealNum(Expr e) {
 		return e instanceof Num && !((Num)e).isComplex();
 	}

@@ -83,8 +83,7 @@ public class StackEditor extends QuickMath {
 		if(expr != null) stack.set(index, expr);
 	}
 
-	public Sequence stack = new Sequence();
-	public Sequence stackOld = new Sequence();
+	public Sequence stack = new Sequence(),stackOld = new Sequence();
 
 	public int size() {
 		return stack.size();

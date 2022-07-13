@@ -69,6 +69,7 @@ public class SimpleFuncs extends QuickMath{
 	
 	static Func polyCoef = new Func("polyCoef",2);
 	static Func degree = new Func("degree",2);
+	static Func leadingCoef = new Func("leadingCoef",2);
 	static Func save = new Func("save",2);
 	static Func open = new Func("open",1);
 	static Func conv = new Func("conv",3);
@@ -244,7 +245,9 @@ public class SimpleFuncs extends QuickMath{
 				Func f = (Func)e;
 				Expr inner = f.get(0);
 				Var var = (Var)f.get(1);
-				return polyExtract(inner,var,casInfo);
+				Expr ans = polyExtract(inner,var,casInfo);
+				if(ans == null) return error();
+				return ans;
 			}
 		});
 		
@@ -256,7 +259,23 @@ public class SimpleFuncs extends QuickMath{
 				Func f = (Func)e;
 				Expr inner = f.get(0);
 				Var var = (Var)f.get(1);
-				return num(degree(inner,var));
+				Expr ans = num(degree(inner,var));
+				if(ans.equals(Num.NEG_ONE)) return error();
+				return ans;
+			}
+		});
+		
+		leadingCoef.ruleSequence.add(new Rule("get the leading coefficient of a polynomial"){
+			private static final long serialVersionUID = 1L;
+
+			@Override
+			public Expr applyRuleToExpr(Expr e,CasInfo casInfo){
+				Func f = (Func)e;
+				Expr inner = f.get(0);
+				Var var = (Var)f.get(1);
+				Expr ans = getLeadingCoef(inner,var,casInfo);
+				if(ans == null) return error();
+				return ans;
 			}
 		});
 		
@@ -928,6 +947,7 @@ public class SimpleFuncs extends QuickMath{
 		
 		addFunc(polyCoef);
 		addFunc(degree);
+		addFunc(leadingCoef);
 		addFunc(save);
 		addFunc(open);
 		addFunc(conv);

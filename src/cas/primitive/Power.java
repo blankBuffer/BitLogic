@@ -381,8 +381,12 @@ public class Power extends Expr{
 			
 			if(pow.getExpo().equals(Var.INF)){//x^inf
 				if(!Limit.stripDirection(pow.getBase()).equals(Num.ONE)) {
-					if(eval(equGreater(pow.getBase(),num(1))).simplify(casInfo).equals(BoolState.TRUE)) {
+					if (Limit.isEpsilon(pow.getBase())){
+						return epsilon();
+					}else if(eval(equGreater(pow.getBase(),num(1))).simplify(casInfo).equals(BoolState.TRUE)) {
 						return inf();
+					}else{
+						return epsilon();
 					}
 				}
 				

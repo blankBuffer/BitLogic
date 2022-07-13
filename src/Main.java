@@ -45,6 +45,7 @@ public class Main extends QuickMath{
 	}
 	
 	public static void main(String[] args) {
+		
 		int gui = 1;
 		boolean clearTerm = false;
 		

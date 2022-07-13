@@ -92,8 +92,9 @@ public abstract class Expr extends QuickMath implements Serializable{
 	
 	public void fullFlagReset() {
 		this.flags.reset();
-		for(Expr e:subExpr) {
-			e.fullFlagReset();
+		for(int i = 0;i < subExpr.size();i++){
+			Expr current = subExpr.get(i);
+			current.fullFlagReset();
 		}
 	}
 	
@@ -338,14 +339,20 @@ public abstract class Expr extends QuickMath implements Serializable{
 	//returns if the expression is in this, not full proof for products and sums
 	public boolean contains(Expr expr) {
 		if(this.equals(expr)) return true;
-		for(Expr e:subExpr)if(e.contains(expr)) return true;
+		for(int i = 0;i<subExpr.size();i++){
+			Expr e = subExpr.get(i);
+			if(e.contains(expr)) return true;
+		}
 		return false;
 	}
 	
 	//returns if the expression contains any variables
 	public boolean containsVars() {
 		if(this instanceof Var && ((Var)this).isGeneric()) return true;
-		for(Expr e:subExpr) if(e.containsVars()) return true;
+		for(int i = 0;i<subExpr.size();i++){
+			Expr e = subExpr.get(i);
+			if(e.containsVars()) return true;
+		}
 		return false;
 	}
 	
@@ -360,7 +367,12 @@ public abstract class Expr extends QuickMath implements Serializable{
 			}
 			varcounts.add(new VarCount((Var)copy(),1));
 		}
-		else for(Expr e:subExpr) e.countVars(varcounts);
+		else{
+			for(int i = 0;i<subExpr.size();i++){
+				Expr e = subExpr.get(i);
+				e.countVars(varcounts);
+			}
+		}
 		Collections.sort(varcounts);
 	}
 	
@@ -369,7 +381,8 @@ public abstract class Expr extends QuickMath implements Serializable{
 	 */
 	public int complexity() {
 		int sum = 1;
-		for(Expr e:subExpr) {
+		for(int i = 0;i<subExpr.size();i++) {
+			Expr e = subExpr.get(i);
 			sum+= e.complexity();
 		}
 		return sum;
@@ -432,6 +445,7 @@ public abstract class Expr extends QuickMath implements Serializable{
 	}
 	
 	public void sort(ArrayList<VarCount> varcounts) {
+		
 		if(!flags.sorted) {
 			if (varcounts == null) {
 				varcounts = new ArrayList<VarCount>();
@@ -500,6 +514,7 @@ public abstract class Expr extends QuickMath implements Serializable{
 			
 			flags.sorted = true;
 		}
+		
 	}
 	
 	public void sort() {
