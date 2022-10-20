@@ -10,7 +10,6 @@ import cas.matrix.*;
 import cas.primitive.*;
 import cas.programming.*;
 import cas.special.*;
-import cas.trig.*;
 
 
 /*
@@ -29,7 +28,6 @@ import cas.trig.*;
  */
 
 public class Rule extends Expr{
-	private static final long serialVersionUID = 5928512201641990677L;
 	
 	private static int ruleCount = 0;
 	
@@ -332,6 +330,8 @@ public class Rule extends Expr{
 	
 	public Expr applyRuleToExpr(Expr expr,CasInfo casInfo){
 		
+		if(pattern == null && cases == null) throw new RuntimeException("pattern is missing : "+name);
+		
 		if(cases == null) {
 			if(fastSimilarExpr(pattern.getLeftSide(),expr)) {
 				Sequence parts = sequence();
@@ -358,16 +358,27 @@ public class Rule extends Expr{
 				
 			}
 		}else {
+			String startType = expr.typeName();
 			for(Rule r:cases){
+				//r.println();
+				//expr.println();
 				expr = r.applyRuleToExpr(expr, casInfo);
+				String currentType = expr.typeName();
+				if(!currentType.equals(startType)) break;
 			}
 		}
 		return expr;
 	}
 	
+	
+	
 	private static boolean ALL_LOADED = false;
+	private static boolean RULES_LOADED = false;
 	public static boolean isAllLoaded() {
 		return ALL_LOADED;
+	}
+	public static boolean rulesLoaded() {
+		return RULES_LOADED;
 	}
 	
 	
@@ -378,71 +389,33 @@ public class Rule extends Expr{
 	}
 	
 	private static void loadTypeRules() {
+		SimpleFuncs.loadRules();
 		StandardRules.loadRules();
 		
-		loadingPercent = 10;
-		
-		Abs.loadRules();
-		Acos.loadRules();
-		And.loadRules();
-		Approx.loadRules();
-		
-		loadingPercent = 15;
-		
-		Asin.loadRules();
-		Atan.loadRules();
-		BoolCompress.loadRules();
-		BoolTableToExpr.loadRules();
-		Cos.loadRules();
 		Define.loadRules();
-		Diff.loadRules();
 		
-		loadingPercent = 20;
-		
-		Distr.loadRules();
-		Div.loadRules();
 		Dot.loadRules();
 		ExprList.loadRules();
 		
-		loadingPercent = 25;
 		
-		Factor.loadRules();
-		Gamma.loadRules();
 		Gcd.loadRules();
 		
-		loadingPercent = 35;
-		
-		Integrate.loadRules();
-		IntegrateOver.loadRules();
-		
-		loadingPercent = 40;
-		
-		LambertW.loadRules();
 		Limit.loadRules();
-		Ln.loadRules();
 		Mat.loadRules();
 		
-		loadingPercent = 50;
-		
 		Next.loadRules();
-		Not.loadRules();
-		Or.loadRules();
-		Power.loadRules();
 		Prod.loadRules();
 		Range.loadRules();
 		
-		loadingPercent = 60;
-		
-		Sin.loadRules();
-		Solve.loadRules();
 		Sum.loadRules();
-		Tan.loadRules();
+		
 		Ternary.loadRules();
 		Transpose.loadRules();
 		
 		loadingPercent = 70;
 		
-		SimpleFuncs.loadRules();
+		System.out.println("rules loaded");
+		RULES_LOADED = true;
 	}
 	
 	static ArrayList<String> bannedPreSimplifyFunctions = new ArrayList<String>();
@@ -455,7 +428,7 @@ public class Rule extends Expr{
 		bannedPreSimplifyFunctions.add("size");
 		bannedPreSimplifyFunctions.add("get");
 		bannedPreSimplifyFunctions.add("degree");
-		bannedPreSimplifyFunctions.add("eval");
+		bannedPreSimplifyFunctions.add("comparison");
 		bannedPreSimplifyFunctions.add("expand");
 		bannedPreSimplifyFunctions.add("distr");
 		bannedPreSimplifyFunctions.add("factor");
@@ -481,7 +454,7 @@ public class Rule extends Expr{
 		loadBannedPreSimplifyFunctions();
 		for(int i = 0;i<allPatternBasedRules.size();i++) {//simplify
 			Rule r = (Rule)allPatternBasedRules.get(i);
-			boolean doNotSimplify = false;
+			boolean doNotSimplify = true;
 			
 			for(String bannedType:bannedPreSimplifyFunctions) {
 				if(r.pattern.getRightSide().containsType(bannedType)) {
@@ -508,14 +481,14 @@ public class Rule extends Expr{
 		SimpleFuncs.FUNCTION_UNLOCKED = true;
 		
 		long endTime = System.nanoTime();
-		System.out.println("done loading "+ruleCount+" Rules! took "+((endTime-startTime)/1000000.0)+" ms");
+		System.out.println("done loading and simplifying "+ruleCount+" Rules! took "+((endTime-startTime)/1000000.0)+" ms");
 		
 		loadingPercent = 100;
 		ALL_LOADED = true;
 	}
 	
 	@Override
-	public Sequence getRuleSequence() {
+	public Rule getRule() {
 		return null;
 	}
 	@Override

@@ -2,10 +2,9 @@ package cas.primitive;
 
 import cas.ComplexFloat;
 import cas.Expr;
+import cas.Rule;
 
 public class Less extends Expr{
-	private static final long serialVersionUID = -7710464659230620416L;
-
 	public Less(){}//
 	public Less(Expr leftSide,Expr rightSide){
 		add(leftSide);
@@ -39,7 +38,7 @@ public class Less extends Expr{
 		return getRightSide().convertToFloat(varDefs);//usually the solution is on the right side of the equation
 	}
 	@Override
-	public Sequence getRuleSequence() {
+	public Rule getRule() {
 		return null;
 	}
 	

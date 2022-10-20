@@ -3,11 +3,8 @@ package cas.programming;
 import cas.*;
 import cas.bool.BoolState;
 import cas.primitive.ExprList;
-import cas.primitive.Sequence;
 
 public class Ternary extends Expr{
-	private static final long serialVersionUID = 6074945872809841123L;
-
 	public Ternary() {
 		simplifyChildren = false;
 	}//
@@ -27,8 +24,6 @@ public class Ternary extends Expr{
 	}
 	
 	static Rule ternaryOperation = new Rule("the ternary operator") {
-		private static final long serialVersionUID = 1L;
-		
 		@Override
 		public Expr applyRuleToExpr(Expr e,CasInfo casInfo) {
 			Ternary tern = (Ternary)e;
@@ -41,17 +36,18 @@ public class Ternary extends Expr{
 		
 	};
 	
-	static Sequence ruleSequence;
-	
-	public static void loadRules() {
-		ruleSequence = sequence(
-			ternaryOperation
-		);
-	}
+	static Rule mainSequenceRule = null;
 
+	public static void loadRules(){
+		mainSequenceRule = new Rule(new Rule[]{
+				ternaryOperation
+		},"main sequence");
+		mainSequenceRule.init();
+	}
+	
 	@Override
-	public Sequence getRuleSequence() {
-		return ruleSequence;
+	public Rule getRule() {
+		return mainSequenceRule;
 	}
 	
 	@Override

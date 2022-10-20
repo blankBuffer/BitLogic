@@ -8,7 +8,6 @@ import cas.primitive.ExprList;
 import cas.primitive.Sequence;
 
 public class Mat extends Expr{
-	private static final long serialVersionUID = 6533854406014708715L;
 	
 	public Mat(){}//
 	public Mat(Sequence e) {
@@ -69,8 +68,6 @@ public class Mat extends Expr{
 	}
 	
 	static Rule make2d = new Rule("force it to be 2d") {
-		private static final long serialVersionUID = 1L;
-		
 		@Override
 		public Expr applyRuleToExpr(Expr e,CasInfo casInfo) {
 			Mat mat = (Mat)e;
@@ -89,18 +86,19 @@ public class Mat extends Expr{
 			return mat;
 		}
 	};
-	
-	static Sequence ruleSequence;
 
-	public static void loadRules() {
-		ruleSequence = sequence(
+	static Rule mainSequenceRule = null;
+	
+	public static void loadRules(){
+		mainSequenceRule = new Rule(new Rule[]{
 				make2d
-		);
+		},"main sequence");
+		mainSequenceRule.init();
 	}
 	
 	@Override
-	public Sequence getRuleSequence() {
-		return ruleSequence;
+	public Rule getRule() {
+		return mainSequenceRule;
 	}
 	
 	@Override

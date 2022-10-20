@@ -7,233 +7,458 @@ import cas.*;
 import cas.primitive.*;
 
 
-public class Or extends Expr{
+public class Or{
 	
-	private static final long serialVersionUID = 5003710279364491787L;
-
-	public Or(){
-		commutative = true;
-	}
-	
-	static Rule orContainsOr = new Rule("or contains or"){
-		private static final long serialVersionUID = 1L;
-
+	public static Func.FuncLoader orLoader = new Func.FuncLoader() {
 		@Override
-		public Expr applyRuleToExpr(Expr e,CasInfo casInfo){
-			Or or = null;
-			if(e instanceof Or){
-				or = (Or)e;
-			}else{
-				return e;
-			}
-			for(int i = 0;i<or.size();i++){
-				if(or.get(i) instanceof Or){
-					Or subOr = (Or)or.get(i);
-					or.remove(i);
-					i--;
-					for(int j = 0;j<subOr.size();j++){
-						or.add(subOr.get(j));
-					}
-				}
-			}
-			return or;
-		}
-		
-	};
-	
-	static Rule nullRule = new Rule("null rule"){
-		private static final long serialVersionUID = 1L;
-
-		@Override
-		public Expr applyRuleToExpr(Expr e,CasInfo casInfo){
-			Or or = null;
-			if(e instanceof Or){
-				or = (Or)e;
-			}else{
-				return e;
-			}
-			for(int i = 0;i<or.size();i++){
-				if(or.get(i).equals(BoolState.TRUE)){
-					Expr result = bool(true);
-					return result;
-				}
-			}
-			return or;
-		}
-	};
-	
-	static Rule removeFalses = new Rule("remove falses"){
-		private static final long serialVersionUID = 1L;
-
-		@Override
-		public Expr applyRuleToExpr(Expr e,CasInfo casInfo){
-			Or or = null;
-			if(e instanceof Or){
-				or = (Or)e;
-			}else{
-				return e;
-			}
-			for(int i = 0;i<or.size();i++){
-				if(or.get(i).equals(BoolState.FALSE)){
-					or.remove(i);
-					i--;
-				}
-			}
-			return or;
-		}
-	};
-	
-	static Rule complement = new Rule("has complement"){
-		private static final long serialVersionUID = 1L;
-
-		@Override
-		public Expr applyRuleToExpr(Expr e,CasInfo casInfo){
-			Or or = null;
-			if(e instanceof Or){
-				or = (Or)e;
-			}else{
-				return e;
-			}
-			for(int i = 0;i<or.size();i++){
-				Expr current = or.get(i);
-				Expr complement = not(current).simplify(casInfo);
-				
-				if(complement instanceof Or){//trickier case a&b|~a|~b=true
-					boolean hasAll = true;
-					for(int j = 0;j<complement.size();j++){
-						boolean found = false;
-						Expr toFind = complement.get(j);
-						for(int k = 0;k<or.size();k++){
-							if(k == i) continue;
-							
-							if(or.get(k).equals(toFind)){
-								found = true;
-								break;
+		public void load(Func owner) {
+			
+			Rule orContainsOr = new Rule("or contains or"){
+				@Override
+				public Expr applyRuleToExpr(Expr e,CasInfo casInfo){
+					Func or = (Func)e;
+					for(int i = 0;i<or.size();i++){
+						if(or.get(i).typeName().equals("or")){
+							Func subOr = (Func)or.get(i);
+							or.remove(i);
+							i--;
+							for(int j = 0;j<subOr.size();j++){
+								or.add(subOr.get(j));
 							}
-							
-						}
-						if(!found){
-							hasAll = false;
-							break;
 						}
 					}
-					if(hasAll){
-						Expr result = bool(true);
-						return result;
-					}
-				}else{
-					for(int j = i+1;j<or.size();j++){
-						Expr other = or.get(j);
-						
-						if(other.equals(complement)){
+					return or;
+				}
+				
+			};
+			
+			Rule nullRule = new Rule("null rule"){
+				@Override
+				public Expr applyRuleToExpr(Expr e,CasInfo casInfo){
+					Func or = (Func)e;
+					for(int i = 0;i<or.size();i++){
+						if(or.get(i).equals(BoolState.TRUE)){
 							Expr result = bool(true);
 							return result;
 						}
 					}
+					return or;
 				}
-				
-			}
-			return or;
-		}
-	};
-	
-	static Rule removeDuplicates = new Rule("remove duplicates"){
-		private static final long serialVersionUID = 1L;
-
-		@Override
-		public Expr applyRuleToExpr(Expr e,CasInfo casInfo){
-			Or or = null;
-			if(e instanceof Or){
-				or = (Or)e;
-			}else{
-				return e;
-			}
-			for(int i = 0;i<or.size();i++){
-				Expr current = or.get(i);
-				
-				for(int j = i+1;j<or.size();j++){
-					Expr other = or.get(j);
-					
-					if(other.equals(current)){
-						or.remove(i);
-						i--;
+			};
+			
+			Rule removeFalses = new Rule("remove falses"){
+				@Override
+				public Expr applyRuleToExpr(Expr e,CasInfo casInfo){
+					Func or = (Func)e;
+					for(int i = 0;i<or.size();i++){
+						if(or.get(i).equals(BoolState.FALSE)){
+							or.remove(i);
+							i--;
+						}
 					}
+					return or;
 				}
-				
-			}
-			return or;
-		}
-	};
-	
-	static Rule absorb = new Rule("absorption"){
-		private static final long serialVersionUID = 1L;
-
-		@Override
-		public Expr applyRuleToExpr(Expr e,CasInfo casInfo){
-			Or or = null;
-			if(e instanceof Or){
-				or = (Or)e;
-			}else{
-				return e;
-			}
-			for(int i = 0;i<or.size();i++){
-				And current = And.cast(or.get(i));
-				for(int j = 0;j<or.size();j++){
-					if(j == i) continue;
-					if(or.get(j) instanceof And){
-						And other = (And)or.get(j);
+			};
+			
+			Rule complement = new Rule("has complement"){//a|~a -> true , a&b|~a|~b -> true
+				@Override
+				public Expr applyRuleToExpr(Expr e,CasInfo casInfo){
+					Func or = (Func)e;
+					for(int i = 0;i<or.size();i++){
+						Expr current = or.get(i);
+						Expr complement = not(current).simplify(casInfo);
 						
-						boolean hasAll = true;
-						for(int k = 0;k<current.size();k++){
-							boolean found = false;
-							
-							for(int l = k;l<other.size();l++){
-								if(current.get(k).equals(other.get(l))){
-									found = true;
+						if(complement.typeName().equals("or")){//trickier case a&b|~a|~b=true
+							boolean hasAll = true;
+							for(int j = 0;j<complement.size();j++){
+								boolean found = false;
+								Expr toFind = complement.get(j);
+								for(int k = 0;k<or.size();k++){
+									if(k == i) continue;
+									
+									if(or.get(k).equals(toFind)){
+										found = true;
+										break;
+									}
+									
+								}
+								if(!found){
+									hasAll = false;
 									break;
 								}
 							}
-							
-							if(!found){
-								hasAll = false;
-								break;
+							if(hasAll){
+								Expr result = bool(true);
+								return result;
+							}
+						}else{
+							for(int j = i+1;j<or.size();j++){
+								Expr other = or.get(j);
+								
+								if(other.equals(complement)){
+									Expr result = bool(true);
+									return result;
+								}
 							}
 						}
 						
-						if(hasAll){
-							or.remove(j);
-							if(j<i) i--;
-							j--;
+					}
+					return or;
+				}
+			};
+			
+			Rule removeDuplicates = new Rule("remove duplicates"){
+				@Override
+				public Expr applyRuleToExpr(Expr e,CasInfo casInfo){
+					Func or = (Func)e;
+					for(int i = 0;i<or.size();i++){
+						Expr current = or.get(i);
+						
+						for(int j = i+1;j<or.size();j++){
+							Expr other = or.get(j);
+							
+							if(other.equals(current)){
+								or.remove(j);
+								j--;
+							}
 						}
 						
 					}
+					return or;
 				}
-			}
-			return or;
-		}
-	};
-	
-	static Rule aloneOr = new Rule("or has one element"){
-		private static final long serialVersionUID = 1L;
-
-		@Override
-		public Expr applyRuleToExpr(Expr e,CasInfo casInfo){
-			Or or = null;
-			if(e instanceof Or){
-				or = (Or)e;
-			}else{
-				return e;
-			}
-			Expr result = null;
-			if(or.size() == 0){
-				result = bool(false);
-			}else if(or.size() == 1){
-				result = or.get();
-			}
-			if(result != null){
-				return result;
-			}
-			return or;
+			};
+			
+			Rule absorb = new Rule("absorption"){// x|x&y -> x
+				@Override
+				public Expr applyRuleToExpr(Expr e,CasInfo casInfo){
+					Func or = (Func)e;
+					for(int i = 0;i<or.size();i++){
+						Func currentAnd = And.cast(or.get(i));
+						for(int j = 0;j<or.size();j++){
+							if(j == i) continue;
+							if(or.get(j).typeName().equals("and")){
+								Func otherAnd = (Func)or.get(j);
+								
+								boolean hasAll = true;
+								for(int k = 0;k<currentAnd.size();k++){
+									boolean found = false;
+									
+									for(int l = k;l<otherAnd.size();l++){
+										if(currentAnd.get(k).equals(otherAnd.get(l))){
+											found = true;
+											break;
+										}
+									}
+									
+									if(!found){
+										hasAll = false;
+										break;
+									}
+								}
+								
+								if(hasAll){
+									or.remove(j);
+									if(j<i) i--;
+									j--;
+								}
+								
+							}
+						}
+					}
+					return or;
+				}
+			};
+			
+			Rule aloneOr = new Rule("or has one element"){
+				@Override
+				public Expr applyRuleToExpr(Expr e,CasInfo casInfo){
+					Func or = (Func)e;
+					Expr result = null;
+					if(or.size() == 0){
+						result = bool(false);
+					}else if(or.size() == 1){
+						result = or.get();
+					}
+					if(result != null){
+						return result;
+					}
+					return or;
+				}
+			};
+			
+			Rule consensus = new Rule("consensus rule"){//x&y | y&z | ~x&z -> x&y | ~x&z
+				@Override
+				public Expr applyRuleToExpr(Expr e,CasInfo casInfo){
+					Func or = (Func)e;
+					if(or.size()>=3){
+						
+						outer:for(int i = 0;i<or.size();i++){
+							if(!(or.get(i).typeName().equals("and") && or.get(i).size()==2)) continue;
+							
+							Func currentAnd = (Func)or.get(i);
+							Expr a = currentAnd.get(0),b = currentAnd.get(1);
+							Expr notA = a.typeName().equals("not") ? a.get() : not(a),notB = b.typeName().equals("not") ? b.get() : not(b);
+							
+							for(int j = i+1;j < or.size();j++){
+								if(!(or.get(j).typeName().equals("and") && or.get(j).size()==2)) continue;
+								Func otherAnd = (Func)or.get(j);
+								int test = 1-fastContains(notA,otherAnd);
+								if(test != 2){
+									Expr redundant = and(b,otherAnd.get(test));
+									for(int k = 0;k<or.size();k++){
+										if(i == k | j==k) continue;
+										if(or.get(k).equals(redundant)){
+											or.remove(k);
+											i--;
+											continue outer;
+										}
+									}
+								}
+								test = 1-fastContains(notB,otherAnd);
+								if(test != 2){
+									Expr redundant = and(a,otherAnd.get(test));
+									for(int k = 0;k<or.size();k++){
+										if(i == k | j==k) continue;
+										if(or.get(k).equals(redundant)){
+											or.remove(k);
+											i--;
+											continue outer;
+										}
+									}
+								}
+								
+							}
+							
+							
+						}
+						
+					}
+					return or;
+				}
+			};
+			
+			/*
+			 * 
+			 * a|~a&b -> a|b , ~a&c|~b&c|a&b|d -> a&b|c|d
+			 * the reasoning for the second example is because ~a&c|~b&c|a&b|d = c&(~a|~b)|a&b|d = c&~(a&b)|a&b|d = (c&~(a&b)|a&b)|d = (c|a&b)|d = a&b|c|d
+			 * 
+			 * more complex examples
+			 * 	 d&k&~(a&b&c)|a&b&c expands to ~a&d&k|~b&d&k|~c&d&k|a&b&c which simplifies down to d&k|a&b&c
+			 * 
+			 * 	d&~(a&b&c)|a&b&c expands to ~a&d|~b&d|~c&d|a&b&c which simplifies down to d|a&b&c
+			 * 
+			 * this algorithm is not very efficient
+			 * 
+			 */
+			Rule redundance = new Rule("redundance"){
+				
+				ExprList negElems(Expr orTerm){
+					ExprList negatedElems = exprList();
+					if(orTerm.typeName().equals("and")){
+						for(int j = 0;j<orTerm.size();j++){
+							negatedElems.add(not(orTerm.get(j)).simplify(CasInfo.normal));
+						}
+					}else negatedElems.add(not(orTerm).simplify(CasInfo.normal));
+					return negatedElems;
+				}
+				
+				@Override
+				public Expr applyRuleToExpr(Expr e,CasInfo casInfo){
+					Func or = (Func)e;
+					
+					outer:for(int i = 0;i<or.size();i++){
+						Expr orTerm = or.get(i);
+						ExprList negatedElems = negElems(orTerm);//negate all elements of that term
+						
+						for(int j = 0;j<or.size();j++){
+							if(j == i) continue;
+							
+							Func castedTermAnd = And.cast(or.get(j));
+							
+							int indexOfFactor = fastContains(negatedElems.get(0),castedTermAnd);//find a factor
+							if(indexOfFactor == -1) continue;
+							Func strippedAnd = (Func)castedTermAnd.copy();
+							strippedAnd.remove(indexOfFactor);
+							
+							ExprList negatedElemsCopy = (ExprList) negatedElems.copy();
+							negatedElemsCopy.remove(0);
+							
+							if(negatedElemsCopy.size() == 0){//simple case
+								or.set(j,strippedAnd.simplify(casInfo));
+								if(j < i) i = -1;//changed sequence needs restart
+								continue outer;
+							}else{//find the rest of them
+								ArrayList<Integer> toBeRemoved = new ArrayList<Integer>();
+								toBeRemoved.add(j);
+								while(negatedElemsCopy.size() > 0){
+									Expr searchFor = negatedElemsCopy.get(0);
+									
+									boolean found = false;
+									for(int k = 0;k<or.size();k++){
+										if(k == i || k == j) continue;
+										
+										Func castedTerm2And = And.cast(or.get(k));
+										
+										indexOfFactor = fastContains(searchFor,castedTerm2And);//find a factor
+										
+										if(indexOfFactor != -1){
+											Func otherStrippedAnd = (Func) castedTerm2And.copy();
+											otherStrippedAnd.remove(indexOfFactor);
+											if(otherStrippedAnd.equals(strippedAnd)){
+												toBeRemoved.add(k);
+												found = true;
+												break;
+											}
+											
+										}
+										
+										
+									}
+									if(found) negatedElemsCopy.remove(0);
+									else continue outer;	
+								}
+								
+								Collections.sort(toBeRemoved);
+								
+								boolean needsReset = false;
+								for(int k = toBeRemoved.size()-1;k>=0;k--){
+									or.remove(toBeRemoved.get(k));
+									if(k < i) needsReset = true;
+								}
+								
+								or.add(strippedAnd.simplify(casInfo));
+								if(needsReset) i = -1;//changed sequence needs restart
+								continue outer;
+								
+								
+							}
+							
+							
+						}
+						
+						
+					}
+					
+					
+					return or;
+				}
+			};
+			
+			/*
+			 * go through each variable
+			 */
+			Rule factorGroupVar = new Rule("factor each variable"){
+				void extractVars(Expr e,ExprList out){
+					if(e.typeName().equals("var") && fastContains(e,out) == -1){
+						out.add(e);
+					}else if(e.typeName().equals("not") && e.get().typeName().equals("var") && fastContains(e,out) == -1){
+						out.add(e);
+					}else{
+						for(int i = 0;i < e.size();i++){
+							extractVars(e.get(i),out);
+						}
+					}
+					
+				}
+				
+				@Override
+				public Expr applyRuleToExpr(Expr e,CasInfo casInfo){
+					Func or = (Func)e;
+					
+					//capture all possible variables
+					ExprList vars = exprList();
+					extractVars(or,vars);
+					//
+					
+					for(int i = 0;i < vars.size();i++){
+						Expr var = vars.get(i);
+						
+						Expr recursiveOr = or();
+						Cas.IndexSet toBeRemoved = new Cas.IndexSet();
+						for(int j = or.size()-1;j >= 0;j--){
+							Expr term = or.get(j);
+							if(term.typeName().equals("and")){
+								int varIndex = fastContains(var,term);
+								if(varIndex != -1){
+									Expr termCopy = term.copy();
+									termCopy.remove(varIndex);
+									toBeRemoved.ints.add(j);
+									
+									recursiveOr.add(termCopy);
+								}
+							}
+						}
+						
+						if(recursiveOr.size() > 1){
+							for(int j = toBeRemoved.ints.size()-1;j>=0;j--){
+								or.remove(j);
+							}
+							
+							recursiveOr = recursiveOr.simplify(casInfo);
+							if(recursiveOr.typeName().equals("or")){
+								for(int j = 0;j<recursiveOr.size();j++){
+									or.add(and(recursiveOr.get(j),var).simplify(casInfo));
+								}
+							}else{
+								or.add(and(recursiveOr,var).simplify(casInfo));
+							}
+						}
+						
+						
+					}
+					
+					return or;
+				}
+			};
+			
+			Rule subSequence = new Rule(new Rule[]{orContainsOr,// (x|y)|z -> x|y|z
+					complement,// a|~a -> true , a&b|~a|~b -> true
+					redundance,// a|~a&b -> a|b , ~a&c|~b&c|a&b|d -> a&b|c|d
+					removeDuplicates,// x|x -> x
+					nullRule,// x|true -> true
+					removeFalses,// false|x -> x
+					absorb,// x|x&y -> x
+					consensus,// x&y | y&z | ~x&z -> x&y | ~x&z
+					aloneOr,
+			},"sub sequence");
+			
+			owner.behavior.commutative = true;
+			owner.behavior.rule = new Rule(new Rule[]{
+				subSequence,
+				factorGroupVar,
+				//again to ensure no more steps
+				subSequence,
+			},"main sequence");
+			owner.behavior.rule.init();
+			
+			owner.behavior.toStringMethod = new Func.ToString() {
+				@Override
+				public String generateString(Func owner) {
+					String out = "";
+					if(owner.size() < 2) out+="alone or:";
+					for(int i = 0;i<owner.size();i++){
+						boolean paren = owner.get(i).typeName().equals("or");
+						if(paren) out+="(";
+						out+=owner.get(i);
+						if(paren) out+=")";
+						if(i!=owner.size()-1) out+="|";
+					}
+					return out;
+				}
+			};
+			
+			owner.behavior.toFloat = new Func.FloatFunc() {
+				@Override
+				public ComplexFloat convertToFloat(ExprList varDefs, Func owner) {
+					boolean state = false;
+					for(int i = 0;i<owner.size();i++){
+						state |= Math.abs(owner.get(i).convertToFloat(varDefs).real)>0.5;
+					}
+					double res = state ? 1.0 : 0.0;
+					return new ComplexFloat(res,0);
+				}
+			};
+			
 		}
 	};
 	
@@ -245,300 +470,16 @@ public class Or extends Expr{
 		}
 		return -1;
 	}
-	static Rule redundance = new Rule("redundant factors"){//~b&a|~c&a|a&b&c -> a ,calculation
-		private static final long serialVersionUID = 1L;
-
-		class BucketInfo{
-			ArrayList<Integer> indexes = new ArrayList<Integer>();
-			ExprList flippedVars = new ExprList();
-		}
-		class Buckets{
-			ExprList bucketVar = new ExprList();
-			ArrayList<BucketInfo> buckets = new ArrayList<BucketInfo>();
-			
-			void place(Expr var,int index,Expr flippedPart){
-				int i = fastContains(var,bucketVar);
-				if(i == -1){
-					bucketVar.add(var);
-					buckets.add(new BucketInfo());
-					i=bucketVar.size()-1;
-				}
-				
-				BucketInfo bf = buckets.get(i);
-				bf.indexes.add(index);
-				bf.flippedVars.add(flippedPart);
-				
-			}
-		}
-		@Override
-		public Expr applyRuleToExpr(Expr e,CasInfo casInfo){//this is very hard to explain
-			Or or = null;
-			if(e instanceof Or){
-				or = (Or)e;
-			}else{
-				return e;
-			}
-			for(int i = 0;i < or.size();i++){
-				And current = And.cast(or.get(i));
-				ExprList flipped = new ExprList();//flipped terms
-				
-				for(int j = 0;j<current.size();j++){
-					flipped.add( current.get(j) instanceof Not ? current.get(j).get() : not(current.get(j)) );
-				}
-				
-				ArrayList<Integer> indexes = new ArrayList<Integer>();//need to keep track of indexes we may need to remove later
-				ExprList strippedFactors = new ExprList();
-				ExprList justFactor = new ExprList();
-				for(int j = 0;j < or.size();j++){
-					if(j == i || !(or.get(j) instanceof And)) continue;
-					int count = 0;//see how many times a flipped factor shows up
-					
-					int lastIndex = -1;//keep track of the index of the factor
-					for(int k = 0;k<flipped.size();k++){
-						int temp = fastContains(flipped.get(k),or.get(j));//index of the factor
-						lastIndex = temp == -1 ? lastIndex : temp;//only change it if it is not negative one
-						if(temp != -1){
-							count++;
-						}
-					}
-					if(count == 1){//should only be one factor because DeMorgan "and" becomes "or", but then gets distributed so only one per term
-						indexes.add(j);
-						And strippedFactor = (And)or.get(j).copy();
-						strippedFactor.remove(lastIndex);
-						strippedFactors.add(strippedFactor);
-						justFactor.add(or.get(j).get(lastIndex));
-					}
-				}
-				
-				//grouping into buckets
-				
-				Buckets buckets = new Buckets();
-				
-				for(int j = 0;j<justFactor.size();j++){
-					buckets.place(strippedFactors.get(j), indexes.get(j), justFactor.get(j));
-				}
-							
-				ArrayList<Integer> toBeRemoved = new ArrayList<Integer>();
-				ArrayList<Expr> toBeAdded = new ArrayList<Expr>();
-				
-				for(int j = 0;j<buckets.bucketVar.size();j++){
-					if(buckets.buckets.get(j).flippedVars.equals(flipped)){
-						toBeRemoved.addAll(buckets.buckets.get(j).indexes);
-						toBeAdded.add(buckets.bucketVar.get(j));
-					}
-				}
-				
-				toBeRemoved.sort(Collections.reverseOrder());
-				for(int j : toBeRemoved){
-					or.remove(j);
-				}
-				for(Expr expr:toBeAdded){
-					or.add(expr.simplify(casInfo));
-				}
-			}
-			return or;
-		}
-	};
 	
-	static Rule consensus = new Rule("consensus rule"){
-		private static final long serialVersionUID = 1L;
-
-		@Override
-		public Expr applyRuleToExpr(Expr e,CasInfo casInfo){
-			Or or = null;
-			if(e instanceof Or){
-				or = (Or)e;
-			}else{
-				return e;
-			}
-			if(or.size()>=3){
-				
-				outer:for(int i = 0;i<or.size();i++){
-					if(!(or.get(i) instanceof And && or.get(i).size()==2)) continue;
-					
-					And current = (And)or.get(i);
-					Expr a = current.get(0),b = current.get(1);
-					Expr notA = a instanceof Not ? a.get() : not(a),notB = b instanceof Not ? b.get() : not(b);
-					
-					for(int j = i+1;j < or.size();j++){
-						if(!(or.get(j) instanceof And && or.get(j).size()==2)) continue;
-						And other = (And)or.get(j);
-						int test = 1-fastContains(notA,other);
-						if(test != 2){
-							Expr redundant = and(b,other.get(test));
-							for(int k = 0;k<or.size();k++){
-								if(i == k | j==k) continue;
-								if(or.get(k).equals(redundant)){
-									or.remove(k);
-									i--;
-									continue outer;
-								}
-							}
-						}
-						test = 1-fastContains(notB,other);
-						if(test != 2){
-							Expr redundant = and(a,other.get(test));
-							for(int k = 0;k<or.size();k++){
-								if(i == k | j==k) continue;
-								if(or.get(k).equals(redundant)){
-									or.remove(k);
-									i--;
-									continue outer;
-								}
-							}
-						}
-						
-					}
-					
-					
-				}
-				
-			}
-			return or;
+	public static Func cast(Expr e){
+		if(e.typeName().equals("or")){
+			return (Func)e;
 		}
-	};
-	
-	static Rule ruleCombination = new Rule("rule set"){
-		private static final long serialVersionUID = 1L;
-
-		ExprList allFactorableVars(Or or){
-			ArrayList<VarCount> varcounts = new ArrayList<VarCount>();
-			or.countVars(varcounts);
-			ExprList allFactorableVars = new ExprList();
-			for(int i = 0;i<varcounts.size();i++){
-				VarCount vc = varcounts.get(i);
-				if(vc.count>=2){
-					allFactorableVars.add(vc.v);
-					allFactorableVars.add(not(vc.v));
-				}
-			}
-			return allFactorableVars;
-		}
-		
-		@Override
-		public Expr applyRuleToExpr(Expr e,CasInfo casInfo){
-			//now try with factored components
-			
-			if(e instanceof Or){
-				Or or = (Or)e;
-				ExprList allFactorableVars = allFactorableVars(or);
-				ExprList used = new ExprList();
-				for(int i = 0;i<allFactorableVars.size();i++){
-					Expr var = allFactorableVars.get(i);
-					if(used.contains(var)) continue;
-					used.add(var);
-					
-					Or factoredOutOr = new Or();
-					for(int j = 0;j<or.size();j++){
-						if(!(or.get(j) instanceof And)) continue;
-						And currentAnd = (And)or.get(j);
-						
-						
-						int index = fastContains(var,currentAnd);
-						
-						if(index != -1){
-							And currentAndFactoredOut = (And)currentAnd.copy();
-							currentAndFactoredOut.remove(index);
-							
-							or.remove(j);
-							j--;
-							
-							factoredOutOr.add(currentAndFactoredOut.simplify(casInfo));
-							
-						}
-						
-					}
-					Or factoredOutOrNew = Or.cast(this.applyRuleToExpr(factoredOutOr.copy(), casInfo) );
-					if(!factoredOutOrNew.equals(factoredOutOr)){//re calculate to waste lest time
-						i=-1;
-						allFactorableVars = allFactorableVars(or);
-					}
-					for(int j = 0;j<factoredOutOrNew.size();j++){
-						And current = And.cast(factoredOutOrNew.get(j));
-						current.add(var);
-						or.add(current.simplify(casInfo));
-					}
-				}
-				
-			}
-			
-			{//apply plain
-				e = complement.applyRuleToExpr(e, casInfo);
-				e = redundance.applyRuleToExpr(e, casInfo);
-				e = consensus.applyRuleToExpr(e, casInfo);
-			}
-			
-			return e;
-		}
-	};
-	
-	static Sequence ruleSequence = null;
-	
-	public static void loadRules(){
-		ruleSequence = sequence(
-				orContainsOr,
-				removeDuplicates,
-				nullRule,
-				removeFalses,
-				absorb,
-				ruleCombination,
-				aloneOr	
-		);
-		Rule.initRules(ruleSequence);
-	}
-	
-	@Override
-	public Sequence getRuleSequence() {
-		return ruleSequence;
-	}
-	
-
-	@Override
-	public String toString() {
-		String out = "";
-		if(size() < 2) out+="alone or:";
-		for(int i = 0;i<size();i++){
-			boolean paren = get(i) instanceof Or;
-			if(paren) out+="(";
-			out+=get(i);
-			if(paren) out+=")";
-			if(i!=size()-1) out+="|";
-		}
-		return out;
-	}
-
-	@Override
-	public ComplexFloat convertToFloat(ExprList varDefs) {
-		boolean state = false;
-		for(int i = 0;i<size();i++){
-			state |= Math.abs(get(i).convertToFloat(varDefs).real)>0.5;
-		}
-		double res = state ? 1.0 : 0.0;
-		return new ComplexFloat(res,0);
-	}
-	
-	public static Or cast(Expr e){
-		if(e instanceof Or){
-			return (Or)e;
-		}
-		return or(e);
-	}
-	
-	@Override
-	public String typeName() {
-		return "or";
-	}
-
-	@Override
-	public String help() {
-		return "| operator\n"
-				+ "examples\n"
-				+ "true|false->true\n"
-				+ "x|~x->true";
-	}
+		return Cas.or(e);
+	}//returns or
 
 	public static Expr unCast(Expr e) {
-		if(e instanceof Or && e.size() == 1) {
+		if(e.typeName().equals("or") && e.size() == 1) {
 			return e.get();
 		}
 		return e;

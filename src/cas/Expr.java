@@ -32,16 +32,14 @@ import cas.primitive.*;
  * 
  */
 
-public abstract class Expr extends QuickMath implements Serializable{
+public abstract class Expr extends Cas{
 	
 	static Random random;
-	public boolean commutative = false;
 	public boolean simplifyChildren = true;
 	public Flags flags = new Flags();
-	private static final long serialVersionUID = -8297916729116741273L;
 	private ArrayList<Expr> subExpr = new ArrayList<Expr>();//many expression types have sub expressions like sums
 	
-	public abstract Sequence getRuleSequence();
+	public abstract Rule getRule();
 	public abstract String help();
 	
 	public Rule getDoneRule() {//post processing rule
@@ -56,6 +54,14 @@ public abstract class Expr extends QuickMath implements Serializable{
 	}
 	public void println() {
 		System.out.println(this);
+	}
+	
+	public boolean isMutable(){
+		return flags.mutable;
+	}
+	
+	public void setMutable(boolean choice){
+		flags.mutable = choice;
 	}
 	
 	/*
@@ -74,6 +80,7 @@ public abstract class Expr extends QuickMath implements Serializable{
 		
 		public boolean simple = false;
 		public boolean sorted = false;
+		public boolean mutable = true;
 		
 		public void set(Flags other) {
 			simple = other.simple;
@@ -83,6 +90,7 @@ public abstract class Expr extends QuickMath implements Serializable{
 		public void reset() {
 			simple = false;
 			sorted = false;
+			mutable = true;
 		}
 		@Override
 		public String toString(){
@@ -98,45 +106,33 @@ public abstract class Expr extends QuickMath implements Serializable{
 		}
 	}
 	
-	public static boolean USE_RECUSION_SAFTEY = true;
+	public static boolean USE_RECUSION_SAFTEY = false;
 	
-	public static long ruleCallCount = 0;
 	public static int RECURSION_SAFETY;
 	
 	public Expr simplify(CasInfo casInfo){//all expressions will have a simplify call, this is the most important function 
+		
+		if(!Rule.rulesLoaded()) throw new RuntimeException("you are simplifying before all rules are loaded");
+		
 		if(Thread.currentThread().isInterrupted()) return null;
 		Expr toBeSimplified = copy();
 		if(flags.simple) return toBeSimplified;
 		if(this instanceof Var) return casInfo.definitions.getVar(toString());//find variable in definitions
-		if(this instanceof Func && getRuleSequence().size() == 0) {
-			Rule r = casInfo.definitions.getFuncRule( ((Func)toBeSimplified ).name );
-			if(r!=null) {
-				Func casted = (Func)toBeSimplified;
-				casted.ruleSequence.add(r);
-			}
-		}
+		
+		Rule rule = getRule();
+		
+		
 		RECURSION_SAFETY++;
 		if(USE_RECUSION_SAFTEY && RECURSION_SAFETY>256) {
 			System.err.println("RECURSION DETECTED");
 			return toBeSimplified;
 		}
 		//System.out.println(toBeSimplified);
-		String originalType = toBeSimplified.typeName();
 		if(simplifyChildren || get().typeName().equals("result")) toBeSimplified.simplifyChildren(casInfo);//simplify sub expressions, result function can override this behavior
 		
-		Sequence ruleSequence = getRuleSequence();
 		
-		if(ruleSequence != null){
-			
-			for (int i = 0;i<ruleSequence.size();i++){
-				Rule rule = (Rule)ruleSequence.get(i);
-				
-				toBeSimplified = rule.applyRuleToExpr(toBeSimplified, casInfo);
-				//System.out.println(rule);
-				ruleCallCount++;
-				if(!toBeSimplified.typeName().equals(originalType)) break;
-			}
-		}
+		if(rule != null) toBeSimplified = rule.applyRuleToExpr(toBeSimplified, casInfo);
+		
 		
 		Rule doneRule = getDoneRule();
 		if(doneRule != null) toBeSimplified = doneRule.applyRuleToExpr(toBeSimplified, casInfo);//give it the original problem to have access to variables
@@ -195,7 +191,7 @@ public abstract class Expr extends QuickMath implements Serializable{
 			
 			if(otherCasted.size() == size()) {//make sure they are the same size
 				
-				if(this.commutative){
+				if(this.isCommutative()){
 					boolean usedIndex[] = new boolean[size()];//keep track of what indices have been used
 					int length = otherCasted.size();//length of the lists
 					
@@ -224,7 +220,7 @@ public abstract class Expr extends QuickMath implements Serializable{
 	@Override
 	public int hashCode(){
 		int sum = this.typeName().hashCode()+1928372;
-		if(commutative){
+		if(this.isCommutative()){
 			for(int i = 0;i<size();i++){
 				sum+=get(i).hashCode()*1092571862;
 			}
@@ -254,8 +250,8 @@ public abstract class Expr extends QuickMath implements Serializable{
 				}
 			}
 			return Prod.unCast(prodCopy);
-		}else if(this instanceof Div) {
-			Div casted = (Div)this;
+		}else if(this.typeName().equals("div")) {
+			Func casted = (Func)this;
 			return Div.unCast( div(casted.getNumer().removeCoefficients(),casted.getDenom().removeCoefficients()));
 		}
 		return copy();
@@ -269,8 +265,8 @@ public abstract class Expr extends QuickMath implements Serializable{
 					if(((Num)get(i)).signum() == -1) return true;
 				}
 			}
-		}else if(this instanceof Div) {
-			Div casted = (Div)this;
+		}else if(this.typeName().equals("div")) {
+			Func casted = (Func)this;
 			return casted.getNumer().negative() || casted.getDenom().negative();
 		}else if(this instanceof Sum) {
 			Sum casted = (Sum)this;
@@ -289,6 +285,10 @@ public abstract class Expr extends QuickMath implements Serializable{
 			return lowestHashExpr.negative();
 			
 		}
+		return false;
+	}
+	
+	public boolean isCommutative(){
 		return false;
 	}
 	
@@ -313,8 +313,8 @@ public abstract class Expr extends QuickMath implements Serializable{
 					}
 				}
 			}
-		}else if(this instanceof Div) {
-			Div casted = (Div)this;
+		}else if(this.typeName().equals("div")) {
+			Func casted = (Func)this;
 			return div(casted.getNumer().strangeAbs(casInfo), casted.getDenom().strangeAbs(casInfo)).simplify(casInfo);
 		}
 		return copy();
@@ -327,8 +327,8 @@ public abstract class Expr extends QuickMath implements Serializable{
 		}else if(this instanceof Num) {
 			return copy();
 		}
-		else if(this instanceof Div) {
-			Div casted = (Div)this;
+		else if(this.typeName().equals("div")) {
+			Func casted = (Func)this;
 			Num numerCoef = (Num)casted.getNumer().getCoefficient();
 			Num denomCoef = (Num)casted.getDenom().getCoefficient();
 			return Div.unCast(div(numerCoef,denomCoef));
@@ -404,19 +404,25 @@ public abstract class Expr extends QuickMath implements Serializable{
 		return replace(l);
 	}
 	
+	
+	
 	public void add(Expr e) {
+		if(flags.mutable == false) throw new RuntimeException("expression is not mutable!");
 		flags.reset();
 		subExpr.add(e);
 	}
 	public void add(int i,Expr e) {
+		if(flags.mutable == false) throw new RuntimeException("expression is not mutable!");
 		flags.reset();
 		subExpr.add(i,e);
 	}
 	public void remove(int index) {
+		if(flags.mutable == false) throw new RuntimeException("expression is not mutable!");
 		flags.reset();
 		subExpr.remove(index);
 	}
 	public void set(int index,Expr e) {
+		if(flags.mutable == false) throw new RuntimeException("expression is not mutable!");
 		flags.reset();
 		subExpr.set(index, e);
 	}
@@ -430,6 +436,7 @@ public abstract class Expr extends QuickMath implements Serializable{
 		return subExpr.size();
 	}
 	public void clear() {
+		if(flags.mutable == false) throw new RuntimeException("expression is not mutable!");
 		flags.reset();
 		subExpr.clear();
 	}
@@ -459,7 +466,7 @@ public abstract class Expr extends QuickMath implements Serializable{
 					@Override
 					public int compare(Expr first, Expr second) {
 						
-						if(first instanceof Num && second instanceof Num) return ((Num)first).realValue.compareTo(((Num)second).realValue);
+						if(first instanceof Num && second instanceof Num) return ((Num)first).getRealValue().compareTo(((Num)second).getRealValue());
 						
 						if(first instanceof Var && second instanceof Var) {//sort for frequency
 							for(int i = 0;i<varcountsConst.size();i++) {
@@ -593,7 +600,7 @@ public abstract class Expr extends QuickMath implements Serializable{
 		if(this instanceof Num || this instanceof Var || this instanceof FloatExpr || this instanceof BoolState) out+=(" name: "+this);
 		out+="\n";
 		if(this instanceof Func) {
-			out+="rules: "+((Func)this).getRuleSequence();
+			out+="rules: "+((Func)this).getRule();
 			out+="\n";
 		}
 		for(int i = 0;i<size();i++) {

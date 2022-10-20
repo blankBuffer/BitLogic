@@ -5,10 +5,8 @@ import cas.primitive.Sequence;
 import cas.primitive.Sum;
 import cas.primitive.Var;
 
-public class StandardRules extends QuickMath{
+public class StandardRules extends Cas{
 	public static Rule oddFunction = new Rule("function is odd"){
-		private static final long serialVersionUID = 1L;
-		
 		@Override
 		public Expr applyRuleToExpr(Expr e,CasInfo casInfo){
 			e.set(0,factor(e.get()).simplify(casInfo));
@@ -24,8 +22,6 @@ public class StandardRules extends QuickMath{
 	};
 	
 	public static Rule evenFunction = new Rule("function is even"){
-		private static final long serialVersionUID = 1L;
-		
 		@Override
 		public Expr applyRuleToExpr(Expr e,CasInfo casInfo){
 			
@@ -42,8 +38,6 @@ public class StandardRules extends QuickMath{
 	};
 	
 	public static Rule trigCompressInner = new Rule("trig compress inside the function"){
-		private static final long serialVersionUID = 1L;
-		
 		Rule[] cases;
 		@Override
 		public void init(){
@@ -72,8 +66,6 @@ public class StandardRules extends QuickMath{
 	};
 	
 	public static Rule linearOperator = new Rule("operator in linear"){
-		private static final long serialVersionUID = 1L;
-		
 		@Override
 		public Expr applyRuleToExpr(Expr e,CasInfo casInfo){
 			Expr expr = e.get();
@@ -95,8 +87,6 @@ public class StandardRules extends QuickMath{
 	};
 	
 	public static Rule pullOutConstants = new Rule("pull out constants"){
-		private static final long serialVersionUID = 1L;
-		
 		@Override
 		public Expr applyRuleToExpr(Expr e,CasInfo casInfo){
 			Expr expr = e.get();
@@ -113,8 +103,6 @@ public class StandardRules extends QuickMath{
 	};
 	
 	public static Rule becomeInner = new Rule("become the argument"){
-		private static final long serialVersionUID = 1L;
-		
 		@Override
 		public Expr applyRuleToExpr(Expr e,CasInfo casInfo){
 			return e.get();
@@ -122,8 +110,6 @@ public class StandardRules extends QuickMath{
 	};
 	
 	public static Rule distrInner = new Rule("distribute inner"){
-		private static final long serialVersionUID = 1L;
-		
 		@Override
 		public Expr applyRuleToExpr(Expr e,CasInfo casInfo){
 			e.set(0, distr(e.get()).simplify(casInfo));
@@ -133,8 +119,6 @@ public class StandardRules extends QuickMath{
 	};
 	
 	public static Rule factorInner = new Rule("factor inner"){
-		private static final long serialVersionUID = 1L;
-		
 		@Override
 		public Expr applyRuleToExpr(Expr e,CasInfo casInfo){
 			e.set(0, factor(e.get()).simplify(casInfo));
@@ -144,8 +128,6 @@ public class StandardRules extends QuickMath{
 	};
 	
 	public static Rule showState = new Rule("print state"){
-		private static final long serialVersionUID = 1L;
-		
 		@Override
 		public Expr applyRuleToExpr(Expr e,CasInfo casInfo){
 			System.out.println(e);

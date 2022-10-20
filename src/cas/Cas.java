@@ -7,14 +7,13 @@ import java.util.HashMap;
 import cas.bool.*;
 import cas.special.*;
 import cas.primitive.*;
-import cas.trig.*;
 import cas.calculus.*;
 import cas.lang.*;
 import cas.matrix.*;
 import cas.programming.*;
 
 
-public class QuickMath {
+public class Cas {
 	/*
 	 * this file is for shortcuts and general algorithms used everywhere
 	 */
@@ -23,6 +22,10 @@ public class QuickMath {
 	
 	public static Expr createExpr(String expr) {
 		return Interpreter.createExpr(expr);
+	}
+	
+	public static void load(){
+		Rule.loadCompileSimplifyRules();
 	}
 	
 	public static class IndexSet{
@@ -35,6 +38,7 @@ public class QuickMath {
 			System.out.println();
 		}
 	}
+	
 	public static class VarCount implements Comparable<VarCount>{
 		public Var v;
 		public int count = 0;
@@ -64,8 +68,13 @@ public class QuickMath {
 	}
 	
 	//
-	public static Expr sqrtObj = sqrt(var("x"));//used for comparing to
-	public static Expr cbrtObj = cbrt(var("x"));//used for comparing to
+	public static Expr sqrtObj = null;//used for comparing to
+	public static Expr cbrtObj = null;//used for comparing to
+	
+	public static void initExprTemp(){
+		sqrtObj = sqrt(var("x"));
+		cbrtObj = cbrt(var("x"));
+	}
 	
 	public static Var e() {
 		return var("e");
@@ -85,8 +94,11 @@ public class QuickMath {
 	}
 	
 	//
-	public static Power pow(Expr a,Expr b) {
-		return new Power(a,b);
+	public static Func power(Expr a,Expr b) {
+		Func out = (Func) SimpleFuncs.power.copy();
+		out.add(a);
+		out.add(b);
+		return out;
 	}
 	public static Sum sum(Expr... exprs) {
 		Sum out = new Sum();
@@ -109,18 +121,14 @@ public class QuickMath {
 		}
 		return out;
 	}
-	public static And and(Expr... exprs) {
-		And out = new And();
-		for(Expr e:exprs){
-			out.add(e);
-		}
+	public static Func and(Expr... exprs) {
+		Func out = (Func) SimpleFuncs.and.copy();
+		for(Expr expr:exprs) out.add(expr);
 		return out;
 	}
-	public static Or or(Expr... exprs) {
-		Or out = new Or();
-		for(Expr e:exprs){
-			out.add(e);
-		}
+	public static Func or(Expr... exprs) {
+		Func out = (Func) SimpleFuncs.or.copy();
+		for(Expr expr:exprs) out.add(expr);
 		return out;
 	}
 	public static ExprList exprList(Expr... exprs) {
@@ -141,8 +149,10 @@ public class QuickMath {
 	public static Limit limit(Expr e,Becomes becomes){
 		return new Limit(e,becomes);
 	}
-	public static Not not(Expr a) {
-		return new Not(a);
+	public static Func not(Expr expr) {
+		Func out = (Func) SimpleFuncs.not.copy();
+		out.add(expr);
+		return out;
 	}
 	public static Var var(String s) {
 		return new Var(s);
@@ -183,88 +193,127 @@ public class QuickMath {
 	public static BoolState bool(boolean b) {
 		return new BoolState(b);
 	}
-	public static Ln ln(Expr a) {
-		return new Ln(a);
+	public static Func ln(Expr expr) {
+		try {
+			return (Func)SimpleFuncs.getFuncByName("ln", expr);
+		}catch(Exception e) {}
+		return null;
 	}
 	public static Sum sub(Expr a,Expr b) {
 		return sum(a,prod(num(-1),b));
 	}
-	public static Div inv(Expr a) {
+	public static Func inv(Expr a) {
 		return div(num(1),a);
 	}
-	public static Power sqrt(Expr a) {
-		return pow(a,inv(num(2)));
+	public static Func sqrt(Expr a) {
+		return power(a,inv(num(2)));
 	}
-	public static Power cbrt(Expr a) {
-		return pow(a,inv(num(3)));
+	public static Func cbrt(Expr a) {
+		return power(a,inv(num(3)));
 	}
 	public static Prod neg(Expr a) {
 		return prod(num(-1),a);
 	}
-	public static Div div(Expr a,Expr b) {
-		return new Div(a,b);
+	public static Func div(Expr a,Expr b) {
+		try {
+			return (Func)SimpleFuncs.getFuncByName("div",a,b);
+		}catch(Exception e2) {}
+		return null;
 	}
 	
-	public static Diff diff(Expr e,Var v) {
-		return new Diff(e,v);
+	public static Func diff(Expr e,Var v) {
+		try {
+			return (Func)SimpleFuncs.getFuncByName("diff",e,v);
+		}catch(Exception e2) {}
+		return null;
 	}
-	public static Integrate integrate(Expr e,Var v) {
-		return new Integrate(e,v);
+	public static Func integrate(Expr e,Var v) {
+		try {
+			return (Func)SimpleFuncs.getFuncByName("integrate",e,v);
+		}catch(Exception e2) {}
+		return null;
 	}
-	public static IntegrateOver integrateOver(Expr min,Expr max,Expr e,Var v) {
-		return new IntegrateOver(min,max,e,v);
+	public static Func integrateOver(Expr min,Expr max,Expr e,Var v) {
+		try {
+			return (Func)SimpleFuncs.getFuncByName("integrateOver", min,max,e,v);
+		}catch(Exception e2) {}
+		return null;
 	}
-	public static Solve solve(Equ e,Var v) {
-		return new Solve(e,v);
-	}
-	public static Solve solve(Greater e,Var v) {
-		return new Solve(e,v);
-	}
-	public static Solve solve(Less e,Var v) {
-		return new Solve(e,v);
-	}
-	public static Solve solve(ExprList e,ExprList v) {
-		return new Solve(e,v);
+	public static Func solve(Expr e,Expr v) {
+		try {
+			return (Func)SimpleFuncs.getFuncByName("solve", e,v);
+		}catch(Exception e2) {}
+		return null;
 	}
 	
-	public static Power exp(Expr expr) {
-		return pow(e(),expr);
+	public static Func exp(Expr expr) {
+		return power(e(),expr);
 	}
-	public static Sin sin(Expr expr) {
-		return new Sin(expr);
+	public static Func sin(Expr expr) {
+		Func out = (Func) SimpleFuncs.sin.copy();
+		out.add(expr);
+		return out;
 	}
-	public static Cos cos(Expr expr) {
-		return new Cos(expr);
+	public static Func cos(Expr expr) {
+		Func out = (Func) SimpleFuncs.cos.copy();
+		out.add(expr);
+		return out;
 	}
-	public static Tan tan(Expr expr) {
-		return new Tan(expr);
+	public static Func tan(Expr expr) {
+		Func out = (Func) SimpleFuncs.tan.copy();
+		out.add(expr);
+		return out;
 	}
-	public static Atan atan(Expr expr) {
-		return new Atan(expr);
+	public static Func atan(Expr expr) {
+		Func out = (Func) SimpleFuncs.atan.copy();
+		out.add(expr);
+		return out;
 	}
-	public static Asin asin(Expr expr) {
-		return new Asin(expr);
+	public static Func asin(Expr expr) {
+		Func out = (Func) SimpleFuncs.asin.copy();
+		out.add(expr);
+		return out;
 	}
-	public static Acos acos(Expr expr) {
-		return new Acos(expr);
+	public static Func acos(Expr expr) {
+		Func out = (Func) SimpleFuncs.acos.copy();
+		out.add(expr);
+		return out;
 	}
-	public static Approx approx(Expr expr,ExprList defs) {
-		return new Approx(expr,defs);
+	public static Func approx(Expr expr,ExprList defs) {
+		Func out = (Func) SimpleFuncs.approx.copy();
+		out.add(expr);
+		out.add(defs);
+		return out;
 	}
-	public static Factor factor(Expr expr) {
-		return new Factor(expr);
+	public static Func factor(Expr expr) {
+		try {
+			return (Func)SimpleFuncs.getFuncByName("factor", expr);
+		}catch(Exception e) {}
+		return null;
 	}
-	public static Distr distr(Expr expr) {
-		return new Distr(expr);
+	public static Func distr(Expr expr) {
+		try {
+			return (Func)SimpleFuncs.getFuncByName("distr", expr);
+		}catch(Exception e) {}
+		return null;
 	}
-	public static Gamma gamma(Expr expr) {
-		return new Gamma(expr);
+	public static Func gamma(Expr expr) {
+		try {
+			return (Func)SimpleFuncs.getFuncByName("gamma", expr);
+		}catch(Exception e) {}
+		return null;
 	}
-	public static LambertW lambertW(Expr expr){
-		return new LambertW(expr);
+	public static Func lambertW(Expr expr){
+		try {
+			return (Func)SimpleFuncs.getFuncByName("lambertW", expr);
+		}catch(Exception e) {}
+		return null;
 	}
-	public static Abs abs(Expr e) {
-		return new Abs(e);
+	public static Func abs(Expr expr) {
+		try {
+			return (Func)SimpleFuncs.getFuncByName("abs", expr);
+		}catch(Exception e) {}
+		return null;
 	}
 	public static Mat mat(Sequence e) {
 		return new Mat(e);
@@ -296,11 +345,16 @@ public class QuickMath {
 	public static Range range(Expr min,Expr max,Expr e,Var v) {
 		return new Range(min,max,e,v);
 	}
-	public static BoolCompress boolCompress(Expr e) {
-		return new BoolCompress(e);
+	public static Func boolCompress(Expr expr) {
+		Func out = (Func) SimpleFuncs.boolCompress.copy();
+		out.add(expr);
+		return out;
 	}
-	public static BoolTableToExpr boolTableToExpr(ExprList table, ExprList vars) {
-		return new BoolTableToExpr(table,vars);
+	public static Func boolTableToExpr(ExprList table, ExprList vars) {
+		Func out = (Func) SimpleFuncs.boolTableToExpr.copy();
+		out.add(table);
+		out.add(vars);
+		return out;
 	}
 	public static Sequence sequence(Expr... exprs) {
 		Sequence out = new Sequence();
@@ -309,9 +363,9 @@ public class QuickMath {
 		}
 		return out;
 	}
-	public static Func eval(Expr equ) {
+	public static Func comparison(Expr equ) {
 		try {
-			return (Func)SimpleFuncs.getFuncByName("eval", equ);
+			return (Func)SimpleFuncs.getFuncByName("comparison", equ);
 		}catch(Exception e) {}
 		return null;
 	}
@@ -326,7 +380,7 @@ public class QuickMath {
 	public static boolean allLinearTerms(Expr e,Var v) {
 		Prod prodCast = (Prod)e;
 		for(int i = 0;i<prodCast.size();i++){
-			Power current = Power.cast(prodCast.get(i));
+			Func current = Power.cast(prodCast.get(i));
 			if(!(isPositiveRealNum(current.getExpo()) && (current.getBase() instanceof Sum || current.getBase() instanceof Var) && degree(current.getBase(),v) == BigInteger.ONE)){
 				return false;
 			}
@@ -344,9 +398,9 @@ public class QuickMath {
 	}
 	
 	public static Expr partialFrac(Expr expr,Var v,CasInfo casInfo) {
-		if(expr instanceof Div) {
+		if(expr.typeName().equals("div")) {
 			BigInteger negOne = BigInteger.valueOf(-1);
-			Div frac = (Div)expr;
+			Func frac = (Func)expr;
 			BigInteger numerDegree = degree( frac.getNumer() ,v);
 			BigInteger denomDegree = degree( frac.getDenom() ,v);
 			
@@ -396,16 +450,16 @@ public class QuickMath {
 				*/
 				
 				Expr currentFunction = frac.copy();
-				((Div)currentFunction).getDenom().remove(i);
+				((Func)currentFunction).getDenom().remove(i);
 				
-				Power currentTerm = Power.cast(denomFactored.get(i));
+				Func currentTerm = Power.cast(denomFactored.get(i));
 				
 				Sequence poly = polyExtract(currentTerm.getBase(),v,casInfo);
 				Expr linearTermCoef = poly.get(1);
 				Equ solution = (Equ)ExprList.cast(solve(equ(currentTerm,Num.ZERO),v).simplify(casInfo)).get();
 				
 				
-				BigInteger expo = ((Num)currentTerm.getExpo()).realValue;
+				BigInteger expo = ((Num)currentTerm.getExpo()).getRealValue();
 				BigInteger expoMinusOne = expo.subtract(BigInteger.ONE);
 				
 				for(BigInteger j = BigInteger.ZERO;j.compareTo( expo ) == -1;j = j.add(BigInteger.ONE)){
@@ -415,8 +469,8 @@ public class QuickMath {
 					
 					chara.add( exprList(num(out.size()),poly.get(0),poly.get(1),num(currentExpo)) );//index , constant , linear coeff, exponent
 					
-					Expr numer = div(functionOut,prod(denomCoef,pow(linearTermCoef,num(j)), num(factorial(j))));
-					Expr newTerm = div(numer,  pow(currentTerm.getBase(),num(currentExpo))  );
+					Expr numer = div(functionOut,prod(denomCoef,power(linearTermCoef,num(j)), num(factorial(j))));
+					Expr newTerm = div(numer,  power(currentTerm.getBase(),num(currentExpo))  );
 					
 					out.add(newTerm);
 					
@@ -445,7 +499,7 @@ public class QuickMath {
 						}
 						
 						if(current.get(2).equals(other.get(2)) && current.get(3).equals(other.get(3)) && !current.get(1).equals(other.get(1))) {//exponent and variable coefficient same but constant different means it can be combined because they are conjugates
-							pairs.put( ((Num)current.get(0)).realValue.intValue() , ((Num)other.get(0)).realValue.intValue());
+							pairs.put( ((Num)current.get(0)).getRealValue().intValue() , ((Num)other.get(0)).getRealValue().intValue());
 							chara.remove(j);
 							continue outer;
 							
@@ -456,12 +510,12 @@ public class QuickMath {
 				for(int key:pairs.keySet()) {
 					int i = key;
 					int j = pairs.get(key);
-					Div first = (Div) out.get(i);
-					Div second = (Div) out.get(j);
+					Func firstDiv = (Func) out.get(i);
+					Func secondDiv = (Func) out.get(j);
 					
-					Expr combinedDenom = pow(distr( prod(((Power)first.getDenom()).getBase(),((Power)second.getDenom()).getBase())  ),((Power)first.getDenom()).getExpo());
+					Expr combinedDenom = power(distr( prod(((Func)firstDiv.getDenom()).getBase(),((Func)secondDiv.getDenom()).getBase())  ),((Func)firstDiv.getDenom()).getExpo());
 					
-					Expr combinedNumer = sum( prod(first.getNumer(),second.getDenom()) ,  prod(first.getDenom(),second.getNumer()) );
+					Expr combinedNumer = sum( prod(firstDiv.getNumer(),secondDiv.getDenom()) ,  prod(firstDiv.getDenom(),secondDiv.getNumer()) );
 					
 					out.set(i, div(combinedNumer,combinedDenom));
 					out.set(j, null);//don't want resize of array
@@ -479,8 +533,8 @@ public class QuickMath {
 	}
 	
 	public static Expr polyDiv(Expr expr,Var v,CasInfo casInfo) {
-		if(expr instanceof Div) {
-			Div frac = (Div)expr.copy();
+		if(expr.typeName().equals("div")) {
+			Func frac = (Func)expr.copy();
 			Sequence numPoly = polyExtract(distr(frac.getNumer()).simplify(casInfo),v,casInfo);
 			Sequence denPoly = polyExtract(distr(frac.getDenom()).simplify(casInfo),v,casInfo);
 			if(numPoly != null && denPoly != null && numPoly.size()>=denPoly.size()) {
@@ -534,13 +588,13 @@ public class QuickMath {
 			Expr term = exprSum.get(i);
 			Expr stripped = stripNonVarPartsFromProd(term,v);
 			if(stripped.equals(v)) maxDegree = maxDegree.max(BigInteger.ONE);
-			else if(stripped instanceof Power) {
-				Power casted = (Power)stripped;
+			else if(stripped.typeName().equals("power")) {
+				Func casted = (Func)stripped;
 				if(isPositiveRealNum(casted.getExpo())) {
 					if(casted.getBase().equals(v)) {
-						maxDegree = maxDegree.max(((Num)casted.getExpo()).realValue);
+						maxDegree = maxDegree.max(((Num)casted.getExpo()).getRealValue());
 					}else if(isPolynomialUnstrict(casted.getBase(),v)) {
-						maxDegree = maxDegree.max( degree(casted.getBase(),v).multiply(((Num)casted.getExpo()).realValue) );
+						maxDegree = maxDegree.max( degree(casted.getBase(),v).multiply(((Num)casted.getExpo()).getRealValue()) );
 					}else return negOne;
 				}else return negOne;
 			}else if(stripped instanceof Prod) {
@@ -568,12 +622,12 @@ public class QuickMath {
 				if(!isPolynomialUnstrict(expr.get(i),v)) return false;
 			}
 			return true;
-		}else if(expr instanceof Power){
-			Power casted = (Power)expr;
+		}else if(expr.typeName().equals("power")){
+			Func casted = (Func)expr;
 			return isPositiveRealNum(casted.getExpo()) && isPolynomialUnstrict(casted.getBase(),v);
-		}else if(expr instanceof Div){
-			Div casted = (Div)expr;
-			return !casted.getDenom().contains(v) && isPolynomialUnstrict(casted.getNumer(),v);
+		}else if(expr.typeName().equals("div")){
+			Func castedDiv = (Func)expr;
+			return !castedDiv.getDenom().contains(v) && isPolynomialUnstrict(castedDiv.getNumer(),v);
 		}
 		return false;
 	}
@@ -584,8 +638,8 @@ public class QuickMath {
 			Expr term = exprSum.get(i);
 			Expr stripped = stripNonVarPartsFromProd(term,v);
 			if(stripped.equals(v)) continue;
-			else if(stripped instanceof Power) {
-				Power casted = (Power)stripped;
+			else if(stripped.typeName().equals("power")) {
+				Func casted = (Func)stripped;
 				if(casted.getBase().equals(v) && isPositiveRealNum(casted.getExpo())) continue;
 				return false;
 			}else if(stripped instanceof Num) continue;
@@ -597,18 +651,18 @@ public class QuickMath {
 		if(isPolynomialUnstrict(expr,v)){
 			if(!expr.contains(v)){
 				return expr;
-			}else if(expr instanceof Div){
-				Div casted = (Div)expr;
-				return div(getLeadingCoef(casted.getNumer(),v,casInfo),casted.getDenom()).simplify(casInfo);
+			}else if(expr.typeName().equals("div")){
+				Func castedDiv = (Func)expr;
+				return div(getLeadingCoef(castedDiv.getNumer(),v,casInfo),castedDiv.getDenom()).simplify(casInfo);
 			}else if(expr instanceof Prod){
 				Prod out = new Prod();
 				for(int i = 0;i<expr.size();i++){
 					out.add(getLeadingCoef(expr.get(i),v,casInfo));
 				}
 				return out.simplify(casInfo);
-			}else if(expr instanceof Power){
-				Power casted = (Power)expr;
-				return pow(getLeadingCoef(casted.getBase(),v,casInfo),casted.getExpo()).simplify(casInfo);
+			}else if(expr.typeName().equals("power")){
+				Func casted = (Func)expr;
+				return power(getLeadingCoef(casted.getBase(),v,casInfo),casted.getExpo()).simplify(casInfo);
 			}else if(expr instanceof Sum){
 				BigInteger[] degrees = new BigInteger[expr.size()];
 				for(int i = 0;i<expr.size();i++){
@@ -659,10 +713,10 @@ public class QuickMath {
 				if(parts.get(1).equals(v)) {
 					contents = parts.get(0);
 					degree = BigInteger.ONE;
-				}else if(parts.get(1) instanceof Power) {
-					Power casted = (Power)parts.get(1);
+				}else if(parts.get(1).typeName().equals("power")) {
+					Func casted = (Func)parts.get(1);
 					if(casted.getBase().equals(v) && isPositiveRealNum(casted.getExpo())) {
-						degree = ((Num)casted.getExpo()).realValue;
+						degree = ((Num)casted.getExpo()).getRealValue();
 					}else return null;
 					contents = parts.get(0);
 				}else return null;
@@ -687,10 +741,10 @@ public class QuickMath {
 					}
 				}
 				return Prod.unCast(eCasted);
-			}else if(e instanceof Div) {
-				Div eCasted = (Div)e;
-				Expr numer = stripNonVarPartsFromProd(eCasted.getNumer(),v);
-				Expr denom = stripNonVarPartsFromProd(eCasted.getDenom(),v);
+			}else if(e.typeName().equals("div")) {
+				Func eCastedDiv = (Func)e;
+				Expr numer = stripNonVarPartsFromProd(eCastedDiv.getNumer(),v);
+				Expr denom = stripNonVarPartsFromProd(eCastedDiv.getDenom(),v);
 				return Div.unCast(div(numer,denom));
 			}
 			return e.copy();
@@ -718,10 +772,10 @@ public class QuickMath {
 			out.add(Prod.unCast(coef));
 			out.add(Prod.unCast(outCopy));
 			
-		}else if(e instanceof Div) {
-			Div casted = (Div)e;
-			Sequence numer = seperateByVar(casted.getNumer(),v);
-			Sequence denom = seperateByVar(casted.getDenom(),v);
+		}else if(e.typeName().equals("div")) {
+			Func castedDiv = (Func)e;
+			Sequence numer = seperateByVar(castedDiv.getNumer(),v);
+			Sequence denom = seperateByVar(castedDiv.getDenom(),v);
 			
 			Expr coef = Div.unCast(div(numer.get(0),denom.get(0)));
 			Expr newExpr = Div.unCast(div(numer.get(1),denom.get(1)));
@@ -751,10 +805,10 @@ public class QuickMath {
 				out.add(num(1));
 			}
 			out.add(Prod.unCast(prodCopy));
-		}else if(e instanceof Div) {
-			Div casted = (Div)e;
-			Sequence numer = seperateCoef(casted.getNumer());
-			Sequence denom = seperateCoef(casted.getDenom());
+		}else if(e.typeName().equals("div")) {
+			Func castedDiv = (Func)e;
+			Sequence numer = seperateCoef(castedDiv.getNumer());
+			Sequence denom = seperateCoef(castedDiv.getDenom());
 			Expr newCoef = Div.unCast(div(numer.get(0),denom.get(0)));
 			Expr newExpr = Div.unCast(div(numer.get(1),denom.get(1)));
 			out.add(newCoef);
@@ -779,7 +833,7 @@ public class QuickMath {
 			}else if(i == 1){
 				out.add(prod(poly.get(i),v));
 			}else {
-				out.add(prod(poly.get(i),pow(v,num(i))));
+				out.add(prod(poly.get(i),power(v,num(i))));
 			}
 		}
 		
@@ -824,23 +878,23 @@ public class QuickMath {
 		return neg? product.negate():product;
 	}
 	
-	public static Power perfectPower(Num n) {//basically tries to do a big root with all possible exponents
-		if(n.realValue.compareTo(BigInteger.TWO) == -1 || n.isComplex()) return pow(n.copy(),num(1));//make it accept any number without errors
-		int currentExpo = n.realValue.bitLength();//maximum exponent is log base 2 of that number. This is because 2 is the smallest base possible
+	public static Func perfectPower(Num n) {//basically tries to do a big root with all possible exponents
+		if(n.getRealValue().compareTo(BigInteger.TWO) == -1 || n.isComplex()) return power(n.copy(),num(1));//make it accept any number without errors
+		int currentExpo = n.getRealValue().bitLength();//maximum exponent is log base 2 of that number. This is because 2 is the smallest base possible
 		while(currentExpo != 1) {
-			BigInteger possibleBase = bigRoot(n.realValue,BigInteger.valueOf(currentExpo));
-			if(possibleBase.pow(currentExpo).equals(n.realValue)) {//testing if re exponentiating it gives the same result
-				return pow(num(possibleBase),num(currentExpo));
+			BigInteger possibleBase = bigRoot(n.getRealValue(),BigInteger.valueOf(currentExpo));
+			if(possibleBase.pow(currentExpo).equals(n.getRealValue())) {//testing if re exponentiating it gives the same result
+				return power(num(possibleBase),num(currentExpo));
 			}
 			currentExpo--;
 		}
-		return pow(n.copy(),num(1));
+		return power(n.copy(),num(1));
 	}
 	
 	public static Sequence basicRealAndImagComponents(Expr e,CasInfo casInfo) {//does obvious separation of real and imaginary components
 		if(e instanceof Num) {
 			Num n = (Num)e;
-			return sequence(num(n.realValue),num(n.imagValue));
+			return sequence(num(n.getRealValue()),num(n.getImagValue()));
 		}
 		
 		if(e instanceof Prod) {
@@ -849,18 +903,18 @@ public class QuickMath {
 				if(e.get(i) instanceof Num) {
 					Num num = (Num)eCopy.get(i);
 					
-					if(num.imagValue.equals(BigInteger.ZERO)) {
+					if(num.getImagValue().equals(BigInteger.ZERO)) {
 						return sequence(eCopy,num(0));
-					}else if(num.realValue.equals(BigInteger.ZERO)) {
-						num.realValue = num.imagValue;
-						num.imagValue = BigInteger.ZERO;
+					}else if(num.getRealValue().equals(BigInteger.ZERO)) {
+						num.setRealValue(num.getImagValue());
+						num.setImagValue(BigInteger.ZERO);
 						eCopy.flags.simple = false;
 						return (Sequence) sequence(num(0),eCopy).simplify(casInfo);
 					}else {
 						
 						Prod imagCopy = (Prod)e.copy();
-						imagCopy.set(i, num(num.imagValue));
-						num.imagValue = BigInteger.ZERO;
+						imagCopy.set(i, num(num.getImagValue()));
+						num.setImagValue(BigInteger.ZERO);
 						eCopy.flags.simple = false;
 						return sequence(eCopy.simplify(casInfo),imagCopy.simplify(casInfo));
 					}
@@ -1084,10 +1138,10 @@ public class QuickMath {
 			return null;
 		}
 		Prod p = new Prod();
-		BigInteger n = num.realValue;
+		BigInteger n = num.getRealValue();
 		if(n.signum()==-1) {
 			n = n.abs();
-			p.add(pow(num(-1),num(1)));
+			p.add(power(num(-1),num(1)));
 		}
 		
 		ArrayList<BigInteger> factors = IntFactor.rhoFactor(n);
@@ -1101,7 +1155,7 @@ public class QuickMath {
 					j--;
 				}
 			}
-			p.add(new Power(num(currentVal),num(count)));
+			p.add(power(num(currentVal),num(count)));
 		}
 		
 		
@@ -1166,7 +1220,7 @@ public class QuickMath {
 			Prod coef = new Prod();
 			if(e instanceof Prod){
 				for(int j = 0;j<e.size();j++){
-					if(e.get(j) instanceof Sin){
+					if(e.get(j).typeName().equals("sin")){
 						if(trigPart == null){
 							trigPart = e.get(j);
 						}else{
@@ -1176,7 +1230,7 @@ public class QuickMath {
 						coef.add(e.get(j));
 					}
 				}
-			}else if(e instanceof Sin){
+			}else if(e.typeName().equals("sin")){
 				trigPart = e;
 			}
 			
@@ -1184,7 +1238,7 @@ public class QuickMath {
 				Expr innerPart = trigPart.get();
 				Expr halfInner = div(innerPart,num(2)).simplify(casInfo);
 				
-				if(!(halfInner instanceof Div)){
+				if(!(halfInner.typeName().equals("div"))){
 					coef.add(sin(halfInner));
 					coef.add(cos(halfInner));
 					coef.add(num(2));
@@ -1221,18 +1275,18 @@ public class QuickMath {
 	}
 	public static Expr multinomial(Expr baseSum,Num expo,CasInfo casInfo) {//returns the binomial expansion
 		Sum terms = new Sum();
-		ArrayList<BigInteger[]> exponentSets = possiblePartitions(expo.realValue,BigInteger.valueOf(baseSum.size()),null,0,null);
+		ArrayList<BigInteger[]> exponentSets = possiblePartitions(expo.getRealValue(),BigInteger.valueOf(baseSum.size()),null,0,null);
 		//System.out.println(exponentSets);
 		
 		for(BigInteger[] set : exponentSets){
 			Prod term = new Prod();
 			BigInteger coef = BigInteger.ONE;
-			BigInteger rem = expo.realValue;
+			BigInteger rem = expo.getRealValue();
 			
 			for(int i = 0;i<baseSum.size();i++){
 				coef = coef.multiply(choose(rem,set[i]));
 				rem = rem.subtract(set[i]);
-				term.add(pow(baseSum.get(i),num(set[i])));
+				term.add(power(baseSum.get(i),num(set[i])));
 			}
 			
 			term.add(num(coef));
@@ -1377,14 +1431,14 @@ public class QuickMath {
 					else out+="+";
 				}
 			}
-		}else if(e instanceof Div) {
+		}else if(e.typeName().equals("div")) {
 			out+="\\frac{";
-			out+=generateLatex(((Div)e).getNumer());
+			out+=generateLatex(((Func)e).getNumer());
 			out+="}{";
-			out+=generateLatex(((Div)e).getDenom());
+			out+=generateLatex(((Func)e).getDenom());
 			out+="}";
-		}else if(e instanceof Power) {
-			Power casted = (Power)e;
+		}else if(e.typeName().equals("power")) {
+			Func casted = (Func)e;
 			
 			if(Rule.fastSimilarExpr(sqrtObj,e)){
 				out += "\\sqrt{";
@@ -1393,13 +1447,13 @@ public class QuickMath {
 			}else{
 				out+="{";
 				boolean parenBase = false;
-				if(casted.getBase() instanceof Sum || casted.getBase() instanceof Prod || casted.getBase() instanceof Power || (casted.getBase() instanceof Num && casted.getBase().negative())) parenBase = true;
+				if(casted.getBase() instanceof Sum || casted.getBase() instanceof Prod || casted.getBase().typeName().equals("power") || (casted.getBase() instanceof Num && casted.getBase().negative())) parenBase = true;
 				if(parenBase) out+=leftParen;
 				out+=generateLatex(casted.getBase());
 				if(parenBase) out+=rightParen;
 				out+="}^{";
 				boolean parenExpo= false;
-				if(casted.getExpo() instanceof Sum || casted.getExpo() instanceof Prod || casted.getExpo() instanceof Power) parenExpo = true;
+				if(casted.getExpo() instanceof Sum || casted.getExpo() instanceof Prod || casted.getExpo().typeName().equals("power")) parenExpo = true;
 				if(parenExpo) out+=leftParen;
 				out+=generateLatex(casted.getExpo());
 				if(parenExpo) out+=rightParen;
@@ -1410,24 +1464,24 @@ public class QuickMath {
 			out+=generateLatex( casted.getLeftSide() );
 			out+="=";
 			out+=generateLatex( casted.getRightSide() );
-		}else if(e instanceof IntegrateOver) {
-			IntegrateOver casted = (IntegrateOver)e;
+		}else if(e.typeName().equals("integrateOver")) {
+			Func castedDefInt = (Func)e;
 			out+="\\int_{";
-			out+=generateLatex(casted.getMin());
+			out+=generateLatex(IntegrateOver.getMin(castedDefInt));
 			out+="}^{";
-			out+=generateLatex(casted.getMax());
+			out+=generateLatex(IntegrateOver.getMax(castedDefInt));
 			out+="}{";
-			out+=generateLatex(casted.getExpr());
-			out+=" d"+generateLatex(casted.getVar());
+			out+=generateLatex(IntegrateOver.getExpr(castedDefInt));
+			out+=" d"+generateLatex(castedDefInt.getVar());
 			out+="}";
-		}else if(e instanceof Diff) {
-			Diff casted = (Diff)e;
+		}else if(e.typeName().equals("diff")) {
+			Func casted = (Func)e;
 			out+="\\frac{d}{d";
 			out+=casted.getVar().toString();
 			out+="}"+leftParen;
 			out+=generateLatex(casted.get());
 			out+=rightParen;
-		}else if(e instanceof Abs){
+		}else if(e.typeName().equals("abs")){
 			out+="\\left| ";
 			out+=generateLatex(e.get());
 			out+="\\right| ";

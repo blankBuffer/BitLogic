@@ -2,11 +2,10 @@ package cas.primitive;
 
 import cas.ComplexFloat;
 import cas.Expr;
+import cas.Rule;
 import cas.CasInfo;
 
 public class FloatExpr extends Expr{
-	
-	private static final long serialVersionUID = 1919695097463437480L;
 	
 	public ComplexFloat value = new ComplexFloat(0,0);
 	
@@ -64,7 +63,7 @@ public class FloatExpr extends Expr{
 	}
 
 	@Override
-	public Sequence getRuleSequence() {
+	public Rule getRule() {
 		return null;
 	}
 

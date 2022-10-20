@@ -2,6 +2,7 @@ package cas.primitive;
 
 import cas.ComplexFloat;
 import cas.Expr;
+import cas.Rule;
 
 /*
  * the become expression type is what's used to create rule mappings, the arrow -> shows how the left argument "becomes"
@@ -9,7 +10,6 @@ import cas.Expr;
  */
 
 public class Becomes extends Expr{
-	private static final long serialVersionUID = 7853485933081337101L;
 
 	public Becomes(){}//
 	
@@ -40,7 +40,7 @@ public class Becomes extends Expr{
 	}
 	
 	@Override
-	public Sequence getRuleSequence() {
+	public Rule getRule() {
 		return null;
 	}
 	@Override

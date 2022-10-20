@@ -5,89 +5,63 @@ import cas.Expr;
 import cas.Rule;
 import cas.CasInfo;
 import cas.primitive.ExprList;
-import cas.primitive.Sequence;
+import cas.primitive.Func;
 import cas.primitive.Var;
 
-public class Not extends Expr{
+public class Not{
 	
-	private static final long serialVersionUID = 775872869042676796L;
-
-	public Not(){}//
-	public Not(Expr e){
-		add(e);
-	}
-	
-	static Rule isTrue = new Rule("~true->false","true case");
-	static Rule isFalse = new Rule("~false->true","false case");
-	static Rule containsNot = new Rule("~~x->x","contains not");
-	static Rule demorgan = new Rule("demorgan"){
-		private static final long serialVersionUID = 1L;
-
+	public static Func.FuncLoader notLoader = new Func.FuncLoader() {
 		@Override
-		public Expr applyRuleToExpr(Expr e,CasInfo casInfo){
-			Not not = null;
-			if(e instanceof Not){
-				not = (Not)e;
-			}else{
-				return e;
-			}
-			Expr result = (not.get() instanceof Or ? new And() :(not.get() instanceof And ? new Or() :null));
-			if(result != null){
-				
-				for(int i = 0;i<not.get().size();i++){
-					result.add(not(not.get().get(i)));
+		public void load(Func owner) {
+			Rule isTrue = new Rule("~true->false","true case");
+			Rule isFalse = new Rule("~false->true","false case");
+			Rule containsNot = new Rule("~~x->x","contains not");
+			Rule demorgan = new Rule("demorgan"){
+				@Override
+				public Expr applyRuleToExpr(Expr e,CasInfo casInfo){
+					Func not = (Func)e;
+					Expr result = (not.get().typeName().equals("or") ? and() :(not.get().typeName().equals("and") ? or() :null));
+					if(result != null){
+						
+						for(int i = 0;i<not.get().size();i++){
+							result.add(not(not.get().get(i)));
+						}
+						result = result.simplify(casInfo);
+						return result;
+					}
+					return not;
 				}
-				result = result.simplify(casInfo);
-				return result;
-			}
-			return not;
-		}
-	};
-	
-	static Sequence ruleSequence = null;
-	public static void loadRules(){
-		ruleSequence = sequence(
+			};
+			
+			owner.behavior.rule = new Rule(new Rule[]{
 				isTrue,
 				isFalse,
 				containsNot,
 				demorgan
-		);
-		Rule.initRules(ruleSequence);
-	}
-	
-	@Override
-	public Sequence getRuleSequence() {
-		return ruleSequence;
-	}
-	
-	@Override
-	public String toString() {
-		String out = "";
-		out+="~";
-		boolean paren = !(get() instanceof Var);
-		if(paren) out+="(";
-		out+=get();
-		if(paren) out+=")";
-		return out;
-	}
-	
-	@Override
-	public ComplexFloat convertToFloat(ExprList varDefs) {
-		boolean state = Math.abs(get().convertToFloat(varDefs).real) < 0.5;
-		double res = state ? 1.0 : 0.0;
-		return new ComplexFloat(res,0);
-	}
-	
-	@Override
-	public String typeName() {
-		return "not";
-	}
-	@Override
-	public String help() {
-		return "~ operator\n"
-				+ "examples\n"
-				+ "~true->false\n"
-				+ "~(~x)->x";
-	}
-
+			},"main sequence");
+			owner.behavior.rule.init();
+			
+			owner.behavior.toFloat = new Func.FloatFunc() {
+				@Override
+				public ComplexFloat convertToFloat(ExprList varDefs, Func owner) {
+					boolean state = Math.abs(owner.get().convertToFloat(varDefs).real) < 0.5;
+					double res = state ? 1.0 : 0.0;
+					return new ComplexFloat(res,0);
+				}
+			};
+			
+			owner.behavior.toStringMethod = new Func.ToString() {
+				@Override
+				public String generateString(Func owner) {
+					String out = "";
+					out+="~";
+					boolean paren = !(owner.get() instanceof Var);
+					if(paren) out+="(";
+					out+=owner.get();
+					if(paren) out+=")";
+					return out;
+				}
+			};
+		}
+	};
 }

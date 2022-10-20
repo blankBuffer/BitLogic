@@ -5,8 +5,6 @@ import cas.lang.Interpreter;
 import cas.primitive.*;
 
 public class Define extends Expr{
-	private static final long serialVersionUID = 1448193931833648039L;
-
 	public Define() {
 		simplifyChildren = false;
 	}//
@@ -26,8 +24,6 @@ public class Define extends Expr{
 	}
 	
 	static Rule addDefinition = new Rule("add definition") {
-		private static final long serialVersionUID = 1L;
-		
 		@Override
 		public Expr applyRuleToExpr(Expr e,CasInfo casInfo) {
 			Define def = (Define)e;
@@ -41,17 +37,18 @@ public class Define extends Expr{
 		
 	};
 	
-	static Sequence ruleSequence;
+	static Rule mainSequenceRule = null;
 	
-	public static void loadRules() {
-		ruleSequence = sequence(
+	public static void loadRules(){
+		mainSequenceRule = new Rule(new Rule[]{
 				addDefinition
-		);
+		},"main sequence");
+		mainSequenceRule.init();
 	}
 	
 	@Override
-	public Sequence getRuleSequence() {
-		return ruleSequence;
+	public Rule getRule() {
+		return mainSequenceRule;
 	}
 
 	@Override

@@ -6,21 +6,39 @@ import java.util.ArrayList;
 import cas.*;
 
 
-public class Factor extends Expr{
+public class Factor{
 	
-	private static final long serialVersionUID = -5448276275686292911L;
+	public static Func.FuncLoader factorLoader = new Func.FuncLoader() {
+		@Override
+		public void load(Func owner) {
+			owner.behavior.rule = new Rule(new Rule[]{
+					fastEscape,
+					sumOfCubes,
+					differenceOfCubes,
+					power2Reduction,
+					quarticRealFactor,
+					quadraticFactor,
+					pullOutRoots,
+					reversePascalsTriangle,
+					generalFactor,
+					reExpandSubSums,
+					StandardRules.becomeInner		
+			},"main sequence");
+			owner.behavior.rule.init();
+			
+			owner.behavior.toFloat = new Func.FloatFunc() {
+				@Override
+				public ComplexFloat convertToFloat(ExprList varDefs, Func owner) {
+					return owner.get().convertToFloat(varDefs);
+				}
+			};
+		}
+	};
 	
 	static Rule sumOfCubes = new Rule("factor(a^3+b^3)->(a+b)*(a^2-a*b+b^2)","sum of cubes");
 	static Rule differenceOfCubes = new Rule("factor(a^3-b^3)->(a-b)*(a^2+a*b+b^2)","difference of cubes");
-
-	public Factor(){}//
-	public Factor(Expr expr) {
-		add(expr);
-	}
 	
 	static Rule fastEscape = new Rule("nothing to factor") {
-		private static final long serialVersionUID = 1L;
-
 		@Override
 		public Expr applyRuleToExpr(Expr e,CasInfo casInfo) {
 			if(e.get() instanceof Var || e.get() instanceof Num) return e.get();
@@ -29,11 +47,9 @@ public class Factor extends Expr{
 	};
 	
 	static Rule reversePascalsTriangle = new Rule("reverse pascals triangle"){
-		private static final long serialVersionUID = 1L;
-
 		@Override
 		public Expr applyRuleToExpr(Expr e,CasInfo casInfo) {
-			Factor factor = (Factor)e;
+			Func factor = (Func)e;
 			Expr expr = factor.get();
 			
 			Var v = mostCommonVar(expr);
@@ -42,21 +58,21 @@ public class Factor extends Expr{
 				Sequence coefs = polyExtract(expr,v,casInfo);
 				if(coefs == null) return e;
 				Num degree = num(coefs.size()-1);
-				if(degree.realValue.compareTo(BigInteger.TWO) == -1) return e;
+				if(degree.getRealValue().compareTo(BigInteger.TWO) == -1) return e;
 				
 				if(coefs.containsType("sum")) return e;
 				
 				Expr highestDegreeCoef = coefs.get(coefs.size()-1);
 				Expr lowestDegreeCoef = coefs.get(0);
 				
-				Expr m = pow(highestDegreeCoef ,inv(degree)).simplify(casInfo);
-				Expr b = pow(lowestDegreeCoef ,inv(degree)).simplify(casInfo);
+				Expr m = power(highestDegreeCoef ,inv(degree)).simplify(casInfo);
+				Expr b = power(lowestDegreeCoef ,inv(degree)).simplify(casInfo);
 				
 				if(multinomial(sum(prod(m,v),b),degree,casInfo).equals(expr) ) {
-					Expr result = pow(sum(prod(m,v),b),degree).simplify(casInfo);
+					Expr result = power(sum(prod(m,v),b),degree).simplify(casInfo);
 					return result;
 				}else if(multinomial(sum(prod(m,v),neg(b)),degree,casInfo).equals(expr)) {//try the negative variant
-					Expr result = pow(sub(prod(m,v),b),degree).simplify(casInfo);
+					Expr result = power(sub(prod(m,v),b),degree).simplify(casInfo);
 					return result;
 				}
 				
@@ -66,33 +82,31 @@ public class Factor extends Expr{
 	};
 	
 	static Rule power2Reduction = new Rule("power of 2 polynomial"){
-		private static final long serialVersionUID = 1L;
-
 		@Override
 		public Expr applyRuleToExpr(Expr e,CasInfo casInfo) {
-			Factor factor = (Factor)e;
+			Func factor = (Func)e;
 			Expr expr = factor.get();
 			Var v = mostCommonVar(expr);
 			if(expr instanceof Sum && v!=null && expr.size() == 2 && isPlainPolynomial(expr,v)) {
-				Power pow = null;
+				Func pow = null;
 				Expr other = null;
-				if(expr.get(0) instanceof Power) {
-					pow = (Power)expr.get(0);
+				if(expr.get(0).typeName().equals("power")) {
+					pow = (Func)expr.get(0);
 					other = expr.get(1);
-				}else if(expr.get(1) instanceof Power) {
-					pow = (Power)expr.get(1);
+				}else if(expr.get(1).typeName().equals("power")) {
+					pow = (Func)expr.get(1);
 					other = expr.get(0);
 				}
 				
 				
-				if(pow != null && other != null && other.negative() && isPositiveRealNum(pow.getExpo()) && ((Num)pow.getExpo()).realValue.mod(BigInteger.TWO).equals(BigInteger.ZERO) ) {
+				if(pow != null && other != null && other.negative() && isPositiveRealNum(pow.getExpo()) && ((Num)pow.getExpo()).getRealValue().mod(BigInteger.TWO).equals(BigInteger.ZERO) ) {
 					CasInfo noAbsVersion = new CasInfo(casInfo);
 					noAbsVersion.setAllowAbs(false);
 					
 					Expr newPow = sqrt(pow).simplify(noAbsVersion);
 					Expr newOther = sqrt(neg(other)).simplify(noAbsVersion);
 					
-					if(!(newOther instanceof Power || newOther instanceof Prod)) {
+					if(!(newOther.typeName().equals("power") || newOther instanceof Prod)) {
 						
 						return prod(sum(newPow,newOther),sum(newPow,neg(newOther))).simplify(casInfo);
 						
@@ -105,16 +119,14 @@ public class Factor extends Expr{
 	};
 	
 	static Rule quarticRealFactor = new Rule(new Rule[] {
-			new Rule("factor(b*x^4+a)->(sqrt(b)*x^2-b^(1/4)*a^(1/4)*sqrt(2)*x+sqrt(a))*(sqrt(b)*x^2+b^(1/4)*a^(1/4)*sqrt(2)*x+sqrt(a))","factorIrrationalRoots()&eval(a>0)&eval(b>0)","factor quartics using special technique"),
-			new Rule("factor(x^4+a)->(x^2-a^(1/4)*sqrt(2)*x+sqrt(a))*(x^2+a^(1/4)*sqrt(2)*x+sqrt(a))","factorIrrationalRoots()&eval(a>0)","factor quartics using special technique"),
+			new Rule("factor(b*x^4+a)->(sqrt(b)*x^2-b^(1/4)*a^(1/4)*sqrt(2)*x+sqrt(a))*(sqrt(b)*x^2+b^(1/4)*a^(1/4)*sqrt(2)*x+sqrt(a))","factorIrrationalRoots()&comparison(a>0)&comparison(b>0)","factor quartics using special technique"),
+			new Rule("factor(x^4+a)->(x^2-a^(1/4)*sqrt(2)*x+sqrt(a))*(x^2+a^(1/4)*sqrt(2)*x+sqrt(a))","factorIrrationalRoots()&comparison(a>0)","factor quartics using special technique"),
 	},"factor quartics using special technique");
 	
 	static Rule quadraticFactor = new Rule("factor quadratics"){
-		private static final long serialVersionUID = 1L;
-
 		@Override
 		public Expr applyRuleToExpr(Expr e,CasInfo casInfo) {
-			Factor factor = (Factor)e;
+			Func factor = (Func)e;
 			Expr expr = factor.get();
 			
 			
@@ -139,11 +151,11 @@ public class Factor extends Expr{
 						
 						if(!casInfo.allowComplexNumbers() && ( (a instanceof Num && ((Num)a).isComplex()) || (b instanceof Num && ((Num)b).isComplex()) || (c instanceof Num && ((Num)c).isComplex()) )) return e;
 						
-						Expr discrNum = sum(pow(b,num(2)),prod(num(-4),a,c)).simplify(casInfo);
+						Expr discrNum = sum(power(b,num(2)),prod(num(-4),a,c)).simplify(casInfo);
 						
 						if( !(isPositiveRealNum(discrNum) || casInfo.allowComplexNumbers() || (!discrNum.negative() && casInfo.factorIrrationalRoots()) ) ) return e;
 						
-						boolean createsComplex = discrNum instanceof Num && (((Num)discrNum).isComplex() || ((Num)discrNum).realValue.signum() == -1);
+						boolean createsComplex = discrNum instanceof Num && (((Num)discrNum).isComplex() || ((Num)discrNum).getRealValue().signum() == -1);
 						
 						if(createsComplex && !casInfo.allowComplexNumbers() ) return e;
 						
@@ -154,7 +166,7 @@ public class Factor extends Expr{
 							
 							Expr out = new Prod();
 							
-							x = pow(x,num((coefs.size()-1)/2));
+							x = power(x,num((coefs.size()-1)/2));
 							
 							Prod twoAX = prod(num(2),a,x);
 							out.add( sum(twoAX,b.copy(),prod(num(-1),discrNumSqrt)) );
@@ -175,43 +187,41 @@ public class Factor extends Expr{
 	};
 	
 	static Rule generalFactor = new Rule("general factor"){
-		private static final long serialVersionUID = 1L;
-		
-		private Num getNumerOfPower(Power pow) {
+		private Num getNumerOfPower(Func pow) {
 			if(pow.getExpo() instanceof Num) {
 				return (Num)pow.getExpo();
-			}else if(pow.getExpo() instanceof Div && ((Div)pow.getExpo()).isNumericalAndReal() ) {
-				return (Num)((Div)pow.getExpo()).getNumer();
+			}else if(pow.getExpo().typeName().equals("div") && Div.isNumericalAndReal((Func)pow.getExpo()) ) {
+				return (Num)((Func)pow.getExpo()).getNumer();
 			}else {
 				return num(1);
 			}
 		}
 		
-		private Num getDenomOfPower(Power pow) {
-			if(pow.getExpo() instanceof Div && ((Div)pow.getExpo()).isNumericalAndReal() ) {
-				return (Num)((Div)pow.getExpo()).getDenom();
+		private Num getDenomOfPower(Func pow) {
+			if(pow.getExpo().typeName().equals("div") && Div.isNumericalAndReal((Func)pow.getExpo()) ) {
+				return (Num)((Func)pow.getExpo()).getDenom();
 			}
 			return num(1);
 		}
 
 		@Override
 		public Expr applyRuleToExpr(Expr e,CasInfo casInfo) {
-			Factor factor = (Factor)e;
+			Func factor = (Func)e;
 			if(e.contains(Var.INF)) return factor;//can't factor infinity lmao
 			Expr expr = factor.get();
 		
 			if(expr instanceof Sum) {
 				boolean sumHasDiv = false;
 				for(int i = 0;i<expr.size();i++) {
-					if(expr.get(i) instanceof Div) {
+					if(expr.get(i).typeName().equals("div")) {
 						sumHasDiv = true;
 						break;
 					}
 				}
 				if(sumHasDiv){//combine fractions
-					Div sum = div(num(0),num(1));
+					Func sum = div(num(0),num(1));
 					for(int i = 0;i<expr.size();i++) {
-						Div current = Div.cast(expr.get(i));
+						Func current = Div.cast(expr.get(i));
 						sum = Div.addFracs(sum, current);
 					}
 					return sum.simplify(casInfo);
@@ -232,11 +242,11 @@ public class Factor extends Expr{
 					Expr subTerm = leadingTerm.get(i);
 					if(subTerm instanceof Num) continue;
 					
-					Power termPower = Power.cast(subTerm);
+					Func termPower = Power.cast(subTerm);
 					
-					if(!Div.cast(termPower.getExpo()).isNumericalAndReal()) {
+					if(!Div.isNumericalAndReal(Div.cast(termPower.getExpo()))) {
 						Sequence parts = seperateCoef(termPower.getExpo());
-						termPower = pow(pow(termPower.getBase(),parts.get(1)),parts.get(0));
+						termPower = power(power(termPower.getBase(),parts.get(1)),parts.get(0));
 					}
 					
 					Num minExpoNum = getNumerOfPower(termPower);
@@ -252,11 +262,11 @@ public class Factor extends Expr{
 							Expr otherSubTerm = otherTerm.get(k);
 							if(otherSubTerm instanceof Num) continue;
 							
-							Power otherTermPower = Power.cast(otherSubTerm);
+							Func otherTermPower = Power.cast(otherSubTerm);
 							
-							if(!Div.cast(otherTermPower.getExpo()).isNumericalAndReal()) {
+							if(!Div.isNumericalAndReal(Div.cast(otherTermPower.getExpo()))) {
 								Sequence parts = seperateCoef(otherTermPower.getExpo());
-								otherTermPower = pow(pow(otherTermPower.getBase(),parts.get(1)),parts.get(0));
+								otherTermPower = power(power(otherTermPower.getBase(),parts.get(1)),parts.get(0));
 							}
 							
 							if(otherTermPower.getBase().equals(termPower.getBase())) {
@@ -265,8 +275,8 @@ public class Factor extends Expr{
 								Num expoNum = getNumerOfPower(otherTermPower);
 								Num expoDen = getDenomOfPower(otherTermPower);
 								
-								BigInteger a = minExpoNum.realValue.multiply(expoDen.realValue);
-								BigInteger b = expoNum.realValue.multiply(minExpoDen.realValue);
+								BigInteger a = minExpoNum.getRealValue().multiply(expoDen.getRealValue());
+								BigInteger b = expoNum.getRealValue().multiply(minExpoDen.getRealValue());
 								
 								if(b.compareTo(a) == -1) {
 									minExpoNum = expoNum;
@@ -283,7 +293,7 @@ public class Factor extends Expr{
 						}
 					}
 					if(!minExpoNum.equals(Num.ZERO)) {
-						factors.add( Power.unCast( pow(termPower.getBase(), Div.unCast(div(minExpoNum,minExpoDen)))));
+						factors.add( Power.unCast( power(termPower.getBase(), Div.unCast(div(minExpoNum,minExpoDen)))));
 					}
 				}
 				
@@ -307,11 +317,9 @@ public class Factor extends Expr{
 	};
 	
 	static Rule reExpandSubSums = new Rule("re distribute sums"){
-		private static final long serialVersionUID = 1L;
-		
 		@Override
 		public Expr applyRuleToExpr(Expr e,CasInfo casInfo) {
-			Factor factor = (Factor)e;
+			Func factor = (Func)e;
 			Expr expr = factor.get();
 			
 			if(expr instanceof Prod) {
@@ -330,11 +338,9 @@ public class Factor extends Expr{
 	};
 	
 	static Rule pullOutRoots = new Rule("pull out roots of polynomial"){
-		private static final long serialVersionUID = 1L;
-		
 		@Override
 		public Expr applyRuleToExpr(Expr e,CasInfo casInfo) {
-			Factor factor = (Factor)e;
+			Func factor = (Func)e;
 			Expr expr = factor.get();
 			
 			Var v = mostCommonVar(expr);
@@ -388,45 +394,5 @@ public class Factor extends Expr{
 			
 		}
 	};
-	
-	static Sequence ruleSequence = null;
-	public static void loadRules(){
-		ruleSequence = sequence(
-				fastEscape,
-				sumOfCubes,
-				differenceOfCubes,
-				power2Reduction,
-				quarticRealFactor,
-				quadraticFactor,
-				pullOutRoots,
-				reversePascalsTriangle,
-				generalFactor,
-				reExpandSubSums,
-				StandardRules.becomeInner
-					
-		);
-		Rule.initRules(ruleSequence);
-	}
-	@Override
-	public Sequence getRuleSequence() {
-		return ruleSequence;
-	}
-	
-	@Override
-	public ComplexFloat convertToFloat(ExprList varDefs) {
-		return get().convertToFloat(varDefs);
-	}
-
-	@Override
-	public String typeName() {
-		return "factor";
-	}
-	@Override
-	public String help() {
-		return "factor(x) is the factor computer\n"
-				+ "examples\n"
-				+ "factor(x*a+x*b)->x*(a+b)\n"
-				+ "factor(x^2-x-6)->(x-3)*(x+2)";
-	}
 	
 }

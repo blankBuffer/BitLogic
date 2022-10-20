@@ -10,8 +10,6 @@ import cas.primitive.Sequence;
 import cas.primitive.Sum;
 
 public class Transpose extends Expr{
-	private static final long serialVersionUID = 197607904901661059L;
-	
 	public Transpose(){}//
 	
 	public Transpose(Expr e) {
@@ -19,8 +17,6 @@ public class Transpose extends Expr{
 	}
 
 	static Rule transContainsTrans = new Rule("transpose contains transpose"){
-		private static final long serialVersionUID = 1L;
-		
 		@Override
 		public Expr applyRuleToExpr(Expr e,CasInfo casInfo) {
 			if(e.get() instanceof Transpose) {
@@ -30,8 +26,6 @@ public class Transpose extends Expr{
 		}
 	};
 	static Rule transOfSum = new Rule("tranpose of sum"){
-		private static final long serialVersionUID = 1L;
-		
 		@Override
 		public Expr applyRuleToExpr(Expr e,CasInfo casInfo) {
 			if(e.get() instanceof Sum) {
@@ -45,8 +39,6 @@ public class Transpose extends Expr{
 		}
 	};
 	static Rule transOfProd = new Rule("tranpose of product"){
-		private static final long serialVersionUID = 1L;
-		
 		@Override
 		public Expr applyRuleToExpr(Expr e,CasInfo casInfo) {
 			if(e.get() instanceof Prod) {
@@ -60,8 +52,6 @@ public class Transpose extends Expr{
 		}
 	};
 	static Rule transOfDotMult = new Rule("tranpose of dot multiply"){
-		private static final long serialVersionUID = 1L;
-		
 		@Override
 		public Expr applyRuleToExpr(Expr e,CasInfo casInfo) {
 			if(e.get() instanceof Dot) {
@@ -76,8 +66,6 @@ public class Transpose extends Expr{
 		}
 	};
 	static Rule transOfMatrix = new Rule("matrix transpose"){
-		private static final long serialVersionUID = 1L;
-		
 		@Override
 		public Expr applyRuleToExpr(Expr e,CasInfo casInfo) {
 			if(e.get() instanceof Mat) {
@@ -94,24 +82,24 @@ public class Transpose extends Expr{
 		}
 	};
 	
-	static Sequence ruleSequence;
+	static Rule mainSequenceRule = null;
 	
-	public static void loadRules() {
-		ruleSequence = sequence(
-				transContainsTrans,
-				transOfSum,
-				transOfProd,
-				transOfDotMult,
-				transOfMatrix
-				
-		);
+	public static void loadRules(){
+		mainSequenceRule = new Rule(new Rule[]{
+			transContainsTrans,
+			transOfSum,
+			transOfProd,
+			transOfDotMult,
+			transOfMatrix
+		},"main sequence");
+		mainSequenceRule.init();
 	}
 	
 	@Override
-	public Sequence getRuleSequence() {
-		return ruleSequence;
+	public Rule getRule() {
+		return mainSequenceRule;
 	}
-
+	
 	@Override
 	public ComplexFloat convertToFloat(ExprList varDefs) {
 		return new ComplexFloat(0,0);

@@ -6,12 +6,14 @@ import cas.matrix.Mat;
 
 public class Sum extends Expr{
 	
-	private static final long serialVersionUID = 2026808885890783719L;
-	
 	static Rule pythagOnePlusTanSqr = new Rule("1+tan(x)^2->cos(x)^-2","one plus tangent squared");
 	
 	public Sum() {
-		commutative = true;
+	}
+	
+	@Override
+	public boolean isCommutative(){
+		return true;
 	}
 	
 	/*
@@ -26,8 +28,6 @@ public class Sum extends Expr{
 	 */
 	
 	public static Rule sumWithInf = new Rule("sum with infinity"){
-		private static final long serialVersionUID = 1L;
-
 		@Override
 		public Expr applyRuleToExpr(Expr e,CasInfo casInfo){
 			Sum sum = (Sum)e;
@@ -62,8 +62,6 @@ public class Sum extends Expr{
 	};
 	
 	public static Rule trigExpandElements = new Rule("trig expand elements"){
-		private static final long serialVersionUID = 1L;
-
 		@Override
 		public Expr applyRuleToExpr(Expr e,CasInfo casInfo){
 			Sum sum = (Sum)e;
@@ -77,8 +75,6 @@ public class Sum extends Expr{
 	};
 	
 	public static Rule complexPythagIden = new Rule("pythagorean identity"){//sin(x)^2+cos(x)^2 = 1 and a*sin(x)^2+a*cos(x)^2=a
-		private static final long serialVersionUID = 1L;
-
 		Expr sinsqr,cossqr;
 		
 		@Override
@@ -174,8 +170,6 @@ public class Sum extends Expr{
 	};
 	
 	public static Rule addLogs = new Rule("add logarithms"){
-		private static final long serialVersionUID = 1L;
-
 		@Override
 		public Expr applyRuleToExpr(Expr e,CasInfo casInfo){
 			Sum sum = (Sum)e;
@@ -184,15 +178,15 @@ public class Sum extends Expr{
 			IndexSet indexOfProdWithLog = new IndexSet();
 			
 			for(int i = 0;i < sum.size();i++) {
-				if(sum.get(i) instanceof Ln && !(sum.get(i).get() instanceof Sum) && !(sum.get(i).get() instanceof Abs && sum.get(i).get().get() instanceof Sum)  ) indexSet.ints.add(i);
+				if(sum.get(i).typeName().equals("ln") && !(sum.get(i).get() instanceof Sum) && !(sum.get(i).get().typeName().equals("abs") && sum.get(i).get().get() instanceof Sum)  ) indexSet.ints.add(i);
 				else if(sum.get(i) instanceof Prod) {
 					Prod innerProd = (Prod)sum.get(i);
 					int innerLogCount = 0;
 					boolean onlyConstantsOutside = true;
 					
 					for(int j = 0;j<innerProd.size();j++) {
-						if(innerProd.get(j) instanceof Ln) {
-							if(!(innerProd.get(j).get() instanceof Sum) && !(innerProd.get(j).get() instanceof Abs && innerProd.get(j).get().get() instanceof Sum)) {
+						if(innerProd.get(j).typeName().equals("ln")) {
+							if(!(innerProd.get(j).get() instanceof Sum) && !(innerProd.get(j).get().typeName().equals("abs") && innerProd.get(j).get().get() instanceof Sum)) {
 								innerLogCount++;
 							}
 						}else {
@@ -212,7 +206,7 @@ public class Sum extends Expr{
 					Expr prod = sum.get(i);
 					Prod nonLog = new Prod();
 					for(int j = 0;j < prod.size();j++) {
-						if(!(prod.get(j) instanceof Ln)) {
+						if(!(prod.get(j).typeName().equals("ln"))) {
 							nonLog.add(prod.get(j));
 							prod.remove(j);
 							j--;
@@ -220,7 +214,7 @@ public class Sum extends Expr{
 					}
 					Expr log = prod.get(0);
 					
-					Expr newInnerPow = pow(log.get(),nonLog).simplify(casInfo);
+					Expr newInnerPow = power(log.get(),nonLog).simplify(casInfo);
 
 					log.set(0, newInnerPow);
 					sum.set(i,log);
@@ -241,8 +235,6 @@ public class Sum extends Expr{
 	};
 	
 	public static Rule distrSubProds = new Rule("distribute sub products"){
-		private static final long serialVersionUID = 1L;
-
 		@Override
 		public Expr applyRuleToExpr(Expr e,CasInfo casInfo){
 			Sum sum = (Sum)e;
@@ -258,8 +250,6 @@ public class Sum extends Expr{
 	};
 	
 	public static Rule sumContainsSum = new Rule("sum contains sum"){
-		private static final long serialVersionUID = 1L;
-
 		@Override
 		public Expr applyRuleToExpr(Expr e,CasInfo casInfo){
 			Sum sum = (Sum)e;
@@ -276,8 +266,6 @@ public class Sum extends Expr{
 	};
 	
 	public static Rule addLikeTerms = new Rule("add like terms"){
-		private static final long serialVersionUID = 1L;
-
 		@Override
 		public Expr applyRuleToExpr(Expr e,CasInfo casInfo){
 			Sum sum = (Sum)e;
@@ -288,7 +276,7 @@ public class Sum extends Expr{
 				
 				Expr coef = num(1);//coefficient
 				
-				if(current instanceof Prod || current instanceof Div) {//if its a product
+				if(current instanceof Prod || current.typeName().equals("div")) {//if its a product
 					Sequence parts = seperateCoef(current);
 					coef = parts.get(0);
 					current = parts.get(1);
@@ -302,7 +290,7 @@ public class Sum extends Expr{
 					
 					Expr toCompCoef = num(1);
 					
-					if(toComp instanceof Prod || toComp instanceof Div) {
+					if(toComp instanceof Prod || toComp.typeName().equals("div")) {
 						Sequence parts = seperateCoef(toComp);
 						toCompCoef = parts.get(0);
 						toComp = parts.get(1);
@@ -333,8 +321,6 @@ public class Sum extends Expr{
 	};
 	
 	public static Rule addIntegersAndFractions = new Rule("add integers and fractions"){
-		private static final long serialVersionUID = 1L;
-
 		@Override
 		public Expr applyRuleToExpr(Expr e,CasInfo casInfo){
 			Sum sum = (Sum)e;
@@ -347,11 +333,11 @@ public class Sum extends Expr{
 					total = total.addNum(temp);
 					sum.remove(i);
 					i--;
-				}else if(sum.get(i) instanceof Div && ((Div)sum.get(i)).isNumerical()) {
+				}else if(sum.get(i).typeName().equals("div") && Div.isNumerical((Func)sum.get(i))) {
 					if(totalFrac == null) {
 						totalFrac = sum.get(i);
 					}else {
-						totalFrac = Div.addFracs((Div)totalFrac, ((Div)sum.get(i)));
+						totalFrac = Div.addFracs((Func)totalFrac, ((Func)sum.get(i)));
 					}
 					sum.remove(i);
 					i--;
@@ -359,7 +345,7 @@ public class Sum extends Expr{
 			}
 			
 			if(totalFrac != null) {
-				totalFrac = Div.addFracs((Div)totalFrac, div(total,num(1)));
+				totalFrac = Div.addFracs((Func)totalFrac, Cas.div(total,num(1)));
 				totalFrac = totalFrac.simplify(CasInfo.normal);
 				sum.add(totalFrac);
 			}else {
@@ -372,8 +358,6 @@ public class Sum extends Expr{
 	};
 	
 	public static Rule alone = new Rule("alone sum"){
-		private static final long serialVersionUID = 1L;
-
 		@Override
 		public Expr applyRuleToExpr(Expr e,CasInfo casInfo){
 			Sum sum = (Sum)e;
@@ -388,8 +372,6 @@ public class Sum extends Expr{
 	};
 	
 	public static Rule basicPythagIden = new Rule("basic pythagorean identity") {
-		private static final long serialVersionUID = 1L;
-		
 		Expr sinSqrTemplate,cosSqrTemplate,sinSqrProdTemplate,cosSqrProdTemplate;
 		
 		@Override
@@ -413,7 +395,7 @@ public class Sum extends Expr{
 						if(j == i) continue;
 						if(sum.get(j).equals(Num.NEG_ONE)) {
 							sum.remove(Math.max(i, j));
-							sum.set(Math.min(i, j), neg(pow(cos(var),num(2))));
+							sum.set(Math.min(i, j), neg(power(cos(var),num(2))));
 							i--;
 							continue outer;
 						}
@@ -425,7 +407,7 @@ public class Sum extends Expr{
 						if(j == i) continue;
 						if(sum.get(j).equals(Num.NEG_ONE)) {
 							sum.remove(Math.max(i, j));
-							sum.set(Math.min(i, j), neg(pow(sin(var),num(2))));
+							sum.set(Math.min(i, j), neg(power(sin(var),num(2))));
 							i--;
 							continue outer;
 						}
@@ -441,7 +423,7 @@ public class Sum extends Expr{
 						if(j == i) continue;
 						if(sum.get(j).equals(negA)) {
 							sum.remove(Math.max(i, j));
-							sum.set(Math.min(i, j), prod(negA,pow(cos(x),num(2))).simplify(casInfo) );
+							sum.set(Math.min(i, j), prod(negA,power(cos(x),num(2))).simplify(casInfo) );
 							i--;
 							continue outer;
 						}
@@ -457,7 +439,7 @@ public class Sum extends Expr{
 						if(j == i) continue;
 						if(sum.get(j).equals(negA)) {
 							sum.remove(Math.max(i, j));
-							sum.set(Math.min(i, j), prod(negA,pow(sin(x),num(2))).simplify(casInfo) );
+							sum.set(Math.min(i, j), prod(negA,power(sin(x),num(2))).simplify(casInfo) );
 							i--;
 							continue outer;
 						}
@@ -470,8 +452,6 @@ public class Sum extends Expr{
 	};
 	
 	static Rule sumWithMatrix = new Rule("sum with matrix") {//sum of each element
-		private static final long serialVersionUID = 1L;
-		
 		@Override
 		public Expr applyRuleToExpr(Expr e,CasInfo casInfo){
 			Sum sum = (Sum)e;
@@ -525,11 +505,10 @@ public class Sum extends Expr{
 		
 	};
 	
-	static Sequence ruleSequence = null;
-	
+	static Rule mainSequenceRule = null;
+
 	public static void loadRules(){
-		
-		ruleSequence = sequence(
+		mainSequenceRule = new Rule(new Rule[]{
 				sumWithInf,
 				distrSubProds,
 				basicPythagIden,//1-sin(x)^2=cos(x)^2 cases
@@ -543,13 +522,13 @@ public class Sum extends Expr{
 				sumWithMatrix,
 				alone,//alone sum is 0
 				pythagOnePlusTanSqr
-		);
-		Rule.initRules(ruleSequence);
+		},"main sequence");
+		mainSequenceRule.init();
 	}
-
+	
 	@Override
-	public Sequence getRuleSequence() {
-		return ruleSequence;
+	public Rule getRule() {
+		return mainSequenceRule;
 	}
 	
 	@Override
@@ -564,7 +543,7 @@ public class Sum extends Expr{
 				Expr next = get(i+1);
 				if(next instanceof Num) {
 					Num numCatsed  = (Num)next;
-					if(numCatsed.realValue.signum()==-1) useNothing = true;
+					if(numCatsed.getRealValue().signum()==-1) useNothing = true;
 				}else if(next instanceof Prod){
 					Num numCasted = null;
 					for(int j = 0;j<next.size();j++) {
@@ -574,7 +553,7 @@ public class Sum extends Expr{
 						}
 					}
 					if(numCasted != null) {
-						if(numCasted.realValue.signum()==-1) useNothing = true;
+						if(numCasted.getRealValue().signum()==-1) useNothing = true;
 					}
 				}
 			}

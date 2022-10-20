@@ -6,27 +6,31 @@ import cas.Rule;
 import cas.CasInfo;
 import cas.StandardRules;
 
-public class Distr extends Expr{
-
+public class Distr{
 	
-	private static final long serialVersionUID = -1352926948237577310L;
-	
-	
-
-	public Distr(){
-		simplifyChildren = false;
-	}//
-	public Distr(Expr expr) {
-		add(expr);
-		simplifyChildren = false;
-	}
+	public static Func.FuncLoader distrLoader = new Func.FuncLoader() {
+		
+		@Override
+		public void load(Func owner) {
+			owner.behavior.rule = new Rule(new Rule[]{
+					generalDistr,
+					StandardRules.becomeInner
+			},"main sequence");
+			owner.behavior.rule.init();
+			
+			owner.behavior.toFloat = new Func.FloatFunc() {
+				@Override
+				public ComplexFloat convertToFloat(ExprList varDefs, Func owner) {
+					return owner.get().convertToFloat(varDefs);
+				}
+			};
+		}
+	};
 	
 	static Rule generalDistr = new Rule("general distribution"){
-		private static final long serialVersionUID = 1L;
-
 		@Override
 		public Expr applyRuleToExpr(Expr e,CasInfo casInfo) {//2*(x+y) -> 2*x+2*y
-			Distr distr = (Distr)e;
+			Func distr = (Func)e;
 			
 			Expr expr = distr.get().copy();
 			
@@ -39,11 +43,11 @@ public class Distr extends Expr{
 						prod = (Prod)expr.copy();
 						prod.remove(i);
 						break;
-					}else if(expr.get(i) instanceof Power) {
-						Power innerPow = (Power)expr.get(i);
+					}else if(expr.get(i).typeName().equals("power")) {
+						Func innerPow = (Func)expr.get(i);
 						if(innerPow.getExpo().equals(Num.TWO) && innerPow.getBase() instanceof Sum && innerPow.getBase().size() == 2) {
 							Sum baseSum = (Sum)innerPow.getBase();
-							theSum = sum( pow(baseSum.get(0),num(2)) , prod(num(2),baseSum.get(0),baseSum.get(1)) , pow(baseSum.get(1),num(2)) );
+							theSum = sum( power(baseSum.get(0),num(2)) , prod(num(2),baseSum.get(0),baseSum.get(1)) , power(baseSum.get(1),num(2)) );
 							prod = (Prod)expr.copy();
 							prod.remove(i);
 							break;
@@ -56,8 +60,8 @@ public class Distr extends Expr{
 					}
 					return theSum.simplify(casInfo);
 				}
-			}else if(expr instanceof Div) {//(x+y)/3 -> x/3+y/3
-				Div casted = (Div)expr;
+			}else if(expr.typeName().equals("div")) {//(x+y)/3 -> x/3+y/3
+				Func casted = (Func)expr;
 				casted.setNumer(distr(casted.getNumer()).simplify(casInfo));
 				if(casted.getNumer() instanceof Sum) {
 					for (int i = 0;i < casted.getNumer().size();i++) {
@@ -74,11 +78,11 @@ public class Distr extends Expr{
 				}
 				
 				
-			}else if(expr instanceof Power) {
-				Power innerPow = (Power)expr;
+			}else if(expr.typeName().equals("power")) {
+				Func innerPow = (Func)expr;
 				if(innerPow.getExpo().equals(Num.TWO) && innerPow.getBase() instanceof Sum && innerPow.getBase().size() == 2) {
 					Sum baseSum = (Sum)innerPow.getBase();
-					expr = sum( pow(baseSum.get(0),num(2)) , prod(num(2),baseSum.get(0),baseSum.get(1)) , pow(baseSum.get(1),num(2)) );
+					expr = sum( power(baseSum.get(0),num(2)) , prod(num(2),baseSum.get(0),baseSum.get(1)) , power(baseSum.get(1),num(2)) );
 				}
 			}
 			
@@ -87,37 +91,5 @@ public class Distr extends Expr{
 			return distr;
 		}
 	};
-	
-	static Sequence ruleSequence = null;
-	
-	public static void loadRules(){
-		
-		ruleSequence = sequence(
-				generalDistr,
-				StandardRules.becomeInner
-		);
-		Rule.initRules(ruleSequence);
-	}
-	
-	@Override
-	public Sequence getRuleSequence() {
-		return ruleSequence;
-	}
-	@Override
-	public ComplexFloat convertToFloat(ExprList varDefs) {
-		return get().convertToFloat(varDefs);
-	}
-	
-	@Override
-	public String typeName() {
-		return "distr";
-	}
-	@Override
-	public String help() {
-		return "distr(x) is the distribute computer\n"
-				+ "examples\n"
-				+ "distr(x*(a+b))->x*a+x*b\n"
-				+ "distr((x-3)*(x+2))->x^2-x-6";
-	}
 
 }

@@ -2,12 +2,11 @@ package cas.programming;
 
 import cas.ComplexFloat;
 import cas.Expr;
+import cas.Rule;
 import cas.primitive.ExprList;
-import cas.primitive.Sequence;
 
 public class Script extends Expr{
 
-	private static final long serialVersionUID = -3385077575450663182L;
 	int addedVariables = 0;
 	
 	public Script(){}//
@@ -51,7 +50,7 @@ public class Script extends Expr{
 	}
 
 	@Override
-	public Sequence getRuleSequence() {
+	public Rule getRule() {
 		return null;
 	}
 	

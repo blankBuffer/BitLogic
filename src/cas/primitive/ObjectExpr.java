@@ -2,10 +2,10 @@ package cas.primitive;
 
 import cas.ComplexFloat;
 import cas.Expr;
+import cas.Rule;
 
 public class ObjectExpr extends Expr{//behaves like variables
 
-	private static final long serialVersionUID = 5555283885953176775L;
 	public Object object = null;
 	
 	public ObjectExpr(Object o) {
@@ -41,7 +41,7 @@ public class ObjectExpr extends Expr{//behaves like variables
 	}
 
 	@Override
-	public Sequence getRuleSequence() {
+	public Rule getRule() {
 		return null;
 	}
 	

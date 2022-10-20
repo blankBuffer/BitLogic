@@ -1,11 +1,9 @@
 package cas.programming;
 
 import cas.Expr;
-import cas.QuickMath;
+import cas.Cas;
 import cas.CasInfo;
 import cas.SimpleFuncs;
-import cas.bool.And;
-import cas.bool.Or;
 import cas.lang.Ask;
 import cas.matrix.Dot;
 import cas.primitive.ExprList;
@@ -18,7 +16,7 @@ import cas.primitive.Sum;
  * it takes commands as strings and stores an internal state which can be accessed
  */
 
-public class StackEditor extends QuickMath {
+public class StackEditor extends Cas {
 
 	public static final int QUIT = -1;
 	public static final int INPUT_ERROR = -2;
@@ -47,11 +45,10 @@ public class StackEditor extends QuickMath {
 			@Override
 			public void run() {
 				Expr.RECURSION_SAFETY = 0;
-				long startingInstructionCount = Expr.ruleCallCount;
 				long oldTime = System.nanoTime();
 				expr = expr.simplify(currentCasInfo);// Substitutes the variables and}
 				long delta = System.nanoTime() - oldTime;
-				createAlert("took " + delta / 1000000.0 + " ms to compute, "+(Expr.ruleCallCount-startingInstructionCount)+" intructions called");
+				createAlert("took " + delta / 1000000.0 + " ms to compute");
 			}
 		};
 		Thread stuckCheck = new Thread("stuck check") {
@@ -104,15 +101,34 @@ public class StackEditor extends QuickMath {
 		}
 		return stack.get(size() - 2);
 	}
+	
+	public String colorize(String in){
+		String out = "";
+		
+		
+		
+		return out;
+	}
 
 	public String getStackAsString(){
 		String out = "";
 		out+="STACK\n";
-		out+="▛▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▜\n";
-		for (int i = 0; i < size(); i++) {
-			out+=(i + 1) + ": "+stack.get(i)+"  --->  "+stack.get(i).convertToFloat(exprList())+"\n";
+		String[] lines = new String[size()];
+		for (int i = 0; i < size(); i++) lines[i] = (i + 1) + ": "+stack.get(i)+"  --->  "+stack.get(i).convertToFloat(exprList()).toString(8);
+		int longestLine = 0;
+		for (int i = 0; i < size(); i++) longestLine = Math.max(longestLine, lines[i].length());
+		String upperBar = "",lowerBar = "";
+		for (int i = 0; i < longestLine;i++){
+			upperBar+="▀";
+			lowerBar+="▄";
 		}
-		out+="▙▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▟\n";
+		
+		out+="▛"+upperBar+"▜\n";
+		for (int i = 0; i < size(); i++) {
+			//lines[i] = colorize(lines[i]);
+			out+=lines[i]+"\n";
+		}
+		out+="▙"+lowerBar+"▟\n";
 		out+=alerts;
 		alerts = "";
 		return out;
@@ -193,7 +209,7 @@ public class StackEditor extends QuickMath {
 	public void and(){
 		if (sLast() == null)
 			return;
-		if (sLast() instanceof And) {
+		if (sLast().typeName().equals("and")) {
 			sLast().add(last());
 			stack.remove(size() - 1);
 		} else {
@@ -205,7 +221,7 @@ public class StackEditor extends QuickMath {
 	public void or(){
 		if (sLast() == null)
 			return;
-		if (sLast() instanceof Or) {
+		if (sLast().typeName().equals("or")) {
 			sLast().add(last());
 			stack.remove(size() - 1);
 		} else {
@@ -223,7 +239,7 @@ public class StackEditor extends QuickMath {
 	public void exponent() {
 		if (sLast() == null)
 			return;
-		Expr pow = pow(sLast(), last());
+		Expr pow = power(sLast(), last());
 		stack.remove(size() - 1);
 		stack.set(size() - 1, pow);
 	}

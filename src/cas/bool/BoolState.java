@@ -2,13 +2,12 @@ package cas.bool;
 
 import cas.ComplexFloat;
 import cas.Expr;
+import cas.Rule;
 import cas.CasInfo;
 import cas.primitive.ExprList;
-import cas.primitive.Sequence;
 
 public class BoolState extends Expr{
 
-	private static final long serialVersionUID = 4155968576732862760L;
 	public static final Expr FALSE = bool(false),TRUE = bool(true);
 	public boolean state = false;
 	
@@ -55,7 +54,7 @@ public class BoolState extends Expr{
 	}
 
 	@Override
-	public Sequence getRuleSequence() {
+	public Rule getRule() {
 		return null;
 	}
 	

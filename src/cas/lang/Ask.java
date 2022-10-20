@@ -20,7 +20,7 @@ import cas.graphics.Plot;
 import cas.primitive.*;
 import ui.UI;
 
-public class Ask extends QuickMath{
+public class Ask extends Cas{
 	
 	static final boolean DEBUG = false;
 	static DateTimeFormatter timeFormat = DateTimeFormatter.ofPattern("hh:mm:ss a MM/dd/yyyy");

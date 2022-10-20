@@ -10,14 +10,15 @@ import cas.CasInfo;
  */
 public class ExprList extends Expr{
 
-	private static final long serialVersionUID = 4631446864313039932L;
-	
 	public ExprList(){
-		commutative = true;
 	}
+	
+	@Override
+	public boolean isCommutative(){
+		return true;
+	}
+	
 	static Rule removeRepeats = new Rule("remove repeats"){
-		private static final long serialVersionUID = 1L;
-
 		@Override
 		public Expr applyRuleToExpr(Expr e,CasInfo casInfo) {
 			ExprList list = (ExprList)e;
@@ -34,24 +35,7 @@ public class ExprList extends Expr{
 		}
 	};
 	
-	static Rule alone = new Rule("alone list") {
-		private static final long serialVersionUID = 1L;
-		
-		@Override
-		public Expr applyRuleToExpr(Expr e,CasInfo casInfo){
-			ExprList list = (ExprList)e;
-			if(list.size() == 1) {//if its only one element 
-				return list.get(0);
-			}else if(list.size() == 0) {//if its empty return 0
-				return num(0);
-			}
-			return list;
-		}
-	};
-	
 	static Rule listContainsList = new Rule("list contains list") {
-		
-		private static final long serialVersionUID = 1L;
 		
 		@Override
 		public Expr applyRuleToExpr(Expr e,CasInfo casInfo){
@@ -105,20 +89,19 @@ public class ExprList extends Expr{
 		return get().convertToFloat(varDefs);
 	}
 	
-	static Sequence ruleSequence = null;
-	
+	static Rule mainSequenceRule = null;
+
 	public static void loadRules(){
-		ruleSequence = sequence(
+		mainSequenceRule = new Rule(new Rule[]{
 				listContainsList,
 				removeRepeats,
-				alone
-		);
-		Rule.initRules(ruleSequence);
+		},"main sequence");
+		mainSequenceRule.init();
 	}
-
+	
 	@Override
-	public Sequence getRuleSequence() {
-		return ruleSequence;
+	public Rule getRule() {
+		return mainSequenceRule;
 	}
 	
 	@Override

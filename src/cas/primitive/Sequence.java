@@ -2,17 +2,16 @@ package cas.primitive;
 
 import cas.ComplexFloat;
 import cas.Expr;
+import cas.Rule;
 
 /*
  * this is a list of items where the order MATTERS and CAN have repeats
  */
 public class Sequence extends Expr{
-	private static final long serialVersionUID = 6157362809757172910L;
-
 	public Sequence() {}//
 	
 	@Override
-	public Sequence getRuleSequence() {
+	public Rule getRule() {
 		return null;
 	}
 

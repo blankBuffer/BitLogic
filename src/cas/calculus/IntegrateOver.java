@@ -2,131 +2,87 @@ package cas.calculus;
 
 import cas.ComplexFloat;
 import cas.Expr;
+import cas.Cas;
 import cas.Rule;
 import cas.CasInfo;
 import cas.primitive.Equ;
 import cas.primitive.ExprList;
 import cas.primitive.FloatExpr;
-import cas.primitive.Sequence;
+import cas.primitive.Func;
 import cas.primitive.Var;
 
-public class IntegrateOver extends Expr {
-
-	private static final long serialVersionUID = -418375860392765107L;
+public class IntegrateOver{
 	
-	public Expr getMin() {
-		return get(0);
-	}
-	public Expr getMax() {
-		return get(1);
-	}
-	public Expr getExpr() {
-		return get(2);
-	}
-	
-	@Override
-	public Var getVar() {
-		return (Var)get(3);
-	}
-	
-	public IntegrateOver(){}//
-	public IntegrateOver(Expr min,Expr max,Expr e,Var v){
-		add(min);
-		add(max);
-		add(e);
-		add(v);
-	}
-	
-	static Rule definiteIntegral = new Rule("integral with bounds"){
-		private static final long serialVersionUID = 1L;
-
+	public static Func.FuncLoader integrateOverLoader = new Func.FuncLoader() {
+		
 		@Override
-		public Expr applyRuleToExpr(Expr e,CasInfo casInfo){
-			IntegrateOver defInt = (IntegrateOver)e;
+		public void load(Func owner) {
 			
-			Expr indefInt = integrate(defInt.getExpr(),defInt.getVar()).simplify(casInfo);
+			Rule definiteIntegral = new Rule("integral with bounds"){
+				@Override
+				public Expr applyRuleToExpr(Expr e,CasInfo casInfo){
+					Func defInt = (Func)e;
+					
+					Expr indefInt = integrate(getExpr(defInt),defInt.getVar()).simplify(casInfo);
+					
+					if(!indefInt.containsType("integrate")) {
+						return sub(indefInt.replace(equ(  defInt.getVar() , getMax(defInt) )),indefInt.replace(equ(  defInt.getVar() , getMin(defInt) ))).simplify(casInfo);
+					}
+					
+					return defInt;
+				}
+			};
 			
-			if(!indefInt.containsType("integrate")) {
-				return sub(indefInt.replace(equ(  defInt.getVar() , defInt.getMax() )),indefInt.replace(equ(  defInt.getVar() , defInt.getMin() ))).simplify(casInfo);
-			}
+			owner.behavior.rule = new Rule(new Rule[]{
+				definiteIntegral		
+			},"main sequence");
+			owner.behavior.rule.init();
 			
-			return defInt;
+			owner.behavior.toFloat = new Func.FloatFunc() {
+				@Override
+				public ComplexFloat convertToFloat(ExprList varDefs, Func owner) {
+					int n = 32;//should be an even number
+					ComplexFloat sum = new ComplexFloat(0,0);
+					ComplexFloat min = getMin(owner).convertToFloat(varDefs),max = getMax(owner).convertToFloat(varDefs);
+					ComplexFloat step = ComplexFloat.div( ComplexFloat.sub(max, min),new ComplexFloat(n,0));
+					
+					Equ vDef = Cas.equ(owner.getVar(),Cas.floatExpr(min));
+					ExprList varDefs2 = (ExprList) varDefs.copy();
+					
+					for(int i = 0;i < varDefs2.size();i++) {
+						Equ temp = (Equ)varDefs2.get(i);
+						Var v = (Var)temp.getLeftSide();
+						if(v.equals(owner.getVar())) {
+							varDefs2.remove(i);
+							break;
+						}
+					}
+					varDefs2.add(vDef);
+					
+					sum = ComplexFloat.add(sum, getExpr(owner).convertToFloat(varDefs2));
+					((FloatExpr)vDef.getRightSide()).value = ComplexFloat.add(((FloatExpr)vDef.getRightSide()).value, step);
+					
+					for(int i = 1;i<n;i++) {
+						sum=ComplexFloat.add(sum,  ComplexFloat.mult( new ComplexFloat(((i%2)*2+2),0) ,getExpr(owner).convertToFloat(varDefs2)) );
+						((FloatExpr)vDef.getRightSide()).value = ComplexFloat.add(((FloatExpr)vDef.getRightSide()).value, step);
+					}
+					
+					sum=ComplexFloat.add(sum, getExpr(owner).convertToFloat(varDefs2));
+					
+					return ComplexFloat.mult(sum,ComplexFloat.mult(step, new ComplexFloat(1.0/3.0,0)));
+				}
+			};
 		}
 	};
 	
-	static Sequence ruleSequence = null;
-	
-	public static void loadRules(){
-		ruleSequence = sequence(
-				definiteIntegral		
-		);
-		Rule.initRules(ruleSequence);
+	public static Expr getMin(Func integrateOver) {
+		return integrateOver.get(0);
 	}
-	
-	@Override
-	public Sequence getRuleSequence() {
-		return ruleSequence;
+	public static Expr getMax(Func integrateOver) {
+		return integrateOver.get(1);
 	}
-	
-	@Override
-	public String toString() {
-		String out = "";
-		out+="integrateOver(";
-		out+=getMin().toString();
-		out+=',';
-		out+=getMax().toString();
-		out+=',';
-		out+=getExpr().toString();
-		out+=',';
-		out+=getVar().toString();
-		out+=')';
-		return out;
-	}
-
-	@Override
-	public ComplexFloat convertToFloat(ExprList varDefs) {//using simpson's rule
-		int n = 32;//should be an even number
-		ComplexFloat sum = new ComplexFloat(0,0);
-		ComplexFloat min = getMin().convertToFloat(varDefs),max = getMax().convertToFloat(varDefs);
-		ComplexFloat step = ComplexFloat.div( ComplexFloat.sub(max, min),new ComplexFloat(n,0));
-		
-		Equ vDef = equ(getVar(),floatExpr(min));
-		ExprList varDefs2 = (ExprList) varDefs.copy();
-		
-		for(int i = 0;i < varDefs2.size();i++) {
-			Equ temp = (Equ)varDefs2.get(i);
-			Var v = (Var)temp.getLeftSide();
-			if(v.equals(getVar())) {
-				varDefs2.remove(i);
-				break;
-			}
-		}
-		varDefs2.add(vDef);
-		
-		sum = ComplexFloat.add(sum, getExpr().convertToFloat(varDefs2));
-		((FloatExpr)vDef.getRightSide()).value = ComplexFloat.add(((FloatExpr)vDef.getRightSide()).value, step);
-		
-		for(int i = 1;i<n;i++) {
-			sum=ComplexFloat.add(sum,  ComplexFloat.mult( new ComplexFloat(((i%2)*2+2),0) ,getExpr().convertToFloat(varDefs2)) );
-			((FloatExpr)vDef.getRightSide()).value = ComplexFloat.add(((FloatExpr)vDef.getRightSide()).value, step);
-		}
-		
-		sum=ComplexFloat.add(sum, getExpr().convertToFloat(varDefs2));
-		
-		return ComplexFloat.mult(sum,ComplexFloat.mult(step, new ComplexFloat(1.0/3.0,0)));
-		
-	}
-	
-	@Override
-	public String typeName() {
-		return "integrateOver";
-	}
-	@Override
-	public String help() {
-		return "integrateOver(min,max,function,variable) the definite integration computer\n"
-				+ "examples\n"
-				+ "integrateOver(1,2,x*sqrt(x+2),x)->(2*sqrt(3))/5+32/15\n"
-				+ "integrateOver(0,pi,sin(x),x)->2";
+	public static Expr getExpr(Func integrateOver) {
+		return integrateOver.get(2);
 	}
 
 }

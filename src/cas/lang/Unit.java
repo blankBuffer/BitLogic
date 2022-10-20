@@ -4,10 +4,10 @@ import java.util.ArrayList;
 import java.util.HashMap;
 
 import cas.Expr;
-import cas.QuickMath;
+import cas.Cas;
 import cas.primitive.FloatExpr;
 
-public class Unit extends QuickMath{
+public class Unit extends Cas{
 	
 	public static ArrayList<String> unitNames = new ArrayList<String>();
 	public static final double EARTH_GRAVITY = 9.80665;

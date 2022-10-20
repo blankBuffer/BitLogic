@@ -9,21 +9,21 @@ import cas.programming.StackEditor;
 
 public class UI {
 	
-	public static final String VERSION = "1.7.10";
-	public static final String CRED = "Benjamin Currie @2021-2022 v "+VERSION+" , java runtime version: "+System.getProperty("java.version");
+	public static final String VERSION = "1.7.11";
+	public static final String CRED = "Benjamin Currie @2021-2022 java runtime version: "+System.getProperty("java.version");
 	
 	static int WINDOW_COUNT = 0;
 	
 	public static final String fancyIntro() {
 		String img = ""
-				+ "▛▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▜\n"
-				+ "▌ ▛▀▀▄ ▀▛▘ ▀▛▘   ▌   ▗▛▜▖ ▗▛▜▖ ▀▛▘ ▗▛▜▖ ▐\n"
-				+ "▌ ▌  ▟  ▌   ▌    ▌   ▛  ▜ ▛  ▀  ▌  ▛  ▀ ▐\n"
-				+ "▌ ▌▀▀▄  ▌   ▌ ██ ▌   ▌  ▐ ▌ ▄▄  ▌  ▌    ▐\n"
-				+ "▌ ▌  ▐  ▌   ▌    ▌   ▙  ▟ ▙ ▘▟  ▌  ▙  ▄ ▐\n"
-				+ "▌ ▙▄▄▀ ▄▙▖  ▌    ▙▄▄ ▝▙▟▘ ▝▙▟▘ ▄▙▖ ▝▙▟▘ ▐\n"
-				+ "▙▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▟\n";
-		return img+CRED;
+				+ "▛▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▜\n"
+				+ "  ▛▀▀▄ ▀▛▘ ▀▛▘  ▌   ▗▛▜▖ ▗▛▜▖ ▀▛▘ ▗▛▜▖    V "+VERSION+"\n"
+				+ "  ▌  ▟  ▌   ▌   ▌   ▛  ▜ ▛  ▀  ▌  ▛  ▀\n"
+				+ "  ▌▀▀▄  ▌   ▌ █ ▌   ▌  ▐ ▌ ▄▄  ▌  ▌    ▗▛▀▜▖  █  ▗▛▀▚\n"
+				+ "  ▌  ▐  ▌   ▌   ▌   ▙  ▟ ▙ ▘▟  ▌  ▙  ▄ ▐     ▟▄▙  ▀▚▄\n"
+				+ "  ▙▄▄▀ ▄▙▖  ▌   ▙▄▄ ▝▙▟▘ ▝▙▟▘ ▄▙▖ ▝▙▟▘ ▝▙▄▟▘▟▘ ▝▙ ▚▄▟▘\n"
+				+ "▙▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▟\n";
+		return img+CRED+"\n"+"GNU LGPL V 2.1";
 	}
 	public static void clearTerm() {
 		System.out.print("\033[H\033[2J");

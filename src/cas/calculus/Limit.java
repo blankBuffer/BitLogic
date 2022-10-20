@@ -10,10 +10,8 @@ import cas.CasInfo;
 import cas.StandardRules;
 import cas.bool.BoolState;
 import cas.primitive.*;
-import cas.special.Gamma;
 
 public class Limit extends Expr{
-	private static final long serialVersionUID = 3302019973998257065L;
 	public static final short RIGHT = 1,LEFT = -1,NONE = 0;
 	
 	public Limit(){}//
@@ -125,7 +123,6 @@ public class Limit extends Expr{
 	 * puts the value directly, last resort
 	 */
 	static Rule directSubst = new Rule("direct substitution"){
-		private static final long serialVersionUID = 1L;
 
 		@Override
 		public Expr applyRuleToExpr(Expr e,CasInfo casInfo){
@@ -139,8 +136,6 @@ public class Limit extends Expr{
 	 * lhopitals rule will work better if its not a root as it avoid infinite recursion
 	 */
 	static Rule limitOfDivWithRoot = new Rule("limit of division where either numerator of denominator is a root function") {
-		private static final long serialVersionUID = 1L;
-		
 		Expr rootExpr;
 		Expr rootCondition;
 		
@@ -154,8 +149,8 @@ public class Limit extends Expr{
 		public Expr applyRuleToExpr(Expr e,CasInfo casInfo){
 			Limit lim = (Limit)e;
 			
-			if(lim.getExpr() instanceof Div) {
-				Div innerDiv = (Div)lim.getExpr();
+			if(lim.getExpr().typeName().equals("div")) {
+				Func innerDiv = (Func)lim.getExpr();
 				
 				boolean numerIsRoot = Rule.similarWithCondition(rootExpr,innerDiv.getNumer(),rootCondition.replace(equ(lim.getVar(),var("x"))));
 				boolean denomIsRoot = Rule.similarWithCondition(rootExpr,innerDiv.getDenom(),rootCondition.replace(equ(lim.getVar(),var("x"))));
@@ -164,35 +159,35 @@ public class Limit extends Expr{
 				
 				Expr rootExpr = null;
 				if(numerIsRoot && !denomIsRoot){//numer case
-					rootExpr = ((Div)((Power)innerDiv.getNumer()).getExpo()).getDenom();
+					rootExpr = ((Func)((Func)innerDiv.getNumer()).getExpo()).getDenom();
 					
 					Expr denomAtInf = limit(innerDiv.getDenom(),lim.getApproaches()).simplify(casInfo);
-					if(isRealNum(rootExpr) && ((Num)rootExpr).realValue.mod(BigInteger.TWO).equals(BigInteger.ZERO) && eval(equLess(denomAtInf,num(0))).simplify(casInfo).equals(BoolState.TRUE) ) {
+					if(isRealNum(rootExpr) && ((Num)rootExpr).getRealValue().mod(BigInteger.TWO).equals(BigInteger.ZERO) && comparison(equLess(denomAtInf,num(0))).simplify(casInfo).equals(BoolState.TRUE) ) {
 						sign = -1;
 					}
 					
 				}else if(!numerIsRoot && denomIsRoot) {//denom case
-					rootExpr = ((Div)((Power)innerDiv.getDenom()).getExpo()).getDenom();
+					rootExpr = ((Func)((Func)innerDiv.getDenom()).getExpo()).getDenom();
 					
 					Expr numerAtInf = limit(innerDiv.getNumer(),lim.getApproaches()).simplify(casInfo);
-					if(isRealNum(rootExpr) && ((Num)rootExpr).realValue.mod(BigInteger.TWO).equals(BigInteger.ZERO) && eval(equLess(numerAtInf,num(0))).simplify(casInfo).equals(BoolState.TRUE) ) {
+					if(isRealNum(rootExpr) && ((Num)rootExpr).getRealValue().mod(BigInteger.TWO).equals(BigInteger.ZERO) && comparison(equLess(numerAtInf,num(0))).simplify(casInfo).equals(BoolState.TRUE) ) {
 						sign = -1;
 					}
 					
 				}else if(numerIsRoot && denomIsRoot) {
-					Expr numerRoot = ((Div)((Power)innerDiv.getNumer()).getExpo()).getDenom();
-					Expr denomRoot = ((Div)((Power)innerDiv.getDenom()).getExpo()).getDenom();
+					Expr numerRoot = ((Func)((Func)innerDiv.getNumer()).getExpo()).getDenom();
+					Expr denomRoot = ((Func)((Func)innerDiv.getDenom()).getExpo()).getDenom();
 					
 					if(isRealNum(numerRoot) && isRealNum(denomRoot)) {
-						rootExpr = num(gcm( ((Num)numerRoot).realValue , ((Num)denomRoot).realValue ));
+						rootExpr = num(gcm( ((Num)numerRoot).getRealValue() , ((Num)denomRoot).getRealValue() ));
 					}else {
 						rootExpr = prod(numerRoot,denomRoot);
 					}
 				}
 				
 				if(rootExpr != null) {
-					lim.setExpr( pow(lim.getExpr(),rootExpr) );
-					return prod(pow(limit(lim.getExpr(),lim.getApproaches()),inv(rootExpr)),num(sign)).simplify(casInfo);
+					lim.setExpr( power(lim.getExpr(),rootExpr) );
+					return prod(power(limit(lim.getExpr(),lim.getApproaches()),inv(rootExpr)),num(sign)).simplify(casInfo);
 				}
 			}
 			
@@ -207,17 +202,15 @@ public class Limit extends Expr{
 	 * we still in general want to factor the exponent so lhoptials rule works better
 	 */
 	static Rule commonExpoDiv = new Rule("common exponent for division limit"){
-		private static final long serialVersionUID = 1L;
-
 		@Override
 		public Expr applyRuleToExpr(Expr e,CasInfo casInfo){
 			Limit lim = (Limit)e;
 			
-			if(lim.getExpr() instanceof Div) {
-				Div innerDiv = (Div)lim.getExpr();
-				if(innerDiv.getNumer() instanceof Power && innerDiv.getDenom() instanceof Power) {
-					Power numerPower = (Power)innerDiv.getNumer();
-					Power denomPower = (Power)innerDiv.getDenom();
+			if(lim.getExpr().typeName().equals("div")) {
+				Func innerDiv = (Func)lim.getExpr();
+				if(innerDiv.getNumer().typeName().equals("power") && innerDiv.getDenom().typeName().equals("power")) {
+					Func numerPower = (Func)innerDiv.getNumer();
+					Func denomPower = (Func)innerDiv.getDenom();
 					
 					Expr gcd = gcd(numerPower.getExpo(),denomPower.getExpo()).simplify(casInfo);
 					
@@ -229,13 +222,13 @@ public class Limit extends Expr{
 						numerPower.setExpo(div(numerPower.getExpo(),gcd).simplify(casInfo));
 						denomPower.setExpo(div(denomPower.getExpo(),gcd).simplify(casInfo));
 						
-						lim.setExpr(pow(div(numerPower,denomPower),gcd));
+						lim.setExpr(power(div(numerPower,denomPower),gcd));
 						return lim;
 					}
 					numerPower.setExpo( div(numerPower.getExpo(),gcd).simplify(casInfo) );
 					denomPower.setExpo( div(denomPower.getExpo(),gcd).simplify(casInfo) );
 					
-					Expr out = pow(lim,gcd);
+					Expr out = power(lim,gcd);
 					return out.simplify(casInfo);
 					
 				}
@@ -249,14 +242,12 @@ public class Limit extends Expr{
 	 * the numerator and denominator and try again
 	 */
 	static Rule lhopitalsRuleDiv = new Rule("lhopitals rule with division") {
-		private static final long serialVersionUID = 1L;
-		
 		@Override
 		public Expr applyRuleToExpr(Expr e,CasInfo casInfo){
 			Limit lim = (Limit)e;
 			
-			if(lim.getExpr() instanceof Div) {
-				Div innerDiv = (Div)lim.getExpr();
+			if(lim.getExpr().typeName().equals("div")) {
+				Func innerDiv = (Func)lim.getExpr();
 				
 				Expr limOfNumer = limit(innerDiv.getNumer(),lim.getApproaches()).simplify(casInfo);
 				Expr limOfDenom = limit(innerDiv.getDenom(),lim.getApproaches()).simplify(casInfo);
@@ -281,16 +272,14 @@ public class Limit extends Expr{
 	
 	//if the numerator has a larger degree 
 	static Rule differentDegreePolysInDiv = new Rule("different degrees in division") {
-		private static final long serialVersionUID = 1L;
-		
 		@Override
 		public Expr applyRuleToExpr(Expr e,CasInfo casInfo){
 			Limit lim = (Limit)e;
 			
 			Var v = lim.getVar();
 			
-			if(lim.getExpr() instanceof Div && isInf(lim.getValue())) {
-				Div innerDiv = (Div)lim.getExpr();
+			if(lim.getExpr().typeName().equals("div") && isInf(lim.getValue())) {
+				Func innerDiv = (Func)lim.getExpr();
 				
 				BigInteger numerDegree = degree(innerDiv.getNumer(),v);
 				if(numerDegree.signum() != 1) return lim;
@@ -316,8 +305,6 @@ public class Limit extends Expr{
 	
 	//remove all parts that are smaller degree in the sum
 	static Rule polyCase = new Rule("limit of a polynomial") {
-		private static final long serialVersionUID = 1L;
-		
 		@Override
 		public Expr applyRuleToExpr(Expr e,CasInfo casInfo){
 			Limit lim = (Limit)e;
@@ -328,7 +315,7 @@ public class Limit extends Expr{
 				Num degree = num(degree(lim.getExpr(),v));
 				Expr coeff = getLeadingCoef(lim.getExpr(),v,casInfo);
 				
-				return prod(coeff,pow(v,degree)).replace(equ(v,lim.getValue())).simplify(casInfo);
+				return prod(coeff,power(v,degree)).replace(equ(v,lim.getValue())).simplify(casInfo);
 				
 			}
 			
@@ -353,8 +340,6 @@ public class Limit extends Expr{
 	 * the ... terms are the lower order polynomial parts. They don't effect the result
 	 */
 	static Rule rootRewrite = new Rule("special way to write roots when they approach infinity") {
-		private static final long serialVersionUID = 1L;
-		
 		Expr rootForm;
 		Expr condition;
 		
@@ -374,21 +359,21 @@ public class Limit extends Expr{
 				for(int i = 0;i<innerSum.size();i++) {
 					Sequence parts = seperateByVar(innerSum.get(i),lim.getVar());
 					if(Rule.similarWithCondition(rootForm, parts.get(1), condition)) {
-						Power inner = (Power)parts.get(1);
-						Sequence innerPoly = polyExtract(inner.getBase(),lim.getVar(),casInfo);
+						Func innerPow = (Func)parts.get(1);
+						Sequence innerPoly = polyExtract(innerPow.getBase(),lim.getVar(),casInfo);
 						if(innerPoly == null) return lim;
-						Num n = (Num) ((Div)inner.getExpo()).getDenom();
+						Num n = (Num) ((Func)innerPow.getExpo()).getDenom();
 						if(!isPositiveRealNum(n)) return lim;
-						if(innerPoly.size()-1 == n.realValue.intValue()) {
+						if(innerPoly.size()-1 == n.getRealValue().intValue()) {
 							Expr a = innerPoly.get(innerPoly.size()-1);
 							Expr b = innerPoly.get(innerPoly.size()-2);
 							
 							Expr repl = null;
 							
-							if(lim.getValue().equals(Var.INF) || n.realValue.mod(BigInteger.TWO).equals(BigInteger.ONE)) {
-								repl = sum(prod(pow(a,inv(n)),lim.getVar(),parts.get(0)), div(prod(b,pow(a,inv(n)),parts.get(0)),prod(a,n)) );
+							if(lim.getValue().equals(Var.INF) || n.getRealValue().mod(BigInteger.TWO).equals(BigInteger.ONE)) {
+								repl = sum(prod(power(a,inv(n)),lim.getVar(),parts.get(0)), div(prod(b,power(a,inv(n)),parts.get(0)),prod(a,n)) );
 							}else {
-								repl = sum(prod(num(-1),pow(a,inv(n)),lim.getVar(),parts.get(0)), div(prod(num(-1),b,pow(a,inv(b)),parts.get(0)),prod(a,n)) );
+								repl = sum(prod(num(-1),power(a,inv(n)),lim.getVar(),parts.get(0)), div(prod(num(-1),b,power(a,inv(b)),parts.get(0)),prod(a,n)) );
 							}
 							
 							innerSum.set(i, repl);
@@ -403,13 +388,11 @@ public class Limit extends Expr{
 	};
 	
 	static Rule lhopitalsRulePow = new Rule("lhopitals rule with powers") {
-		private static final long serialVersionUID = 1L;
-		
 		@Override
 		public Expr applyRuleToExpr(Expr e,CasInfo casInfo){
 			Limit lim = (Limit)e;
-			if(lim.getExpr() instanceof Power) {
-				Power innerPow = (Power)lim.getExpr();
+			if(lim.getExpr().typeName().equals("power")) {
+				Func innerPow = (Func)lim.getExpr();
 				
 				Expr limOfBase = limit(innerPow.getBase(),lim.getApproaches()).simplify(casInfo);
 				Expr limOfExpo = limit(innerPow.getExpo(),lim.getApproaches()).simplify(casInfo);
@@ -434,36 +417,34 @@ public class Limit extends Expr{
 	 * convert the gamma function to the sterling approximation so that if there is a ration of the two it can be calculated
 	 */
 	static Rule sterlingTransformation = new Rule("sterling approximation for gamma") {
-		private static final long serialVersionUID = 1L;
-		
 		Expr toSterling;
 		
 		@Override
 		public void init() {
-			toSterling = createExpr("((x-1)^((2*x-1)/2)*sqrt(2*pi))/e^(x-1)").simplify(CasInfo.normal);//the sterling approximation
+			toSterling = createExpr("((x-1)^((2*x-1)/2)*sqrt(2*pi))/e^(x-1)");
 		}
 		
 		public Expr replace(Expr e) {
 			boolean changed = false;
-			if(e instanceof Gamma) {
+			if(e.typeName().equals("gamma")) {
 				return toSterling.replace(equ(var("x"),e.get()));
 			}else if(e instanceof Prod) {
 				for(int i = 0;i<e.size();i++) {
-					if(e.get(i) instanceof Gamma) {
+					if(e.get(i).typeName().equals("gamma")) {
 						e.set(i, toSterling.replace(equ(var("x"),e.get(i).get())));
 						changed = true;
-					}else if(e.get(i) instanceof Power) {
-						Power innerPower = (Power)e.get(i);
-						if(innerPower.getBase() instanceof Gamma) {
+					}else if(e.get(i).typeName().equals("power")) {
+						Func innerPower = (Func)e.get(i);
+						if(innerPower.getBase().typeName().equals("gamma")) {
 							changed = true;
 							innerPower.setBase(toSterling.replace(equ(var("x"),innerPower.getBase().get())));
 						}
 					}
 				}
 				if(changed) return e;
-			}else if(e instanceof Power) {
-				Power innerPower = (Power)e;
-				if(innerPower.getBase() instanceof Gamma) {
+			}else if(e.typeName().equals("power")) {
+				Func innerPower = (Func)e;
+				if(innerPower.getBase().typeName().equals("gamma")) {
 					changed = true;
 					innerPower.setBase(toSterling.replace(equ(var("x"),innerPower.getBase().get())));
 				}
@@ -478,9 +459,9 @@ public class Limit extends Expr{
 			
 			if(!lim.getValue().equals(Var.INF)) return lim;
 			
-			if(lim.getExpr() instanceof Div) {
+			if(lim.getExpr().typeName().equals("div")) {
 				boolean changed = false;
-				Div innerDiv = (Div)lim.getExpr();
+				Func innerDiv = (Func)lim.getExpr();
 				
 				Expr newNumer = replace(innerDiv.getNumer());
 				if(newNumer != null) {
@@ -501,11 +482,9 @@ public class Limit extends Expr{
 	};
 	
 	static Rule biggerFuncCalc = new Rule("function growth comparison"){
-		private static final long serialVersionUID = 1L;
-		
 		boolean posLinFunc(Expr e,Var v,CasInfo casInfo){
 			return degree(e,v).equals(BigInteger.ONE) &&
-					eval(equGreater(getLeadingCoef(e,v,casInfo),num(0))).simplify(casInfo).equals(BoolState.TRUE);
+					comparison(equGreater(getLeadingCoef(e,v,casInfo),num(0))).simplify(casInfo).equals(BoolState.TRUE);
 		}
 		
 		int UNKNOWN = -1,CONST = 0,POLY = 1,EXP = 2,SUPER = 3;//different classes of size
@@ -514,8 +493,8 @@ public class Limit extends Expr{
 			e = stripNonVarPartsFromProd(e,v);
 			if(!e.contains(v)) return CONST;
 			if(isPolynomialUnstrict(e, v)) return POLY;
-			if(e instanceof Power && !e.get(0).contains(v) && posLinFunc(e.get(1), v,casInfo) ) return EXP;
-			if(e instanceof Power && posLinFunc(e.get(0),v,casInfo) && posLinFunc(e.get(1),v,casInfo)) return SUPER;
+			if(e.typeName().equals("power") && !e.get(0).contains(v) && posLinFunc(e.get(1), v,casInfo) ) return EXP;
+			if(e.typeName().equals("power") && posLinFunc(e.get(0),v,casInfo) && posLinFunc(e.get(1),v,casInfo)) return SUPER;
 			return UNKNOWN;//cannot compare too complicated
 		}
 		
@@ -535,8 +514,8 @@ public class Limit extends Expr{
 			Limit lim = (Limit)e;
 			Var v = lim.getVar();
 			if(lim.getValue().equals(Var.INF)){
-				if(lim.getExpr() instanceof Div){
-					Div casted = (Div)lim.getExpr();
+				if(lim.getExpr().typeName().equals("div")){
+					Func casted = (Func)lim.getExpr();
 					int comparison = compare(casted.getNumer(),casted.getDenom(),v,casInfo);
 					if(comparison == 1) return inf();
 					else if(comparison == -1) return epsilon();
@@ -560,28 +539,28 @@ public class Limit extends Expr{
 		}
 	};
 	
-	static Sequence ruleSequence = null;
+	static Rule mainSequenceRule = null;
 	
 	public static void loadRules(){
-		ruleSequence = sequence(
-				StandardRules.pullOutConstants,
-				commonExpoDiv,
-				biggerFuncCalc,
-				lhopitalsRulePow,
-				limitOfDivWithRoot,
-				differentDegreePolysInDiv,
-				polyCase,
-				rootRewrite,
-				sterlingTransformation,
-				lhopitalsRuleDiv,
-				directSubst
-		);
-		Rule.initRules(ruleSequence);
+		mainSequenceRule = new Rule(new Rule[]{
+			StandardRules.pullOutConstants,
+			commonExpoDiv,
+			biggerFuncCalc,
+			lhopitalsRulePow,
+			limitOfDivWithRoot,
+			differentDegreePolysInDiv,
+			polyCase,
+			rootRewrite,
+			sterlingTransformation,
+			lhopitalsRuleDiv,
+			directSubst
+		},"main sequence");
+		mainSequenceRule.init();
 	}
 	
 	@Override
-	public Sequence getRuleSequence() {
-		return ruleSequence;
+	public Rule getRule() {
+		return mainSequenceRule;
 	}
 
 	@Override

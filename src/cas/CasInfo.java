@@ -2,7 +2,7 @@ package cas;
 
 import java.io.Serializable;
 
-public class CasInfo extends QuickMath implements Serializable{
+public class CasInfo extends Cas implements Serializable{
 	
 	private static final long serialVersionUID = -423836233586167621L;
 	private boolean allowComplexNumbers = false;

@@ -12,13 +12,9 @@ import cas.primitive.Sum;
 import cas.primitive.Var;
 
 public class Dot extends Expr{
-	private static final long serialVersionUID = 7913599929905047782L;
-	
 	public Dot(){}//
 	
 	static Rule matrixMult = new Rule("matrix multiplication") {
-		private static final long serialVersionUID = 1L;
-		
 		@Override
 		public Expr applyRuleToExpr(Expr e,CasInfo casInfo) {
 			Dot dot = (Dot)e;
@@ -55,8 +51,6 @@ public class Dot extends Expr{
 	};
 	
 	static Rule dotContainsDot = new Rule("dot contains dot") {
-		private static final long serialVersionUID = 1L;
-		
 		@Override
 		public Expr applyRuleToExpr(Expr e,CasInfo casInfo) {
 			Dot dot = (Dot)e;
@@ -76,18 +70,19 @@ public class Dot extends Expr{
 		
 	};
 	
-	static Sequence ruleSequence;
-	
-	public static void loadRules() {
-		ruleSequence = sequence(
+	static Rule mainSequenceRule = null;
+
+	public static void loadRules(){
+		mainSequenceRule = new Rule(new Rule[]{
 				dotContainsDot,
 				matrixMult
-		);
+		},"main sequence");
+		mainSequenceRule.init();
 	}
-
+	
 	@Override
-	public Sequence getRuleSequence() {
-		return ruleSequence;
+	public Rule getRule() {
+		return mainSequenceRule;
 	}
 	
 	@Override

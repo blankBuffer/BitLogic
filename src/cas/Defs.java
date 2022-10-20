@@ -7,7 +7,7 @@ import cas.primitive.Becomes;
 import cas.primitive.Equ;
 import cas.primitive.Func;
 
-public class Defs extends QuickMath implements Serializable{
+public class Defs extends Cas implements Serializable{
 	private static final long serialVersionUID = 4654953050013809971L;
 	
 	HashMap<String,Rule> functionsRule = new HashMap<String,Rule>();//stores the rule for a function name
@@ -20,7 +20,7 @@ public class Defs extends QuickMath implements Serializable{
 	}
 	
 	public void addFuncRule(Becomes def) {
-		String name = ((Func)def.getLeftSide()).name;
+		String name = ((Func)def.getLeftSide()).behavior.name;
 		Rule r = new Rule(def, "function definition");
 		r.init();
 		if(!functionsRule.containsKey(name)) functionsRule.put(name, r);

@@ -4,10 +4,10 @@ import java.io.Serializable;
 
 import cas.ComplexFloat;
 import cas.Expr;
+import cas.Rule;
 
 public class Var extends Expr{
 	
-	private static final long serialVersionUID = -3581525014075161068L;
 	public static class Assumptions implements Serializable{
 		private static final long serialVersionUID = 5994712998417994326L;
 		
@@ -139,7 +139,7 @@ public class Var extends Expr{
 		return valuef;
 	}
 	@Override
-	public Sequence getRuleSequence() {
+	public Rule getRule() {
 		return null;
 	}
 

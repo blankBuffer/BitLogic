@@ -4,12 +4,11 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 import cas.*;
-import cas.bool.*;
 import cas.primitive.*;
 import cas.programming.*;
 import cas.matrix.*;
 
-public class Interpreter extends QuickMath{
+public class Interpreter extends Cas{
 	
 	public static Expr SUCCESS = var("done!");
 	
@@ -147,7 +146,7 @@ public class Interpreter extends QuickMath{
 	
 	public static void groupFloatingPointTokens(ArrayList<String> tokens) {
 		if(tokens.contains(".")) {
-			for(int i = 0;i<tokens.size()-2;i++){//floating point reading
+			for(int i = 0;i<tokens.size()-1;i++){//floating point reading
 				if(i+6<tokens.size()+1 && tokens.get(i).equals("-") && tokens.get(i+1).matches("([0-9])+") && tokens.get(i+2).equals(".") && tokens.get(i+3).matches("([0-9])*(e|E)") && tokens.get(i+4).equals("-") && tokens.get(i+5).matches("([0-9])+")) {
 					combineTokens(tokens,i,i+6);
 					tokens.add(i, "+");
@@ -160,6 +159,13 @@ public class Interpreter extends QuickMath{
 					tokens.add(i, "+");
 				}
 				if(i+3<tokens.size()+1 && tokens.get(i).matches("([0-9])+") && tokens.get(i+1).equals(".") && tokens.get(i+2).matches("([0-9])*(e|E)?([0-9])*")) {
+					combineTokens(tokens,i,i+3);
+				}
+				
+				if(i+2<tokens.size()+1 && tokens.get(i).equals(".") && tokens.get(i+1).matches("([0-9])+")){
+					combineTokens(tokens,i,i+2);
+				}
+				if(i+3<tokens.size()+1 && tokens.get(i).equals("-") && tokens.get(i+1).equals(".") && tokens.get(i+2).matches("([0-9])+")){
 					combineTokens(tokens,i,i+3);
 				}
 			}
@@ -212,7 +218,7 @@ public class Interpreter extends QuickMath{
 			if(string.matches("[0-9]+")){
 				return num(string);
 			}
-			if(string.matches("[\\-]?[0-9]+((.[0-9]+)|(.[0-9]+[e|E][\\-]?[0-9]+))")) {
+			if(string.matches("[\\-]?[0-9]*(([\\.][0-9]*)|([\\.][0-9]*[e|E][\\-]?[0-9]+))")) {
 				return floatExpr(string);
 			}
 			if(!containsOperators(string)){//variable
@@ -335,13 +341,13 @@ public class Interpreter extends QuickMath{
 		}
 		
 		if(tokens.contains("|")){
-			Or or = new Or();
+			Func or = or();
 			ArrayList<ArrayList<String>> tokenGroups = splitTokensIntoGroups(tokens,"|");
 			for(ArrayList<String> group:tokenGroups) or.add( createExprFromTokens(group,rec+1) );
 			return or;
 		}
 		if(tokens.contains("&")){
-			And and = new And();
+			Func and = and();
 			ArrayList<ArrayList<String>> tokenGroups = splitTokensIntoGroups(tokens,"&");
 			for(ArrayList<String> group:tokenGroups) and.add( createExprFromTokens(group,rec+1) );
 			return and;
@@ -455,7 +461,7 @@ public class Interpreter extends QuickMath{
 			Expr base = createExprFromTokens(groupTokens(tokens,0,indexOfPowToken),rec+1);
 			Expr expo = createExprFromTokens(groupTokens(tokens,indexOfPowToken+1,tokens.size()),rec+1);
 			
-			return pow(base,expo);
+			return power(base,expo);
 		}
 		if(tokens.get(tokens.size()-1).equals("!")) {
 			return gamma( sum(createExprFromTokens(groupTokens(tokens,0,tokens.size()-1),rec+1),num(1)) );

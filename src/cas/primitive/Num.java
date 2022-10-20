@@ -3,14 +3,14 @@ import java.math.BigInteger;
 
 import cas.ComplexFloat;
 import cas.Expr;
+import cas.Rule;
 import cas.CasInfo;
 
 public class Num extends Expr{
 	
-	private static final long serialVersionUID = -8648260475281043831L;
-	public BigInteger realValue,imagValue;
+	private BigInteger realValue,imagValue;
 	
-	public static final Num ZERO = num(0),ONE = num(1),TWO = num(2),I = num(0,1), NEG_ONE = num(-1,0), NEG_I = num(0,-1);//be carful not to modify these
+	public static final Num ZERO = new Num(0,false),ONE = new Num(1,false),TWO = new Num(2,false),I = new Num(0,1,false), NEG_ONE = new Num(-1,0,false), NEG_I = new Num(0,-1,false);
 	
 	private void setFlags() {
 		flags.simple = true;
@@ -32,6 +32,11 @@ public class Num extends Expr{
 		imagValue = BigInteger.ZERO;
 		setFlags();
 	}
+	public Num(String real,String imag) {
+		realValue = new BigInteger(real);
+		imagValue = new BigInteger(imag);
+		setFlags();
+	}
 	public Num(BigInteger num) {
 		realValue = num;
 		imagValue = BigInteger.ZERO;
@@ -43,9 +48,67 @@ public class Num extends Expr{
 		setFlags();
 	}
 	
+	
+	
+	
+	public Num(long num,boolean mutable) {
+		realValue = BigInteger.valueOf(num);
+		imagValue = BigInteger.ZERO;
+		flags.mutable = mutable;
+		setFlags();
+	}
+	public Num(long real,long imag,boolean mutable) {
+		realValue = BigInteger.valueOf(real);
+		imagValue = BigInteger.valueOf(imag);
+		flags.mutable = mutable;
+		setFlags();
+	}
+	public Num(String num,boolean mutable) {
+		realValue = new BigInteger(num);
+		imagValue = BigInteger.ZERO;
+		flags.mutable = mutable;
+		setFlags();
+	}
+	public Num(String real,String imag,boolean mutable) {
+		realValue = new BigInteger(real);
+		imagValue = new BigInteger(imag);
+		flags.mutable = mutable;
+		setFlags();
+	}
+	public Num(BigInteger num,boolean mutable) {
+		realValue = num;
+		imagValue = BigInteger.ZERO;
+		flags.mutable = mutable;
+		setFlags();
+	}
+	public Num(BigInteger real,BigInteger imag,boolean mutable) {
+		realValue = real;
+		imagValue = imag;
+		flags.mutable = mutable;
+		setFlags();
+	}
+	
 	public void setValue(Num other) {
 		realValue = other.realValue;
 		imagValue = other.imagValue;
+	}
+	
+	public void setRealValue(BigInteger realValue){
+		if(flags.mutable == false) throw new RuntimeException("expression is not mutable!");
+		this.realValue = realValue;
+	}
+	
+	public void setImagValue(BigInteger imagValue){
+		if(flags.mutable == false) throw new RuntimeException("expression is not mutable!");
+		this.imagValue = imagValue;
+	}
+	
+	public BigInteger getRealValue(){
+		return realValue;
+	}
+	
+	public BigInteger getImagValue(){
+		return imagValue;
 	}
 	
 	@Override
@@ -138,23 +201,22 @@ public class Num extends Expr{
 	private BigInteger bigIntNegOne = BigInteger.valueOf(-1);
 	@Override
 	public String toString() {
+		
+		String out = null;
 		if(!realValue.equals(BigInteger.ZERO) && !imagValue.equals(BigInteger.ZERO)) {
-			if(imagValue.equals(BigInteger.ONE)) {
-				return "("+realValue.toString()+"+i)";
-			}else if(imagValue.equals(bigIntNegOne)) {
-				return "("+realValue.toString()+"-i)";
-			}
-			if(imagValue.signum() == -1) {
-				return "(" +realValue.toString()+"-"+imagValue.negate().toString()+"*i)";
-			}
-			return "(" +realValue.toString()+"+"+imagValue.toString()+"*i)";
+			if(imagValue.equals(BigInteger.ONE)) out = "("+realValue.toString()+"+i)";
+			else if(imagValue.equals(bigIntNegOne)) out = "("+realValue.toString()+"-i)";
+			else if(imagValue.signum() == -1) out = "(" +realValue.toString()+"-"+imagValue.negate().toString()+"*i)";
+			else out = "(" +realValue.toString()+"+"+imagValue.toString()+"*i)";
 		}else if(realValue.equals(BigInteger.ZERO) && !imagValue.equals(BigInteger.ZERO)) {
-			if(imagValue.equals(BigInteger.ONE)) return "i";
-			else if(equals(Num.NEG_I)) return "-i";
-			return "("+imagValue.toString()+"*i)";
+			if(imagValue.equals(BigInteger.ONE)) out = "i";
+			else if(equals(Num.NEG_I)) out = "-i";
+			else out = "("+imagValue.toString()+"*i)";
 		}else {
-			return realValue.toString();
+			out = realValue.toString();
 		}
+		
+		return out;
 	}
 	@Override
 	public Expr copy() {
@@ -178,7 +240,7 @@ public class Num extends Expr{
 	}
 
 	@Override
-	public Sequence getRuleSequence() {
+	public Rule getRule() {
 		return null;
 	}
 

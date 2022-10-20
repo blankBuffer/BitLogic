@@ -51,6 +51,49 @@ public class ComplexFloat implements Serializable{
 		return Double.toString(real);
 	}
 	
+	private String doubleFormat(double val,int sigfigs){
+		
+		boolean neg = val<0;
+		val = Math.abs(val);
+		
+		String format = "%."+sigfigs+"e";
+		String out = String.format(format, val);
+		
+		if(!Double.isNaN(val) && !Double.isInfinite(val)){
+		
+			int indexOfe = out.indexOf('e');
+			int exp = Integer.parseInt(out.substring(indexOfe+1));
+			
+			
+			if(exp >= -1 && exp < sigfigs){
+				String digits = out.substring(0, indexOfe).replace(".", "");
+				out = digits.substring(0, exp+1)+"."+digits.substring(exp+1);
+			}
+		
+		}
+		
+		if(neg) out="-"+out;
+		return out;
+	}
+	
+	public String toString(int sigfigs){
+		
+		String out = null;
+		if(!closeToZero(real) && !closeToZero(imag)) {
+			String realComp = doubleFormat(real,sigfigs);
+			String imagComp = doubleFormat(imag,sigfigs);
+			out = realComp+"+"+imagComp+"*i";
+		}else if(closeToZero(imag)) {
+			
+			out = doubleFormat(real,sigfigs);
+		}else if(closeToZero(real)){
+			
+			out = doubleFormat(imag,sigfigs)+"*i";
+		}
+		
+		return out;
+	}
+	
 	public static ComplexFloat sin(ComplexFloat in) {
 		return new ComplexFloat(Math.sin(in.real)*Math.cosh(in.imag),Math.cos(in.real)*Math.sinh(in.imag));
 	}

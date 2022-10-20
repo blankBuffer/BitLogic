@@ -6,14 +6,9 @@ import cas.Expr;
 import cas.Rule;
 import cas.CasInfo;
 import cas.matrix.Mat;
-import cas.trig.Cos;
-import cas.trig.Sin;
-import cas.trig.Tan;
 
 public class Prod extends Expr{
 
-	private static final long serialVersionUID = -6256457097575815230L;
-	
 	static class TermInfo{
 		Expr var = null;
 		String typeName = null;
@@ -25,13 +20,13 @@ public class Prod extends Expr{
 		}
 	}
 	static TermInfo getTermInfo(Expr e) {
-		if(e instanceof Sin || e instanceof Tan || e instanceof Cos) {
+		if(e.typeName().equals("sin") || e.typeName().equals("tan") || e.typeName().equals("cos")) {
 			return new TermInfo(e.get(),e.typeName(),num(1));
-		}else if(e instanceof Power) {
-			Power casted = (Power)e;
+		}else if(e.typeName().equals("power")) {
+			Func casted = (Func)e;
 			if(isRealNum(casted.getExpo())) {
 				e = casted.getBase();
-				if(e instanceof Sin || e instanceof Tan || e instanceof Cos) {
+				if(e.typeName().equals("sin") || e.typeName().equals("tan") || e.typeName().equals("cos")) {
 					return new TermInfo(e.get(),e.typeName(),(Num)casted.getExpo());
 				}
 			}
@@ -40,11 +35,14 @@ public class Prod extends Expr{
 	}
 	
 	public Prod() {
-		commutative = true;
 	}
+	
+	@Override
+	public boolean isCommutative(){
+		return true;
+	}
+	
 	static Rule epsilonInfReduction = new Rule("expressions with epsilon or infinity"){
-		private static final long serialVersionUID = 1L;
-
 		@Override
 		public Expr applyRuleToExpr(Expr e,CasInfo casInfo){
 			Prod prod = (Prod)e;
@@ -93,7 +91,7 @@ public class Prod extends Expr{
 	public static boolean foundProdInTrigInProd(Prod prod){
 		if(prod.containsType("sin")){
 			for(int i = 0;i < prod.size();i++){
-				if(prod.get(i) instanceof Sin || prod.get(i) instanceof Cos || prod.get(i) instanceof Tan){
+				if(prod.get(i).typeName().equals("sin") || prod.get(i).typeName().equals("cos") || prod.get(i).typeName().equals("tan")){
 					if(prod.get(i).get() instanceof Prod){
 						return true;
 					}
@@ -105,7 +103,7 @@ public class Prod extends Expr{
 	public static boolean foundNonProdInTrigInProd(Prod prod){
 		if(prod.containsType("sin")){
 			for(int i = 0;i < prod.size();i++){
-				if(prod.get(i) instanceof Sin || prod.get(i) instanceof Cos || prod.get(i) instanceof Tan){
+				if(prod.get(i).typeName().equals("sin") || prod.get(i).typeName().equals("cos") || prod.get(i).typeName().equals("tan")){
 					if(!(prod.get(i).get() instanceof Prod)){
 						return true;
 					}
@@ -116,8 +114,6 @@ public class Prod extends Expr{
 	}
 	
 	static Rule trigExpandElements = new Rule("trig expand elements Prod"){
-		private static final long serialVersionUID = 1L;
-
 		@Override
 		public Expr applyRuleToExpr(Expr e,CasInfo casInfo){
 			Prod prod = (Prod)e;
@@ -132,22 +128,20 @@ public class Prod extends Expr{
 	};
 	
 	static Rule combineWithDiv = new Rule("combine products with division"){
-		private static final long serialVersionUID = 1L;
-
 		@Override
 		public Expr applyRuleToExpr(Expr e,CasInfo casInfo){
 			Prod prod = (Prod)e;
 			
 			int indexOfDiv = -1;
 			for(int i = 0;i<prod.size();i++) {
-				if(prod.get(i) instanceof Div) {
+				if(prod.get(i).typeName().equals("div")) {
 					indexOfDiv = i;
 					break;
 				}
 			}
 			
 			if(indexOfDiv != -1) {
-				Div div = (Div)prod.get(indexOfDiv);
+				Func div = (Func)prod.get(indexOfDiv);
 				prod.remove(indexOfDiv);
 				
 				Prod prodNumer = Prod.cast(div.getNumer());
@@ -155,8 +149,8 @@ public class Prod extends Expr{
 				
 				for(int i = 0;i<prod.size();i++) {
 
-					if(prod.get(i) instanceof Div) {
-						Div castedDiv = (Div)prod.get(i);
+					if(prod.get(i).typeName().equals("div")) {
+						Func castedDiv = (Func)prod.get(i);
 						
 						prodNumer.add(castedDiv.getNumer());
 						prodDenom.add(castedDiv.getDenom());
@@ -176,8 +170,6 @@ public class Prod extends Expr{
 	};
 	
 	static Rule factorSubSums = new Rule("factor sum elements"){
-		private static final long serialVersionUID = 1L;
-
 		@Override
 		public Expr applyRuleToExpr(Expr e,CasInfo casInfo){
 			Prod prod = (Prod)e;
@@ -187,15 +179,13 @@ public class Prod extends Expr{
 	};
 	
 	static Rule reSimplifyIntBasePowers = new Rule("re-simplify int based powers"){
-		private static final long serialVersionUID = 1L;
-
 		@Override
 		public Expr applyRuleToExpr(Expr e,CasInfo casInfo){
 			Prod prod = (Prod)e;
 			for(int i = 0;i<prod.size();i++) {
 				Expr current = prod.get(i);
-				if(current instanceof Power) {
-					Power currentPower = (Power)current;
+				if(current.typeName().equals("power")) {
+					Func currentPower = (Func)current;
 					if(currentPower.getBase() instanceof Num) {
 						
 						prod.set(i, currentPower.simplify(casInfo));
@@ -209,8 +199,6 @@ public class Prod extends Expr{
 	};
 	
 	static Rule prodContainsProd = new Rule("product contains a product"){
-		private static final long serialVersionUID = 1L;
-
 		@Override
 		public Expr applyRuleToExpr(Expr e,CasInfo casInfo){
 			Prod prod = (Prod)e;
@@ -229,26 +217,24 @@ public class Prod extends Expr{
 	};
 	
 	static Rule expoIntoBase = new Rule("power of integers with exponent being product"){
-		private static final long serialVersionUID = 1L;
-
 		@Override
 		public Expr applyRuleToExpr(Expr e,CasInfo casInfo){
 			Prod prod = (Prod)e;
 			
 			for(int i = 0;i<prod.size();i++) {
 				Expr current = prod.get(i);
-				if(current instanceof Power) {
-					Power currentPower = (Power)current;
+				if(current.typeName().equals("power")) {
+					Func currentPower = (Func)current;
 					if(currentPower.getExpo() instanceof Prod && currentPower.getBase() instanceof Num) {
 						Prod expoProd = (Prod)currentPower.getExpo();
 						
 						for(int j = 0;j<expoProd.size();j++) {
 							if(expoProd.get(j) instanceof Num) {
 								Num num = (Num)expoProd.get(j);
-								if(num.realValue.signum() == -1) continue;
+								if(num.getRealValue().signum() == -1) continue;
 								expoProd.remove(j);
 								
-								BigInteger newBase = ((Num)currentPower.getBase()).realValue.pow(num.realValue.intValue());
+								BigInteger newBase = ((Num)currentPower.getBase()).getRealValue().pow(num.getRealValue().intValue());
 								
 								currentPower.setBase( num(newBase) );
 								currentPower.setExpo(expoProd.simplify(casInfo));
@@ -267,8 +253,6 @@ public class Prod extends Expr{
 	};
 	
 	static Rule multiplyIntBases = new Rule("multiply int bases"){
-		private static final long serialVersionUID = 1L;
-
 		@Override
 		public Expr applyRuleToExpr(Expr e,CasInfo casInfo){
 			Prod prod = (Prod)e;
@@ -276,8 +260,8 @@ public class Prod extends Expr{
 			for(int i = 0;i<prod.size();i++) {
 				Expr current = prod.get(i);
 				
-				if(current instanceof Power) {
-					Power currentPower = (Power)current;
+				if(current.typeName().equals("power")) {
+					Func currentPower = (Func)current;
 					
 					if(currentPower.getBase() instanceof Num) {
 						Num numBase = (Num)currentPower.getBase();
@@ -285,11 +269,11 @@ public class Prod extends Expr{
 						for(int j = i+1; j< prod.size(); j++) {
 							
 							Expr other = prod.get(j);
-							if(other instanceof Power) {
-								Power otherPower = (Power)other;
+							if(other.typeName().equals("power")) {
+								Func otherPower = (Func)other;
 								if(otherPower.getBase() instanceof Num && otherPower.getExpo().equals(currentPower.getExpo())) {
 									
-									numBase.realValue = numBase.realValue.multiply(((Num)otherPower.getBase()).realValue);
+									numBase.setRealValue(numBase.getRealValue().multiply(((Num)otherPower.getBase()).getRealValue()));
 									
 									prod.remove(j);
 									j--;
@@ -310,8 +294,6 @@ public class Prod extends Expr{
 	};
 	
 	static Rule expandIntBases = new Rule("prime factor and expand int bases"){
-		private static final long serialVersionUID = 1L;
-		
 		@Override
 		public Expr applyRuleToExpr(Expr e,CasInfo casInfo){
 			Prod prod = (Prod)e;
@@ -319,26 +301,26 @@ public class Prod extends Expr{
 			for(int i = 0;i<prod.size();i++) {
 				Expr current = prod.get(i);
 				
-				if(current instanceof Power) {
-					Power currentPower = (Power)current;
+				if(current.typeName().equals("power")) {
+					Func currentPower = (Func)current;
 					
 					if(isPositiveRealNum(currentPower.getBase()) && !(currentPower.getExpo() instanceof Num)) {
 						Num numBase = (Num)currentPower.getBase();
 						
-						if(numBase.realValue.isProbablePrime(128) || numBase.realValue.equals(BigInteger.valueOf(-1))) continue;//skip primes
+						if(numBase.getRealValue().isProbablePrime(128) || numBase.getRealValue().equals(BigInteger.valueOf(-1))) continue;//skip primes
 						
 						Prod primeFactors = primeFactor(numBase);
 						
 						for(int j = 0;j<primeFactors.size();j++) {
-							Power factor = (Power)primeFactors.get(j);
-							if(((Num)factor.getExpo()).realValue.equals(BigInteger.ONE)) {
-								prod.add(pow(factor.getBase(),currentPower.getExpo().copy()));
+							Func factor = (Func)primeFactors.get(j);
+							if(((Num)factor.getExpo()).getRealValue().equals(BigInteger.ONE)) {
+								prod.add(power(factor.getBase(),currentPower.getExpo().copy()));
 							}else {
 								if(currentPower.getExpo() instanceof Prod) {
 									currentPower.getExpo().add(factor.getExpo());
-									prod.add(pow(factor.getBase(),currentPower.getExpo().simplify(casInfo)));
+									prod.add(power(factor.getBase(),currentPower.getExpo().simplify(casInfo)));
 								}else {
-									prod.add(pow(factor.getBase(),prod(currentPower.getExpo().copy(),factor.getExpo()).simplify(casInfo)));
+									prod.add(power(factor.getBase(),prod(currentPower.getExpo().copy(),factor.getExpo()).simplify(casInfo)));
 								}
 								
 							}
@@ -358,8 +340,6 @@ public class Prod extends Expr{
 	};
 	
 	static Rule multiplyLikeTerms = new Rule("multiply like terms"){
-		private static final long serialVersionUID = 1L;
-		
 		@Override
 		public Expr applyRuleToExpr(Expr e,CasInfo casInfo){
 			Prod prod = (Prod)e;
@@ -373,7 +353,7 @@ public class Prod extends Expr{
 				if(current instanceof Num) continue;//ignore integers
 				
 				
-				Power currentCasted = Power.cast(current);	
+				Func currentCasted = Power.cast(current);	
 				current = currentCasted.getBase();//extract out the base and reassign current, current now represents the base of power
 				expo.add(currentCasted.getExpo());//extract out the exponent
 				
@@ -383,7 +363,7 @@ public class Prod extends Expr{
 					
 					if(other instanceof Num) continue;//ignore integers
 					
-					Power otherCasted = Power.cast(other);
+					Func otherCasted = Power.cast(other);
 					if(otherCasted.getBase().equals(current)) {//if other has equal base
 						expo.add(otherCasted.getExpo());
 						prod.remove(j);
@@ -393,7 +373,7 @@ public class Prod extends Expr{
 				}
 				
 				if(found) {
-					Expr repl = new Power(current,expo);//replacement
+					Expr repl = power(current,expo);//replacement
 					prod.set(i,repl.simplify(casInfo));//modify the element with the replacement
 				}
 				
@@ -404,8 +384,6 @@ public class Prod extends Expr{
 	};
 	
 	static Rule zeroInProd = new Rule("zero in the product"){
-		private static final long serialVersionUID = 1L;
-		
 		@Override
 		public Expr applyRuleToExpr(Expr e,CasInfo casInfo){
 			Prod prod = (Prod)e;
@@ -429,8 +407,6 @@ public class Prod extends Expr{
 	};
 	
 	static Rule multiplyIntegers = new Rule("multiply integers"){
-		private static final long serialVersionUID = 1L;
-		
 		@Override
 		public Expr applyRuleToExpr(Expr e,CasInfo casInfo){
 			Prod prod = (Prod)e;
@@ -455,8 +431,6 @@ public class Prod extends Expr{
 	};
 	
 	static Rule reduceTrigProd = new Rule("reducing trig product") {//tan(x)*cos(x) -> sin(x)
-		private static final long serialVersionUID = 1L;
-		
 		@Override
 		public Expr applyRuleToExpr(Expr e,CasInfo casInfo){
 			Prod prod = (Prod)e;
@@ -504,8 +478,8 @@ public class Prod extends Expr{
 					Num tanCount = num(0);
 					if(!sinCount.equals(Num.ZERO) && !cosCount.equals(Num.ZERO)) {
 						if(sinCount.signum() == 1 ^ cosCount.signum() == 1) {
-							BigInteger tanCountBI = sinCount.realValue.abs().min(cosCount.realValue.abs());
-							BigInteger sumCount = sinCount.realValue.add(cosCount.realValue);
+							BigInteger tanCountBI = sinCount.getRealValue().abs().min(cosCount.getRealValue().abs());
+							BigInteger sumCount = sinCount.getRealValue().add(cosCount.getRealValue());
 							if(sinCount.negative()) {
 								tanCountBI = tanCountBI.negate();
 							}
@@ -523,13 +497,13 @@ public class Prod extends Expr{
 					}
 					//re add back
 					if(!tanCount.equals(Num.ZERO)) {
-						newNumerProd.add(  Power.unCast(pow(tan(var),tanCount))  );
+						newNumerProd.add(  Power.unCast(power(tan(var),tanCount))  );
 					}
 					if(!sinCount.equals(Num.ZERO)) {
-						newNumerProd.add(  Power.unCast(pow(sin(var),sinCount))  );
+						newNumerProd.add(  Power.unCast(power(sin(var),sinCount))  );
 					}
 					if(!cosCount.equals(Num.ZERO)) {
-						newNumerProd.add(  Power.unCast(pow(cos(var),cosCount))  );
+						newNumerProd.add(  Power.unCast(power(cos(var),cosCount))  );
 					}
 					
 					
@@ -545,8 +519,6 @@ public class Prod extends Expr{
 	};
 	
 	static Rule aloneProd = new Rule("product is alone"){
-		private static final long serialVersionUID = 1L;
-		
 		@Override
 		public Expr applyRuleToExpr(Expr e,CasInfo casInfo){
 			return Prod.unCast(e);
@@ -554,8 +526,6 @@ public class Prod extends Expr{
 	};
 	
 	static Rule multConj = new Rule("multiplying conjugates") {//(sqrt(2)+3)*(sqrt(2)-3) -> -7
-		private static final long serialVersionUID = 1L;
-		
 		Expr sqrtObjExtended,sqrtObjExtended2;
 		@Override
 		public void init() {
@@ -568,7 +538,7 @@ public class Prod extends Expr{
 			Prod prod = (Prod)e;
 			
 			for(int i = 0;i<prod.size();i++) {
-				Power currentCasted = Power.cast(prod.get(i));
+				Func currentCasted = Power.cast(prod.get(i));
 				if( currentCasted.getBase() instanceof Sum && currentCasted.getBase().size() == 2 ) {
 					Sum currentSum = (Sum)currentCasted.getBase();
 					Num num = null;
@@ -583,15 +553,15 @@ public class Prod extends Expr{
 					
 					if(!(num != null && other != null)) continue;
 					
-					Expr conj = Power.unCast( pow(sum(other,num.negate()),currentCasted.getExpo()) );//Variant 1
-					Expr conj2 = Power.unCast( pow(sum(neg(other).simplify(casInfo),num),currentCasted.getExpo()) );//Variant 2
+					Expr conj = Power.unCast( power(sum(other,num.negate()),currentCasted.getExpo()) );//Variant 1
+					Expr conj2 = Power.unCast( power(sum(neg(other).simplify(casInfo),num),currentCasted.getExpo()) );//Variant 2
 					
 					for(int j = i+1;j<prod.size();j++) {
 						Expr out = null;
 						if(prod.get(j).equals(conj)) {
-							out = pow(factor(sub(pow(other,num(2)),num.pow(BigInteger.TWO))),currentCasted.getExpo()).simplify(casInfo);
+							out = power(factor(sub(power(other,num(2)),num.pow(BigInteger.TWO))),currentCasted.getExpo()).simplify(casInfo);
 						}else if(prod.get(j).equals(conj2)) {
-							out = pow(factor(sub(num.pow(BigInteger.TWO),pow(other,num(2)))),currentCasted.getExpo()).simplify(casInfo);
+							out = power(factor(sub(num.pow(BigInteger.TWO),power(other,num(2)))),currentCasted.getExpo()).simplify(casInfo);
 						}
 						
 						if(out != null) {
@@ -614,8 +584,6 @@ public class Prod extends Expr{
 	};
 	
 	static Rule productWithMatrix = new Rule("product with matrix") {//multiplication of each element
-		private static final long serialVersionUID = 1L;
-		
 		@Override
 		public Expr applyRuleToExpr(Expr e,CasInfo casInfo){
 			Prod prod = (Prod)e;
@@ -670,22 +638,20 @@ public class Prod extends Expr{
 	};
 	
 	static Rule compressRoots = new Rule("compress roots together"){
-		private static final long serialVersionUID = 1L;
-		
 		@Override
 		public Expr applyRuleToExpr(Expr e,CasInfo casInfo){
 			Prod prod = (Prod)e;
 			
 			for(int i = 0;i<prod.size();i++) {
-				if(prod.get(i) instanceof Power && ((Power)prod.get(i)).getExpo() instanceof Div ) {
-					Power current = (Power) prod.get(i);
+				if(prod.get(i).typeName().equals("power") && ((Func)prod.get(i)).getExpo().typeName().equals("div") ) {
+					Func current = (Func) prod.get(i);
 					Prod prodBase = Prod.cast(current.getBase());
 					boolean changed = false;
 					
 					for(int j = i+1;j<prod.size();j++) {
 						
-						if(prod.get(j) instanceof Power && ((Power)prod.get(j)).getExpo() instanceof Div ) {
-							Power other = (Power)prod.get(j);
+						if(prod.get(j).typeName().equals("power") && ((Func)prod.get(j)).getExpo().typeName().equals("div") ) {
+							Func other = (Func)prod.get(j);
 							if(other.getExpo().equals(current.getExpo())) {
 								
 								if(other.getBase() instanceof Prod) {
@@ -702,6 +668,8 @@ public class Prod extends Expr{
 					}
 					if(changed) {
 						current.setBase( Prod.unCast(prodBase));
+						//System.out.println(current);
+						
 						prod.set(i, current.simplify(casInfo) );
 					}
 					
@@ -713,34 +681,35 @@ public class Prod extends Expr{
 		
 	};
 	
-	static Sequence ruleSequence = null;
+	
+	static Rule mainSequenceRule = null;
 	
 	public static void loadRules(){
-		ruleSequence = sequence(
-				factorSubSums,
-				reduceTrigProd,
-				trigExpandElements,
-				combineWithDiv,
-				prodContainsProd,
-				expandIntBases,
-				multConj,
-				multiplyLikeTerms,
-				compressRoots,
-				expoIntoBase,
-				multiplyIntBases,
-				reSimplifyIntBasePowers,
-				multiplyIntegers,
-				zeroInProd,
-				epsilonInfReduction,
-				productWithMatrix,
-				aloneProd
-		);
-		Rule.initRules(ruleSequence);
+		mainSequenceRule = new Rule(new Rule[]{
+			factorSubSums,
+			reduceTrigProd,
+			trigExpandElements,
+			combineWithDiv,
+			prodContainsProd,
+			expandIntBases,
+			multConj,
+			multiplyLikeTerms,
+			compressRoots,
+			expoIntoBase,
+			multiplyIntBases,
+			reSimplifyIntBasePowers,
+			multiplyIntegers,
+			zeroInProd,
+			epsilonInfReduction,
+			productWithMatrix,
+			aloneProd
+		},"main sequence");
+		mainSequenceRule.init();
 	}
 	
 	@Override
-	public Sequence getRuleSequence() {
-		return ruleSequence;
+	public Rule getRule() {
+		return mainSequenceRule;
 	}
 	
 	@Override
@@ -768,7 +737,7 @@ public class Prod extends Expr{
 			boolean paren = false,div = false;
 			Expr e = prodCopy.get(i);
 			
-			if(i == 0 && e instanceof Num) if(((Num) e).realValue.equals(BigInteger.valueOf(-1))) {
+			if(i == 0 && e instanceof Num) if(((Num) e).getRealValue().equals(BigInteger.valueOf(-1))) {
 				out+='-';
 				continue;
 			}

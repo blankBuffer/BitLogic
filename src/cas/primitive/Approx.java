@@ -2,58 +2,31 @@ package cas.primitive;
 
 import cas.*;
 
-public class Approx extends Expr{
+public class Approx{
 	
-	private static final long serialVersionUID = 5922084948843351440L;
-
-	public Approx(){
-		simplifyChildren = false;
-	}//
-	public Approx(Expr expr,ExprList defs) {
-		add(expr);
-		add(defs);
-		simplifyChildren = false;
-	}
-	
-	static Rule getFloatExpr = new Rule("get float approximation"){
-		private static final long serialVersionUID = 1L;
-		
+	public static Func.FuncLoader approxLoader = new Func.FuncLoader() {
 		@Override
-		public Expr applyRuleToExpr(Expr e,CasInfo casInfo){
-			Approx approx = (Approx)e;
-			Expr out = floatExpr(approx.get().convertToFloat((ExprList)approx.get(1)));
-			return out;
+		public void load(Func owner) {
+			Rule getFloatExpr = new Rule("get float approximation"){
+				@Override
+				public Expr applyRuleToExpr(Expr e,CasInfo casInfo){
+					Func approx = (Func)e;
+					Expr out = floatExpr(approx.get().convertToFloat((ExprList)approx.get(1)));
+					return out;
+				}
+			};
+			
+			owner.behavior.simplifyChildren = false;
+			owner.behavior.rule = new Rule(new Rule[]{
+					getFloatExpr,
+			},"main sequence");
+			owner.behavior.toFloat = new Func.FloatFunc() {
+				@Override
+				public ComplexFloat convertToFloat(ExprList varDefs, Func owner) {
+					return owner.get().convertToFloat((ExprList)owner.get(1));//kinda pointless but whatever
+				}
+			};
+			owner.behavior.rule.init();
 		}
 	};
-	
-	static Sequence ruleSequence = null;
-	
-	public static void loadRules(){
-		ruleSequence = sequence(
-			getFloatExpr	
-		);
-		Rule.initRules(ruleSequence);
-	}
-	
-	@Override
-	public Sequence getRuleSequence(){
-		return ruleSequence;
-	}
-	
-	@Override
-	public ComplexFloat convertToFloat(ExprList varDefs) {
-		return get().convertToFloat((ExprList)get(1));//kinda pointless but whatever
-	}
-	
-	@Override
-	public String typeName() {
-		return "approx";
-	}
-	@Override
-	public String help() {
-		return "approx(x) is floating point approximation\n"
-				+ "examples\n"
-				+ "approx(pi)->3.141592653589793\n"
-				+ "approx(sqrt(i))->0.7071067811865476+0.7071067811865475*i";
-	}
 }

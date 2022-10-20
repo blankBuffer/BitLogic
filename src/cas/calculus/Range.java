@@ -7,8 +7,6 @@ import cas.Rule;
 import cas.primitive.*;
 
 public class Range extends Expr{
-	private static final long serialVersionUID = -6321836409665890872L;
-	
 	public Range() {}//
 	
 	public Range(Expr domainMin,Expr domainMax,Expr e,Var v) {
@@ -36,8 +34,6 @@ public class Range extends Expr{
 	}
 
 	static Rule calculateRange = new Rule("calculate the range from critical points") {
-		private static final long serialVersionUID = 1L;
-		
 		ExprList getCriticalPoints(Expr e,Var v,CasInfo casInfo) {
 			Expr derivative = diff(e,v).simplify(casInfo);
 			ExprList derivativeSolutions = ExprList.cast(solve(equ(derivative,num(0)),v).simplify(casInfo));
@@ -99,7 +95,7 @@ public class Range extends Expr{
 				ComplexFloat maxApprox = range.getMax().convertToFloat(exprList());
 				
 				for(int i = 0;i<criticalPoints.size();i++) {
-					if(criticalPoints.get(i) instanceof Solve) {//Unsolved state
+					if(criticalPoints.get(i).typeName().equals("solve")) {//Unsolved state
 						criticalPoints.remove(i);
 						i--;
 						continue;
@@ -127,17 +123,18 @@ public class Range extends Expr{
 		}
 	};
 	
-	static Sequence ruleSequence;
+	static Rule mainSequenceRule = null;
 	
-	public static void loadRules() {
-		ruleSequence = sequence(
+	public static void loadRules(){
+		mainSequenceRule = new Rule(new Rule[]{
 				calculateRange
-		);
+		},"main sequence");
+		mainSequenceRule.init();
 	}
 	
 	@Override
-	public Sequence getRuleSequence() {
-		return ruleSequence;
+	public Rule getRule() {
+		return mainSequenceRule;
 	}
 
 	@Override

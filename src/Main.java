@@ -5,11 +5,10 @@ import cas.*;
 import cas.lang.Ask;
 import ui.UI;
 
-public class Main extends QuickMath{
+public class Main extends Cas{
 	
 	public static void runScript(String fileName,boolean verbose) {
 		Rule.loadCompileSimplifyRules();
-		long startingInstructionCount = Expr.ruleCallCount;
 		long oldTime = System.nanoTime();
 		Scanner sc = null;
 		int currentLine = 0;
@@ -41,10 +40,14 @@ public class Main extends QuickMath{
 		}
 		long delta = System.nanoTime() - oldTime;
 		System.out.println("took " + delta / 1000000.0 + " ms to finish script!");
-		System.out.println((Expr.ruleCallCount-startingInstructionCount)+" - instructions called");
 	}
 	
 	public static void main(String[] args) {
+		
+		Tester tester = new Tester();
+		tester.runAllTests(true);
+		
+		
 		
 		int gui = 1;
 		boolean clearTerm = false;

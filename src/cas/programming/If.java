@@ -2,14 +2,12 @@ package cas.programming;
 
 import cas.ComplexFloat;
 import cas.Expr;
+import cas.Rule;
 import cas.primitive.Equ;
 import cas.primitive.ExprList;
-import cas.primitive.Sequence;
 
 public class If extends Expr{
 	
-	private static final long serialVersionUID = -7181628821034162659L;
-
 	If(){}//
 	public If(Equ eq,Script s) {
 		add(eq);
@@ -28,7 +26,7 @@ public class If extends Expr{
 		return null;
 	}
 	@Override
-	public Sequence getRuleSequence() {
+	public Rule getRule() {
 		// TODO Auto-generated method stub
 		return null;
 	}

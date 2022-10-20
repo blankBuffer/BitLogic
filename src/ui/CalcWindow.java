@@ -27,7 +27,7 @@ import javax.swing.text.SimpleAttributeSet;
 import javax.swing.text.StyleConstants;
 
 import cas.Expr;
-import cas.QuickMath;
+import cas.Cas;
 import cas.Rule;
 import cas.SimpleFuncs;
 import cas.graphics.ExprRender;
@@ -246,7 +246,7 @@ public class CalcWindow extends JFrame{
 					if(clearTerminal) terminalOutPane.getDocument().remove(0, terminalOutPane.getDocument().getLength());
 					addTextln("▛▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▜");
 					for(int i = 0;i<currentStack.size();i++) {
-						addTextln("#"+(i+1)+" approx: "+currentStack.stack.get(i).convertToFloat(QuickMath.exprList()).toString(), redText);
+						addTextln("#"+(i+1)+" approx: "+currentStack.stack.get(i).convertToFloat(Cas.exprList()).toString(), redText);
 						
 						StackButtonGroup stackButtonGroup = new StackButtonGroup();
 						

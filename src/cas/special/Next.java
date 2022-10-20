@@ -9,8 +9,6 @@ import cas.primitive.*;
  */
 public class Next extends Expr{
 	
-	private static final long serialVersionUID = 7861200724185548138L;
-	
 	public Next() {}//
 	
 	public Next(Sequence sequence,Num steps) {
@@ -28,8 +26,6 @@ public class Next extends Expr{
 	
 	//is the sequence the standard fibonacci
 	static Rule isFibonacci = new Rule("is the fibonacci sequence") {
-		private static final long serialVersionUID = 1L;
-		
 		@Override
 		public Expr applyRuleToExpr(Expr e,CasInfo casInfo) {
 			Next next = (Next)e;
@@ -47,7 +43,7 @@ public class Next extends Expr{
 					}else return next;
 				}
 				Sequence newSeq = new Sequence();
-				for(int i = 0;i<next.getNum().realValue.intValue();i++) {
+				for(int i = 0;i<next.getNum().getRealValue().intValue();i++) {
 					Expr expected = sum(first,second).simplify(casInfo);
 					newSeq.add(expected);
 					first = second;
@@ -69,8 +65,6 @@ public class Next extends Expr{
 	 */
 	static boolean USED_GEO = false;
 	static Rule geometric = new Rule("is a geometric series") {
-		private static final long serialVersionUID = 1L;
-		
 		@Override
 		public Expr applyRuleToExpr(Expr e,CasInfo casInfo) {
 			if(USED_GEO) return e;
@@ -92,7 +86,7 @@ public class Next extends Expr{
 				
 				Sequence newSeq = new Sequence();
 				Expr last = s.get(s.size()-1);
-				for(int i = 0;i<next.getNum().realValue.intValue();i++) {
+				for(int i = 0;i<next.getNum().getRealValue().intValue();i++) {
 					last = prod(last,nextRatios.get(i)).simplify(casInfo);
 					newSeq.add(last);
 				}
@@ -106,8 +100,6 @@ public class Next extends Expr{
 	 * sequence loops like 1,2,3,4,1,2,3,4,1,2,3,4 etc
 	 */
 	static Rule looping = new Rule("sequence is a loop") {
-		private static final long serialVersionUID = 1L;
-		
 		@Override
 		public Expr applyRuleToExpr(Expr e,CasInfo casInfo) {
 			Next next = (Next)e;
@@ -120,7 +112,7 @@ public class Next extends Expr{
 						if(!s.get(i).equals(s.get(i%loopSize))) continue outer;
 					}
 					Sequence newSeq = new Sequence();
-					for(int i = 0;i<next.getNum().realValue.intValue();i++) newSeq.add(s.get( (s.size()+i)%loopSize ));
+					for(int i = 0;i<next.getNum().getRealValue().intValue();i++) newSeq.add(s.get( (s.size()+i)%loopSize ));
 					return newSeq;
 				}
 			}	
@@ -137,8 +129,6 @@ public class Next extends Expr{
 	 */
 	static boolean USED_STEP = false;
 	static Rule steppedPattern = new Rule("stepped/interlaced patterns") {//basically like sequences interlaced
-		private static final long serialVersionUID = 1L;
-		
 		@Override
 		public Expr applyRuleToExpr(Expr e,CasInfo casInfo) {
 			if(USED_STEP || USED_GEO || USED_COEF) return e;
@@ -158,7 +148,7 @@ public class Next extends Expr{
 				//for(int i = 0;i<subSequences.length;i++) System.out.println(subSequences[i]);
 				
 				int startingPoint = s.size()%step;
-				int remain = next.getNum().realValue.intValue();
+				int remain = next.getNum().getRealValue().intValue();
 				
 				int maxChunkSize = remain/step;
 				//System.out.println("max chunk size:"+maxChunkSize+" remain:"+remain);
@@ -188,7 +178,7 @@ public class Next extends Expr{
 					if(contSequences[i] instanceof Next) continue outer;
 				}
 				
-				remain = next.getNum().realValue.intValue();
+				remain = next.getNum().getRealValue().intValue();
 				
 				int[] indexTracker = new int[step];
 				
@@ -216,8 +206,6 @@ public class Next extends Expr{
 	 */
 	static boolean USED_COEF = false;
 	static Rule coefPredict = new Rule("predict seperatly the coefficinet and the variable component") {
-		private static final long serialVersionUID = 1L;
-		
 		@Override
 		public Expr applyRuleToExpr(Expr e,CasInfo casInfo) {
 			if(USED_COEF) return e;
@@ -244,7 +232,7 @@ public class Next extends Expr{
 			if(nextCoefs instanceof Next || nextExprs instanceof Next) return next;
 			
 			Sequence newSeq = new Sequence();
-			for(int i = 0;i<next.getNum().realValue.intValue();i++) {
+			for(int i = 0;i<next.getNum().getRealValue().intValue();i++) {
 				newSeq.add(prod(nextCoefs.get(i),nextExprs.get(i)).simplify(casInfo));
 			}
 			return newSeq;
@@ -252,20 +240,18 @@ public class Next extends Expr{
 	};
 	//predicts the next fraction in a sequence. Looks at the numerator and denominator patterns separately to predict the next elements
 	static Rule fracPredict = new Rule("predict next fraction") {
-		private static final long serialVersionUID = 1L;
-		
 		@Override
 		public Expr applyRuleToExpr(Expr e,CasInfo casInfo) {
 			Next next = (Next)e;
 			Sequence s = next.getSequence();
 			
-			if(s.get(0) instanceof Div || s.get(1) instanceof Div) {
+			if(s.get(0).typeName().equals("div") || s.get(1).typeName().equals("div")) {
 				
 				Sequence numerS = new Sequence();
 				Sequence denomS = new Sequence();
 				
 				for(int i = 0;i<s.size();i++) {
-					Div div = Div.cast(s.get(i));
+					Func div = Div.cast(s.get(i));
 					
 					numerS.add(div.getNumer());
 					denomS.add(div.getDenom());
@@ -277,7 +263,7 @@ public class Next extends Expr{
 				if(nextNumers instanceof Next || nextDenoms instanceof Next) return next;
 				
 				Sequence newSeq = new Sequence();
-				for(int i = 0;i<next.getNum().realValue.intValue();i++) {
+				for(int i = 0;i<next.getNum().getRealValue().intValue();i++) {
 					newSeq.add(div(nextNumers.get(i),nextDenoms.get(i)).simplify(casInfo));
 				}
 				return newSeq;
@@ -292,20 +278,18 @@ public class Next extends Expr{
 	 * predicts the next power in a sequence by looking at the base and exponent as seperate sequences
 	 */
 	static Rule powPredict = new Rule("predict next power") {
-		private static final long serialVersionUID = 1L;
-		
 		@Override
 		public Expr applyRuleToExpr(Expr e,CasInfo casInfo) {
 			Next next = (Next)e;
 			Sequence s = next.getSequence();
 			
-			if(s.get(0) instanceof Power || s.get(1) instanceof Power || s.get(s.size()-1) instanceof Power || s.get(s.size()-2) instanceof Power) {
+			if(s.get(0).typeName().equals("power") || s.get(1).typeName().equals("power") || s.get(s.size()-1).typeName().equals("power") || s.get(s.size()-2).typeName().equals("power")) {
 				
 				Sequence baseS = new Sequence();
 				Sequence expoS = new Sequence();
 				
 				for(int i = 0;i<s.size();i++) {
-					Power pow = Power.cast(s.get(i));
+					Func pow = Power.cast(s.get(i));
 					
 					baseS.add(pow.getBase());
 					expoS.add(pow.getExpo());
@@ -317,8 +301,8 @@ public class Next extends Expr{
 				if(nextBases instanceof Next || nextExpos instanceof Next) return next;
 				
 				Sequence newSeq = new Sequence();
-				for(int i = 0;i<next.getNum().realValue.intValue();i++) {
-					newSeq.add(pow(nextBases.get(i),nextExpos.get(i)).simplify(casInfo));
+				for(int i = 0;i<next.getNum().getRealValue().intValue();i++) {
+					newSeq.add(power(nextBases.get(i),nextExpos.get(i)).simplify(casInfo));
 				}
 				return newSeq;
 				
@@ -332,8 +316,6 @@ public class Next extends Expr{
 	 * standard way of predicting the next number in a sequences
 	 */
 	static Rule polynomial = new Rule("is a polynomial sequence") {
-		private static final long serialVersionUID = 1L;
-		
 		boolean allSame(Sequence s) {
 			for(int i = 1;i<s.size();i++) {
 				if(!s.get(i).equals(s.get(0))) return false;
@@ -375,7 +357,7 @@ public class Next extends Expr{
 		public Expr applyRuleToExpr(Expr e,CasInfo casInfo) {
 			Next next = (Next)e;
 			Sequence s = next.getSequence();
-			Expr expected = getNext(s,casInfo,s.size()/2+1,next.getNum().realValue.intValue());
+			Expr expected = getNext(s,casInfo,s.size()/2+1,next.getNum().getRealValue().intValue());
 			
 			if(expected != null) {
 				return expected;
@@ -387,15 +369,13 @@ public class Next extends Expr{
 	
 	//sequence is only 1 or 0 elements
 	static Rule nothingCase = new Rule("nothing case for sequence prediction") {
-		private static final long serialVersionUID = 1L;
-		
 		@Override
 		public Expr applyRuleToExpr(Expr e,CasInfo casInfo) {
 			Next next = (Next)e;
 			if(next.getNum().equals(Num.ZERO)) return new Sequence();
 			else if(next.getSequence().size() == 1) {
 				Sequence out = new Sequence();
-				for(int i = 0;i<next.getNum().realValue.intValue();i++) {
+				for(int i = 0;i<next.getNum().getRealValue().intValue();i++) {
 					out.add(next.getSequence().get());
 				}
 				return out;
@@ -408,8 +388,6 @@ public class Next extends Expr{
 	 * looks what's inside the function and predicts the next inner
 	 */
 	static Rule funcPredict = new Rule("expression layout prediction") {
-		private static final long serialVersionUID = 1L;
-		
 		@Override
 		public Expr applyRuleToExpr(Expr e,CasInfo casInfo) {
 			Next next = (Next)e;
@@ -438,26 +416,27 @@ public class Next extends Expr{
 		}
 	};
 	
-	static Sequence ruleSequence;
+	static Rule mainSequenceRule = null;
 	
-	public static void loadRules() {
-		ruleSequence = sequence(
-				nothingCase,
-				polynomial,
-				isFibonacci,
-				looping,
-				geometric,
-				fracPredict,
-				powPredict,
-				funcPredict,
-				coefPredict,
-				steppedPattern
-		);
+	public static void loadRules(){
+		mainSequenceRule = new Rule(new Rule[]{
+			nothingCase,
+			polynomial,
+			isFibonacci,
+			looping,
+			geometric,
+			fracPredict,
+			powPredict,
+			funcPredict,
+			coefPredict,
+			steppedPattern
+		},"main sequence");
+		mainSequenceRule.init();
 	}
 	
 	@Override
-	public Sequence getRuleSequence() {
-		return ruleSequence;
+	public Rule getRule() {
+		return mainSequenceRule;
 	}
 
 	@Override

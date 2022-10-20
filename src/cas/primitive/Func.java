@@ -1,71 +1,97 @@
 package cas.primitive;
 
-import java.io.Serializable;
-
 import cas.ComplexFloat;
 import cas.Expr;
+import cas.Rule;
 
 public class Func extends Expr{
 
-	private static final long serialVersionUID = -3146654431684411030L;
-	public String name;
-	public int numberOfParams;
+	public Behavior behavior;
+	public FuncLoader loader = null;
+	
+	public static abstract class FloatFunc{
+		public abstract ComplexFloat convertToFloat(ExprList varDefs,Func owner);
+	}
+	
+	public static abstract class FuncLoader{
+		public abstract void load(Func owner);
+	}
+	
+	public static abstract class ToString{
+		public abstract String generateString(Func owner);
+	}
+	
+	public static class Behavior{
+		public Rule rule = null;
+		public Rule doneRule = null;
+		public FloatFunc toFloat = null;
+		public ToString toStringMethod = null;
+		public String name;
+		public int numOfParams;
+		public boolean commutative;
+		public boolean simplifyChildren = true;
+	}
 	
 	void init(){
 	}
 	
 	public Func(String name,int numberOfParams){
-		this.name = name;
-		this.numberOfParams = numberOfParams;
+		behavior = new Behavior();
+		this.behavior.numOfParams = numberOfParams;
+		this.behavior.name = name;
+		init();
+	}
+	public Func(String name,int numberOfParams,FuncLoader loader){
+		this.loader = loader;
+		behavior = new Behavior();
+		this.behavior.numOfParams = numberOfParams;
+		this.behavior.name = name;
 		init();
 	}
 	public Func(String name,Expr... params){
-		this.name = name;
 		for(Expr e:params) {
 			add(e);
 		}
+		behavior = new Behavior();
+		this.behavior.numOfParams = params.length;
+		this.behavior.name = name;
+		init();
+	}
+	
+	public Func(){
 		init();
 	}
 	
 	@Override
 	public String toString() {
-		String out = "";
-		out+=name+"(";
-		
-		for(int i = 0;i<size();i++) {
-			out+=get(i);
-			if(i!=size()-1) out+=",";
+		if(behavior.toStringMethod == null){
+			String out = "";
+			out+=behavior.name+"(";
+			
+			for(int i = 0;i<size();i++) {
+				out+=get(i);
+				if(i!=size()-1) out+=",";
+			}
+			out+=")";
+			return out;
+		}else{
+			return behavior.toStringMethod.generateString(this);
 		}
-		out+=")";
-		return out;
 	}
-	public Sequence ruleSequence = sequence();
-	public FloatFunc toFloatFunc = null;
-	public String helpMessage = "no help message";
 	
 	@Override
 	public Expr copy() {
-		Func out = new Func(name);
+		Func out = new Func();
 		for(int i = 0;i<size();i++){
 			out.add(get(i).copy());
 		}
 		out.simplifyChildren = simplifyChildren;
-		out.ruleSequence = ruleSequence;
-		out.numberOfParams = numberOfParams;
+		out.behavior = behavior;
 		out.flags.set(flags);
-		out.toFloatFunc = toFloatFunc;
 		return out;
 	}
 	
-	public static abstract class FloatFunc implements Serializable{
-		private static final long serialVersionUID = 7831115405347619209L;
-
-		public abstract ComplexFloat convertToFloat(ExprList varDefs,Func owner);
-	}
-	
 	public static FloatFunc nothingFunc = new Func.FloatFunc() {//return whatever is inside
-		private static final long serialVersionUID = 1L;
-
 		@Override
 		public ComplexFloat convertToFloat(ExprList varDefs, Func owner) {
 			return owner.get().convertToFloat(varDefs);
@@ -74,24 +100,89 @@ public class Func extends Expr{
 	
 	@Override
 	public ComplexFloat convertToFloat(ExprList varDefs) {
-		if(toFloatFunc != null) {
-			return toFloatFunc.convertToFloat(varDefs,this);
+		if(behavior.toFloat != null) {
+			return behavior.toFloat.convertToFloat(varDefs,this);
 		}
 		return new ComplexFloat(0,0);
 	}
 	@Override
-	public Sequence getRuleSequence() {
-		return ruleSequence;
+	public Rule getRule() {
+		return behavior.rule;
+	}
+	
+	@Override
+	public Rule getDoneRule() {
+		return behavior.doneRule;
 	}
 
 	@Override
 	public String typeName() {
-		return name;
+		return behavior.name;
+	}
+	
+	//power specific functions
+	public void setBase(Expr base) {
+		if(!typeName().equals("power")) throw new RuntimeException(typeName()+": is not a power");
+		set(0, base);
+	}
+	public void setExpo(Expr expo) {
+		if(!typeName().equals("power")) throw new RuntimeException(typeName()+": is not a power");
+		set(1, expo);
+	}
+	
+	public Expr getBase() {
+		assert typeName().equals("power") : "expected a power";
+		return get(0);
+	}
+	public Expr getExpo() {
+		assert typeName().equals("power") : "expected a power";
+		return get(1);
+	}
+	
+	public Expr getNumer() {
+		assert typeName().equals("div") : "expected a div";
+		return get();
+	}
+	public Expr getDenom() {
+		assert typeName().equals("div") : "expected a div";
+		return get(1);
+	}
+	
+	public void setNumer(Expr e) {
+		set(0,e);
+	}
+	
+	public void setDenom(Expr e) {
+		set(1,e);
+	}
+	
+	@Override
+	public Var getVar(){
+		if(typeName().equals("diff") || typeName().equals("integrate") || typeName().equals("solve")){
+			return (Var) get(1);
+		}else if(typeName().equals("integrateOver")){
+			return (Var) get(3);
+		}
+		
+		throw new RuntimeException(typeName()+"invalid type for getVar()");
+	}
+	
+	public Expr getComparison(){
+		if(typeName().equals("solve")){
+			return get();
+		}
+		
+		throw new RuntimeException(typeName()+"invalid type for getComparison()");
+	}
+	
+	@Override
+	public boolean isCommutative(){
+		return behavior.commutative;
 	}
 
 	@Override
 	public String help() {
-		return helpMessage;
+		return "no help message";
 	}
 	
 }

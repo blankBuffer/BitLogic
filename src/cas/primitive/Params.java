@@ -2,17 +2,16 @@ package cas.primitive;
 
 import cas.ComplexFloat;
 import cas.Expr;
+import cas.Rule;
 
 public class Params extends Expr{
-	private static final long serialVersionUID = 1899960538100104923L;
-	
 	public Params(){}//
 	public Params(Expr e){
 		add(e);
 	}
 
 	@Override
-	public Sequence getRuleSequence() {
+	public Rule getRule() {
 		return null;
 	}
 

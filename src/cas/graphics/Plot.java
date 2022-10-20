@@ -101,7 +101,7 @@ public class Plot extends JPanel{
 	
 	static final int IN_TERMS_OF_X = 0,IN_TERMS_OF_Y = 1;
 	static final int EQU = 0, GREATER = 1,LESS = -1;
-	private static final Var Y = QuickMath.var("y"),X = QuickMath.var("x");
+	private static final Var Y = Cas.var("y"),X = Cas.var("x");
 	
 	static void basicPlot2D(Graphics g,Expr expr,PlotWindowParams plotWindowParams,Dimension windowSize,int varChoice,int equType) {//plots basic functions in terms  of x
 		
@@ -109,7 +109,7 @@ public class Plot extends JPanel{
 		
 		if(varChoice == IN_TERMS_OF_X) {
 			double beforeY = 0;
-			Equ varDef = QuickMath.equ(QuickMath.var("x"),QuickMath.floatExpr(0));
+			Equ varDef = Cas.equ(Cas.var("x"),Cas.floatExpr(0));
 			ExprList varDefs = new ExprList();
 			varDefs.add(varDef);
 			
@@ -130,7 +130,7 @@ public class Plot extends JPanel{
 			}
 		}else if(varChoice == IN_TERMS_OF_Y){
 			double beforeX = 0;
-			Equ varDef = QuickMath.equ(QuickMath.var("y"),QuickMath.floatExpr(0));
+			Equ varDef = Cas.equ(Cas.var("y"),Cas.floatExpr(0));
 			ExprList varDefs = new ExprList();
 			varDefs.add(varDef);
 			
@@ -148,13 +148,13 @@ public class Plot extends JPanel{
 	}
 	
 	static void equPlot2D(Graphics g,Expr expr,PlotWindowParams plotWindowParams,Dimension windowSize,int detail) {//plots equations with x and y
-		Equ xDef = QuickMath.equ(QuickMath.var("x"),QuickMath.floatExpr(0)),yDef = QuickMath.equ(QuickMath.var("y"),QuickMath.floatExpr(0));
+		Equ xDef = Cas.equ(Cas.var("x"),Cas.floatExpr(0)),yDef = Cas.equ(Cas.var("y"),Cas.floatExpr(0));
 		ExprList varDefs = new ExprList();
 		varDefs.add(xDef);
 		varDefs.add(yDef);
 		
-		Expr leftSide = QuickMath.getLeftSideGeneric(expr);
-		Expr rightSide = QuickMath.getRightSideGeneric(expr);
+		Expr leftSide = Cas.getLeftSideGeneric(expr);
+		Expr rightSide = Cas.getRightSideGeneric(expr);
 		
 		int equType = EQU;
 		if(expr instanceof Greater) equType = GREATER;
@@ -213,10 +213,10 @@ public class Plot extends JPanel{
 				if(expr instanceof Greater) equType = GREATER;
 				if(expr instanceof Less) equType = LESS;
 				
-				if(QuickMath.getLeftSideGeneric(expr).equals(Y)) {
-					basicPlot2D(g,QuickMath.getRightSideGeneric(expr),plotWindowParams,windowSize,IN_TERMS_OF_X,equType);
-				}else if(QuickMath.getLeftSideGeneric(expr).equals(X)) {
-					basicPlot2D(g,QuickMath.getRightSideGeneric(expr),plotWindowParams,windowSize,IN_TERMS_OF_Y,equType);
+				if(Cas.getLeftSideGeneric(expr).equals(Y)) {
+					basicPlot2D(g,Cas.getRightSideGeneric(expr),plotWindowParams,windowSize,IN_TERMS_OF_X,equType);
+				}else if(Cas.getLeftSideGeneric(expr).equals(X)) {
+					basicPlot2D(g,Cas.getRightSideGeneric(expr),plotWindowParams,windowSize,IN_TERMS_OF_Y,equType);
 				}else {
 					equPlot2D(g,expr,plotWindowParams,windowSize,detail);
 				}
@@ -324,7 +324,7 @@ public class Plot extends JPanel{
 			
 			g.setColor(foregroundColor);
 			
-			Equ xDef = QuickMath.equ(QuickMath.var("x"),QuickMath.floatExpr(0)),yDef = QuickMath.equ(QuickMath.var("y"),QuickMath.floatExpr(0));
+			Equ xDef = Cas.equ(Cas.var("x"),Cas.floatExpr(0)),yDef = Cas.equ(Cas.var("y"),Cas.floatExpr(0));
 			ExprList varDefs = new ExprList();
 			varDefs.add(xDef);
 			varDefs.add(yDef);
@@ -431,7 +431,7 @@ public class Plot extends JPanel{
 
 			Expr expr = stack.get(stack.size()-1);
 			
-			Equ varDef = QuickMath.equ(QuickMath.var("z"),QuickMath.floatExpr(0));
+			Equ varDef = Cas.equ(Cas.var("z"),Cas.floatExpr(0));
 			ExprList varDefs = new ExprList();
 			varDefs.add(varDef);
 			

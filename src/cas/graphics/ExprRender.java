@@ -20,7 +20,7 @@ import cas.matrix.*;
 /*
  * renders expressions into images in pretty way ,built using unicode characters
  */
-public class ExprRender extends QuickMath{//sort of a wrap of the image type but keeps track of fraction bar heights
+public class ExprRender extends Cas{//sort of a wrap of the image type but keeps track of fraction bar heights
 	
 	static class ExprImg{
 		private int width,height,fractionBar;
@@ -179,8 +179,8 @@ public class ExprRender extends QuickMath{//sort of a wrap of the image type but
 		public void makeExpr(Expr e) {//create image from expression
 			if(e instanceof Var || e instanceof Num || e instanceof FloatExpr || e instanceof BoolState) {
 				makeString(e.toString());
-			}else if(e instanceof Power) {
-				Power pow = (Power)e;
+			}else if(e.typeName().equals("power")) {
+				Func pow = (Func)e;
 				
 				ExprImg baseImg = newExprImg();
 				
@@ -210,7 +210,7 @@ public class ExprRender extends QuickMath{//sort of a wrap of the image type but
 					drawImage(baseImg,sqrtWid,smallShift*2,baseImg.getWidth(),baseImg.getHeight());
 					graphics.fillRect(sqrtWid,smallShift,getWidth(),overBarHeight);
 				}else {
-					if(pow.getBase() instanceof Prod || pow.getBase() instanceof Sum || pow.getBase() instanceof Div || pow.getBase() instanceof Power || (pow.getBase() instanceof Num && pow.getBase().negative()) ) {
+					if(pow.getBase() instanceof Prod || pow.getBase() instanceof Sum || pow.getBase().typeName().equals("div") || pow.getBase().typeName().equals("power") || (pow.getBase() instanceof Num && pow.getBase().negative()) ) {
 						baseImg.makeParen(pow.getBase());
 					}else {
 						baseImg.makeExpr(pow.getBase());
@@ -226,8 +226,8 @@ public class ExprRender extends QuickMath{//sort of a wrap of the image type but
 					drawImage(baseImg,0,getHeight()-baseImg.getHeight(),baseImg.getWidth(),baseImg.getHeight());
 					drawImage(expoImg,getWidth()-expoImg.getWidth()*3/4,0,expoImg.getWidth()*3/4,expoImg.getHeight()*3/4);
 				}
-			}else if(e instanceof Div) {
-				Div div = (Div)e;
+			}else if(e.typeName().equals("div")) {
+				Func div = (Func)e;
 				
 				ExprImg numerImg = newExprImg();
 				numerImg.makeExpr(div.getNumer());
@@ -377,7 +377,7 @@ public class ExprRender extends QuickMath{//sort of a wrap of the image type but
 				drawImage(parameters,getFontWidth(),0,parameters.getWidth(),getHeight());
 				drawImage(rightBrac,getWidth()-getFontWidth(),0,getFontWidth(),getHeight());
 				
-			}else if(e instanceof And) {
+			}else if(e.typeName().equals("and")) {
 				ExprImg andImg = newExprImg();
 				andImg.makeString("&");
 				
@@ -386,7 +386,7 @@ public class ExprRender extends QuickMath{//sort of a wrap of the image type but
 				for(int i = 0;i<e.size();i++) {
 					ExprImg imgEl = newExprImg();
 					
-					if(e.get(i) instanceof Or) imgEl.makeParen(e.get(i));
+					if(e.get(i).typeName().equals("or")) imgEl.makeParen(e.get(i));
 					else imgEl.makeExpr(e.get(i));
 					
 					imgs.add(imgEl);
@@ -398,7 +398,7 @@ public class ExprRender extends QuickMath{//sort of a wrap of the image type but
 				for(int i = 0;i<imgs.size();i++)exprImgs[i] = imgs.get(i);
 						
 				makeImgSeries(exprImgs);
-			}else if(e instanceof Or) {
+			}else if(e.typeName().equals("or")) {
 				ExprImg orImg = newExprImg();
 				orImg.makeString("or");
 				
@@ -418,7 +418,7 @@ public class ExprRender extends QuickMath{//sort of a wrap of the image type but
 				for(int i = 0;i<imgs.size();i++)exprImgs[i] = imgs.get(i);
 						
 				makeImgSeries(exprImgs);
-			}else if(e instanceof Not) {
+			}else if(e.typeName().equals("not")) {
 				ExprImg notImg = newExprImg();
 				notImg.makeString("~");
 				
@@ -428,7 +428,7 @@ public class ExprRender extends QuickMath{//sort of a wrap of the image type but
 				else exprImg.makeParen(e.get());
 				
 				makeImgSeries(new ExprImg[] {notImg,exprImg});
-			}else if(e instanceof Abs) {
+			}else if(e.typeName().equals("abs")) {
 				ExprImg eImg = newExprImg();
 				eImg.makeExpr(e.get());
 				
@@ -444,12 +444,12 @@ public class ExprRender extends QuickMath{//sort of a wrap of the image type but
 				drawImage(verticleBar,0,0,verticleBar.getWidth(),getHeight());
 				drawImage(eImg,verticleBar.getWidth(),0,eImg.getWidth(),getHeight());
 				drawImage(verticleBar,getWidth()-verticleBar.getWidth(),0,verticleBar.getWidth(),getHeight());
-			}else if(e instanceof Integrate) {
+			}else if(e.typeName().equals("integrate")) {
 				
 				ExprImg diffImg = newExprImg();
 				diffImg.makeString("∂");
 				
-				Integrate integ = (Integrate)e;
+				Func integ = (Func)e;
 				
 				ExprImg varImg = newExprImg();
 				varImg.makeString(integ.getVar().toString());
@@ -487,24 +487,24 @@ public class ExprRender extends QuickMath{//sort of a wrap of the image type but
 				currentX+=diffImg.getWidth();
 				drawImage(varImg,currentX,getFractionBar()-varImg.getHeight(),varImg.getWidth(),varImg.getHeight());
 				
-			}else if(e instanceof IntegrateOver) {
+			}else if(e.typeName().equals("integrateOver")) {
 				
 				ExprImg diffImg = newExprImg();
 				diffImg.makeString("∂");
 				
-				IntegrateOver integ = (IntegrateOver)e;
+				Func integ = (Func)e;
 				
 				ExprImg varImg = newExprImg();
 				varImg.makeString(integ.getVar().toString());
 				
 				ExprImg eImg = newExprImg();
-				eImg.makeExpr(integ.getExpr());
+				eImg.makeExpr(IntegrateOver.getExpr(integ));
 				
 				ExprImg minImg = newExprImg();
-				minImg.makeExpr(integ.getMin());
+				minImg.makeExpr(IntegrateOver.getMin(integ));
 				
 				ExprImg maxImg = newExprImg();
-				maxImg.makeExpr(integ.getMax());
+				maxImg.makeExpr(IntegrateOver.getMax(integ));
 				
 				setHeight(Math.max(eImg.getHeight(),minImg.getHeight()*3/4+maxImg.getHeight()*3/4)+fontSize());
 				ExprImg leftBracket = newExprImg();
@@ -553,7 +553,7 @@ public class ExprRender extends QuickMath{//sort of a wrap of the image type but
 				arrowImg.makeString(" → ");
 				
 				makeImgSeries(new ExprImg[] {leftSide,arrowImg,rightSide  });
-			}else if(e instanceof Diff) {
+			}else if(e.typeName().equals("diff")) {
 				
 				ExprImg diffImg = newExprImg();
 				diffImg.makeExpr( div(var("∂"),var("∂"+nameExchange.getOrDefault(e.getVar().toString(), e.getVar().toString()))) );
