@@ -3,14 +3,13 @@ package cas.programming;
 import cas.ComplexFloat;
 import cas.Expr;
 import cas.Rule;
-import cas.primitive.Equ;
-import cas.primitive.ExprList;
+import cas.primitive.Func;
 
 public class If extends Expr{
 	
 	If(){}//
-	public If(Equ eq,Script s) {
-		add(eq);
+	public If(Func equ,Script s) {
+		add(equ);
 		add(s);
 	}
 	
@@ -21,7 +20,7 @@ public class If extends Expr{
 	}
 
 	@Override
-	public ComplexFloat convertToFloat(ExprList varDefs) {
+	public ComplexFloat convertToFloat(Func varDefs) {
 		// TODO Auto-generated method stub
 		return null;
 	}

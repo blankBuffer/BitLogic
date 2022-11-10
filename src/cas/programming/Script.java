@@ -3,7 +3,7 @@ package cas.programming;
 import cas.ComplexFloat;
 import cas.Expr;
 import cas.Rule;
-import cas.primitive.ExprList;
+import cas.primitive.Func;
 
 public class Script extends Expr{
 
@@ -44,9 +44,9 @@ public class Script extends Expr{
 	}
 	
 	@Override
-	public ComplexFloat convertToFloat(ExprList varDefs) {
+	public ComplexFloat convertToFloat(Func varDefs) {
 		// TODO Auto-generated method stub
-		return new ComplexFloat(0,0);
+		return ComplexFloat.ZERO;
 	}
 
 	@Override

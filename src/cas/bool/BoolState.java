@@ -4,7 +4,7 @@ import cas.ComplexFloat;
 import cas.Expr;
 import cas.Rule;
 import cas.CasInfo;
-import cas.primitive.ExprList;
+import cas.primitive.Func;
 
 public class BoolState extends Expr{
 
@@ -48,7 +48,7 @@ public class BoolState extends Expr{
 	}
 
 	@Override
-	public ComplexFloat convertToFloat(ExprList varDefs) {
+	public ComplexFloat convertToFloat(Func varDefs) {
 		if(state == true) return new ComplexFloat(1,0);
 		return new ComplexFloat(0,0);
 	}

@@ -6,7 +6,6 @@ import cas.CasInfo;
 import cas.SimpleFuncs;
 import cas.lang.Ask;
 import cas.matrix.Dot;
-import cas.primitive.ExprList;
 import cas.primitive.Prod;
 import cas.primitive.Sequence;
 import cas.primitive.Sum;
@@ -114,7 +113,7 @@ public class StackEditor extends Cas {
 		String out = "";
 		out+="STACK\n";
 		String[] lines = new String[size()];
-		for (int i = 0; i < size(); i++) lines[i] = (i + 1) + ": "+stack.get(i)+"  --->  "+stack.get(i).convertToFloat(exprList()).toString(8);
+		for (int i = 0; i < size(); i++) lines[i] = (i + 1) + ": "+stack.get(i)+"  --->  "+stack.get(i).convertToFloat(exprSet()).toString(8);
 		int longestLine = 0;
 		for (int i = 0; i < size(); i++) longestLine = Math.max(longestLine, lines[i].length());
 		String upperBar = "",lowerBar = "";
@@ -293,11 +292,22 @@ public class StackEditor extends Cas {
 		stack.remove(size() - 1);
 	}
 
-	public void createList() {
-		stack.add(new ExprList());
+	public void createSet() {
+		stack.add(exprSet());
 	}
 
-	public void addToList() {
+	public void addToSet() {
+		if (sLast() == null)
+			return;
+		sLast().add(last());
+		stack.remove(size() - 1);
+	}
+	
+	public void createSequence() {
+		stack.add(sequence());
+	}
+
+	public void addToSequence() {
 		if (sLast() == null)
 			return;
 		sLast().add(last());
@@ -412,9 +422,13 @@ public class StackEditor extends Cas {
 			} else if (command.equals(":=")) {
 				define();
 			} else if (command.equals("{")) {
-				createList();
+				createSet();
 			} else if (command.equals("}")) {
-				addToList();
+				addToSet();
+			}else if (command.equals("[")) {
+				createSequence();
+			} else if (command.equals("]")) {
+				addToSequence();
 			} else if (command.equals("break")) {
 				breakApart();
 			} else if (command.equals("clear")) {

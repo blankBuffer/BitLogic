@@ -36,7 +36,7 @@ public class ObjectExpr extends Expr{//behaves like variables
 	}
 
 	@Override
-	public ComplexFloat convertToFloat(ExprList varDefs) {
+	public ComplexFloat convertToFloat(Func varDefs) {
 		return new ComplexFloat(0,0);
 	}
 

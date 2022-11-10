@@ -180,9 +180,9 @@ public class Integrate{
 					
 					Sequence coef = polyExtract(denomPow.getBase() ,integ.getVar(),casInfo);
 					if(coef == null || coef.size() != 3) return integ;
-					ExprList equs = exprList(  equ(var("a"),coef.get(2)) , equ(var("b"),coef.get(1)) , equ(var("c"),coef.get(0)) , equ(var("n"),n) , equ(var("x"),integ.getVar()) );
+					Func equsSet = exprSet(  equ(var("a"),coef.get(2)) , equ(var("b"),coef.get(1)) , equ(var("c"),coef.get(0)) , equ(var("n"),n) , equ(var("x"),integ.getVar()) );
 					
-					return ans.replace(equs).simplify(casInfo);
+					return ans.replace(equsSet).simplify(casInfo);
 				}
 				
 			};
@@ -387,7 +387,7 @@ public class Integrate{
 					if(u != null) {
 						while(true) {//try normal u and innermost u sub
 							if(!u.equals(integ.getVar())) {
-								Equ eq = equ(u,uSubVar);//im calling it 0u since variables normally can't start with number
+								Func eq = equ(u,uSubVar);//im calling it 0u since variables normally can't start with number
 								
 								Expr diffObj = diff(u,(Var)integ.getVar().copy()).simplify(casInfo);
 								if(diffObj.containsType("diff")) return integ;
@@ -405,11 +405,11 @@ public class Integrate{
 									CasInfo singleSolutionModeCasInfo = new CasInfo(casInfo);
 									singleSolutionModeCasInfo.setSingleSolutionMode(true);
 									Expr solved = solve(equ(uSubVar,u),integ.getVar()).simplify(singleSolutionModeCasInfo);
-									if(solved instanceof ExprList) {//just in case single solution mode accidently returns a list
+									if(solved.typeName().equals("set")) {//just in case single solution mode accidently returns a list
 										solved = solved.get();
 									}
 									if(!(solved.typeName().equals("solve"))) {
-										solved = ((Equ)solved).getRightSide();
+										solved = Equ.getRightSide(((Func)solved));
 										newExpr = integrate(newExpr.replace(equ(integ.getVar(),solved)),uSubVar);
 										newExpr = newExpr.simplify(casInfo);
 										if(!newExpr.containsType("integrate")) {
@@ -510,13 +510,13 @@ public class Integrate{
 						Sequence coefs = polyExtract(e.get().get(),integ.getVar(),casInfo);
 						if(coefs == null) return integ;
 						if(coefs.size() == 3) {
-							ExprList equs = exprList( equ(var("c"),coefs.get(0)) , equ(var("b"),coefs.get(1)) , equ(var("a"),coefs.get(2)) , equ(var("x"),integ.getVar()) );
-							boolean aPositive = check.replace(equs).simplify(casInfo).equals(BoolState.TRUE);
+							Func equsSet = exprSet( equ(var("c"),coefs.get(0)) , equ(var("b"),coefs.get(1)) , equ(var("a"),coefs.get(2)) , equ(var("x"),integ.getVar()) );
+							boolean aPositive = check.replace(equsSet).simplify(casInfo).equals(BoolState.TRUE);
 							Expr out;
 							if(aPositive) {
-								out = resultPos.replace(equs).simplify(casInfo);
+								out = resultPos.replace(equsSet).simplify(casInfo);
 							}else {
-								out = resultNeg.replace(equs).simplify(casInfo);
+								out = resultNeg.replace(equsSet).simplify(casInfo);
 							}
 							//System.out.println(out);
 							return out;
@@ -546,11 +546,11 @@ public class Integrate{
 					}
 					return null;
 				}
-				ExprList subs;
+				Func subsSet;
 				Expr addedDeriv;
 				@Override
 				public void init() {
-					subs = (ExprList)createExpr("{sin(0a)=(2*0t)/(1+0t^2),cos(0a)=(1-0t^2)/(1+0t^2)}");
+					subsSet = (Func)createExpr("{sin(0a)=(2*0t)/(1+0t^2),cos(0a)=(1-0t^2)/(1+0t^2)}");
 					addedDeriv = createExpr("2/(0t^2+1)");
 				}
 				
@@ -563,11 +563,11 @@ public class Integrate{
 					Expr innerTrig = getSinOrCosInner(integ.get());
 					if(innerTrig == null) return integ;
 					
-					Equ equ = equ(var("0a"),innerTrig);
-					ExprList subs = (ExprList) this.subs.replace(equ);
+					Func equ = equ(var("0a"),innerTrig);
+					Func subsSet = (Func) this.subsSet.replace(equ);
 					Expr addedDeriv = this.addedDeriv.replace(equ);
 					
-					Expr newInner = div(prod(integ.get().replace(subs),addedDeriv),diff(innerTrig,integ.getVar()));
+					Expr newInner = div(prod(integ.get().replace(subsSet),addedDeriv),diff(innerTrig,integ.getVar()));
 					newInner = newInner.simplify(casInfo);
 					
 					if(newInner.contains(integ.getVar()) || containsTrig(newInner)) return integ;
@@ -622,17 +622,17 @@ public class Integrate{
 					Sequence poly = polyExtract(innerDiv.getDenom(),v,casInfo);
 					if(poly == null) return e;
 					Expr c = poly.get(0),b = poly.get(1),a = poly.get(2);
-					ExprList subTable = exprList(equ(var("0a"),a),equ(var("0b"),b),equ(var("0c"),c),equ(var("x"),v));
+					Func subTableSet = exprSet(equ(var("0a"),a),equ(var("0b"),b),equ(var("0c"),c),equ(var("x"),v));
 
-					Expr k = this.k.replace(subTable).simplify(casInfo);
+					Expr k = this.k.replace(subTableSet).simplify(casInfo);
 					
-					subTable.add(equ(var("0k"),k));
+					subTableSet.add(equ(var("0k"),k));
 					
 					if(comparison(equGreater(k,num(0))).simplify(casInfo).equals(BoolState.TRUE)) {
-						return this.kPosCase.replace(subTable).simplify(casInfo);
+						return this.kPosCase.replace(subTableSet).simplify(casInfo);
 					}
 					
-					return this.kNegCase.replace(subTable).simplify(casInfo);
+					return this.kNegCase.replace(subTableSet).simplify(casInfo);
 				}
 				
 			};
@@ -659,16 +659,16 @@ public class Integrate{
 						Sequence poly = polyExtract(denom, integ.getVar(), casInfo);
 						if(poly != null && poly.size() == 3) {
 							Expr c = poly.get(0),b = poly.get(1),a = poly.get(2);
-							ExprList subTable = exprList(equ(var("0a"),a),equ(var("0b"),b),equ(var("0c"),c),equ(var("x"),integ.getVar()));
+							Func subTableSet = exprSet(equ(var("0a"),a),equ(var("0b"),b),equ(var("0c"),c),equ(var("x"),integ.getVar()));
 							
-							Expr check = this.check.replace(subTable).simplify(casInfo);
+							Expr check = this.check.replace(subTableSet).simplify(casInfo);
 							
-							subTable.add(equ(var("0k"),check));
+							subTableSet.add(equ(var("0k"),check));
 							if(!check.negative()) {//check is negative if the quadratic contains no roots thus using arctan
-								return this.arctanCase.replace(subTable).simplify(casInfo);
+								return this.arctanCase.replace(subTableSet).simplify(casInfo);
 							}
 							//otherwise use logarithms
-							return this.logCase.replace(subTable).simplify(casInfo);
+							return this.logCase.replace(subTableSet).simplify(casInfo);
 						}
 					}
 					return integ;
@@ -725,12 +725,11 @@ public class Integrate{
 					fullExpandInner,
 					StandardRules.linearOperator
 			},"main sequence");
-			owner.behavior.rule.init();
 			
 			owner.behavior.toFloat = new Func.FloatFunc() {
 				
 				@Override
-				public ComplexFloat convertToFloat(ExprList varDefs, Func owner) {
+				public ComplexFloat convertToFloat(Func varDefs, Func owner) {
 					return Cas.integrateOver(Cas.floatExpr(smallRandNum),owner.getVar(),owner.get(),owner.getVar()).convertToFloat(varDefs);
 				}
 			};

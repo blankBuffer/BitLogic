@@ -235,7 +235,7 @@ public class Num extends Expr{
 		return realValue.intValue()+230487349;
 	}
 	@Override
-	public ComplexFloat convertToFloat(ExprList varDefs) {
+	public ComplexFloat convertToFloat(Func varDefs) {
 		return new ComplexFloat(realValue.doubleValue(),imagValue.doubleValue());
 	}
 

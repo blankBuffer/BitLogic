@@ -1,7 +1,6 @@
 package cas.special;
 
 import cas.*;
-import cas.primitive.ExprList;
 import cas.primitive.Func;
 
 /*
@@ -27,7 +26,7 @@ public class LambertW{
 				 * the Lambert w function is 'visually' really close to ln(x+1)*0.75 so using that as the initial guess for Newton approximation
 				*/
 				@Override
-				public ComplexFloat convertToFloat(ExprList varDefs, Func owner) {
+				public ComplexFloat convertToFloat(Func varDefs, Func owner) {
 					//y=x*e^x  y is known x is unknown
 					//f(x)=y-x*e^x finding the root of f(x) gives us lambertw(x)
 					//f'(x) = -(x*e^x+e^x)
@@ -80,25 +79,25 @@ public class LambertW{
 			
 			boolean canCompute = false;
 			
-			ExprList equs = getEqusFromTemplate(crazyProductRuleFormat,originalExpr);
+			Func equsSet = getEqusFromTemplate(crazyProductRuleFormat,originalExpr);
 			
 			Expr n=null,k=null,b=null,c=null;
 			
-			if(equs != null && !canCompute){
-				n = Rule.getExprByName(equs, "n");
-				k= Rule.getExprByName(equs, "k");
-				b= Rule.getExprByName(equs, "b");
-				c= Rule.getExprByName(equs, "c");
+			if(equsSet != null && !canCompute){
+				n = Rule.getExprByName(equsSet, "n");
+				k= Rule.getExprByName(equsSet, "k");
+				b= Rule.getExprByName(equsSet, "b");
+				c= Rule.getExprByName(equsSet, "c");
 				canCompute = true;
 			}else{
-				equs = getEqusFromTemplate(crazyProductRuleFormat2,originalExpr);
+				equsSet = getEqusFromTemplate(crazyProductRuleFormat2,originalExpr);
 			}
 			
-			if(equs != null && !canCompute){
-				n = Rule.getExprByName(equs, "n");
+			if(equsSet != null && !canCompute){
+				n = Rule.getExprByName(equsSet, "n");
 				k=num(1);
-				b=Rule.getExprByName(equs, "b");
-				c=Rule.getExprByName(equs, "c");
+				b=Rule.getExprByName(equsSet, "b");
+				c=Rule.getExprByName(equsSet, "c");
 				canCompute = true;
 			}
 			
@@ -106,7 +105,7 @@ public class LambertW{
 				
 				Expr v = div(prod(n,lambertW( div(prod(ln(b),k,power(b,div(c,n))),n)) ),ln(b));
 				
-				ComplexFloat approxV = v.convertToFloat(new ExprList());
+				ComplexFloat approxV = v.convertToFloat(exprSet());
 				
 				
 				try{

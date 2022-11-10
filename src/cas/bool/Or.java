@@ -252,14 +252,14 @@ public class Or{
 			 */
 			Rule redundance = new Rule("redundance"){
 				
-				ExprList negElems(Expr orTerm){
-					ExprList negatedElems = exprList();
+				Func negElems(Expr orTerm){//returns expr set
+					Func negatedElemsSet = exprSet();
 					if(orTerm.typeName().equals("and")){
 						for(int j = 0;j<orTerm.size();j++){
-							negatedElems.add(not(orTerm.get(j)).simplify(CasInfo.normal));
+							negatedElemsSet.add(not(orTerm.get(j)).simplify(CasInfo.normal));
 						}
-					}else negatedElems.add(not(orTerm).simplify(CasInfo.normal));
-					return negatedElems;
+					}else negatedElemsSet.add(not(orTerm).simplify(CasInfo.normal));
+					return negatedElemsSet;
 				}
 				
 				@Override
@@ -268,30 +268,30 @@ public class Or{
 					
 					outer:for(int i = 0;i<or.size();i++){
 						Expr orTerm = or.get(i);
-						ExprList negatedElems = negElems(orTerm);//negate all elements of that term
+						Func negatedElemsSet = negElems(orTerm);//negate all elements of that term
 						
 						for(int j = 0;j<or.size();j++){
 							if(j == i) continue;
 							
 							Func castedTermAnd = And.cast(or.get(j));
 							
-							int indexOfFactor = fastContains(negatedElems.get(0),castedTermAnd);//find a factor
+							int indexOfFactor = fastContains(negatedElemsSet.get(0),castedTermAnd);//find a factor
 							if(indexOfFactor == -1) continue;
 							Func strippedAnd = (Func)castedTermAnd.copy();
 							strippedAnd.remove(indexOfFactor);
 							
-							ExprList negatedElemsCopy = (ExprList) negatedElems.copy();
-							negatedElemsCopy.remove(0);
+							Func negatedElemsSetCopy = (Func) negatedElemsSet.copy();
+							negatedElemsSetCopy.remove(0);
 							
-							if(negatedElemsCopy.size() == 0){//simple case
+							if(negatedElemsSetCopy.size() == 0){//simple case
 								or.set(j,strippedAnd.simplify(casInfo));
 								if(j < i) i = -1;//changed sequence needs restart
 								continue outer;
 							}else{//find the rest of them
 								ArrayList<Integer> toBeRemoved = new ArrayList<Integer>();
 								toBeRemoved.add(j);
-								while(negatedElemsCopy.size() > 0){
-									Expr searchFor = negatedElemsCopy.get(0);
+								while(negatedElemsSetCopy.size() > 0){
+									Expr searchFor = negatedElemsSetCopy.get(0);
 									
 									boolean found = false;
 									for(int k = 0;k<or.size();k++){
@@ -314,7 +314,7 @@ public class Or{
 										
 										
 									}
-									if(found) negatedElemsCopy.remove(0);
+									if(found) negatedElemsSetCopy.remove(0);
 									else continue outer;	
 								}
 								
@@ -348,14 +348,14 @@ public class Or{
 			 * go through each variable
 			 */
 			Rule factorGroupVar = new Rule("factor each variable"){
-				void extractVars(Expr e,ExprList out){
-					if(e.typeName().equals("var") && fastContains(e,out) == -1){
-						out.add(e);
-					}else if(e.typeName().equals("not") && e.get().typeName().equals("var") && fastContains(e,out) == -1){
-						out.add(e);
+				void extractVars(Expr e,Func outSet){
+					if(e.typeName().equals("var") && fastContains(e,outSet) == -1){
+						outSet.add(e);
+					}else if(e.typeName().equals("not") && e.get().typeName().equals("var") && fastContains(e,outSet) == -1){
+						outSet.add(e);
 					}else{
 						for(int i = 0;i < e.size();i++){
-							extractVars(e.get(i),out);
+							extractVars(e.get(i),outSet);
 						}
 					}
 					
@@ -366,12 +366,12 @@ public class Or{
 					Func or = (Func)e;
 					
 					//capture all possible variables
-					ExprList vars = exprList();
-					extractVars(or,vars);
+					Func varsSet = exprSet();
+					extractVars(or,varsSet);
 					//
 					
-					for(int i = 0;i < vars.size();i++){
-						Expr var = vars.get(i);
+					for(int i = 0;i < varsSet.size();i++){
+						Expr var = varsSet.get(i);
 						
 						Expr recursiveOr = or();
 						Cas.IndexSet toBeRemoved = new Cas.IndexSet();
@@ -429,7 +429,6 @@ public class Or{
 				//again to ensure no more steps
 				subSequence,
 			},"main sequence");
-			owner.behavior.rule.init();
 			
 			owner.behavior.toStringMethod = new Func.ToString() {
 				@Override
@@ -449,7 +448,7 @@ public class Or{
 			
 			owner.behavior.toFloat = new Func.FloatFunc() {
 				@Override
-				public ComplexFloat convertToFloat(ExprList varDefs, Func owner) {
+				public ComplexFloat convertToFloat(Func varDefs, Func owner) {
 					boolean state = false;
 					for(int i = 0;i<owner.size();i++){
 						state |= Math.abs(owner.get(i).convertToFloat(varDefs).real)>0.5;

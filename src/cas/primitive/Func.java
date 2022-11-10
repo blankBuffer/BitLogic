@@ -10,7 +10,7 @@ public class Func extends Expr{
 	public FuncLoader loader = null;
 	
 	public static abstract class FloatFunc{
-		public abstract ComplexFloat convertToFloat(ExprList varDefs,Func owner);
+		public abstract ComplexFloat convertToFloat(Func varDefs,Func owner);
 	}
 	
 	public static abstract class FuncLoader{
@@ -93,13 +93,13 @@ public class Func extends Expr{
 	
 	public static FloatFunc nothingFunc = new Func.FloatFunc() {//return whatever is inside
 		@Override
-		public ComplexFloat convertToFloat(ExprList varDefs, Func owner) {
+		public ComplexFloat convertToFloat(Func varDefs, Func owner) {
 			return owner.get().convertToFloat(varDefs);
 		}
 	};
 	
 	@Override
-	public ComplexFloat convertToFloat(ExprList varDefs) {
+	public ComplexFloat convertToFloat(Func varDefs) {
 		if(behavior.toFloat != null) {
 			return behavior.toFloat.convertToFloat(varDefs,this);
 		}

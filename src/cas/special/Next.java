@@ -440,8 +440,8 @@ public class Next extends Expr{
 	}
 
 	@Override
-	public ComplexFloat convertToFloat(ExprList varDefs) {
-		return new ComplexFloat(0,0);
+	public ComplexFloat convertToFloat(Func varDefs) {
+		return ComplexFloat.ZERO;
 	}
 
 	@Override

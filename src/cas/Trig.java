@@ -114,10 +114,10 @@ public class Trig {
 				unitCircle
 			},"main sequence");
 			
-			owner.behavior.rule.init();
+			
 			owner.behavior.toFloat = new Func.FloatFunc() {
 				@Override
-				public ComplexFloat convertToFloat(ExprList varDefs, Func owner) {
+				public ComplexFloat convertToFloat(Func varDefs, Func owner) {
 					return ComplexFloat.sin(owner.get().convertToFloat(varDefs));
 				}
 			};
@@ -216,10 +216,10 @@ public class Trig {
 					unitCircle
 			},"main sequence");
 			
-			owner.behavior.rule.init();
+			
 			owner.behavior.toFloat = new Func.FloatFunc() {
 				@Override
-				public ComplexFloat convertToFloat(ExprList varDefs, Func owner) {
+				public ComplexFloat convertToFloat(Func varDefs, Func owner) {
 					return ComplexFloat.cos(owner.get().convertToFloat(varDefs));
 				}
 			};
@@ -315,10 +315,10 @@ public class Trig {
 					StandardRules.distrInner,
 					unitCircle
 			},"main sequence");
-			owner.behavior.rule.init();
+			
 			owner.behavior.toFloat = new Func.FloatFunc() {
 				@Override
-				public ComplexFloat convertToFloat(ExprList varDefs, Func owner) {
+				public ComplexFloat convertToFloat(Func varDefs, Func owner) {
 					return ComplexFloat.tan(owner.get().convertToFloat(varDefs));
 				}
 			};
@@ -346,10 +346,10 @@ public class Trig {
 					containsInverse,
 					inverseUnitCircle
 			},"main sequence");
-			owner.behavior.rule.init();
+			
 			owner.behavior.toFloat = new Func.FloatFunc() {
 				@Override
-				public ComplexFloat convertToFloat(ExprList varDefs, Func owner) {
+				public ComplexFloat convertToFloat(Func varDefs, Func owner) {
 					return ComplexFloat.atan(owner.get().convertToFloat(varDefs));
 				}
 			};
@@ -397,10 +397,10 @@ public class Trig {
 					containsSin,
 					inverseUnitCircle
 			},"main sequence");
-			owner.behavior.rule.init();
+			
 			owner.behavior.toFloat = new Func.FloatFunc() {
 				@Override
-				public ComplexFloat convertToFloat(ExprList varDefs, Func owner) {
+				public ComplexFloat convertToFloat(Func varDefs, Func owner) {
 					return ComplexFloat.acos(owner.get().convertToFloat(varDefs));
 				}
 			};
@@ -436,10 +436,10 @@ public class Trig {
 					asinCosCase,
 					inverseUnitCircle
 			},"main sequence");
-			owner.behavior.rule.init();
+			
 			owner.behavior.toFloat = new Func.FloatFunc() {
 				@Override
-				public ComplexFloat convertToFloat(ExprList varDefs, Func owner) {
+				public ComplexFloat convertToFloat(Func varDefs, Func owner) {
 					return ComplexFloat.asin(owner.get().convertToFloat(varDefs));
 				}
 			};

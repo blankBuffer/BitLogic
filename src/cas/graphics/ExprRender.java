@@ -246,12 +246,12 @@ public class ExprRender extends Cas{//sort of a wrap of the image type but keeps
 				drawImage(numerImg,getWidth()/2-numerImg.getWidth()/2,0,numerImg.getWidth(),numerImg.getHeight());
 				graphics.fillRect(getWidth()/2-fractionSpacerWidth/2, numerImg.getHeight(), fractionSpacerWidth, fractionSpacerHeight);
 				drawImage(denomImg,getWidth()/2-denomImg.getWidth()/2,getHeight()-denomImg.getHeight(),denomImg.getWidth(),denomImg.getHeight());
-			}else if(e instanceof Equ || e instanceof Greater || e instanceof Less) {
+			}else if(e.typeName().equals("equ") || e instanceof Greater || e instanceof Less) {
 				Expr leftSide = getLeftSideGeneric(e);
 				Expr rightSide = getRightSideGeneric(e);
 				
 				ExprImg equImg = newExprImg();
-				equImg.makeString( (e instanceof Equ) ? "=" : ((e instanceof Greater) ? ">" : "<") );
+				equImg.makeString( (e.typeName().equals("equ")) ? "=" : ((e instanceof Greater) ? ">" : "<") );
 				
 				ExprImg leftImg = newExprImg();
 				leftImg.makeExpr(leftSide);
@@ -350,7 +350,7 @@ public class ExprRender extends Cas{//sort of a wrap of the image type but keeps
 				for(int i = 0;i<imgs.size();i++)exprImgs[i] = imgs.get(i);
 						
 				makeImgSeries(exprImgs);
-			}else if(e instanceof ExprList || e instanceof Sequence) {
+			}else if(e.typeName().equals("set") || e instanceof Sequence) {
 				ExprImg leftBrac = newExprImg();
 				ExprImg rightBrac = newExprImg();
 				
@@ -360,7 +360,7 @@ public class ExprRender extends Cas{//sort of a wrap of the image type but keeps
 				
 				setHeight(Math.max(parameters.getHeight(),fontSize()));
 				
-				if(e instanceof ExprList) {
+				if(e.typeName().equals("set")) {
 					leftBrac.makeString("{",getHeight());
 					rightBrac.makeString("}",getHeight());
 				}else {
@@ -541,13 +541,13 @@ public class ExprRender extends Cas{//sort of a wrap of the image type but keeps
 				currentX+=diffImg.getWidth();
 				drawImage(varImg,currentX,getFractionBar()-varImg.getHeight(),varImg.getWidth(),varImg.getHeight());
 				
-			}else if(e instanceof Becomes) {
-				Becomes becomes = (Becomes)e;
+			}else if(e.typeName().equals("becomes")) {
+				Func becomes = (Func)e;
 				
 				ExprImg leftSide = newExprImg();
-				leftSide.makeExpr(becomes.getLeftSide());
+				leftSide.makeExpr(Becomes.getLeftSide(becomes));
 				ExprImg rightSide = newExprImg();
-				rightSide.makeExpr(becomes.getRightSide());
+				rightSide.makeExpr(Becomes.getRightSide(becomes));
 				
 				ExprImg arrowImg = newExprImg();
 				arrowImg.makeString(" → ");

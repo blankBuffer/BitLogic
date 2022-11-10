@@ -245,9 +245,9 @@ public class Interpreter extends Cas{
 					else if(outExpr == null) return sequence();
 					return sequence(outExpr);
 				}else if(string.startsWith("{")){
-					if(outExpr instanceof Params) return ExprList.cast(outExpr);
-					else if(outExpr == null) return exprList();
-					return exprList(outExpr);
+					if(outExpr instanceof Params) return ExprSet.cast(outExpr);
+					else if(outExpr == null) return exprSet();
+					return exprSet(outExpr);
 				}
 				
 			}

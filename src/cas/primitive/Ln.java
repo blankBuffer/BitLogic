@@ -30,7 +30,7 @@ public class Ln{
 			
 			owner.behavior.toFloat = new Func.FloatFunc() {
 				@Override
-				public ComplexFloat convertToFloat(ExprList varDefs, Func owner) {
+				public ComplexFloat convertToFloat(Func varDefs, Func owner) {
 					return ComplexFloat.ln(owner.get().convertToFloat(varDefs));
 				}
 			};
@@ -118,7 +118,7 @@ public class Ln{
 				for(int i = 0;i<prodNumer.size();i++) {
 					Expr current = prodNumer.get(i);
 					if(current instanceof Sum || current.typeName().equals("power") && ((Func)current).getBase() instanceof Sum || current.typeName().equals("abs") && ((Func)current).get() instanceof Sum) {
-						if(!current.containsVars() && !current.convertToFloat(exprList()).positiveAndReal()) continue;
+						if(!current.containsVars() && !current.convertToFloat(exprSet()).positiveAndReal()) continue;
 						out.add(ln(current));
 						prodNumer.remove(i);
 						i--;
@@ -127,7 +127,7 @@ public class Ln{
 				for(int i = 0;i<prodDenom.size();i++) {
 					Expr current = prodDenom.get(i);
 					if(current instanceof Sum || current.typeName().equals("power") && ((Func)current).getBase() instanceof Sum || current.typeName().equals("abs") && ((Func)current).get() instanceof Sum) {
-						if(!current.containsVars() && !current.convertToFloat(exprList()).positiveAndReal()) continue;
+						if(!current.containsVars() && !current.convertToFloat(exprSet()).positiveAndReal()) continue;
 						out.add(neg(ln(current)));
 						prodDenom.remove(i);
 						i--;

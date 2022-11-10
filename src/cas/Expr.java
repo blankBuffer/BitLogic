@@ -46,7 +46,7 @@ public abstract class Expr extends Cas{
 		return null;
 	}
 	
-	public abstract ComplexFloat convertToFloat(ExprList varDefs);
+	public abstract ComplexFloat convertToFloat(Func varDefsSet);
 	public abstract String typeName();
 	
 	public void print() {
@@ -398,14 +398,6 @@ public abstract class Expr extends Cas{
 		return false;
 	}
 	
-	public Expr replace(Equ equ) {
-		ExprList l = new ExprList();
-		l.add(equ);
-		return replace(l);
-	}
-	
-	
-	
 	public void add(Expr e) {
 		if(flags.mutable == false) throw new RuntimeException("expression is not mutable!");
 		flags.reset();
@@ -458,7 +450,7 @@ public abstract class Expr extends Cas{
 				varcounts = new ArrayList<VarCount>();
 				countVars(varcounts);
 			}
-			if(this instanceof Sum || this instanceof Prod || this instanceof ExprList) {
+			if(this instanceof Sum || this instanceof Prod || this.typeName().equals("set")) {
 				boolean wasSimple = flags.simple;
 				
 				final ArrayList<VarCount> varcountsConst = varcounts;
@@ -528,18 +520,29 @@ public abstract class Expr extends Cas{
 		sort(null);
 	}
 	
-	public Expr replace(ExprList equs) {
-		for(int i = 0;i<equs.size();i++) {
-			Equ e = (Equ)equs.get(i);
-			if(equals(e.getLeftSide())) return e.getRightSide().copy();
-		}
+	public Expr replace(Func in) {
 		
-		Expr replacedChildren = copy();
-		
-		for(int i = 0;i<replacedChildren.size();i++) {
-			replacedChildren.set(i, get(i).replace(equs));
+		if(in.typeName().equals("set")) {
+			Func equsSet = in;
+			for(int i = 0;i<equsSet.size();i++) {
+				Func equ = (Func)equsSet.get(i);
+				if(equals(Equ.getLeftSide(equ))) return Equ.getRightSide(equ).copy();
+			}
+			
+			Expr replacedChildren = copy();
+			
+			for(int i = 0;i<replacedChildren.size();i++) {
+				replacedChildren.set(i, get(i).replace(equsSet));
+			}
+			return replacedChildren;
+		}else if(in.typeName().equals("equ")){
+			Func equ = in;
+			Func l = exprSet();
+			l.add(equ);
+			return replace(l);
+		}else {
+			throw new RuntimeException("invalid parameter for replace");
 		}
-		return replacedChildren;
 	}
 	
 	public void simplifyChildren(CasInfo casInfo) {

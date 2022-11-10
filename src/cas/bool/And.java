@@ -5,7 +5,6 @@ import cas.Expr;
 import cas.Cas;
 import cas.Rule;
 import cas.CasInfo;
-import cas.primitive.ExprList;
 import cas.primitive.Func;
 
 public class And{
@@ -168,11 +167,10 @@ public class And{
 				distribute,
 				aloneAnd
 			},"main sequence");
-			owner.behavior.rule.init();
 			
 			owner.behavior.toFloat = new Func.FloatFunc() {
 				@Override
-				public ComplexFloat convertToFloat(ExprList varDefs, Func owner) {
+				public ComplexFloat convertToFloat(Func varDefs, Func owner) {
 					boolean state = true;
 					for(int i = 0;i<owner.size();i++){
 						state &= Math.abs(owner.get(i).convertToFloat(varDefs).real)>0.5;

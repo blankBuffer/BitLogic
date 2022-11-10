@@ -795,7 +795,7 @@ public class Prod extends Expr{
 	}
 	
 	@Override
-	public ComplexFloat convertToFloat(ExprList varDefs) {
+	public ComplexFloat convertToFloat(Func varDefs) {
 		ComplexFloat total = new ComplexFloat(1,0);
 		for(int i = 0;i<size();i++) total=ComplexFloat.mult(total, get(i).convertToFloat(varDefs));
 		return total;

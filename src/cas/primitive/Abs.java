@@ -22,11 +22,11 @@ public class Abs{
 			 */
 			Rule alwaysPositive = new Rule("expression is always positive") {
 				Expr computeResult(Func abs,Expr theoryMin,Expr theoryMax,CasInfo casInfo) {
-					boolean minPos = theoryMin.convertToFloat(exprList()).real>=0 || theoryMin.equals(Num.ZERO);
-					boolean minNeg = theoryMin.convertToFloat(exprList()).real<=0 || theoryMin.equals(Num.ZERO);
+					boolean minPos = theoryMin.convertToFloat(exprSet()).real>=0 || theoryMin.equals(Num.ZERO);
+					boolean minNeg = theoryMin.convertToFloat(exprSet()).real<=0 || theoryMin.equals(Num.ZERO);
 					
-					boolean maxPos = theoryMax.convertToFloat(exprList()).real>=0 || theoryMax.equals(Num.ZERO);
-					boolean maxNeg = theoryMax.convertToFloat(exprList()).real<=0 || theoryMax.equals(Num.ZERO);
+					boolean maxPos = theoryMax.convertToFloat(exprSet()).real>=0 || theoryMax.equals(Num.ZERO);
+					boolean maxNeg = theoryMax.convertToFloat(exprSet()).real<=0 || theoryMax.equals(Num.ZERO);
 					
 					if(minPos && maxPos) {
 						return abs.get();
@@ -101,16 +101,16 @@ public class Abs{
 							theoryMin.add(num(-1));
 							theoryMax.add(num(1));
 						}else if(Rule.fastSimilarExpr(basicSinProd, current)) {
-							ExprList equs = Rule.getEqusFromTemplate(basicSinProd, current);
-							Expr a = Rule.getExprByName(equs, "a");
+							Func equsSet = Rule.getEqusFromTemplate(basicSinProd, current);
+							Expr a = Rule.getExprByName(equsSet, "a");
 							
 							if(!a.contains(v)) {
 								theoryMin.add(neg(abs(a)));
 								theoryMax.add(abs(a));
 							}else return abs;
 						}else if(Rule.fastSimilarExpr(basicCosProd, current)) {
-							ExprList equs = Rule.getEqusFromTemplate(basicCosProd, current);
-							Expr a = Rule.getExprByName(equs, "a");
+							Func equsSet = Rule.getEqusFromTemplate(basicCosProd, current);
+							Expr a = Rule.getExprByName(equsSet, "a");
 							
 							if(!a.contains(v)) {
 								theoryMin.add(neg(abs(a)));
@@ -119,8 +119,8 @@ public class Abs{
 						}else if(current instanceof Func) {
 							theoryMax.add(inf());
 						}else if(Rule.fastSimilarExpr(basicAbsProd, current)) {
-							ExprList equs = Rule.getEqusFromTemplate(basicAbsProd, current);
-							Expr a = Rule.getExprByName(equs, "a");
+							Func equsSet = Rule.getEqusFromTemplate(basicAbsProd, current);
+							Expr a = Rule.getExprByName(equsSet, "a");
 							
 							if(!a.contains(v)) {
 								if( comparison(equGreater(a,num(0))).simplify(casInfo).equals(BoolState.TRUE) ) {
@@ -145,7 +145,7 @@ public class Abs{
 					if(degree.mod(BigInteger.TWO).equals(BigInteger.ONE)) return abs;
 
 					Sequence poly = polyExtract(polynomialSum,v,casInfo);
-					boolean positive = poly.get(poly.size()-1).convertToFloat(exprList()).real>0;
+					boolean positive = poly.get(poly.size()-1).convertToFloat(exprSet()).real>0;
 					if(positive) theoryMax = inf();
 					else theoryMin = neg(inf());
 					
@@ -153,15 +153,15 @@ public class Abs{
 					double polyMin = 0.0;
 					double polyMax = 0.0;
 					for(double solution:derivPolySols) {
-						double out = polynomialSum.convertToFloat(exprList( equ(v,floatExpr(solution)) )).real;
+						double out = polynomialSum.convertToFloat(exprSet( equ(v,floatExpr(solution)) )).real;
 						
 						polyMin = Math.min(polyMin, out);
 						polyMax = Math.max(polyMax, out);
 						
 					}
 					
-					if(positive) theoryMin = floatExpr(sum(theoryMin,floatExpr(polyMin)).convertToFloat(exprList()));
-					else floatExpr(sum(theoryMax,floatExpr(polyMax)).convertToFloat(exprList()));
+					if(positive) theoryMin = floatExpr(sum(theoryMin,floatExpr(polyMin)).convertToFloat(exprSet()));
+					else floatExpr(sum(theoryMax,floatExpr(polyMax)).convertToFloat(exprSet()));
 					
 					return computeResult(abs,theoryMin,theoryMax,casInfo);
 				}
@@ -204,7 +204,7 @@ public class Abs{
 				public Expr applyRuleToExpr(Expr e,CasInfo casInfo) {
 					Func abs = (Func)e;
 					if(!abs.get().containsVars() && !abs.contains(Var.EPSILON)) {
-						ComplexFloat approx = abs.get().convertToFloat(exprList());
+						ComplexFloat approx = abs.get().convertToFloat(exprSet());
 						if(ComplexFloat.closeToZero(approx.imag)) {
 							if(approx.real<0) {
 								return neg(abs.get()).simplify(casInfo);
@@ -247,7 +247,7 @@ public class Abs{
 			
 			owner.behavior.toFloat = new Func.FloatFunc() {
 				@Override
-				public ComplexFloat convertToFloat(ExprList varDefs, Func owner) {
+				public ComplexFloat convertToFloat(Func varDefs, Func owner) {
 					return ComplexFloat.mag(owner.get().convertToFloat(varDefs));
 				}
 			};

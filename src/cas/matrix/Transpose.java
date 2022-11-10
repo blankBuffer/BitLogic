@@ -4,7 +4,7 @@ import cas.ComplexFloat;
 import cas.Expr;
 import cas.Rule;
 import cas.CasInfo;
-import cas.primitive.ExprList;
+import cas.primitive.Func;
 import cas.primitive.Prod;
 import cas.primitive.Sequence;
 import cas.primitive.Sum;
@@ -101,8 +101,8 @@ public class Transpose extends Expr{
 	}
 	
 	@Override
-	public ComplexFloat convertToFloat(ExprList varDefs) {
-		return new ComplexFloat(0,0);
+	public ComplexFloat convertToFloat(Func varDefs) {
+		return ComplexFloat.ZERO;
 	}
 
 	@Override

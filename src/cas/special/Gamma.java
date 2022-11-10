@@ -70,7 +70,7 @@ public class Gamma{
 			
 			owner.behavior.toFloat = new Func.FloatFunc() {
 				@Override
-				public ComplexFloat convertToFloat(ExprList varDefs, Func owner) {
+				public ComplexFloat convertToFloat(Func varDefs, Func owner) {
 					ComplexFloat inner = ComplexFloat.sub(owner.get().convertToFloat(varDefs),new ComplexFloat(1.0,0));
 					
 					return new ComplexFloat(Cas.factorial(inner.real),0);

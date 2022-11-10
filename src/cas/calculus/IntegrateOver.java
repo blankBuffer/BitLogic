@@ -6,7 +6,6 @@ import cas.Cas;
 import cas.Rule;
 import cas.CasInfo;
 import cas.primitive.Equ;
-import cas.primitive.ExprList;
 import cas.primitive.FloatExpr;
 import cas.primitive.Func;
 import cas.primitive.Var;
@@ -36,35 +35,34 @@ public class IntegrateOver{
 			owner.behavior.rule = new Rule(new Rule[]{
 				definiteIntegral		
 			},"main sequence");
-			owner.behavior.rule.init();
 			
 			owner.behavior.toFloat = new Func.FloatFunc() {
 				@Override
-				public ComplexFloat convertToFloat(ExprList varDefs, Func owner) {
+				public ComplexFloat convertToFloat(Func varDefs, Func owner) {
 					int n = 32;//should be an even number
 					ComplexFloat sum = new ComplexFloat(0,0);
 					ComplexFloat min = getMin(owner).convertToFloat(varDefs),max = getMax(owner).convertToFloat(varDefs);
 					ComplexFloat step = ComplexFloat.div( ComplexFloat.sub(max, min),new ComplexFloat(n,0));
 					
-					Equ vDef = Cas.equ(owner.getVar(),Cas.floatExpr(min));
-					ExprList varDefs2 = (ExprList) varDefs.copy();
+					Func vDefEqu = Cas.equ(owner.getVar(),Cas.floatExpr(min));
+					Func varDefs2 = (Func) varDefs.copy();
 					
 					for(int i = 0;i < varDefs2.size();i++) {
-						Equ temp = (Equ)varDefs2.get(i);
-						Var v = (Var)temp.getLeftSide();
+						Func tempEqu = (Func)varDefs2.get(i);
+						Var v = (Var)Equ.getLeftSide(tempEqu);
 						if(v.equals(owner.getVar())) {
 							varDefs2.remove(i);
 							break;
 						}
 					}
-					varDefs2.add(vDef);
+					varDefs2.add(vDefEqu);
 					
 					sum = ComplexFloat.add(sum, getExpr(owner).convertToFloat(varDefs2));
-					((FloatExpr)vDef.getRightSide()).value = ComplexFloat.add(((FloatExpr)vDef.getRightSide()).value, step);
+					((FloatExpr)Equ.getRightSide(vDefEqu)).value = ComplexFloat.add(((FloatExpr)Equ.getRightSide(vDefEqu)).value, step);
 					
 					for(int i = 1;i<n;i++) {
 						sum=ComplexFloat.add(sum,  ComplexFloat.mult( new ComplexFloat(((i%2)*2+2),0) ,getExpr(owner).convertToFloat(varDefs2)) );
-						((FloatExpr)vDef.getRightSide()).value = ComplexFloat.add(((FloatExpr)vDef.getRightSide()).value, step);
+						((FloatExpr)Equ.getRightSide(vDefEqu)).value = ComplexFloat.add(((FloatExpr)Equ.getRightSide(vDefEqu)).value, step);
 					}
 					
 					sum=ComplexFloat.add(sum, getExpr(owner).convertToFloat(varDefs2));

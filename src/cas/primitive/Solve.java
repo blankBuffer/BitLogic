@@ -134,11 +134,11 @@ public class Solve{
 						public Expr applyRuleToExpr(Expr e,CasInfo casInfo){
 							Func solve = (Func)e;
 							
-							Equ equ = getEqu(solve);
+							Func equ = getEqu(solve);
 							Var v = solve.getVar();
 							
-							if(equ.getLeftSide() instanceof Prod) {
-								Prod leftSide = (Prod)equ.getLeftSide();
+							if(Equ.getLeftSide(equ) instanceof Prod) {
+								Prod leftSide = (Prod)Equ.getLeftSide(equ);
 								if(leftSide.size() == 2) {
 									Expr varPart = null,sumPart = null;
 									
@@ -169,7 +169,7 @@ public class Solve{
 									
 									Expr a = Sum.unCast(variableParts);
 									Expr b = Sum.unCast(constantParts);
-									Expr c = equ.getRightSide();
+									Expr c = Equ.getRightSide(equ);
 									
 									//a*x^2+b*x=c
 									//x = -b+sqrt(b^2+4*a*c)/2a
@@ -177,17 +177,17 @@ public class Solve{
 									Expr answer = null;
 									
 									if(!casInfo.singleSolutionMode()) {
-										answer = quadAns.replace( exprList( equ(var("a"),a),equ(var("b"),b),equ(var("c"),c),equ(var("x"),varPart) ) );
+										answer = quadAns.replace( exprSet( equ(var("a"),a),equ(var("b"),b),equ(var("c"),c),equ(var("x"),varPart) ) );
 										for(int i = 0;i<answer.size();i++) {
-											answer.set(i, solve( (Equ)answer.get(i) ,v));
+											answer.set(i, solve( (Func)answer.get(i) ,v));
 										}
 										
 										return answer.simplify(casInfo);
 									}
 									
 									//if we are in single solution mode
-									answer = quadSingleAns.replace( exprList( equ(var("a"),a),equ(var("b"),b),equ(var("c"),c),equ(var("x"),varPart) ) );
-									setEqu(solve,(Equ) answer.simplify(casInfo));
+									answer = quadSingleAns.replace( exprSet( equ(var("a"),a),equ(var("b"),b),equ(var("c"),c),equ(var("x"),varPart) ) );
+									setEqu(solve,(Func) answer.simplify(casInfo));
 								}
 							}
 							
@@ -206,7 +206,7 @@ public class Solve{
 						@Override
 						public Expr applyRuleToExpr(Expr e,CasInfo casInfo){
 							Func solve = (Func)e;
-							setEqu(solve, (Equ)mainCase.applyRuleToExpr(getEqu(solve), casInfo) );
+							setEqu(solve, (Func)mainCase.applyRuleToExpr(getEqu(solve), casInfo) );
 							return solve;
 						}
 					};
@@ -254,8 +254,8 @@ public class Solve{
 							
 							Var v = solve.getVar();
 							
-							if(getEqu(solve).getLeftSide().typeName().equals("power")) {
-								Func pow = (Func)getEqu(solve).getLeftSide();
+							if(Equ.getLeftSide(getEqu(solve)).typeName().equals("power")) {
+								Func pow = (Func)Equ.getLeftSide(getEqu(solve));
 								
 								boolean baseHasVar = pow.getBase().contains(v);
 								boolean expoHasVar = pow.getExpo().contains(v);
@@ -265,18 +265,18 @@ public class Solve{
 									
 									boolean plusMinus = !casInfo.singleSolutionMode() && Div.isNumericalAndReal(frac) && ((Num)frac.getNumer()).getRealValue().mod(BigInteger.TWO).equals(BigInteger.ZERO);
 									
-									Equ newEqu = (Equ)rootCase.applyRuleToExpr(getEqu(solve), casInfo);
+									Func newEqu = (Func)rootCase.applyRuleToExpr(getEqu(solve), casInfo);
 									
 									if(plusMinus) {
-										Equ newEquNeg = (Equ)newEqu.copy();
-										newEquNeg.setRightSide(neg(newEquNeg.getRightSide()));
-										return exprList( solve(newEquNeg,v), solve(newEqu,v) ).simplify(casInfo);
+										Func newEquNeg = (Func)newEqu.copy();
+										Equ.setRightSide(newEquNeg,neg(Equ.getRightSide(newEquNeg)));
+										return exprSet( solve(newEquNeg,v), solve(newEqu,v) ).simplify(casInfo);
 									}
 									setEqu(solve,newEqu);
 								}else if(!baseHasVar && expoHasVar) {
-									setEqu(solve,(Equ)expoCase.applyRuleToExpr(getEqu(solve), casInfo));
+									setEqu(solve,(Func)expoCase.applyRuleToExpr(getEqu(solve), casInfo));
 								}else if(baseHasVar && expoHasVar) {
-									setEqu(solve,(Equ)baseAndExpoHaveVar.applyRuleToExpr(getEqu(solve), casInfo));
+									setEqu(solve,(Func)baseAndExpoHaveVar.applyRuleToExpr(getEqu(solve), casInfo));
 								}
 								
 							}
@@ -292,9 +292,9 @@ public class Solve{
 							
 							Var v = solve.getVar();
 							
-							if(getEqu(solve).getRightSide().equals(Num.ZERO) && getEqu(solve).getLeftSide() instanceof Prod) {
-								ExprList solutions = new ExprList();
-								Prod leftSide = (Prod)getEqu(solve).getLeftSide();
+							if(Equ.getRightSide(getEqu(solve)).equals(Num.ZERO) && Equ.getLeftSide(getEqu(solve)) instanceof Prod) {
+								Func solutions = exprSet();
+								Prod leftSide = (Prod)Equ.getLeftSide(getEqu(solve));
 								
 								for(int i = 0;i<leftSide.size();i++) {
 									Expr current = leftSide.get(i);
@@ -349,7 +349,7 @@ public class Solve{
 							e = ((Rule)loopedSequence.get(i)).applyRuleToExpr(solve, casInfo);
 							if(!(e.typeName().equals("solve"))) break outer;
 							solve = (Func)e;
-							if(getEqu(solve).getLeftSide().equals(solve.getVar()) && !getEqu(solve).getRightSide().contains(solve.getVar())) {
+							if(Equ.getLeftSide(getEqu(solve)).equals(solve.getVar()) && !Equ.getRightSide(getEqu(solve)).contains(solve.getVar())) {
 								return getEqu(solve);
 							}
 						}
@@ -368,12 +368,12 @@ public class Solve{
 			owner.behavior.toFloat = new Func.FloatFunc() {
 				
 				@Override
-				public ComplexFloat convertToFloat(ExprList varDefs, Func owner) {
+				public ComplexFloat convertToFloat(Func varDefs, Func owner) {
 					FloatExpr guess = Cas.floatExpr(INITIAL_GUESS);
 					if(singleEq(owner)){
-						Expr expr = Cas.sub(getEqu(owner).getLeftSide(),getEqu(owner).getRightSide());
+						Expr expr = Cas.sub(Equ.getLeftSide(getEqu(owner)),Equ.getRightSide(getEqu(owner)));
 						expr = Cas.sub(owner.getVar(),Cas.div(expr,Cas.diff(expr,owner.getVar())));
-						ExprList varDefs2 = Cas.exprList(Cas.equ(owner.getVar(),guess));
+						Func varDefs2 = Cas.exprSet(Cas.equ(owner.getVar(),guess));
 					
 						for(int i = 0;i<16;i++) guess.value = expr.convertToFloat(varDefs2);
 					}
@@ -384,8 +384,8 @@ public class Solve{
 		}
 	};
 	
-	static ExprList getVars(Func solve){
-		return (ExprList) solve.get(1);
+	static Func getVars(Func solve){//returns expr set
+		return (Func) solve.get(1);
 	}
 	
 	static void setComparison(Func solve,Expr c){
@@ -402,27 +402,27 @@ public class Solve{
 	}
 	
 	
-	static Equ getEqu(Func solve) {
-		return (Equ)solve.get();
+	static Func getEqu(Func solve) {
+		return (Func)solve.get();
 	}
 	
-	static ExprList getEqus(Func solve) {
-		return (ExprList)solve.get();
+	static Func getEqus(Func solve) {//returns expr set
+		return (Func)solve.get();
 	}
 	
-	static void setEqu(Func solve,Equ e) {
-		solve.set(0,e);
+	static void setEqu(Func solve,Func equ) {
+		solve.set(0,equ);
 	}
 	
-	void setEqus(Func solve,ExprList equs) {
-		solve.set(0,equs);
+	void setEqus(Func solve,Func equsSet) {
+		solve.set(0,equsSet);
 	}
 	
 	public static boolean singleEq(Func solve) {
-		return solve.get() instanceof Equ;
+		return solve.get().typeName().equals("equ");
 	}
 	public static boolean manyEqus(Func solve) {
-		return solve.get() instanceof ExprList;
+		return solve.get().typeName().equals("set");
 	}
 	
 	public static boolean comparisonEq(Func solve){
@@ -437,9 +437,9 @@ public class Solve{
 		Var v = solve.getVar();
 		for(Rule rule:cases) {
 			Expr result = rule.applyRuleToExpr(solve.get(), casInfo);
-			if(result instanceof ExprList) {
+			if(result.typeName().equals("set")) {
 				for(int i = 0;i<result.size();i++){
-					if(result instanceof Equ) result.set(i, Cas.solve((Equ)result.get(i),v));
+					if(result.typeName().equals("equ")) result.set(i, Cas.solve((Func)result.get(i),v));
 					if(result instanceof Less) result.set(i, Cas.solve((Less)result.get(i),v)  );
 					if(result instanceof Greater) result.set(i, Cas.solve((Greater)result.get(i),v)  );
 				}
@@ -452,19 +452,19 @@ public class Solve{
 	}
 	
 	static Rule solveSetCase = new Rule("solve a set of equations") {
-		void removeAnEq(ExprList equs,Var v,CasInfo casInfo,Sequence removed) {//remove an equation reducing the problem
+		void removeAnEq(Func equsSet,Var v,CasInfo casInfo,Sequence removed) {//remove an equation reducing the problem
 			CasInfo singleSolutionModeCasInfo = new CasInfo(casInfo);
 			singleSolutionModeCasInfo.setSingleSolutionMode(true);
 			
-			for(int i = 0;i<equs.size();i++) {
-				Expr solution = solve((Equ)equs.get(i),v).simplify(singleSolutionModeCasInfo);
-				if(solution instanceof ExprList) solution = solution.get();
+			for(int i = 0;i<equsSet.size();i++) {
+				Expr solution = solve((Func)equsSet.get(i),v).simplify(singleSolutionModeCasInfo);
+				if(solution.typeName().equals("set")) solution = solution.get();
 				else if(solution.typeName().equals("solve")) continue;
 				
 				removed.add(solution);
-				equs.remove(i);
+				equsSet.remove(i);
 				
-				for(int j = 0;j<equs.size();j++) equs.set(j,equs.get(j).replace((Equ)solution));
+				for(int j = 0;j<equsSet.size();j++) equsSet.set(j,equsSet.get(j).replace((Func)solution));
 				
 				return;
 			}
@@ -477,25 +477,25 @@ public class Solve{
 			
 			if(!manyEqus(solve)) return solve;
 			
-			ExprList vars = getVars(solve);
+			Func varsSet = getVars(solve);
 			
-			ExprList reduced = (ExprList) getEqus(solve).copy();
+			Func reducedSet = (Func) getEqus(solve).copy();
 			Sequence removed = new Sequence();//keep reducing problem
-			for(int i = 0;i<vars.size();i++) {
-				Var v = (Var)vars.get(i);
-				int oldSize = reduced.size();
-				removeAnEq(reduced,v,casInfo,removed);
-				if(oldSize == reduced.size()) return e;//did not reduce, stop solve
+			for(int i = 0;i<varsSet.size();i++) {
+				Var v = (Var)varsSet.get(i);
+				int oldSize = reducedSet.size();
+				removeAnEq(reducedSet,v,casInfo,removed);
+				if(oldSize == reducedSet.size()) return e;//did not reduce, stop solve
 			}
-			ExprList variableSolutions = new ExprList();
+			Func variableSolutionsSet = exprSet();
 			
 			//work backwards
 			for(int i = removed.size()-1;i>=0;i--) {
-				Equ currentEq = (Equ)(removed.get(i).replace(variableSolutions).simplify(casInfo));
-				variableSolutions.add(currentEq);
+				Func currentEq = (Func)(removed.get(i).replace(variableSolutionsSet).simplify(casInfo));
+				variableSolutionsSet.add(currentEq);
 			}
 			
-			return variableSolutions;//done
+			return variableSolutionsSet;//done
 		}
 	};
 	
@@ -560,7 +560,7 @@ public class Solve{
 								Func negSolve = (Func)solve.copy();
 								flipComparison(negSolve);
 								setRightSideGeneric(negSolve.getComparison(),neg(getRightSideGeneric(negSolve.getComparison())).simplify(casInfo));
-								Expr out = exprList(solve,negSolve);
+								Expr out = exprSet(solve,negSolve);
 								return out.simplify(casInfo);
 							}
 						}else if(!baseHasVar && expoHasVar){
@@ -759,7 +759,7 @@ public class Solve{
 		
 		double[] base = new double[poly.size()];
 		for(int i = 0;i<poly.size();i++) {
-			base[i] = poly.get(i).convertToFloat(Cas.exprList()).real;
+			base[i] = poly.get(i).convertToFloat(Cas.exprSet()).real;
 		}
 		double[][] table = new double[poly.size()-1][];
 		

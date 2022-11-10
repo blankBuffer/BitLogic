@@ -11,7 +11,7 @@ public class Approx{
 				@Override
 				public Expr applyRuleToExpr(Expr e,CasInfo casInfo){
 					Func approx = (Func)e;
-					Expr out = floatExpr(approx.get().convertToFloat((ExprList)approx.get(1)));
+					Expr out = floatExpr(approx.get().convertToFloat((Func)approx.get(1)));
 					return out;
 				}
 			};
@@ -22,8 +22,8 @@ public class Approx{
 			},"main sequence");
 			owner.behavior.toFloat = new Func.FloatFunc() {
 				@Override
-				public ComplexFloat convertToFloat(ExprList varDefs, Func owner) {
-					return owner.get().convertToFloat((ExprList)owner.get(1));//kinda pointless but whatever
+				public ComplexFloat convertToFloat(Func varDefs, Func owner) {
+					return owner.get().convertToFloat((Func)owner.get(1));//kinda pointless but whatever
 				}
 			};
 			owner.behavior.rule.init();

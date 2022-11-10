@@ -4,7 +4,6 @@ import cas.ComplexFloat;
 import cas.Expr;
 import cas.Rule;
 import cas.CasInfo;
-import cas.primitive.ExprList;
 import cas.primitive.Func;
 import cas.primitive.Var;
 
@@ -39,11 +38,10 @@ public class Not{
 				containsNot,
 				demorgan
 			},"main sequence");
-			owner.behavior.rule.init();
 			
 			owner.behavior.toFloat = new Func.FloatFunc() {
 				@Override
-				public ComplexFloat convertToFloat(ExprList varDefs, Func owner) {
+				public ComplexFloat convertToFloat(Func varDefs, Func owner) {
 					boolean state = Math.abs(owner.get().convertToFloat(varDefs).real) < 0.5;
 					double res = state ? 1.0 : 0.0;
 					return new ComplexFloat(res,0);

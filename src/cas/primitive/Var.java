@@ -125,15 +125,15 @@ public class Var extends Expr{
 	}
 
 	@Override
-	public ComplexFloat convertToFloat(ExprList varDefs) {
+	public ComplexFloat convertToFloat(Func varDefs) {
 		for(int i = 0;i<varDefs.size();i++) {
-			Equ temp = (Equ)varDefs.get(i);
-			Var otherVar = (Var)temp.getLeftSide();
+			Func tempEqu = (Func)varDefs.get(i);
+			Var otherVar = (Var)Equ.getLeftSide(tempEqu);
 			if(equals(otherVar)) {
-				if(temp.getRightSide() instanceof FloatExpr) {
-					return ((FloatExpr)temp.getRightSide()).value;
+				if(Equ.getRightSide(tempEqu) instanceof FloatExpr) {
+					return ((FloatExpr)Equ.getRightSide(tempEqu)).value;
 				}
-				return temp.getRightSide().convertToFloat(new ExprList());
+				return Equ.getRightSide(tempEqu).convertToFloat(exprSet());
 			}
 		}
 		return valuef;

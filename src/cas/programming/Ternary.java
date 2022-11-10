@@ -2,7 +2,7 @@ package cas.programming;
 
 import cas.*;
 import cas.bool.BoolState;
-import cas.primitive.ExprList;
+import cas.primitive.Func;
 
 public class Ternary extends Expr{
 	public Ternary() {
@@ -62,8 +62,8 @@ public class Ternary extends Expr{
 	}
 
 	@Override
-	public ComplexFloat convertToFloat(ExprList varDefs) {
-		return new ComplexFloat(0,0);
+	public ComplexFloat convertToFloat(Func varDefs) {
+		return ComplexFloat.ZERO;
 	}
 
 	@Override

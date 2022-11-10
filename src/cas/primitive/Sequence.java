@@ -16,14 +16,14 @@ public class Sequence extends Expr{
 	}
 
 	@Override
-	public ComplexFloat convertToFloat(ExprList varDefs) {
-		return new ComplexFloat(0,0);
+	public ComplexFloat convertToFloat(Func varDefs) {
+		return ComplexFloat.ZERO;
 	}
 	
 	public static Sequence cast(Expr e) {
 		if(e == null) return sequence();
 		if(e instanceof Sequence) return (Sequence)e;
-		if(e instanceof Params || e instanceof ExprList) {
+		if(e instanceof Params || e.typeName().equals("set")) {
 			Sequence out = new Sequence();
 			for(int i = 0;i<e.size();i++) {
 				out.add(e.get(i));

@@ -318,20 +318,20 @@ public class Ask extends Cas{
 				
 				int windowTokenIndex = tokens.indexOf("window");
 				if(windowTokenIndex != -1) {
-					ExprList windowParams = (ExprList) createExpr(tokens.get(windowTokenIndex+1));
-					plotWind.xMin = windowParams.get(0).convertToFloat(exprList()).real;
-					plotWind.xMax = windowParams.get(1).convertToFloat(exprList()).real;
-					plotWind.yMin = windowParams.get(2).convertToFloat(exprList()).real;
-					plotWind.yMax = windowParams.get(3).convertToFloat(exprList()).real;
+					Func windowParamsSet = (Func) createExpr(tokens.get(windowTokenIndex+1));
+					plotWind.xMin = windowParamsSet.get(0).convertToFloat(exprSet()).real;
+					plotWind.xMax = windowParamsSet.get(1).convertToFloat(exprSet()).real;
+					plotWind.yMin = windowParamsSet.get(2).convertToFloat(exprSet()).real;
+					plotWind.yMax = windowParamsSet.get(3).convertToFloat(exprSet()).real;
 					
-					if(windowParams.size()>4) {
-						plotWind.zMin = windowParams.get(4).convertToFloat(exprList()).real;
-						plotWind.zMax = windowParams.get(5).convertToFloat(exprList()).real;
+					if(windowParamsSet.size()>4) {
+						plotWind.zMin = windowParamsSet.get(4).convertToFloat(exprSet()).real;
+						plotWind.zMax = windowParamsSet.get(5).convertToFloat(exprSet()).real;
 					}
 					
-					if(windowParams.size()>6 ) {
-						plotWind.zRot = windowParams.get(6).convertToFloat(exprList()).real;
-						plotWind.xRot = windowParams.get(7).convertToFloat(exprList()).real;
+					if(windowParamsSet.size()>6 ) {
+						plotWind.zRot = windowParamsSet.get(6).convertToFloat(exprSet()).real;
+						plotWind.xRot = windowParamsSet.get(7).convertToFloat(exprSet()).real;
 					}
 				}
 				

@@ -413,9 +413,9 @@ public class Sum extends Expr{
 						}
 					}
 				}else if(Rule.fastSimilarExpr(sinSqrProdTemplate, sum.get(i))) {
-					ExprList equs = Rule.getEqusFromTemplate(sinSqrProdTemplate, sum.get(i));
-					Expr a = Rule.getExprByName(equs, "a");
-					Expr x = Rule.getExprByName(equs, "x");
+					Func equsSet = Rule.getEqusFromTemplate(sinSqrProdTemplate, sum.get(i));
+					Expr a = Rule.getExprByName(equsSet, "a");
+					Expr x = Rule.getExprByName(equsSet, "x");
 					
 					Expr negA = neg(a).simplify(casInfo);
 					
@@ -429,9 +429,9 @@ public class Sum extends Expr{
 						}
 					}
 				}else if(Rule.fastSimilarExpr(cosSqrProdTemplate, sum.get(i))) {
-					ExprList equs = Rule.getEqusFromTemplate(cosSqrProdTemplate, sum.get(i));
-					Expr a = Rule.getExprByName(equs, "a");
-					Expr x = Rule.getExprByName(equs, "x");
+					Func equsSet = Rule.getEqusFromTemplate(cosSqrProdTemplate, sum.get(i));
+					Expr a = Rule.getExprByName(equsSet, "a");
+					Expr x = Rule.getExprByName(equsSet, "x");
 					
 					Expr negA = neg(a).simplify(casInfo);
 					
@@ -604,7 +604,7 @@ public class Sum extends Expr{
 		return Sum.combineSums(aCasted, bCasted);
 	}
 	@Override
-	public ComplexFloat convertToFloat(ExprList varDefs) {
+	public ComplexFloat convertToFloat(Func varDefs) {
 		ComplexFloat total = new ComplexFloat(0,0);
 		for(int i = 0;i<size();i++) total =ComplexFloat.add(total, get(i).convertToFloat(varDefs));
 		return total;

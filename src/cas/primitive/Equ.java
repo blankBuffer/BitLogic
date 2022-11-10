@@ -2,55 +2,47 @@ package cas.primitive;
 
 import cas.ComplexFloat;
 import cas.Expr;
-import cas.Rule;
 
-public class Equ extends Expr{
-	public Equ(){}//
-	public Equ(Expr leftSide,Expr rightSide){
-		add(leftSide);
-		add(rightSide);
+public class Equ{
+	public static Func.FuncLoader equLoader = new Func.FuncLoader() {
+		
+		@Override
+		public void load(Func owner) {
+			owner.behavior.toStringMethod = new Func.ToString() {
+				
+				@Override
+				public String generateString(Func owner) {
+					String out = "";
+					out+=getLeftSide(owner).toString();
+					out+='=';
+					out+=getRightSide(owner).toString();
+					return out;
+				}
+			};
+			owner.behavior.toFloat = new Func.FloatFunc() {
+				
+				@Override
+				public ComplexFloat convertToFloat(Func varDefs, Func owner) {
+					return getRightSide(owner).convertToFloat(varDefs);//usually the solution is on the right side of the equation
+				}
+			};
+		}
+	};
+	
+	
+	public static Expr getLeftSide(Func equ) {
+		assert equ.typeName().equals("equ") : "expected a equ";
+		return equ.get(0);
 	}
-	public Expr getLeftSide() {
-		return get(0);
-	}
-	public Expr getRightSide() {
-		return get(1);
+	public static Expr getRightSide(Func equ) {
+		assert equ.typeName().equals("equ") : "expected a equ";
+		return equ.get(1);
 	}
 	
-	public void setLeftSide(Expr expr) {
-		set(0,expr);
+	public static void setLeftSide(Func equ,Expr expr) {
+		equ.set(0,expr);
 	}
-	public void setRightSide(Expr expr) {
-		set(1,expr);
-	}
-
-	@Override
-	public String toString() {
-		String out = "";
-		out+=getLeftSide().toString();
-		out+='=';
-		out+=getRightSide().toString();
-		return out;
-	}
-	
-	@Override
-	public ComplexFloat convertToFloat(ExprList varDefs) {
-		return getRightSide().convertToFloat(varDefs);//usually the solution is on the right side of the equation
-	}
-	@Override
-	public Rule getRule() {
-		return null;
-	}
-	
-	@Override
-	public String typeName() {
-		return "equ";
-	}
-	@Override
-	public String help() {
-		return "= opertator\n"
-				+ "examples\n"
-				+ "x=y\n"
-				+ "solve(x^2=2,x)->[x=-sqrt(2),x=sqrt(2)]";
+	public static void setRightSide(Func equ,Expr expr) {
+		equ.set(1,expr);
 	}
 }

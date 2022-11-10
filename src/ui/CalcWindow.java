@@ -246,7 +246,7 @@ public class CalcWindow extends JFrame{
 					if(clearTerminal) terminalOutPane.getDocument().remove(0, terminalOutPane.getDocument().getLength());
 					addTextln("▛▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▜");
 					for(int i = 0;i<currentStack.size();i++) {
-						addTextln("#"+(i+1)+" approx: "+currentStack.stack.get(i).convertToFloat(Cas.exprList()).toString(), redText);
+						addTextln("#"+(i+1)+" approx: "+currentStack.stack.get(i).convertToFloat(Cas.exprSet()).toString(), redText);
 						
 						StackButtonGroup stackButtonGroup = new StackButtonGroup();
 						

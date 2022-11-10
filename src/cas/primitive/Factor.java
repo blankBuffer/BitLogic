@@ -28,7 +28,7 @@ public class Factor{
 			
 			owner.behavior.toFloat = new Func.FloatFunc() {
 				@Override
-				public ComplexFloat convertToFloat(ExprList varDefs, Func owner) {
+				public ComplexFloat convertToFloat(Func varDefs, Func owner) {
 					return owner.get().convertToFloat(varDefs);
 				}
 			};

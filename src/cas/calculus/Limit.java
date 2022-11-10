@@ -16,7 +16,7 @@ public class Limit extends Expr{
 	
 	public Limit(){}//
 	
-	public Limit(Expr e,Becomes becomes){
+	public Limit(Expr e,Func becomes){
 		add(e);
 		add(becomes);
 	}
@@ -38,8 +38,8 @@ public class Limit extends Expr{
 		return get(1).get(1);
 	}
 	
-	public Becomes getApproaches() {
-		return (Becomes)get(1);
+	public Func getApproaches() {//returns becomes
+		return (Func)get(1);
 	}
 	
 	
@@ -564,7 +564,7 @@ public class Limit extends Expr{
 	}
 
 	@Override
-	public ComplexFloat convertToFloat(ExprList varDefs) {
+	public ComplexFloat convertToFloat(Func varDefs) {
 		return get().convertToFloat(varDefs);
 	}
 

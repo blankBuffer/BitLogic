@@ -58,7 +58,7 @@ public class FloatExpr extends Expr{
 	}
 
 	@Override
-	public ComplexFloat convertToFloat(ExprList varDefs) {
+	public ComplexFloat convertToFloat(Func varDefs) {
 		return value;
 	}
 

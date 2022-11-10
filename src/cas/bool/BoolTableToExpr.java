@@ -11,10 +11,10 @@ public class BoolTableToExpr{
 		@Override
 		public void load(Func owner) {
 			Rule generate = new Rule("generate the function") {
-				Expr generateTerm(Becomes inOut,ExprList vars) {
-					if(inOut.getRightSide().equals(BoolState.TRUE)) {
+				Expr generateTerm(Func inOutBecomes,Func vars) {
+					if(Becomes.getRightSide(inOutBecomes).equals(BoolState.TRUE)) {
 						Func termAnd = and();
-						Sequence in = (Sequence) inOut.getLeftSide();
+						Sequence in = (Sequence) Becomes.getLeftSide(inOutBecomes);
 						for(int i = 0;i<in.size();i++) {
 							if(in.get(i).equals(BoolState.TRUE)) {
 								termAnd.add( vars.get(i) );
@@ -33,9 +33,9 @@ public class BoolTableToExpr{
 					Func castedBoolTableToExpr = (Func)e;
 					
 					for(int i = 0;i<getTable(castedBoolTableToExpr).size();i++) {
-						Becomes inOut = (Becomes) getTable(castedBoolTableToExpr).get(i);
+						Func inOutBecomes = (Func) getTable(castedBoolTableToExpr).get(i);
 						
-						outOr.add(generateTerm(inOut,getVars(castedBoolTableToExpr)));
+						outOr.add(generateTerm(inOutBecomes,getVars(castedBoolTableToExpr)));
 					}
 					return outOr.simplify(casInfo);
 				}
@@ -44,15 +44,14 @@ public class BoolTableToExpr{
 			owner.behavior.rule = new Rule(new Rule[]{
 				generate,
 			},"main sequence");
-			owner.behavior.rule.init();
 		}
 	};
 	
-	public static ExprList getTable(Func boolTableToExpr) {
-		return ExprList.cast(boolTableToExpr.get(0));
+	public static Func getTable(Func boolTableToExpr) {
+		return ExprSet.cast(boolTableToExpr.get(0));
 	}
-	public static ExprList getVars(Func boolTableToExpr) {
-		return ExprList.cast(boolTableToExpr.get(1));
+	public static Func getVars(Func boolTableToExpr) {
+		return ExprSet.cast(boolTableToExpr.get(1));
 	}
 
 }

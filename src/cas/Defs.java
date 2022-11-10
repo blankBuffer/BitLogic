@@ -13,15 +13,15 @@ public class Defs extends Cas implements Serializable{
 	HashMap<String,Rule> functionsRule = new HashMap<String,Rule>();//stores the rule for a function name
 	HashMap<String,Expr> varDefs = new HashMap<String,Expr>();
 	
-	public void defineVar(Equ def) {
-		String varName = def.getLeftSide().toString();
-		if(!varDefs.containsKey(varName)) varDefs.put(varName, def.getRightSide());
-		else varDefs.replace(varName, def.getRightSide());
+	public void defineVar(Func defEqu) {
+		String varName = Equ.getLeftSide(defEqu).toString();
+		if(!varDefs.containsKey(varName)) varDefs.put(varName, Equ.getRightSide(defEqu));
+		else varDefs.replace(varName, Equ.getRightSide(defEqu));
 	}
 	
-	public void addFuncRule(Becomes def) {
-		String name = ((Func)def.getLeftSide()).behavior.name;
-		Rule r = new Rule(def, "function definition");
+	public void addFuncRule(Func defBecomes) {
+		String name = ((Func)Becomes.getLeftSide(defBecomes)).behavior.name;
+		Rule r = new Rule(defBecomes, "function definition");
 		r.init();
 		if(!functionsRule.containsKey(name)) functionsRule.put(name, r);
 		else functionsRule.replace(name, r);

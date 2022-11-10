@@ -41,7 +41,7 @@ public class Rule extends Expr{
 	 * the transformation description with a before and after state
 	 * beforeState->afterState
 	 */
-	private Becomes pattern = null;
+	private Func pattern = null;
 	private Expr condition = null;//conditions that apply to the rule
 	
 	
@@ -86,9 +86,9 @@ public class Rule extends Expr{
 		this.name = name;
 		ruleCount++;
 	}
-	public Rule(Becomes pattern,String name){
-		this.pattern = pattern;
-		this.pattern.getLeftSide().sort();
+	public Rule(Func patternBecomes,String name){
+		this.pattern = patternBecomes;
+		Becomes.getLeftSide(this.pattern).sort();
 		this.name = name;
 		ruleCount++;
 	}
@@ -112,13 +112,14 @@ public class Rule extends Expr{
 		//System.out.println(this);
 		
 		if(patternStr != null) {
-			pattern = (Becomes) createExpr(patternStr);
+			pattern = (Func) createExpr(patternStr);
+			if(!pattern.typeName().equals("becomes")) throw new RuntimeException("expected a becomes for a pattern!");
 		}
 		
 		if(pattern != null) {
-			pattern.getLeftSide().sort();//sort the patterns left side into a standardized order
+			Becomes.getLeftSide(pattern).sort();//sort the patterns left side into a standardized order
 			
-			patternParts = generateTemplateParts(pattern.getLeftSide());
+			patternParts = generateTemplateParts(Becomes.getLeftSide(pattern));
 			matchingSetsForPattern = generateTemplateMatchingSets(patternParts);
 			
 			allPatternBasedRules.add(this);
@@ -170,11 +171,11 @@ public class Rule extends Expr{
 	 * this is described above where sin(c*b)*a^b+a maps to {{1,3},{2,4}}
 	 */
 	private static ArrayList<IndexSet> generateTemplateMatchingSets(Sequence templateParts){
-		ExprList usedVars = new ExprList();
+		Func usedVarsSet = exprSet();
 		ArrayList<IndexSet> matcherIndexSets = new ArrayList<IndexSet>();
 		for(int i = 0;i<templateParts.size();i++) {
 			
-			if(usedVars.contains(templateParts.get(i))) continue;
+			if(usedVarsSet.contains(templateParts.get(i))) continue;
 			
 			IndexSet matchSet = new IndexSet();
 			matchSet.ints.add(i);
@@ -188,7 +189,7 @@ public class Rule extends Expr{
 			
 			if(matchSet.ints.size() != 1) matcherIndexSets.add(matchSet);
 			
-			usedVars.add(templateParts.get(i));
+			usedVarsSet.add(templateParts.get(i));
 		}
 		return matcherIndexSets;
 	}
@@ -208,8 +209,8 @@ public class Rule extends Expr{
 		}
 	}
 	
-	private static ExprList makeEqusFromParts(Sequence templateParts,Sequence otherParts) {
-		ExprList out = new ExprList();
+	private static Func makeEqusFromParts(Sequence templateParts,Sequence otherParts) {//return set of equations
+		Func out = exprSet();
 		for(int i = 0;i<templateParts.size();i++) {
 			out.add(equ(templateParts.get(i),otherParts.get(i)));
 		}
@@ -237,8 +238,8 @@ public class Rule extends Expr{
 				if(condition == null) return partsMatch;
 				if(!partsMatch) return false;
 				
-				ExprList equs = makeEqusFromParts(templateParts,otherParts);
-				return condition.replace(equs).simplify(CasInfo.normal).equals(BoolState.TRUE);
+				Func equsSet = makeEqusFromParts(templateParts,otherParts);
+				return condition.replace(equsSet).simplify(CasInfo.normal).equals(BoolState.TRUE);
 			}
 			
 			for(int i = 0;i<template.size();i++) {
@@ -263,11 +264,11 @@ public class Rule extends Expr{
 		return similarExpr(template,other,condition,false);
 	}
 	
-	public static Expr getExprByName(ExprList equs,String name){
-		for (int i = 0;i<equs.size();i++){
-			Equ currentEqu = (Equ) equs.get(i);
-			if(currentEqu.getLeftSide().toString().equals(name)){
-				return currentEqu.getRightSide();
+	public static Expr getExprByName(Func equsSet,String name){
+		for (int i = 0;i<equsSet.size();i++){
+			Func currentEqu = (Func) equsSet.get(i);
+			if(Equ.getLeftSide(currentEqu).toString().equals(name)){
+				return Equ.getRightSide(currentEqu);
 			}
 		}
 		return null;
@@ -275,7 +276,7 @@ public class Rule extends Expr{
 	
 	
 	
-	static public ExprList getEqusFromTemplate(Expr template,Expr condition,Expr expr) {
+	static public Func getEqusFromTemplate(Expr template,Expr condition,Expr expr) {//returns set of equations
 		if(fastSimilarExpr(template,expr)) {
 			Sequence exprParts = sequence();
 			
@@ -286,17 +287,17 @@ public class Rule extends Expr{
 			if(!match) {
 				return null;
 			}
-			ExprList equs = makeEqusFromParts(templateParts,exprParts);
+			Func equsSet = makeEqusFromParts(templateParts,exprParts);
 			
-			if(condition != null && !condition.replace(equs).simplify(CasInfo.normal).equals(BoolState.TRUE)) return null;
+			if(condition != null && !condition.replace(equsSet).simplify(CasInfo.normal).equals(BoolState.TRUE)) return null;
 			
-			return equs;
+			return equsSet;
 			
 		}
 		return null;
 	}
 	
-	static public ExprList getEqusFromTemplate(Expr template,Expr expr) {
+	static public Func getEqusFromTemplate(Expr template,Expr expr) {//returns set of equations
 		return getEqusFromTemplate(template,null,expr);
 	}
 	
@@ -333,23 +334,23 @@ public class Rule extends Expr{
 		if(pattern == null && cases == null) throw new RuntimeException("pattern is missing : "+name);
 		
 		if(cases == null) {
-			if(fastSimilarExpr(pattern.getLeftSide(),expr)) {
+			if(fastSimilarExpr(Becomes.getLeftSide(pattern),expr)) {
 				Sequence parts = sequence();
 				
-				boolean match = checkForMatches(matchingSetsForPattern,parts,pattern.getLeftSide(),expr);
+				boolean match = checkForMatches(matchingSetsForPattern,parts,Becomes.getLeftSide(pattern),expr);
 				if(!match) {
 					return expr;
 				}
-				ExprList equs = makeEqusFromParts(patternParts,parts);
+				Func equsSet = makeEqusFromParts(patternParts,parts);
 				
 				if(condition != null) {
-					Expr condition = this.condition.replace(equs);
+					Expr condition = this.condition.replace(equsSet);
 					condition = condition.simplify(casInfo);
 					if(!condition.simplify(casInfo).equals(BoolState.TRUE)) return expr;
 				}
 				
-				Expr out = pattern.getRightSide().replace(equs);
-				if(pattern.getLeftSide().getClass() == pattern.getRightSide().getClass()) {
+				Expr out = Becomes.getRightSide(pattern).replace(equsSet);
+				if(Becomes.getLeftSide(pattern).typeName().equals(Becomes.getRightSide(pattern).typeName())) {
 					out.simplifyChildren(casInfo);
 				}else {
 					out = out.simplify(casInfo);
@@ -395,7 +396,7 @@ public class Rule extends Expr{
 		Define.loadRules();
 		
 		Dot.loadRules();
-		ExprList.loadRules();
+		ExprSet.loadRules();
 		
 		
 		Gcd.loadRules();
@@ -457,17 +458,17 @@ public class Rule extends Expr{
 			boolean doNotSimplify = true;
 			
 			for(String bannedType:bannedPreSimplifyFunctions) {
-				if(r.pattern.getRightSide().containsType(bannedType)) {
+				if(Becomes.getRightSide(r.pattern).containsType(bannedType)) {
 					doNotSimplify = true;
 					break;
 				}
 			}
 			
 			if(!doNotSimplify) {
-				if(!r.pattern.getRightSide().containsType(r.pattern.getLeftSide().typeName())) {//avoid recursion
-					r.pattern.setRightSide(r.pattern.getRightSide().simplify(CasInfo.normal));
+				if(!Becomes.getRightSide(r.pattern).containsType(Becomes.getLeftSide(r.pattern).typeName())) {//avoid recursion
+					Becomes.setRightSide(r.pattern,Becomes.getRightSide(r.pattern).simplify(CasInfo.normal));
 				}else {
-					r.pattern.getRightSide().simplifyChildren(CasInfo.normal, r.pattern.getLeftSide().typeName());
+					Becomes.getRightSide(r.pattern).simplifyChildren(CasInfo.normal, Becomes.getLeftSide(r.pattern).typeName());
 				}
 			}
 			loadingPercent+=incr;
@@ -492,7 +493,7 @@ public class Rule extends Expr{
 		return null;
 	}
 	@Override
-	public ComplexFloat convertToFloat(ExprList varDefs) {
+	public ComplexFloat convertToFloat(Func varDefs) {
 		return null;
 	}
 	

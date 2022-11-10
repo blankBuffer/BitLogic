@@ -4,7 +4,7 @@ import cas.ComplexFloat;
 import cas.Expr;
 import cas.Rule;
 import cas.CasInfo;
-import cas.primitive.ExprList;
+import cas.primitive.Func;
 import cas.primitive.Sequence;
 
 public class Mat extends Expr{
@@ -102,8 +102,8 @@ public class Mat extends Expr{
 	}
 	
 	@Override
-	public ComplexFloat convertToFloat(ExprList varDefs) {
-		return new ComplexFloat(0,0);
+	public ComplexFloat convertToFloat(Func varDefs) {
+		return ComplexFloat.ZERO;
 	}
 
 	@Override

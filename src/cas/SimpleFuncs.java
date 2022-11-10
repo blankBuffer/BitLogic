@@ -128,6 +128,8 @@ public class SimpleFuncs extends Cas{
 	static Func sin,cos,tan,asin,acos,atan;
 	static Func and,or,not,boolCompress,boolTableToExpr;
 	static Func approx;
+	static Func becomes,equ;
+	static Func exprSet;
 	
 	public static void loadRules(){
 		
@@ -146,6 +148,10 @@ public class SimpleFuncs extends Cas{
 		boolCompress = new Func("boolCompress",1,BoolCompress.boolCompressLoader);
 		boolTableToExpr = new Func("boolTableToExpr",2,BoolTableToExpr.boolTableToExprLoader);
 		approx = new Func("approx",2,Approx.approxLoader);
+		becomes = new Func("becomes",2,Becomes.becomesLoader);
+		equ = new Func("equ",2,Equ.equLoader);
+		exprSet = new Func("set",-1,ExprSet.exprSetLoader);
+		
 		addFunc(power);
 		addFunc(sin);
 		addFunc(cos);
@@ -159,6 +165,8 @@ public class SimpleFuncs extends Cas{
 		addFunc(boolCompress);
 		addFunc(boolTableToExpr);
 		addFunc(approx);
+		addFunc(becomes);
+		addFunc(equ);
 		
 		addFunc(new Func("div",2,Div.divLoader));
 		
@@ -236,6 +244,8 @@ public class SimpleFuncs extends Cas{
 		
 		addFunc(fastEquals);
 		
+		addFunc(exprSet);
+		
 		for(String s:funcs.keySet()) {
 			functionNames.add(s);
 		}
@@ -272,7 +282,7 @@ public class SimpleFuncs extends Cas{
 			
 			
 			@Override
-			public ComplexFloat convertToFloat(ExprList varDefs, Func owner) {
+			public ComplexFloat convertToFloat(Func varDefs, Func owner) {
 				return new ComplexFloat(owner.get().size(),0);
 			}
 		};
@@ -292,7 +302,7 @@ public class SimpleFuncs extends Cas{
 			
 			
 			@Override
-			public ComplexFloat convertToFloat(ExprList varDefs, Func owner) {
+			public ComplexFloat convertToFloat(Func varDefs, Func owner) {
 				int index = ((Num)owner.get(1)).getRealValue().intValue();
 				return owner.get().get(index).convertToFloat(varDefs);
 			}
@@ -318,7 +328,7 @@ public class SimpleFuncs extends Cas{
 			
 			
 			@Override
-			public ComplexFloat convertToFloat(ExprList varDefs, Func owner) {
+			public ComplexFloat convertToFloat(Func varDefs, Func owner) {
 				double n = owner.get(0).convertToFloat(varDefs).real;
 				double k = owner.get(1).convertToFloat(varDefs).real;
 				return new ComplexFloat( factorial(n)/(factorial(k)*factorial(n-k)) ,0);
@@ -409,7 +419,7 @@ public class SimpleFuncs extends Cas{
 				Func f = (Func)e;
 				
 				try {
-					return approx(Unit.conv(f.get(0), Unit.getUnit(f.get(1).toString()), Unit.getUnit(f.get(2).toString())),exprList()).simplify(casInfo);
+					return approx(Unit.conv(f.get(0), Unit.getUnit(f.get(1).toString()), Unit.getUnit(f.get(2).toString())),exprSet()).simplify(casInfo);
 				} catch (Exception e1) {
 					e1.printStackTrace();
 				}
@@ -436,10 +446,10 @@ public class SimpleFuncs extends Cas{
 			@Override
 			public Expr applyRuleToExpr(Expr e,CasInfo casInfo) {
 				Func f = (Func)e;
-				if(f.get(1) instanceof ExprList) {
-					return f.get().replace((ExprList)f.get(1)).simplify(casInfo);
+				if(f.get(1).typeName().equals("set")) {
+					return f.get().replace((Func)f.get(1)).simplify(casInfo);
 				}
-				return f.get().replace((Equ)f.get(1)).simplify(casInfo);
+				return f.get().replace((Func)f.get(1)).simplify(casInfo);
 			}
 		};
 		
@@ -450,24 +460,24 @@ public class SimpleFuncs extends Cas{
 			public Expr applyRuleToExpr(Expr e,CasInfo casInfo) {
 				Func f = (Func)e;
 				
-				if(f.get() instanceof Equ) {
-					Equ casted = (Equ)f.get();
+				if(f.get().typeName().equals("equ")) {
+					Func castedEqu = (Func)f.get();
 					
-					return bool(casted.getLeftSide().exactlyEquals(casted.getRightSide()));
+					return bool(Equ.getLeftSide(castedEqu).exactlyEquals(Equ.getRightSide(castedEqu)));
 				}else if(f.get() instanceof Less) {
 					Less casted = (Less)f.get();
 					
 					boolean equal = casted.getLeftSide().exactlyEquals(casted.getRightSide());
 					if(casted.containsVars()) return bool(!equal);
 					
-					return bool(!equal && casted.getLeftSide().convertToFloat(exprList()).real < casted.getRightSide().convertToFloat(exprList()).real );
+					return bool(!equal && casted.getLeftSide().convertToFloat(exprSet()).real < casted.getRightSide().convertToFloat(exprSet()).real );
 				}else if(f.get() instanceof Greater) {
 					Greater casted = (Greater)f.get();
 					
 					boolean equal = casted.getLeftSide().exactlyEquals(casted.getRightSide());
 					if(casted.containsVars()) return bool(!equal);
 					
-					return bool(!equal && casted.getLeftSide().convertToFloat(exprList()).real > casted.getRightSide().convertToFloat(exprList()).real );
+					return bool(!equal && casted.getLeftSide().convertToFloat(exprSet()).real > casted.getRightSide().convertToFloat(exprSet()).real );
 				}else if(f.get() instanceof BoolState) {
 					return f.get();
 				}
@@ -497,8 +507,8 @@ public class SimpleFuncs extends Cas{
 				
 				Expr expr = f.get(0);
 				
-				Equ equ = (Equ)f.get(1);
-				Var v = (Var)equ.getLeftSide();
+				Func equ = (Func)f.get(1);
+				Var v = (Var)Equ.getLeftSide(equ);
 				Num n = (Num)f.get(2);
 				
 				
@@ -506,7 +516,7 @@ public class SimpleFuncs extends Cas{
 				
 				for(int i = 0;i<n.getRealValue().intValue();i++) {
 					
-					out.add( div(prod(expr.replace(equ),power(sub(v,equ.getRightSide()),num(i))),num(factorial(BigInteger.valueOf(i)))));
+					out.add( div(prod(expr.replace(equ),power(sub(v,Equ.getRightSide(equ)),num(i))),num(factorial(BigInteger.valueOf(i)))));
 					
 					expr = diff(expr,v).simplify(casInfo);
 				}
@@ -647,7 +657,7 @@ public class SimpleFuncs extends Cas{
 			
 
 			@Override
-			public ComplexFloat convertToFloat(ExprList varDefs, Func owner) {
+			public ComplexFloat convertToFloat(Func varDefs, Func owner) {
 				return ComplexFloat.mult(ComplexFloat.sub(ComplexFloat.exp(owner.get().convertToFloat(varDefs)),ComplexFloat.exp(ComplexFloat.neg(owner.get().convertToFloat(varDefs)))),new ComplexFloat(0.5,0));
 			}
 		};
@@ -664,7 +674,7 @@ public class SimpleFuncs extends Cas{
 			
 
 			@Override
-			public ComplexFloat convertToFloat(ExprList varDefs, Func owner) {
+			public ComplexFloat convertToFloat(Func varDefs, Func owner) {
 				return ComplexFloat.mult(ComplexFloat.add(ComplexFloat.exp(owner.get().convertToFloat(varDefs)),ComplexFloat.exp(ComplexFloat.neg(owner.get().convertToFloat(varDefs)))),new ComplexFloat(0.5,0));
 			}
 		};
@@ -681,7 +691,7 @@ public class SimpleFuncs extends Cas{
 			
 
 			@Override
-			public ComplexFloat convertToFloat(ExprList varDefs, Func owner) {
+			public ComplexFloat convertToFloat(Func varDefs, Func owner) {
 				ComplexFloat expSquared = ComplexFloat.exp( ComplexFloat.mult(ComplexFloat.TWO, owner.get().convertToFloat(varDefs) ) );
 				return ComplexFloat.div( ComplexFloat.sub(expSquared, ComplexFloat.ONE) ,  ComplexFloat.add(expSquared, ComplexFloat.ONE) );
 			}
@@ -699,7 +709,7 @@ public class SimpleFuncs extends Cas{
 			
 
 			@Override
-			public ComplexFloat convertToFloat(ExprList varDefs, Func owner) {
+			public ComplexFloat convertToFloat(Func varDefs, Func owner) {
 				return ComplexFloat.div(ComplexFloat.ONE, ComplexFloat.cos(owner.get().convertToFloat(varDefs)));
 			}
 		};
@@ -716,7 +726,7 @@ public class SimpleFuncs extends Cas{
 			
 
 			@Override
-			public ComplexFloat convertToFloat(ExprList varDefs, Func owner) {
+			public ComplexFloat convertToFloat(Func varDefs, Func owner) {
 				return ComplexFloat.div(ComplexFloat.ONE, ComplexFloat.sin(owner.get().convertToFloat(varDefs)));
 			}
 		};
@@ -733,7 +743,7 @@ public class SimpleFuncs extends Cas{
 			
 
 			@Override
-			public ComplexFloat convertToFloat(ExprList varDefs, Func owner) {
+			public ComplexFloat convertToFloat(Func varDefs, Func owner) {
 				return ComplexFloat.div(ComplexFloat.ONE, ComplexFloat.tan(owner.get().convertToFloat(varDefs)));
 			}
 		};
@@ -833,7 +843,7 @@ public class SimpleFuncs extends Cas{
 			
 
 			@Override
-			public ComplexFloat convertToFloat(ExprList varDefs, Func owner) {
+			public ComplexFloat convertToFloat(Func varDefs, Func owner) {
 				Expr min = owner.get(0),max = owner.get(1);
 				Expr expr = owner.get(2);
 				Var v = (Var) owner.get(3);
@@ -864,7 +874,7 @@ public class SimpleFuncs extends Cas{
 			
 			//this is not based on any mathematical rigor, but it seems to somewhat work
 			//time complexity of 2^n so keep n small
-			ComplexFloat calcDerivRec(Expr expr,ExprList varDefs,ComplexFloat var,int n,ComplexFloat delta) {
+			ComplexFloat calcDerivRec(Expr expr,Func varDefs,ComplexFloat var,int n,ComplexFloat delta) {
 				if(n > 8) return new ComplexFloat(0,0);//does not work well beyond this point
 				if(n == 0) return expr.convertToFloat(varDefs);
 				
@@ -895,17 +905,17 @@ public class SimpleFuncs extends Cas{
 			}
 
 			@Override
-			public ComplexFloat convertToFloat(ExprList varDefs, Func owner) {
+			public ComplexFloat convertToFloat(Func varDefs, Func owner) {
 				int amount = ((Num)owner.get(2)).getRealValue().intValue();
 				Var var = (Var)owner.get(1);
 				ComplexFloat equRightSideVal = null;
 				Expr expr = owner.get(0);
 				
 				for(int i = 0;i < varDefs.size();i++) {//search for definition
-					Equ equ = (Equ)varDefs.get(i);
-					Var v = (Var)equ.getLeftSide();
+					Func equ = (Func)varDefs.get(i);
+					Var v = (Var)Equ.getLeftSide(equ);
 					if(v.equals(var)) {
-						equRightSideVal = ((FloatExpr)equ.getRightSide()).value;//found!
+						equRightSideVal = ((FloatExpr)Equ.getRightSide(equ)).value;//found!
 						break;
 					}
 				}
@@ -978,16 +988,16 @@ public class SimpleFuncs extends Cas{
 			@Override
 			public Expr applyRuleToExpr(Expr e,CasInfo casInfo) {
 				Sequence poly = polyExtract(e.get(0), (Var)e.get(1) ,casInfo);
-				ExprList solutions = new ExprList();
+				Func solutionsSet = exprSet();
 				
 				if(poly!=null) {
 					ArrayList<Double> solutionsArrayList = Solve.polySolve(poly);
 					for(double solution:solutionsArrayList) {
-						solutions.add(floatExpr(solution));
+						solutionsSet.add(floatExpr(solution));
 					}
 				}
 				
-				return solutions;
+				return solutionsSet;
 			}
 		};
 		
@@ -1005,7 +1015,10 @@ public class SimpleFuncs extends Cas{
 		
 		
 		for(String funcName :funcs.keySet()) {
-			funcs.get(funcName).getRule().init();
+			Rule mainRule = funcs.get(funcName).getRule();
+			Rule doneRule = funcs.get(funcName).getDoneRule();
+			if(mainRule != null) mainRule.init();
+			if(doneRule != null) doneRule.init();
 		}
 		
 	}
@@ -1072,9 +1085,9 @@ public class SimpleFuncs extends Cas{
 		
 		if(funcName.equals("approx")) {
 			if(params.length == 1) {
-				return approx(params[0],exprList());
+				return approx(params[0],exprSet());
 			}else if(params.length == 2) {
-				return approx(params[0],(ExprList)params[1]);
+				return approx(params[0],(Func)params[1]);
 			}else {
 				throw new Exception("function: "+funcName+", requires: 1 or 2 parameters");
 			}
@@ -1102,14 +1115,14 @@ public class SimpleFuncs extends Cas{
 		
 		if(funcName.equals("gcd")) return gcd(params);
 		
-		if(funcName.equals("solve") && params[0] instanceof ExprList) return solve((ExprList)params[0],(ExprList)params[1]);
+		if(funcName.equals("solve") && params[0].typeName().equals("set")) return solve((Func)params[0],(Func)params[1]);
 		if(funcName.equals("solve") && params[0] instanceof Greater) return solve((Greater)params[0],(Var)params[1]);
 		if(funcName.equals("solve") && params[0] instanceof Less) return solve((Less)params[0],(Var)params[1]);
 	
-		if(funcName.equals("limit")) return limit(params[0],(Becomes)params[1]);
+		if(funcName.equals("limit")) return limit(params[0],(Func)params[1]);
 		if(funcName.equals("range")) return range(params[0],params[1],params[2],(Var)params[3]);
 		
-		if(funcName.equals("boolTableToExpr")) return boolTableToExpr((ExprList)params[0],(ExprList)params[1]);
+		if(funcName.equals("boolTableToExpr")) return boolTableToExpr((Func)params[0],(Func)params[1]);
 		
 		if(!FUNCTION_UNLOCKED) throw new Exception("no function by the name: "+funcName);//allow making new functions on the fly
 		

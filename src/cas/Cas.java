@@ -131,11 +131,9 @@ public class Cas {
 		for(Expr expr:exprs) out.add(expr);
 		return out;
 	}
-	public static ExprList exprList(Expr... exprs) {
-		ExprList out = new ExprList();
-		for(Expr e:exprs){
-			out.add(e);
-		}
+	public static Func exprSet(Expr... exprs) {
+		Func out = (Func) SimpleFuncs.exprSet.copy();
+		for(Expr expr:exprs) out.add(expr);
 		return out;
 	}
 	public static Gcd gcd(Expr... exprs) {
@@ -146,7 +144,7 @@ public class Cas {
 		return out;
 	}
 	
-	public static Limit limit(Expr e,Becomes becomes){
+	public static Limit limit(Expr e,Func becomes){
 		return new Limit(e,becomes);
 	}
 	public static Func not(Expr expr) {
@@ -181,8 +179,11 @@ public class Cas {
 	public static FloatExpr floatExpr(String s) {
 		return new FloatExpr(s);
 	}
-	public static Equ equ(Expr a,Expr b) {
-		return new Equ(a,b);
+	public static Func equ(Expr a,Expr b) {
+		Func out = (Func) SimpleFuncs.equ.copy();
+		out.add(a);
+		out.add(b);
+		return out;
 	}
 	public static Greater equGreater(Expr a,Expr b) {
 		return new Greater(a,b);
@@ -279,10 +280,10 @@ public class Cas {
 		out.add(expr);
 		return out;
 	}
-	public static Func approx(Expr expr,ExprList defs) {
+	public static Func approx(Expr expr,Func defsSet) {
 		Func out = (Func) SimpleFuncs.approx.copy();
 		out.add(expr);
-		out.add(defs);
+		out.add(defsSet);
 		return out;
 	}
 	public static Func factor(Expr expr) {
@@ -321,14 +322,14 @@ public class Cas {
 	public static Mat mat(int rows,int cols) {
 		return new Mat(rows,cols);
 	}
-	public static Func func(String name,ExprList vars,Expr expr) {
-		return new Func(name,vars,expr);
+	public static Func func(String name,Func vEqu,Expr expr) {
+		return new Func(name,vEqu,expr);
 	}
-	public static Func func(String name,Equ v,Expr expr) {
-		return new Func(name,v,expr);
-	}
-	public static Becomes becomes(Expr left,Expr right) {
-		return new Becomes(left,right);
+	public static Func becomes(Expr left,Expr right) {
+		Func out = (Func)SimpleFuncs.becomes.copy();
+		out.add(left);
+		out.add(right);
+		return out;
 	}
 	public static Transpose transpose(Expr e) {
 		return new Transpose(e);
@@ -350,10 +351,10 @@ public class Cas {
 		out.add(expr);
 		return out;
 	}
-	public static Func boolTableToExpr(ExprList table, ExprList vars) {
+	public static Func boolTableToExpr(Func tableSet,Func varsSet) {
 		Func out = (Func) SimpleFuncs.boolTableToExpr.copy();
-		out.add(table);
-		out.add(vars);
+		out.add(tableSet);
+		out.add(varsSet);
 		return out;
 	}
 	public static Sequence sequence(Expr... exprs) {
@@ -456,7 +457,7 @@ public class Cas {
 				
 				Sequence poly = polyExtract(currentTerm.getBase(),v,casInfo);
 				Expr linearTermCoef = poly.get(1);
-				Equ solution = (Equ)ExprList.cast(solve(equ(currentTerm,Num.ZERO),v).simplify(casInfo)).get();
+				Func solutionEqu = (Func)ExprSet.cast(solve(equ(currentTerm,Num.ZERO),v).simplify(casInfo)).get();
 				
 				
 				BigInteger expo = ((Num)currentTerm.getExpo()).getRealValue();
@@ -465,9 +466,9 @@ public class Cas {
 				for(BigInteger j = BigInteger.ZERO;j.compareTo( expo ) == -1;j = j.add(BigInteger.ONE)){
 					BigInteger currentExpo = expo.subtract(j);
 					
-					Expr functionOut = currentFunction.replace(solution);
+					Expr functionOut = currentFunction.replace(solutionEqu);
 					
-					chara.add( exprList(num(out.size()),poly.get(0),poly.get(1),num(currentExpo)) );//index , constant , linear coeff, exponent
+					chara.add( exprSet(num(out.size()),poly.get(0),poly.get(1),num(currentExpo)) );//index , constant , linear coeff, exponent
 					
 					Expr numer = div(functionOut,prod(denomCoef,power(linearTermCoef,num(j)), num(factorial(j))));
 					Expr newTerm = div(numer,  power(currentTerm.getBase(),num(currentExpo))  );
@@ -1330,8 +1331,8 @@ public class Cas {
 	}
 	
 	public static Expr getLeftSideGeneric(Expr e) {
-		if(e instanceof Equ) {
-			return ((Equ)e).getLeftSide();
+		if(e.typeName().equals("equ")) {
+			return Equ.getLeftSide((Func)e);
 		}
 		if(e instanceof Less) {
 			return ((Less)e).getLeftSide();
@@ -1344,8 +1345,8 @@ public class Cas {
 	}
 	
 	public static Expr getRightSideGeneric(Expr e) {
-		if(e instanceof Equ) {
-			return ((Equ)e).getRightSide();
+		if(e.typeName().equals("equ")) {
+			return Equ.getRightSide((Func)e);
 		}
 		if(e instanceof Less) {
 			return ((Less)e).getRightSide();
@@ -1358,8 +1359,8 @@ public class Cas {
 	}
 	
 	public static void setLeftSideGeneric(Expr expr,Expr ls) {
-		if(expr instanceof Equ) {
-			((Equ)expr).setLeftSide(ls);
+		if(expr.typeName().equals("equ")) {
+			Equ.setLeftSide(((Func)expr),ls);
 		}
 		if(expr instanceof Less) {
 			((Less)expr).setLeftSide(ls);
@@ -1370,8 +1371,8 @@ public class Cas {
 	}
 	
 	public static void setRightSideGeneric(Expr expr,Expr rs) {
-		if(expr instanceof Equ) {
-			((Equ)expr).setRightSide(rs);
+		if(expr.typeName().equals("equ")) {
+			Equ.setRightSide(((Func)expr),rs);
 		}
 		if(expr instanceof Less) {
 			((Less)expr).setRightSide(rs);
@@ -1459,11 +1460,11 @@ public class Cas {
 				if(parenExpo) out+=rightParen;
 				out+="}";
 			}
-		}else if(e instanceof Equ) {
-			Equ casted = (Equ)e;
-			out+=generateLatex( casted.getLeftSide() );
+		}else if(e.typeName().equals("equ")) {
+			Func castedEqu = (Func)e;
+			out+=generateLatex( Equ.getLeftSide(castedEqu) );
 			out+="=";
-			out+=generateLatex( casted.getRightSide() );
+			out+=generateLatex( Equ.getRightSide(castedEqu) );
 		}else if(e.typeName().equals("integrateOver")) {
 			Func castedDefInt = (Func)e;
 			out+="\\int_{";

@@ -109,18 +109,18 @@ public class Plot extends JPanel{
 		
 		if(varChoice == IN_TERMS_OF_X) {
 			double beforeY = 0;
-			Equ varDef = Cas.equ(Cas.var("x"),Cas.floatExpr(0));
-			ExprList varDefs = new ExprList();
-			varDefs.add(varDef);
+			Func varDefEqu = Cas.equ(Cas.var("x"),Cas.floatExpr(0));
+			Func varDefsSet = Cas.exprSet();
+			varDefsSet.add(varDefEqu);
 			
 			double x = convertToInternalPositionX(0,plotWindowParams,windowSize);
-			((FloatExpr)varDef.getRightSide()).value.set(new ComplexFloat(x,0));
-			beforeY = convertToExternalPositionY(expr.convertToFloat(varDefs).real ,plotWindowParams,windowSize);
+			((FloatExpr)Equ.getRightSide(varDefEqu)).value.set(new ComplexFloat(x,0));
+			beforeY = convertToExternalPositionY(expr.convertToFloat(varDefsSet).real ,plotWindowParams,windowSize);
 			
 			for(int i = 0;i<windowSize.getWidth();i+=step) {
 				x = convertToInternalPositionX(i,plotWindowParams,windowSize);
-				((FloatExpr)varDef.getRightSide()).value.set(new ComplexFloat(x,0));
-				double y = convertToExternalPositionY(expr.convertToFloat(varDefs).real ,plotWindowParams,windowSize);
+				((FloatExpr)Equ.getRightSide(varDefEqu)).value.set(new ComplexFloat(x,0));
+				double y = convertToExternalPositionY(expr.convertToFloat(varDefsSet).real ,plotWindowParams,windowSize);
 				
 				if(equType == EQU) g.drawLine(i-1, (int)beforeY, i, (int)y);
 				else if(equType == GREATER) g.fillRect(i-1, 0, step, (int)y);
@@ -130,14 +130,14 @@ public class Plot extends JPanel{
 			}
 		}else if(varChoice == IN_TERMS_OF_Y){
 			double beforeX = 0;
-			Equ varDef = Cas.equ(Cas.var("y"),Cas.floatExpr(0));
-			ExprList varDefs = new ExprList();
-			varDefs.add(varDef);
+			Func varDefEqu = Cas.equ(Cas.var("y"),Cas.floatExpr(0));
+			Func varDefsSet = Cas.exprSet();
+			varDefsSet.add(varDefEqu);
 			
 			for(int i = 0;i<windowSize.getHeight();i+=2) {
 				double y = convertToInternalPositionY(i,plotWindowParams,windowSize);
-				((FloatExpr)varDef.getRightSide()).value.set(new ComplexFloat(y,0));
-				double x = convertToExternalPositionX(expr.convertToFloat(varDefs).real ,plotWindowParams,windowSize);
+				((FloatExpr)Equ.getRightSide(varDefEqu)).value.set(new ComplexFloat(y,0));
+				double x = convertToExternalPositionX(expr.convertToFloat(varDefsSet).real ,plotWindowParams,windowSize);
 				
 				if(equType == EQU) g.drawLine((int)beforeX,i-1, (int)x,i);
 				else if(equType == GREATER) g.fillRect(0,i-1, (int)x,step);
@@ -148,10 +148,10 @@ public class Plot extends JPanel{
 	}
 	
 	static void equPlot2D(Graphics g,Expr expr,PlotWindowParams plotWindowParams,Dimension windowSize,int detail) {//plots equations with x and y
-		Equ xDef = Cas.equ(Cas.var("x"),Cas.floatExpr(0)),yDef = Cas.equ(Cas.var("y"),Cas.floatExpr(0));
-		ExprList varDefs = new ExprList();
-		varDefs.add(xDef);
-		varDefs.add(yDef);
+		Func xDefEqu = Cas.equ(Cas.var("x"),Cas.floatExpr(0)),yDefEqu = Cas.equ(Cas.var("y"),Cas.floatExpr(0));
+		Func varDefsSet = Cas.exprSet();
+		varDefsSet.add(xDefEqu);
+		varDefsSet.add(yDefEqu);
 		
 		Expr leftSide = Cas.getLeftSideGeneric(expr);
 		Expr rightSide = Cas.getRightSideGeneric(expr);
@@ -162,9 +162,9 @@ public class Plot extends JPanel{
 		
 		for(int i = 0;i<windowSize.getWidth();i+=detail) {
 			for(int j = 0;j<windowSize.getHeight();j+=detail) {
-				((FloatExpr)xDef.getRightSide()).value.set(new ComplexFloat(convertToInternalPositionX(i,plotWindowParams,windowSize),0));
-				((FloatExpr)yDef.getRightSide()).value.set(new ComplexFloat(convertToInternalPositionY(j,plotWindowParams,windowSize),0));
-				double originalRes = leftSide.convertToFloat(varDefs).real-rightSide.convertToFloat(varDefs).real;
+				((FloatExpr)Equ.getRightSide(xDefEqu)).value.set(new ComplexFloat(convertToInternalPositionX(i,plotWindowParams,windowSize),0));
+				((FloatExpr)Equ.getRightSide(yDefEqu)).value.set(new ComplexFloat(convertToInternalPositionY(j,plotWindowParams,windowSize),0));
+				double originalRes = leftSide.convertToFloat(varDefsSet).real-rightSide.convertToFloat(varDefsSet).real;
 				boolean showPixel = false;
 				
 				if(equType == EQU) {
@@ -172,9 +172,9 @@ public class Plot extends JPanel{
 					outer:for(int k = -2;k<=2;k+=2) {
 						for(int l = -2;l<=2;l+=2) {
 							if(l == 0 && k == 0) continue;
-							((FloatExpr)xDef.getRightSide()).value.set(new ComplexFloat(convertToInternalPositionX(i+k,plotWindowParams,windowSize),0));
-							((FloatExpr)yDef.getRightSide()).value.set(new ComplexFloat(convertToInternalPositionY(j+l,plotWindowParams,windowSize),0));
-							double testRes = leftSide.convertToFloat(varDefs).real-rightSide.convertToFloat(varDefs).real;
+							((FloatExpr)Equ.getRightSide(xDefEqu)).value.set(new ComplexFloat(convertToInternalPositionX(i+k,plotWindowParams,windowSize),0));
+							((FloatExpr)Equ.getRightSide(yDefEqu)).value.set(new ComplexFloat(convertToInternalPositionY(j+l,plotWindowParams,windowSize),0));
+							double testRes = leftSide.convertToFloat(varDefsSet).real-rightSide.convertToFloat(varDefsSet).real;
 							if((testRes<0) != (originalRes<0)) {
 								diff = true;
 								break outer;
@@ -207,7 +207,7 @@ public class Plot extends JPanel{
 			
 			g.setColor(randomColor(expr.hashCode()));
 			
-			if(expr instanceof Equ || expr instanceof Greater || expr instanceof Less) {
+			if(expr.typeName().equals("equ") || expr instanceof Greater || expr instanceof Less) {
 				
 				int equType = EQU;
 				if(expr instanceof Greater) equType = GREATER;
@@ -220,12 +220,12 @@ public class Plot extends JPanel{
 				}else {
 					equPlot2D(g,expr,plotWindowParams,windowSize,detail);
 				}
-			}else if(expr instanceof ExprList || expr instanceof Sequence){
+			}else if(expr.typeName().equals("set") || expr instanceof Sequence){
 				Sequence subList = Sequence.cast(expr);
 				renderPlots2D(g,subList,plotWindowParams,windowSize,detail);
 			}else if(expr.typeName().equals("point")) {
-				double x = expr.get(0).convertToFloat(new ExprList()).real;
-				double y = expr.get(1).convertToFloat(new ExprList()).real;
+				double x = expr.get(0).convertToFloat(Cas.exprSet()).real;
+				double y = expr.get(1).convertToFloat(Cas.exprSet()).real;
 				int extX = convertToExternalPositionX(x,plotWindowParams,windowSize );
 				int extY = convertToExternalPositionY(y,plotWindowParams,windowSize );
 				
@@ -324,10 +324,10 @@ public class Plot extends JPanel{
 			
 			g.setColor(foregroundColor);
 			
-			Equ xDef = Cas.equ(Cas.var("x"),Cas.floatExpr(0)),yDef = Cas.equ(Cas.var("y"),Cas.floatExpr(0));
-			ExprList varDefs = new ExprList();
-			varDefs.add(xDef);
-			varDefs.add(yDef);
+			Func xDefEqu = Cas.equ(Cas.var("x"),Cas.floatExpr(0)),yDefEqu = Cas.equ(Cas.var("y"),Cas.floatExpr(0));
+			Func varDefsSet = Cas.exprSet();
+			varDefsSet.add(xDefEqu);
+			varDefsSet.add(yDefEqu);
 			
 			//generate points
 			int xRes = resolution,yRes = resolution;
@@ -341,10 +341,10 @@ public class Plot extends JPanel{
 					double x = (plotWindowParams.xMax-plotWindowParams.xMin)*((double)xIndex/(xRes-1))+plotWindowParams.xMin;
 					
 					
-					((FloatExpr)xDef.getRightSide()).value.set(new ComplexFloat(x,0));
-					((FloatExpr)yDef.getRightSide()).value.set(new ComplexFloat(y,0));
+					((FloatExpr)Equ.getRightSide(xDefEqu)).value.set(new ComplexFloat(x,0));
+					((FloatExpr)Equ.getRightSide(yDefEqu)).value.set(new ComplexFloat(y,0));
 					
-					double z = function.convertToFloat(varDefs).real;
+					double z = function.convertToFloat(varDefsSet).real;
 					points[yIndex][xIndex] = new Point(x,y,z);
 					
 				}
@@ -431,9 +431,9 @@ public class Plot extends JPanel{
 
 			Expr expr = stack.get(stack.size()-1);
 			
-			Equ varDef = Cas.equ(Cas.var("z"),Cas.floatExpr(0));
-			ExprList varDefs = new ExprList();
-			varDefs.add(varDef);
+			Func varDefEqu = Cas.equ(Cas.var("z"),Cas.floatExpr(0));
+			Func varDefsSet = Cas.exprSet();
+			varDefsSet.add(varDefEqu);
 			
 			for(int pixelX = 0;pixelX < windowSize.width;pixelX+=detail) {
 				for(int pixelY = 0;pixelY < windowSize.height;pixelY+=detail) {
@@ -441,8 +441,8 @@ public class Plot extends JPanel{
 					double real = convertToInternalPositionX(pixelX,plotWindowParams,windowSize);
 					double imag = convertToInternalPositionY(pixelY,plotWindowParams,windowSize);
 					
-					((FloatExpr)varDef.getRightSide()).value.set(new ComplexFloat(real,imag));
-					ComplexFloat result = expr.convertToFloat(varDefs);
+					((FloatExpr)Equ.getRightSide(varDefEqu)).value.set(new ComplexFloat(real,imag));
+					ComplexFloat result = expr.convertToFloat(varDefsSet);
 					
 					double mag = ComplexFloat.mag(result).real;
 					double angle = ComplexFloat.angle(result).real;

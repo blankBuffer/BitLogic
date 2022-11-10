@@ -34,7 +34,7 @@ public class Less extends Expr{
 	}
 	
 	@Override
-	public ComplexFloat convertToFloat(ExprList varDefs) {
+	public ComplexFloat convertToFloat(Func varDefs) {
 		return getRightSide().convertToFloat(varDefs);//usually the solution is on the right side of the equation
 	}
 	@Override

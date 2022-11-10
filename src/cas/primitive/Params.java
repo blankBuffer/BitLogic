@@ -16,7 +16,7 @@ public class Params extends Expr{
 	}
 
 	@Override
-	public ComplexFloat convertToFloat(ExprList varDefs) {
+	public ComplexFloat convertToFloat(Func varDefs) {
 		return new ComplexFloat(0,0);
 	}
 	

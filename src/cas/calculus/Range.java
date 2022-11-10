@@ -34,30 +34,30 @@ public class Range extends Expr{
 	}
 
 	static Rule calculateRange = new Rule("calculate the range from critical points") {
-		ExprList getCriticalPoints(Expr e,Var v,CasInfo casInfo) {
+		Func getCriticalPoints(Expr e,Var v,CasInfo casInfo) {//returns set
 			Expr derivative = diff(e,v).simplify(casInfo);
-			ExprList derivativeSolutions = ExprList.cast(solve(equ(derivative,num(0)),v).simplify(casInfo));
-			ExprList solutions = ExprList.cast(solve(equ(e,num(0)),v).simplify(casInfo));
+			Func derivativeSolutionsSet = ExprSet.cast(solve(equ(derivative,num(0)),v).simplify(casInfo));
+			Func solutionsSet = ExprSet.cast(solve(equ(e,num(0)),v).simplify(casInfo));
 			
-			ExprList criticalPoints = new ExprList();
+			Func criticalPointsSet = exprSet();
 			
-			for(int i = 0;i<solutions.size();i++) {
-				if(!solutions.get(i).containsType("solve")) criticalPoints.add(solutions.get(i));
+			for(int i = 0;i<solutionsSet.size();i++) {
+				if(!solutionsSet.get(i).containsType("solve")) criticalPointsSet.add(solutionsSet.get(i));
 			}
-			for(int i = 0;i<derivativeSolutions.size();i++) {
-				if(!derivativeSolutions.get(i).containsType("solve")) criticalPoints.add(derivativeSolutions.get(i));
+			for(int i = 0;i<derivativeSolutionsSet.size();i++) {
+				if(!derivativeSolutionsSet.get(i).containsType("solve")) criticalPointsSet.add(derivativeSolutionsSet.get(i));
 			}
 			
-			return ExprList.cast(criticalPoints.simplify(casInfo));
+			return ExprSet.cast(criticalPointsSet.simplify(casInfo));
 		}
 		
-		Expr maximum(Expr e,ExprList criticalPoints,CasInfo casInfo) {
-			Expr currentMax = e.replace( (Equ)criticalPoints.get(0) ).simplify(casInfo);
-			ComplexFloat floatMax = currentMax.convertToFloat(exprList());
+		Expr maximum(Expr e,Func criticalPointsSet,CasInfo casInfo) {
+			Expr currentMax = e.replace( (Func)criticalPointsSet.get(0) ).simplify(casInfo);
+			ComplexFloat floatMax = currentMax.convertToFloat(exprSet());
 			
-			for(int i = 1;i<criticalPoints.size();i++) {
-				Expr current = e.replace( (Equ)criticalPoints.get(i)).simplify(casInfo);
-				ComplexFloat currentApprox = current.convertToFloat(exprList());
+			for(int i = 1;i<criticalPointsSet.size();i++) {
+				Expr current = e.replace( (Func)criticalPointsSet.get(i)).simplify(casInfo);
+				ComplexFloat currentApprox = current.convertToFloat(exprSet());
 				
 				if(currentApprox.real > floatMax.real && currentApprox.real()) {
 					floatMax = currentApprox;
@@ -66,13 +66,13 @@ public class Range extends Expr{
 			}
 			return currentMax;
 		}
-		Expr minimum(Expr e,ExprList criticalPoints,CasInfo casInfo) {
-			Expr currentMax = e.replace( (Equ)criticalPoints.get(0) ).simplify(casInfo);
-			ComplexFloat floatMax = currentMax.convertToFloat(exprList());
+		Expr minimum(Expr e,Func criticalPointsSet,CasInfo casInfo) {
+			Expr currentMax = e.replace( (Func)criticalPointsSet.get(0) ).simplify(casInfo);
+			ComplexFloat floatMax = currentMax.convertToFloat(exprSet());
 			
-			for(int i = 1;i<criticalPoints.size();i++) {
-				Expr current = e.replace( (Equ)criticalPoints.get(i)).simplify(casInfo);
-				ComplexFloat currentApprox = current.convertToFloat(exprList());
+			for(int i = 1;i<criticalPointsSet.size();i++) {
+				Expr current = e.replace( (Func)criticalPointsSet.get(i)).simplify(casInfo);
+				ComplexFloat currentApprox = current.convertToFloat(exprSet());
 				
 				if(currentApprox.real < floatMax.real && currentApprox.real()) {
 					floatMax = currentApprox;
@@ -87,25 +87,25 @@ public class Range extends Expr{
 			Range range = (Range)e;
 			
 			
-			ExprList criticalPoints = getCriticalPoints(range.getExpr(),range.getVar(),casInfo);
-			criticalPoints.println();
+			Func criticalPointsSet = getCriticalPoints(range.getExpr(),range.getVar(),casInfo);
+			criticalPointsSet.println();
 			
 			{//remove criticalPoints outside domain
-				ComplexFloat minApprox = range.getMin().convertToFloat(exprList());
-				ComplexFloat maxApprox = range.getMax().convertToFloat(exprList());
+				ComplexFloat minApprox = range.getMin().convertToFloat(exprSet());
+				ComplexFloat maxApprox = range.getMax().convertToFloat(exprSet());
 				
-				for(int i = 0;i<criticalPoints.size();i++) {
-					if(criticalPoints.get(i).typeName().equals("solve")) {//Unsolved state
-						criticalPoints.remove(i);
+				for(int i = 0;i<criticalPointsSet.size();i++) {
+					if(criticalPointsSet.get(i).typeName().equals("solve")) {//Unsolved state
+						criticalPointsSet.remove(i);
 						i--;
 						continue;
 					}
 					
-					Expr critVal = ((Equ)criticalPoints.get(i)).getRightSide();
-					ComplexFloat approx = critVal.convertToFloat(exprList());
+					Expr critVal = Equ.getRightSide((Func)criticalPointsSet.get(i));
+					ComplexFloat approx = critVal.convertToFloat(exprSet());
 					
 					if(approx.real > maxApprox.real || approx.real < minApprox.real) {//out of bounds of domain
-						criticalPoints.remove(i);
+						criticalPointsSet.remove(i);
 						i--;
 					}
 					
@@ -113,11 +113,11 @@ public class Range extends Expr{
 			}
 			
 			//add domain points to critical points list
-			criticalPoints.add(equ(range.getVar(),range.getMin()));
-			criticalPoints.add(equ(range.getVar(),range.getMax()));
+			criticalPointsSet.add(equ(range.getVar(),range.getMin()));
+			criticalPointsSet.add(equ(range.getVar(),range.getMax()));
 			
-			Expr min = minimum(range.getExpr(), criticalPoints,casInfo);
-			Expr max = maximum(range.getExpr(), criticalPoints,casInfo);
+			Expr min = minimum(range.getExpr(), criticalPointsSet,casInfo);
+			Expr max = maximum(range.getExpr(), criticalPointsSet,casInfo);
 			
 			return sequence(min,max);
 		}
@@ -138,8 +138,8 @@ public class Range extends Expr{
 	}
 
 	@Override
-	public ComplexFloat convertToFloat(ExprList varDefs) {
-		return new ComplexFloat(0,0);
+	public ComplexFloat convertToFloat(Func varDefs) {
+		return ComplexFloat.ZERO;
 	}
 
 	@Override

@@ -6,7 +6,6 @@ import cas.Rule;
 import cas.CasInfo;
 import cas.StandardRules;
 import cas.primitive.Equ;
-import cas.primitive.ExprList;
 import cas.primitive.FloatExpr;
 import cas.primitive.Func;
 import cas.primitive.Prod;
@@ -88,19 +87,18 @@ public class Diff{
 					lambertWCase,
 					absCase
 			},"main sequence");
-			owner.behavior.rule.init();
 			
 			owner.behavior.toFloat = new Func.FloatFunc() {
 				@Override
-				public ComplexFloat convertToFloat(ExprList varDefs, Func owner) {
+				public ComplexFloat convertToFloat(Func varDefs, Func owner) {
 					ComplexFloat equRightSideVal = null;
 					Expr expr = owner.get();
 					
 					for(int i = 0;i < varDefs.size();i++) {//search for definition
-						Equ equ = (Equ)varDefs.get(i);
-						Var v = (Var)equ.getLeftSide();
+						Func equ = (Func)varDefs.get(i);
+						Var v = (Var)Equ.getLeftSide(equ);
 						if(v.equals(owner.getVar())) {
-							equRightSideVal = ((FloatExpr)equ.getRightSide()).value;//found!
+							equRightSideVal = ((FloatExpr)Equ.getRightSide(equ)).value;//found!
 							break;
 						}
 					}
