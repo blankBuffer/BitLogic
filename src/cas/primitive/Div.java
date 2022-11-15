@@ -319,9 +319,10 @@ public class Div{
 				
 				boolean negate = false;
 				
-				if(numer.signum() == -1 && denom.signum() == -1) negate = true;
-				else if(numer.equals(Num.NEG_ONE) && !denom.equals(Num.ONE)) negate = true;
-				else if(denom.equals(Num.NEG_ONE)) negate = true;
+				if(numer.signum() == -1 && denom.signum() == -1) negate = true;//numerator and denominator negative
+				else if(numer.equals(Num.NEG_ONE) && !denom.equals(Num.ONE)) negate = true;//transfer to negative to denominator
+				else if(denom.equals(Num.NEG_ONE)) negate = true;//transfer negative to numerator
+				else if(!numer.strangeAbs().equals(Num.ONE) && !denom.strangeAbs().equals(Num.ONE) && denom.signum() == -1) negate = true;//numerator negative takes priority
 				
 				if(negate) {
 					numer = numer.negate();

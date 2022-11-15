@@ -49,10 +49,75 @@ public class Tester {
 					testCase(Cas.sum(Cas.num(3),Cas.num(4),Cas.sum(Cas.num(7),Cas.num(9))),Cas.num(23),casInfo);
 		}
 		{//products
+			//6*3 -> 18
+			passes = passes &
+					testCase(Cas.prod(Cas.num(6),Cas.num(3)),Cas.num(18),casInfo);
+			//-6*3 -> -18
+			passes = passes &
+					testCase(Cas.prod(Cas.num(-6),Cas.num(3)),Cas.num(-18),casInfo);
+			//(-6)*(-3) -> 18
+			passes = passes &
+					testCase(Cas.prod(Cas.num(-6),Cas.num(-3)),Cas.num(18),casInfo);
+			//3*4*(7*9) -> 756
+			passes = passes & 
+					testCase(Cas.prod(Cas.num(3),Cas.num(4),Cas.prod(Cas.num(7),Cas.num(9))),Cas.num(756),casInfo);
+		}
+		
+		{//ratios
+			//6/3 -> 2
+			passes = passes &
+					testCase(Cas.div(Cas.num(6), Cas.num(3)),Cas.num(2),casInfo);
+			//6/-3 -> -2
+			passes = passes &
+					testCase(Cas.div(Cas.num(6), Cas.num(-3)),Cas.num(-2),casInfo);
+			//-6/3 -> -2
+			passes = passes &
+					testCase(Cas.div(Cas.num(-6), Cas.num(3)),Cas.num(-2),casInfo);
+			//3/6 -> 1/2
+			passes = passes &
+					testCase(Cas.div(Cas.num(3), Cas.num(6)),Cas.inv(Cas.num(2)),casInfo);
+			
+			//here the denominator must hold the negative to avoid negative ones
+			
+			//3/(-6) -> 1/-2
+			passes = passes &
+					testCase(Cas.div(Cas.num(3), Cas.num(-6)),Cas.inv(Cas.num(-2)),casInfo);
+			//(-3)/6 -> 1/-2
+			passes = passes &
+					testCase(Cas.div(Cas.num(-3), Cas.num(6)),Cas.inv(Cas.num(-2)),casInfo);
+			//2/-3 -> -2/3     here numerator negative takes priority
+			passes = passes &
+					testCase(Cas.div(Cas.num(2), Cas.num(-3)),Cas.div(Cas.num(-2), Cas.num(3)),casInfo);
+			//-2/3 -> -2/3     verifying
+			passes = passes &
+					testCase(Cas.div(Cas.num(-2), Cas.num(3)),Cas.div(Cas.num(-2), Cas.num(3)),casInfo);
 			
 		}
 		
 		if(verbose) System.out.println("passed arithmetic test: "+passes);
+		return passes;
+	}
+	
+	public boolean basicAlgebraTest(CasInfo casInfo) {
+		boolean passes = true;
+		
+		{//powers
+			//x^0 -> 1
+			passes = passes &
+					testCase(Cas.power(Cas.var("x"), Cas.num(0)),Cas.num(1),casInfo);
+			//x^1 -> x
+			passes = passes &
+					testCase(Cas.power(Cas.var("x"), Cas.num(1)),Cas.var("x"),casInfo);
+			//(2^y)^z -> 2^(y*z)
+			passes = passes &
+					testCase(Cas.power(Cas.power(Cas.num(2), Cas.var("y")), Cas.var("z")),Cas.power(Cas.num(2), Cas.prod(Cas.var("y"),Cas.var("z"))),casInfo);
+			//sqrt(x^2) -> abs(x)
+			passes = passes &
+					testCase(Cas.sqrt(Cas.power(Cas.var("x"), Cas.num(2))),Cas.abs(Cas.var("x")),casInfo);
+			
+		}
+		
+		if(verbose) System.out.println("passed basic algebra test: "+passes);
 		return passes;
 	}
 	
@@ -62,6 +127,7 @@ public class Tester {
 		Cas.load();
 		CasInfo casInfo = new CasInfo();
 		passes = passes & arithmeticTest(casInfo);
+		passes = passes & basicAlgebraTest(casInfo);
 		
 		if(verbose) System.out.println("passed all tests: "+passes);
 		return passes;

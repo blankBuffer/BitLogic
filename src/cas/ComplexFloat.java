@@ -150,6 +150,18 @@ public class ComplexFloat implements Serializable{
 		return div(ln(add(in, mult(I,pow(oneMinusXSquared,new ComplexFloat(0.5,0)) ))),I);
 		
 	}
+	
+	private static long longGcd(long a,long b) {
+		if (b == 0) return a;
+	    return longGcd(b, a % b);
+	}
+	
+	public static ComplexFloat gcd(ComplexFloat a,ComplexFloat b) {
+		long currentGcd = (long)Math.round(a.real);
+		currentGcd = longGcd(currentGcd,(long)Math.round(b.real));
+		return new ComplexFloat(currentGcd,0);
+	}
+	
 	public static ComplexFloat neg(ComplexFloat in) {
 		return new ComplexFloat(-in.real,-in.imag);
 	}

@@ -618,21 +618,29 @@ public class Integrate{
 					if(!(integ.get().typeName().equals("div"))) return e;
 					
 					Func innerDiv = (Func)integ.get();
-					if(!( innerDiv.getNumer().equals(v) && degree(innerDiv.getDenom(),v).equals(BigInteger.TWO) )) return e;
-					Sequence poly = polyExtract(innerDiv.getDenom(),v,casInfo);
-					if(poly == null) return e;
-					Expr c = poly.get(0),b = poly.get(1),a = poly.get(2);
-					Func subTableSet = exprSet(equ(var("0a"),a),equ(var("0b"),b),equ(var("0c"),c),equ(var("x"),v));
+					if( innerDiv.getNumer().equals(v) && degree(innerDiv.getDenom(),v).equals(BigInteger.TWO) ) {//simple form can proceed
+						
+						Sequence poly = polyExtract(innerDiv.getDenom(),v,casInfo);
+						if(poly == null) return e;
+						Expr c = poly.get(0),b = poly.get(1),a = poly.get(2);
+						Func subTableSet = exprSet(equ(var("0a"),a),equ(var("0b"),b),equ(var("0c"),c),equ(var("x"),v));
 
-					Expr k = this.k.replace(subTableSet).simplify(casInfo);
-					
-					subTableSet.add(equ(var("0k"),k));
-					
-					if(comparison(equGreater(k,num(0))).simplify(casInfo).equals(BoolState.TRUE)) {
-						return this.kPosCase.replace(subTableSet).simplify(casInfo);
+						Expr k = this.k.replace(subTableSet).simplify(casInfo);
+						
+						subTableSet.add(equ(var("0k"),k));
+						
+						if(comparison(equGreater(k,num(0))).simplify(casInfo).equals(BoolState.TRUE)) {
+							return this.kPosCase.replace(subTableSet).simplify(casInfo);
+						}
+						return this.kNegCase.replace(subTableSet).simplify(casInfo);
+						
+					}else if( innerDiv.getNumer().typeName().equals("sum") && degree(innerDiv.getNumer(),v).equals(BigInteger.ONE) ){//need to spit numerator
+						integ.set(0,distr(integ.get()).simplify(casInfo));
+						return StandardRules.linearOperator.applyRuleToExpr(integ, casInfo);
+					}else {
+						return e;
 					}
 					
-					return this.kNegCase.replace(subTableSet).simplify(casInfo);
 				}
 				
 			};
@@ -676,9 +684,7 @@ public class Integrate{
 				}
 				
 			};
-			
-			owner.behavior.rule = new Rule(new Rule[]{
-					
+			Rule integrationSequence = new Rule(new Rule[] {
 					StandardRules.pullOutConstants,
 					polynomial,
 					logCases,
@@ -724,7 +730,20 @@ public class Integrate{
 					weierstrassSub,
 					fullExpandInner,
 					StandardRules.linearOperator
-			},"main sequence");
+			},"integration sequence");
+			
+			owner.behavior.rule = new Rule("main rule") {
+				@Override
+				public void init(){
+					integrationSequence.init();
+				}
+				@Override
+				public Expr applyRuleToExpr(Expr e,CasInfo casInfo){
+					CasInfo relaxedPowerVersion = new CasInfo(casInfo);
+					relaxedPowerVersion.setRelaxedPower(true);
+					return integrationSequence.applyRuleToExpr(e, relaxedPowerVersion);
+				}
+			};
 			
 			owner.behavior.toFloat = new Func.FloatFunc() {
 				

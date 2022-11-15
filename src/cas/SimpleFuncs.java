@@ -86,10 +86,12 @@ public class SimpleFuncs extends Cas{
 	static Func allowComplexNumbers = new Func("allowComplexNumbers",0);
 	static Func singleSolutionMode = new Func("singleSolutionMode",0);
 	static Func factorIrrationalRoots = new Func("factorIrrationalRoots",0);
+	static Func relaxedPower = new Func("relaxedPower",0);
 	static Func setAllowAbs = new Func("setAllowAbs",1);
 	static Func setAllowComplexNumbers = new Func("setAllowComplexNumbers",1);
 	static Func setSingleSolutionMode = new Func("setSingleSolutionMode",1);
 	static Func setFactorIrrationalRoots = new Func("setFactorIrrationalRoots",1);
+	static Func setRelaxedPower = new Func("setRelaxedPower",1);
 	
 	static Func sinh = new Func("sinh",1);
 	static Func cosh = new Func("cosh",1);
@@ -130,6 +132,7 @@ public class SimpleFuncs extends Cas{
 	static Func approx;
 	static Func becomes,equ;
 	static Func exprSet;
+	static Func gcd;
 	
 	public static void loadRules(){
 		
@@ -151,6 +154,7 @@ public class SimpleFuncs extends Cas{
 		becomes = new Func("becomes",2,Becomes.becomesLoader);
 		equ = new Func("equ",2,Equ.equLoader);
 		exprSet = new Func("set",-1,ExprSet.exprSetLoader);
+		gcd = new Func("gcd",-1,Gcd.gcdLoader);
 		
 		addFunc(power);
 		addFunc(sin);
@@ -167,6 +171,7 @@ public class SimpleFuncs extends Cas{
 		addFunc(approx);
 		addFunc(becomes);
 		addFunc(equ);
+		addFunc(gcd);
 		
 		addFunc(new Func("div",2,Div.divLoader));
 		
@@ -215,6 +220,8 @@ public class SimpleFuncs extends Cas{
 		addFunc(setAllowComplexNumbers);
 		addFunc(setSingleSolutionMode);
 		addFunc(setFactorIrrationalRoots);
+		addFunc(relaxedPower);
+		addFunc(setRelaxedPower);
 		
 		addFunc(sinh);
 		addFunc(cosh);
@@ -642,6 +649,19 @@ public class SimpleFuncs extends Cas{
 			public Expr applyRuleToExpr(Expr e,CasInfo casInfo) {
 				casInfo.setFactorIrrationalRoots( e.get().equals(BoolState.TRUE));
 				return bool(casInfo.factorIrrationalRoots());
+			}
+		};
+		relaxedPower.behavior.rule = new Rule("simplify (a^b)^c to a^(b*c) always") {
+			@Override
+			public Expr applyRuleToExpr(Expr e,CasInfo casInfo) {
+				return bool(casInfo.relaxedPower());
+			}
+		};
+		setRelaxedPower.behavior.rule = new Rule("simplify (a^b)^c to a^(b*c) always") {
+			@Override
+			public Expr applyRuleToExpr(Expr e,CasInfo casInfo) {
+				casInfo.setRelaxedPower(e.get().equals(BoolState.TRUE));
+				return bool(casInfo.relaxedPower());
 			}
 		};
 		

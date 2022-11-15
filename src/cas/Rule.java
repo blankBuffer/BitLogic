@@ -398,9 +398,6 @@ public class Rule extends Expr{
 		Dot.loadRules();
 		ExprSet.loadRules();
 		
-		
-		Gcd.loadRules();
-		
 		Limit.loadRules();
 		Mat.loadRules();
 		

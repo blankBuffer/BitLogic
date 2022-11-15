@@ -13,7 +13,7 @@ public class Power{
 		@Override
 		public void load(Func owner) {
 			
-			Rule baseHasPower = new Rule("(a^b)^c->a^(b*c)","isType(b,num)&isType(c,num)|comparison(a>0)","base has power");
+			Rule baseHasPower = new Rule("(a^b)^c->a^(b*c)","relaxedPower()|isType(b,num)&isType(c,num)|(comparison(a>0)&isType(a,num))","base has power");
 			Rule baseHasPowerAbs = new Rule("(a^b)^c->abs(a)^(b*c)","isType(result(b/2),num)&~allowComplexNumbers()","base has power");
 			
 			Rule expoOfZero = new Rule("a^0->1","~comparison(a=0)","exponent is zero");
@@ -594,6 +594,7 @@ public class Power{
 				eulersIdentity,
 				
 				baseHasPowerAbs,
+				
 				baseOfPowerIsAbsExpoEven,
 				
 				negativeExpoToInv,
@@ -627,7 +628,6 @@ public class Power{
 				expoSumHasLog,//keep after expoHasIntegerInSum
 				
 				exponentiateIntegers
-					
 			},"main sequence");
 			
 			owner.behavior.rule.init();

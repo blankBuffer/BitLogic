@@ -208,7 +208,7 @@ public class Ln{
 						return log;
 					}
 				}
-				Expr gcd = new Gcd();
+				Expr gcd = gcd();
 				for(int i = 0;i<innerProd.size();i++) {
 					Func current = (Func)innerProd.get(i);
 					

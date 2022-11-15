@@ -5,10 +5,11 @@ import java.io.Serializable;
 public class CasInfo extends Cas implements Serializable{
 	
 	private static final long serialVersionUID = -423836233586167621L;
-	private boolean allowComplexNumbers = false;
-	private boolean allowAbs = true;
+	private boolean allowComplexNumbers = false;//simplify sqrt(-1) -> i
+	private boolean allowAbs = true;//simplify abs(x) -> x
 	private boolean factorIrrationalRoots = false;
-	private boolean singleSolutionMode = false;
+	private boolean singleSolutionMode = false;//solve returns only the base solution
+	private boolean relaxedPower = false;//(a^b)^c -> a^(b*c)
 	public Defs definitions;
 	
 	public CasInfo() {
@@ -19,7 +20,7 @@ public class CasInfo extends Cas implements Serializable{
 		allowAbs = casInfo.allowAbs;
 		factorIrrationalRoots = casInfo.factorIrrationalRoots;
 		singleSolutionMode = casInfo.singleSolutionMode;
-		
+		relaxedPower = casInfo.relaxedPower;
 		definitions = casInfo.definitions;
 	}
 	public static CasInfo normal = new CasInfo();
@@ -30,6 +31,7 @@ public class CasInfo extends Cas implements Serializable{
 		out += "allowComplexNumbers: "+allowComplexNumbers;
 		out += " allowAbs: "+allowAbs;
 		out += " singleSolutionMode: "+singleSolutionMode;
+		out += "relaxedPowers: "+relaxedPower;
 		return out;
 	}
 	
@@ -59,6 +61,9 @@ public class CasInfo extends Cas implements Serializable{
 	public void setSingleSolutionMode(boolean singleSolutionMode) {
 		this.singleSolutionMode = singleSolutionMode;
 	}
+	public void setRelaxedPower(boolean relaxedPower) {
+		this.relaxedPower = relaxedPower;
+	}
 	
 	public boolean allowAbs() {
 		return allowAbs;
@@ -73,5 +78,9 @@ public class CasInfo extends Cas implements Serializable{
 	
 	public boolean singleSolutionMode() {
 		return singleSolutionMode;
+	}
+	
+	public boolean relaxedPower() {
+		return relaxedPower;
 	}
 }

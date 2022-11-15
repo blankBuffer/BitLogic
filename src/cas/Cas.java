@@ -136,11 +136,9 @@ public class Cas {
 		for(Expr expr:exprs) out.add(expr);
 		return out;
 	}
-	public static Gcd gcd(Expr... exprs) {
-		Gcd out = new Gcd();
-		for(Expr e:exprs){
-			out.add(e);
-		}
+	public static Func gcd(Expr... exprs) {
+		Func out = (Func) SimpleFuncs.gcd.copy();
+		for(Expr expr:exprs) out.add(expr);
 		return out;
 	}
 	

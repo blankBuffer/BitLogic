@@ -134,6 +134,16 @@ public class StandardRules extends Cas{
 			return e;
 		}
 	};
+	
+	public static Rule showMessage(String text) {
+		return new Rule("show message") {
+			@Override
+			public Expr applyRuleToExpr(Expr e,CasInfo casInfo){
+				System.out.println(text);
+				return e;
+			}
+		};
+	}
 
 	public static void loadRules() {
 		oddFunction.init();
