@@ -1,13 +1,13 @@
 package cas.calculus;
 
-import cas.ComplexFloat;
-import cas.Expr;
-import cas.Rule;
-
 import java.math.BigInteger;
 
-import cas.CasInfo;
-import cas.StandardRules;
+import cas.base.CasInfo;
+import cas.base.ComplexFloat;
+import cas.base.Expr;
+import cas.base.Func;
+import cas.base.Rule;
+import cas.base.StandardRules;
 import cas.bool.BoolState;
 import cas.primitive.*;
 
@@ -55,8 +55,8 @@ public class Limit extends Expr{
 	
 	//returns the direction of an expression right or left
 	public static short getDirection(Expr e){
-		if(e instanceof Sum){
-			Sum innerSum = (Sum)e;
+		if(e.typeName().equals("sum")){
+			Func innerSum = (Func)e;
 			for(int i = 0;i<innerSum.size();i++){
 				if(innerSum.get(i).equals(Var.EPSILON)){
 					return RIGHT;
@@ -74,17 +74,17 @@ public class Limit extends Expr{
 	
 	
 	public static Expr stripDirection(Expr e){//does not modify input
-		if(e instanceof Sum){
-			Sum innerSum = (Sum)e;
+		if(e.typeName().equals("sum")){
+			Func innerSum = (Func)e;
 			for(int i = 0;i<innerSum.size();i++){
 				if(innerSum.get(i).equals(Var.EPSILON)){
-					Sum out = (Sum)e.copy();
-					out.remove(i);
-					return Sum.unCast(out);
+					Func outSum = (Func)e.copy();
+					outSum.remove(i);
+					return Sum.unCast(outSum);
 				}else if(innerSum.get(i).equals(Var.NEG_EPSILON)){
-					Sum out = (Sum)e.copy();
-					out.remove(i);
-					return Sum.unCast(out);
+					Func outSum = (Func)e.copy();
+					outSum.remove(i);
+					return Sum.unCast(outSum);
 				}
 			}
 		}else if(e.equals(Var.EPSILON)){
@@ -99,7 +99,7 @@ public class Limit extends Expr{
 		Expr epsilonAdder = direction == LEFT ? neg(epsilon()) : (  direction == RIGHT ? epsilon() : null);
 		
 		if(epsilonAdder != null){
-			if(e instanceof Sum){
+			if(e.typeName().equals("sum")){
 				e.add(epsilonAdder);
 				return e;
 			}
@@ -353,8 +353,8 @@ public class Limit extends Expr{
 		public Expr applyRuleToExpr(Expr e,CasInfo casInfo){
 			Limit lim = (Limit)e;
 			
-			if(isInf(lim.getValue()) && lim.getExpr() instanceof Sum) {
-				Sum innerSum = (Sum)lim.getExpr();
+			if(isInf(lim.getValue()) && lim.getExpr().typeName().equals("sum")) {
+				Func innerSum = (Func)lim.getExpr();
 				
 				for(int i = 0;i<innerSum.size();i++) {
 					Sequence parts = seperateByVar(innerSum.get(i),lim.getVar());
@@ -428,7 +428,7 @@ public class Limit extends Expr{
 			boolean changed = false;
 			if(e.typeName().equals("gamma")) {
 				return toSterling.replace(equ(var("x"),e.get()));
-			}else if(e instanceof Prod) {
+			}else if(e.typeName().equals("prod")) {
 				for(int i = 0;i<e.size();i++) {
 					if(e.get(i).typeName().equals("gamma")) {
 						e.set(i, toSterling.replace(equ(var("x"),e.get(i).get())));
@@ -519,12 +519,12 @@ public class Limit extends Expr{
 					int comparison = compare(casted.getNumer(),casted.getDenom(),v,casInfo);
 					if(comparison == 1) return inf();
 					else if(comparison == -1) return epsilon();
-				}else if(lim.getExpr() instanceof Sum){//sum where one term grows much faster than the rest
-					Sum casted = (Sum)lim.getExpr();
-					Expr biggest = casted.get(0);
+				}else if(lim.getExpr().typeName().equals("sum")){//sum where one term grows much faster than the rest
+					Func castedSum = (Func)lim.getExpr();
+					Expr biggest = castedSum.get(0);
 					
-					for(int i = 1;i<casted.size();i++){
-						Expr current = casted.get(i);
+					for(int i = 1;i<castedSum.size();i++){
+						Expr current = castedSum.get(i);
 						int comparison = compare(biggest,current,v,casInfo);
 						if(comparison == 0) return e;
 						if(comparison == -1){

@@ -1,9 +1,9 @@
 package cas.programming;
 
-import cas.ComplexFloat;
-import cas.Expr;
-import cas.Rule;
-import cas.primitive.Func;
+import cas.base.ComplexFloat;
+import cas.base.Expr;
+import cas.base.Func;
+import cas.base.Rule;
 
 public class If extends Expr{
 	

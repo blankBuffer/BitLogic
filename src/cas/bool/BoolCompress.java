@@ -2,8 +2,12 @@ package cas.bool;
 
 import java.util.ArrayList;
 
-import cas.*;
-import cas.primitive.*;
+import cas.base.CasInfo;
+import cas.base.ComplexFloat;
+import cas.base.Expr;
+import cas.base.Func;
+import cas.base.Rule;
+import cas.base.StandardRules;
 
 public class BoolCompress{
 	

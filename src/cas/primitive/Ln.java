@@ -1,7 +1,11 @@
 package cas.primitive;
 import java.math.BigInteger;
 
-import cas.*;
+import cas.base.CasInfo;
+import cas.base.ComplexFloat;
+import cas.base.Expr;
+import cas.base.Func;
+import cas.base.Rule;
 import cas.calculus.Limit;
 
 
@@ -54,7 +58,7 @@ public class Ln{
 				return e;
 			}
 			
-			if(ln.get() instanceof Sum){
+			if(ln.get().typeName().equals("sum")){
 				Expr inner = ln.get();
 				short direction = Limit.getDirection(inner);
 				
@@ -80,8 +84,8 @@ public class Ln{
 				if(((Num)perfectPower.getExpo()).getRealValue().equals(BigInteger.ONE)) return log;
 				
 				log.set(0, perfectPower);
-			}else if(log.get() instanceof Prod) {//ln(8*x) -> ln(2^3*x) , this will be reverted in later steps
-				Prod innerProd = (Prod)log.get();
+			}else if(log.get().typeName().equals("prod")) {//ln(8*x) -> ln(2^3*x) , this will be reverted in later steps
+				Func innerProd = (Func)log.get();
 				for(int i = 0;i<innerProd.size();i++) {
 					if(innerProd.get(i) instanceof Num) {
 						Num casted = (Num)innerProd.get(i);
@@ -107,40 +111,40 @@ public class Ln{
 		public Expr applyRuleToExpr(Expr e,CasInfo casInfo) {
 			Func log = (Func)e;
 			
-			if((log.get() instanceof Prod || log.get().typeName().equals("div")) && (casInfo.allowComplexNumbers() || !log.get().negative()) ) {
+			if((log.get().typeName().equals("prod") || log.get().typeName().equals("div")) && (casInfo.allowComplexNumbers() || !log.get().negative()) ) {
 
-				Sum out = new Sum();
+				Func outSum = sum();
 				Func div = Div.cast(log.get());
 				
-				Prod prodNumer = Prod.cast(div.getNumer());
-				Prod prodDenom = Prod.cast(div.getDenom());
+				Func prodNumer = Prod.cast(div.getNumer());
+				Func prodDenom = Prod.cast(div.getDenom());
 				
 				for(int i = 0;i<prodNumer.size();i++) {
 					Expr current = prodNumer.get(i);
-					if(current instanceof Sum || current.typeName().equals("power") && ((Func)current).getBase() instanceof Sum || current.typeName().equals("abs") && ((Func)current).get() instanceof Sum) {
+					if(current.typeName().equals("sum") || current.typeName().equals("power") && ((Func)current).getBase().typeName().equals("sum") || current.typeName().equals("abs") && ((Func)current).get().typeName().equals("sum")) {
 						if(!current.containsVars() && !current.convertToFloat(exprSet()).positiveAndReal()) continue;
-						out.add(ln(current));
+						outSum.add(ln(current));
 						prodNumer.remove(i);
 						i--;
 					}
 				}
 				for(int i = 0;i<prodDenom.size();i++) {
 					Expr current = prodDenom.get(i);
-					if(current instanceof Sum || current.typeName().equals("power") && ((Func)current).getBase() instanceof Sum || current.typeName().equals("abs") && ((Func)current).get() instanceof Sum) {
+					if(current.typeName().equals("sum") || current.typeName().equals("power") && ((Func)current).getBase().typeName().equals("sum") || current.typeName().equals("abs") && ((Func)current).get().typeName().equals("sum")) {
 						if(!current.containsVars() && !current.convertToFloat(exprSet()).positiveAndReal()) continue;
-						out.add(neg(ln(current)));
+						outSum.add(neg(ln(current)));
 						prodDenom.remove(i);
 						i--;
 					}
 				}
 				
-				if(out.size()>0) {
+				if(outSum.size()>0) {
 					div.setNumer(prodNumer);
 					div.setDenom(prodDenom);
 					log.set(0, div);
 					
-					out.add(log);
-					return out.simplify(casInfo);
+					outSum.add(log);
+					return outSum.simplify(casInfo);
 				}
 			}
 			
@@ -192,8 +196,8 @@ public class Ln{
 		@Override
 		public Expr applyRuleToExpr(Expr e,CasInfo casInfo) {
 			Func log = (Func)e;
-			if(log.get() instanceof Prod) {
-				Prod innerProd = (Prod)log.get();
+			if(log.get().typeName().equals("prod")) {
+				Func innerProd = (Func)log.get();
 				for(int i = 0;i<innerProd.size();i++) {
 					boolean badForm = false;
 					if(innerProd.get(i) instanceof Num) {

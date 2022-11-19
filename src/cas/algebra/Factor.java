@@ -1,9 +1,15 @@
-package cas.primitive;
+package cas.algebra;
 
 import java.math.BigInteger;
 import java.util.ArrayList;
 
-import cas.*;
+import cas.base.CasInfo;
+import cas.base.ComplexFloat;
+import cas.base.Expr;
+import cas.base.Func;
+import cas.base.Rule;
+import cas.base.StandardRules;
+import cas.primitive.*;
 
 
 public class Factor{
@@ -53,7 +59,7 @@ public class Factor{
 			Expr expr = factor.get();
 			
 			Var v = mostCommonVar(expr);
-			if(expr instanceof Sum && v != null && isPlainPolynomial(expr,v )) {
+			if(expr.typeName().equals("sum") && v != null && isPlainPolynomial(expr,v )) {
 				
 				Sequence coefs = polyExtract(expr,v,casInfo);
 				if(coefs == null) return e;
@@ -87,7 +93,7 @@ public class Factor{
 			Func factor = (Func)e;
 			Expr expr = factor.get();
 			Var v = mostCommonVar(expr);
-			if(expr instanceof Sum && v!=null && expr.size() == 2 && isPlainPolynomial(expr,v)) {
+			if(expr.typeName().equals("sum") && v!=null && expr.size() == 2 && isPlainPolynomial(expr,v)) {
 				Func pow = null;
 				Expr other = null;
 				if(expr.get(0).typeName().equals("power")) {
@@ -106,7 +112,7 @@ public class Factor{
 					Expr newPow = sqrt(pow).simplify(noAbsVersion);
 					Expr newOther = sqrt(neg(other)).simplify(noAbsVersion);
 					
-					if(!(newOther.typeName().equals("power") || newOther instanceof Prod)) {
+					if(!(newOther.typeName().equals("power") || newOther.typeName().equals("prod"))) {
 						
 						return prod(sum(newPow,newOther),sum(newPow,neg(newOther))).simplify(casInfo);
 						
@@ -130,7 +136,7 @@ public class Factor{
 			Expr expr = factor.get();
 			
 			
-			if(expr instanceof Sum) {
+			if(expr.typeName().equals("sum")) {
 				Sequence coefs = null;
 				Expr x = mostCommonVar(expr);
 				if(x!=null) {
@@ -164,17 +170,17 @@ public class Factor{
 						if(discrNumSqrt instanceof Num || casInfo.factorIrrationalRoots()) {
 							
 							
-							Expr out = new Prod();
+							Func outProd = prod();
 							
 							x = power(x,num((coefs.size()-1)/2));
 							
-							Prod twoAX = prod(num(2),a,x);
-							out.add( sum(twoAX,b.copy(),prod(num(-1),discrNumSqrt)) );
-							out.add( sum(twoAX.copy(),b.copy(),discrNumSqrt.copy()) );
-							out.add(inv(num(4)));
-							out.add(inv(a.copy()));
+							Func twoAXProd = prod(num(2),a,x);
+							outProd.add( sum(twoAXProd,b.copy(),prod(num(-1),discrNumSqrt)) );
+							outProd.add( sum(twoAXProd.copy(),b.copy(),discrNumSqrt.copy()) );
+							outProd.add(inv(num(4)));
+							outProd.add(inv(a.copy()));
 							
-							return out.simplify(casInfo);
+							return outProd.simplify(casInfo);
 						}
 							
 						
@@ -210,7 +216,7 @@ public class Factor{
 			if(e.contains(Var.INF)) return factor;//can't factor infinity lmao
 			Expr expr = factor.get();
 		
-			if(expr instanceof Sum) {
+			if(expr.typeName().equals("sum")) {
 				boolean sumHasDiv = false;
 				for(int i = 0;i<expr.size();i++) {
 					if(expr.get(i).typeName().equals("div")) {
@@ -226,10 +232,10 @@ public class Factor{
 					}
 					return sum.simplify(casInfo);
 				}
-				Prod leadingTerm = Prod.cast(expr.get(0));
-				Num leadingTermCoef = (Num)leadingTerm.getCoefficient();
+				Func leadingTermProd = Prod.cast(expr.get(0));
+				Num leadingTermCoef = (Num)leadingTermProd.getCoefficient();
 				BigInteger gcd = leadingTermCoef.gcd();
-				Expr factors = new Prod();
+				Expr factors = prod();
 				//calculate gcd
 				for(int i = 1;i<expr.size();i++) {
 					gcd = ((Num)expr.get(i).getCoefficient()).gcd().gcd(gcd);
@@ -238,8 +244,8 @@ public class Factor{
 				//add to factors product
 				if(!gcd.equals(BigInteger.ONE)) factors.add(num(gcd));
 				//common term
-				for(int i = 0;i<leadingTerm.size();i++) {
-					Expr subTerm = leadingTerm.get(i);
+				for(int i = 0;i<leadingTermProd.size();i++) {
+					Expr subTerm = leadingTermProd.get(i);
 					if(subTerm instanceof Num) continue;
 					
 					Func termPower = Power.cast(subTerm);
@@ -254,12 +260,12 @@ public class Factor{
 					
 					
 					for(int j = 1;j<expr.size();j++) {
-						Prod otherTerm = Prod.cast(expr.get(j));
+						Func otherTermProd = Prod.cast(expr.get(j));
 						
 						boolean found = false;
 						
-						for(int k = 0;k<otherTerm.size();k++) {
-							Expr otherSubTerm = otherTerm.get(k);
+						for(int k = 0;k<otherTermProd.size();k++) {
+							Expr otherSubTerm = otherTermProd.get(k);
 							if(otherSubTerm instanceof Num) continue;
 							
 							Func otherTermPower = Power.cast(otherSubTerm);
@@ -322,10 +328,10 @@ public class Factor{
 			Func factor = (Func)e;
 			Expr expr = factor.get();
 			
-			if(expr instanceof Prod) {
+			if(expr.typeName().equals("prod")) {
 
 				for(int i = 0;i<expr.size();i++) {
-					if(expr.get(i) instanceof Sum) {
+					if(expr.get(i).typeName().equals("sum")) {
 						Expr subSum = expr.get(i);
 						subSum.flags.simple = false;
 						expr.set(i, subSum.simplify(casInfo));
@@ -345,14 +351,14 @@ public class Factor{
 			
 			Var v = mostCommonVar(expr);
 			
-			if(expr instanceof Sum && v != null && isPlainPolynomial(expr,v) ) {
+			if(expr.typeName().equals("sum") && v != null && isPlainPolynomial(expr,v) ) {
 				int degree = degree(expr,v).intValue();
 				if(degree < 2) return e;
 				Sequence poly = polyExtract(expr,v,casInfo);
 				if(poly == null) return e;
 				for(int i = 0;i<poly.size();i++) if(!(poly.get(i) instanceof Num)) return e;//must be all nums
 				ArrayList<Double> rootsAsFloat = Solve.polySolve(poly);
-				Prod out = new Prod();
+				Func outProd = prod();
 				//System.out.println(expr);
 				//System.out.println(rootsAsFloat);
 				for(double root:rootsAsFloat) {
@@ -378,15 +384,15 @@ public class Factor{
 					
 					
 					if(divided != null && divided[1].size() == 0) {
-						out.add( exprListToPoly(rootAsPoly, v, casInfo) );
+						outProd.add( exprListToPoly(rootAsPoly, v, casInfo) );
 						poly = divided[0];
 						degree = poly.size()-1;
 					}
 					
 				}
-				out.add( exprListToPoly(poly, v, casInfo) );
-				if(out.size() > 1) {
-					return out.simplify(casInfo);
+				outProd.add( exprListToPoly(poly, v, casInfo) );
+				if(outProd.size() > 1) {
+					return outProd.simplify(casInfo);
 				}
 				
 			}
@@ -394,5 +400,4 @@ public class Factor{
 			
 		}
 	};
-	
 }

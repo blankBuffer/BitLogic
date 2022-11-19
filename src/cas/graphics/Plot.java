@@ -1,5 +1,8 @@
 package cas.graphics;
 import cas.*;
+import cas.base.ComplexFloat;
+import cas.base.Expr;
+import cas.base.Func;
 import cas.primitive.*;
 import cas.programming.StackEditor;
 

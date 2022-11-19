@@ -4,7 +4,7 @@
  */
 
 
-package cas;
+package cas.base;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
@@ -16,6 +16,7 @@ import java.util.Collections;
 import java.util.Comparator;
 import java.util.Random;
 
+import cas.Cas;
 import cas.bool.BoolState;
 import cas.primitive.*;
 
@@ -34,8 +35,7 @@ import cas.primitive.*;
 
 public abstract class Expr extends Cas{
 	
-	static Random random;
-	public boolean simplifyChildren = true;
+	public static Random random;
 	public Flags flags = new Flags();
 	private ArrayList<Expr> subExpr = new ArrayList<Expr>();//many expression types have sub expressions like sums
 	
@@ -128,7 +128,7 @@ public abstract class Expr extends Cas{
 			return toBeSimplified;
 		}
 		//System.out.println(toBeSimplified);
-		if(simplifyChildren || get().typeName().equals("result")) toBeSimplified.simplifyChildren(casInfo);//simplify sub expressions, result function can override this behavior
+		if(this instanceof Func && (((Func)this).behavior.simplifyChildren || get().typeName().equals("result"))) toBeSimplified.simplifyChildren(casInfo);//simplify sub expressions, result function can override this behavior
 		
 		
 		if(rule != null) toBeSimplified = rule.applyRuleToExpr(toBeSimplified, casInfo);
@@ -241,8 +241,8 @@ public abstract class Expr extends Cas{
 	
 	public Expr removeCoefficients() {
 		if(this instanceof Num) return num(1);
-		else if(this instanceof Prod) {
-			Prod prodCopy = (Prod)copy();
+		else if(this.typeName().equals("prod")) {
+			Func prodCopy = (Func)copy();
 			for(int i = 0;i<prodCopy.size();i++) {
 				if(prodCopy.get(i) instanceof Num) {
 					prodCopy.remove(i);
@@ -259,7 +259,7 @@ public abstract class Expr extends Cas{
 	
 	public boolean negative() {//Assumes its already simplified
 		if(this instanceof Num) return ((Num)this).signum() == -1;
-		else if(this instanceof Prod) {
+		else if(this.typeName().equals("prod")) {
 			for(int i = 0;i<size();i++) {
 				if(get(i) instanceof Num) {
 					if(((Num)get(i)).signum() == -1) return true;
@@ -268,20 +268,20 @@ public abstract class Expr extends Cas{
 		}else if(this.typeName().equals("div")) {
 			Func casted = (Func)this;
 			return casted.getNumer().negative() || casted.getDenom().negative();
-		}else if(this instanceof Sum) {
-			Sum casted = (Sum)this;
+		}else if(this.typeName().equals("sum")) {
+			Func castedSum = (Func)this;
 			
 			int highest  = Integer.MIN_VALUE;
 			int index = 0;
-			for(int i = 0;i<casted.size();i++) {
-				int current = casted.get(i).removeCoefficients().hashCode();//its very important to use the absolute value
+			for(int i = 0;i<castedSum.size();i++) {
+				int current = castedSum.get(i).removeCoefficients().hashCode();//its very important to use the absolute value
 				if(current>highest) {
 					highest = current;
 					index = i;
 				}
 			}
 			
-			Expr lowestHashExpr = casted.get(index);
+			Expr lowestHashExpr = castedSum.get(index);
 			return lowestHashExpr.negative();
 			
 		}
@@ -303,7 +303,7 @@ public abstract class Expr extends Cas{
 	 */
 	public Expr strangeAbs(CasInfo casInfo) {//Assumes its already simplified
 		if(this instanceof Num) return ((Num)this).strangeAbs();
-		else if(this instanceof Prod) {
+		else if(this.typeName().equals("prod")) {
 			for(int i = 0;i<size();i++) {
 				if(get(i) instanceof Num) {
 					if(((Num)get(i)).signum() == -1) {
@@ -322,7 +322,7 @@ public abstract class Expr extends Cas{
 	
 	
 	public Expr getCoefficient() {
-		if(this instanceof Prod) {
+		if(this.typeName().equals("prod")) {
 			for(int i = 0;i<size();i++) if(get(i) instanceof Num) return get(i).copy();
 		}else if(this instanceof Num) {
 			return copy();
@@ -450,7 +450,7 @@ public abstract class Expr extends Cas{
 				varcounts = new ArrayList<VarCount>();
 				countVars(varcounts);
 			}
-			if(this instanceof Sum || this instanceof Prod || this.typeName().equals("set")) {
+			if(this.typeName().equals("sum") || this.typeName().equals("prod") || this.typeName().equals("set")) {
 				boolean wasSimple = flags.simple;
 				
 				final ArrayList<VarCount> varcountsConst = varcounts;

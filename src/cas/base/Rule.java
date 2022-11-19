@@ -1,8 +1,9 @@
-package cas;
+package cas.base;
 
 import java.util.ArrayList;
 import java.util.Random;
 
+import cas.SimpleFuncs;
 import cas.bool.*;
 import cas.calculus.*;
 import cas.lang.Ask;
@@ -396,16 +397,12 @@ public class Rule extends Expr{
 		Define.loadRules();
 		
 		Dot.loadRules();
-		ExprSet.loadRules();
 		
 		Limit.loadRules();
 		Mat.loadRules();
 		
 		Next.loadRules();
-		Prod.loadRules();
 		Range.loadRules();
-		
-		Sum.loadRules();
 		
 		Ternary.loadRules();
 		Transpose.loadRules();

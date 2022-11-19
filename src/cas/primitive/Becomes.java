@@ -1,6 +1,7 @@
 package cas.primitive;
 
-import cas.Expr;
+import cas.base.Expr;
+import cas.base.Func;
 
 /*
  * the become expression type is what's used to create rule mappings, the arrow -> shows how the left argument "becomes"

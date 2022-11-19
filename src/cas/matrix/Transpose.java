@@ -1,13 +1,11 @@
 package cas.matrix;
 
-import cas.ComplexFloat;
-import cas.Expr;
-import cas.Rule;
-import cas.CasInfo;
-import cas.primitive.Func;
-import cas.primitive.Prod;
+import cas.base.CasInfo;
+import cas.base.ComplexFloat;
+import cas.base.Expr;
+import cas.base.Func;
+import cas.base.Rule;
 import cas.primitive.Sequence;
-import cas.primitive.Sum;
 
 public class Transpose extends Expr{
 	public Transpose(){}//
@@ -28,8 +26,8 @@ public class Transpose extends Expr{
 	static Rule transOfSum = new Rule("tranpose of sum"){
 		@Override
 		public Expr applyRuleToExpr(Expr e,CasInfo casInfo) {
-			if(e.get() instanceof Sum) {
-				Sum innerSum = (Sum)e.get();
+			if(e.get().typeName().equals("sum")) {
+				Func innerSum = (Func)e.get();
 				for(int i = 0;i<innerSum.size();i++) {
 					innerSum.set(i, transpose(innerSum.get(i)) );
 				}
@@ -41,8 +39,8 @@ public class Transpose extends Expr{
 	static Rule transOfProd = new Rule("tranpose of product"){
 		@Override
 		public Expr applyRuleToExpr(Expr e,CasInfo casInfo) {
-			if(e.get() instanceof Prod) {
-				Prod innerProd = (Prod)e.get();
+			if(e.get().typeName().equals("prod")) {
+				Func innerProd = (Func)e.get();
 				for(int i = 0;i<innerProd.size();i++) {
 					innerProd.set(i, transpose(innerProd.get(i)) );
 				}

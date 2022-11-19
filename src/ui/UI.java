@@ -4,7 +4,7 @@ import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
 
-import cas.Rule;
+import cas.base.Rule;
 import cas.programming.StackEditor;
 
 public class UI {
@@ -31,6 +31,8 @@ public class UI {
 	}
 	
 	public static void startCommandLineInterface(boolean clearTerm) {
+		System.out.println("starting stack read print loop...");
+		
 		System.out.println(UI.fancyIntro());
 		System.out.println("type \"quit\" and hit ENTER to quit");
 		Rule.loadCompileSimplifyRules();

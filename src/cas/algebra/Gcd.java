@@ -1,5 +1,14 @@
-package cas.primitive;
-import cas.*;
+package cas.algebra;
+import cas.base.CasInfo;
+import cas.base.ComplexFloat;
+import cas.base.Expr;
+import cas.base.Func;
+import cas.base.Rule;
+import cas.primitive.Div;
+import cas.primitive.Num;
+import cas.primitive.Power;
+import cas.primitive.Prod;
+import cas.primitive.Sequence;
 
 public class Gcd{
 	
@@ -10,7 +19,7 @@ public class Gcd{
 			
 			Rule gcdRule = new Rule("get the greatest common divisor") {
 				Expr smallGcd(Expr a,Expr b) {//gcd of just two elements
-					Prod subGcd = new Prod();
+					Func subGcdProd = prod();
 					
 					Sequence aSep = seperateCoef(a);
 					a =	aSep.get(1);
@@ -20,7 +29,7 @@ public class Gcd{
 					Func fracCoefA = Div.cast(aSep.get());
 					Func fracCoefB = Div.cast(bSep.get());
 					
-					subGcd.add(Div.unCast(div( num(((Num)fracCoefA.getNumer()).gcd().gcd(((Num)fracCoefB.getNumer()).gcd())) ,num(((Num)fracCoefA.getDenom()).gcd().gcd(((Num)fracCoefB.getDenom()).gcd())) )));
+					subGcdProd.add(Div.unCast(div( num(((Num)fracCoefA.getNumer()).gcd().gcd(((Num)fracCoefB.getNumer()).gcd())) ,num(((Num)fracCoefA.getDenom()).gcd().gcd(((Num)fracCoefB.getDenom()).gcd())) )));
 					
 					if(a.typeName().equals("div") || b.typeName().equals("div")) {
 						Func aDiv = Div.cast(a);
@@ -41,9 +50,9 @@ public class Gcd{
 							if(aPow.getBase().equals(bPow.getBase())) {
 								
 								if(aPow.getExpo().equals(bPow.getExpo())) {
-									subGcd.add(Power.unCast(aPow));
+									subGcdProd.add(Power.unCast(aPow));
 								}else if( isPositiveRealNum(aPow.getExpo()) && isPositiveRealNum(bPow.getExpo()) ){
-									subGcd.add(Power.unCast( power(aPow.getBase(), num(((Num)aPow.getExpo()).getRealValue().min(((Num)bPow.getExpo()).getRealValue()))) ));
+									subGcdProd.add(Power.unCast( power(aPow.getBase(), num(((Num)aPow.getExpo()).getRealValue().min(((Num)bPow.getExpo()).getRealValue()))) ));
 								}else if(aPow.getExpo().typeName().equals("div") || bPow.getExpo().typeName().equals("div")) {
 									Func aExpo = Div.cast(aPow.getExpo());
 									Func bExpo = Div.cast(bPow.getExpo());
@@ -52,9 +61,9 @@ public class Gcd{
 										int comparison = ((Num)aExpo.getNumer()).getRealValue().multiply(((Num)bExpo.getDenom()).getRealValue()).compareTo(((Num)bExpo.getNumer()).getRealValue().multiply(((Num)aExpo.getDenom()).getRealValue()));
 										
 										if(comparison == -1) {
-											subGcd.add(a.get(i));
+											subGcdProd.add(a.get(i));
 										}else if(comparison == 1) {
-											subGcd.add(b.get(j));
+											subGcdProd.add(b.get(j));
 										}
 										
 									}
@@ -65,13 +74,13 @@ public class Gcd{
 						}
 					}
 					//remove ones
-					for(int i = 0;i<subGcd.size();i++) {
-						if(subGcd.get(i).equals(Num.ONE)) {
-							subGcd.remove(i);
+					for(int i = 0;i<subGcdProd.size();i++) {
+						if(subGcdProd.get(i).equals(Num.ONE)) {
+							subGcdProd.remove(i);
 							i--;
 						}
 					}
-					return Prod.unCast(subGcd);
+					return Prod.unCast(subGcdProd);
 				}
 				
 				@Override
@@ -82,8 +91,8 @@ public class Gcd{
 					else if(gcd.size() == 1) return gcd.get();
 					
 					for(int i = 0;i<gcd.size();i++) {
-						if(gcd.get(i) instanceof Sum) {
-							Sum subSum = (Sum)gcd.get(i);
+						if(gcd.get(i).typeName().equals("sum")) {
+							Func subSum = (Func)gcd.get(i);
 							Func subGcd = gcd();
 							
 							for(int j = 0;j<subSum.size();j++) {

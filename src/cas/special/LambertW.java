@@ -1,7 +1,10 @@
 package cas.special;
 
-import cas.*;
-import cas.primitive.Func;
+import cas.base.CasInfo;
+import cas.base.ComplexFloat;
+import cas.base.Expr;
+import cas.base.Func;
+import cas.base.Rule;
 
 /*
  * the Lambert W function which is the inverse of x*e^x

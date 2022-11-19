@@ -1,14 +1,99 @@
 package cas.primitive;
 import java.math.BigInteger;
 
-import cas.ComplexFloat;
-import cas.Expr;
-import cas.Rule;
-import cas.CasInfo;
+import cas.Cas;
+import cas.base.CasInfo;
+import cas.base.ComplexFloat;
+import cas.base.Expr;
+import cas.base.Func;
+import cas.base.Rule;
 import cas.matrix.Mat;
 
-public class Prod extends Expr{
-
+public class Prod{
+	
+	public static Func.FuncLoader prodLoader = new Func.FuncLoader() {
+		
+		@Override
+		public void load(Func owner) {
+			owner.behavior.commutative = true;
+			owner.behavior.rule = new Rule(new Rule[] {
+					factorSubSums,
+					reduceTrigProd,
+					trigExpandElements,
+					combineWithDiv,
+					prodContainsProd,
+					expandIntBases,
+					multConj,
+					multiplyLikeTerms,
+					compressRoots,
+					expoIntoBase,
+					multiplyIntBases,
+					reSimplifyIntBasePowers,
+					multiplyIntegers,
+					zeroInProd,
+					epsilonInfReduction,
+					productWithMatrix,
+					aloneProd
+			},"main sequence");
+			owner.behavior.toStringMethod = new Func.ToString() {
+				
+				@Override
+				public String generateString(Func owner) {
+					String out = "";
+					Expr prodCopy = owner.copy();
+					if(prodCopy.size() < 2) out+="alone product:";
+					int indexOfSwap = 0;
+					if(prodCopy.size()>1) {
+						if(!(prodCopy.get() instanceof Num)) {//bring number to front
+							for(int i = 0;i<prodCopy.size();i++) {
+								if(prodCopy.get(i) instanceof Num) {
+									indexOfSwap = i;
+									break;
+								}
+							}
+						}
+						//swap
+						Expr temp = prodCopy.get(indexOfSwap);
+						prodCopy.set(indexOfSwap,prodCopy.get());
+						prodCopy.set(0,temp);
+					}
+					
+					for(int i = 0;i < prodCopy.size();i++) {
+						boolean paren = false,div = false;
+						Expr e = prodCopy.get(i);
+						
+						if(i == 0 && e instanceof Num) if(((Num) e).getRealValue().equals(BigInteger.valueOf(-1))) {
+							out+='-';
+							continue;
+						}
+						
+						if(e.typeName().equals("sum") || e.typeName().equals("prod")) paren = true;
+						
+						if(div) out+='/';
+						if(paren) out+='(';
+						out+=e.toString();
+						if(paren) out+=')';
+						
+						
+						if(i != prodCopy.size()-1) out+="*";
+						
+					}
+					return out;
+				}
+			};
+			
+			owner.behavior.toFloat = new Func.FloatFunc() {
+				
+				@Override
+				public ComplexFloat convertToFloat(Func varDefs, Func owner) {
+					ComplexFloat total = new ComplexFloat(1,0);
+					for(int i = 0;i<owner.size();i++) total=ComplexFloat.mult(total, owner.get(i).convertToFloat(varDefs));
+					return total;
+				}
+			};
+		}
+	};
+	
 	static class TermInfo{
 		Expr var = null;
 		String typeName = null;
@@ -19,12 +104,13 @@ public class Prod extends Expr{
 			this.expo = expo;
 		}
 	}
+	
 	static TermInfo getTermInfo(Expr e) {
 		if(e.typeName().equals("sin") || e.typeName().equals("tan") || e.typeName().equals("cos")) {
-			return new TermInfo(e.get(),e.typeName(),num(1));
+			return new TermInfo(e.get(),e.typeName(),Cas.num(1));
 		}else if(e.typeName().equals("power")) {
 			Func casted = (Func)e;
-			if(isRealNum(casted.getExpo())) {
+			if(Cas.isRealNum(casted.getExpo())) {
 				e = casted.getBase();
 				if(e.typeName().equals("sin") || e.typeName().equals("tan") || e.typeName().equals("cos")) {
 					return new TermInfo(e.get(),e.typeName(),(Num)casted.getExpo());
@@ -34,18 +120,10 @@ public class Prod extends Expr{
 		return null;
 	}
 	
-	public Prod() {
-	}
-	
-	@Override
-	public boolean isCommutative(){
-		return true;
-	}
-	
 	static Rule epsilonInfReduction = new Rule("expressions with epsilon or infinity"){
 		@Override
 		public Expr applyRuleToExpr(Expr e,CasInfo casInfo){
-			Prod prod = (Prod)e;
+			Func prod = (Func)e;
 			
 			boolean hasEpsilon = false;
 			boolean hasInf = false;
@@ -88,11 +166,11 @@ public class Prod extends Expr{
 	};
 	
 	//the following two functions are also used by div
-	public static boolean foundProdInTrigInProd(Prod prod){
+	public static boolean foundProdInTrigInProd(Func prod){
 		if(prod.containsType("sin")){
 			for(int i = 0;i < prod.size();i++){
 				if(prod.get(i).typeName().equals("sin") || prod.get(i).typeName().equals("cos") || prod.get(i).typeName().equals("tan")){
-					if(prod.get(i).get() instanceof Prod){
+					if(prod.get(i).get().typeName().equals("prod")){
 						return true;
 					}
 				}
@@ -100,11 +178,11 @@ public class Prod extends Expr{
 		}
 		return false;
 	}
-	public static boolean foundNonProdInTrigInProd(Prod prod){
+	public static boolean foundNonProdInTrigInProd(Func prod){
 		if(prod.containsType("sin")){
 			for(int i = 0;i < prod.size();i++){
 				if(prod.get(i).typeName().equals("sin") || prod.get(i).typeName().equals("cos") || prod.get(i).typeName().equals("tan")){
-					if(!(prod.get(i).get() instanceof Prod)){
+					if(!(prod.get(i).get().typeName().equals("prod"))){
 						return true;
 					}
 				}
@@ -116,7 +194,7 @@ public class Prod extends Expr{
 	static Rule trigExpandElements = new Rule("trig expand elements Prod"){
 		@Override
 		public Expr applyRuleToExpr(Expr e,CasInfo casInfo){
-			Prod prod = (Prod)e;
+			Func prod = (Func)e;
 			if(foundProdInTrigInProd(prod) && foundNonProdInTrigInProd(prod)){
 				
 				for(int i = 0;i < prod.size();i++){
@@ -130,7 +208,7 @@ public class Prod extends Expr{
 	static Rule combineWithDiv = new Rule("combine products with division"){
 		@Override
 		public Expr applyRuleToExpr(Expr e,CasInfo casInfo){
-			Prod prod = (Prod)e;
+			Func prod = (Func)e;
 			
 			int indexOfDiv = -1;
 			for(int i = 0;i<prod.size();i++) {
@@ -144,8 +222,8 @@ public class Prod extends Expr{
 				Func div = (Func)prod.get(indexOfDiv);
 				prod.remove(indexOfDiv);
 				
-				Prod prodNumer = Prod.cast(div.getNumer());
-				Prod prodDenom = Prod.cast(div.getDenom());
+				Func prodNumer = Prod.cast(div.getNumer());
+				Func prodDenom = Prod.cast(div.getDenom());
 				
 				for(int i = 0;i<prod.size();i++) {
 
@@ -172,8 +250,8 @@ public class Prod extends Expr{
 	static Rule factorSubSums = new Rule("factor sum elements"){
 		@Override
 		public Expr applyRuleToExpr(Expr e,CasInfo casInfo){
-			Prod prod = (Prod)e;
-			for(int i = 0;i<prod.size();i++) if(prod.get(i) instanceof Sum) prod.set(i,  factor(prod.get(i)).simplify(casInfo));
+			Func prod = (Func)e;
+			for(int i = 0;i<prod.size();i++) if(prod.get(i).typeName().equals("sum")) prod.set(i,  factor(prod.get(i)).simplify(casInfo));
 			return prod;
 		}
 	};
@@ -181,7 +259,7 @@ public class Prod extends Expr{
 	static Rule reSimplifyIntBasePowers = new Rule("re-simplify int based powers"){
 		@Override
 		public Expr applyRuleToExpr(Expr e,CasInfo casInfo){
-			Prod prod = (Prod)e;
+			Func prod = (Func)e;
 			for(int i = 0;i<prod.size();i++) {
 				Expr current = prod.get(i);
 				if(current.typeName().equals("power")) {
@@ -201,11 +279,11 @@ public class Prod extends Expr{
 	static Rule prodContainsProd = new Rule("product contains a product"){
 		@Override
 		public Expr applyRuleToExpr(Expr e,CasInfo casInfo){
-			Prod prod = (Prod)e;
+			Func prod = (Func)e;
 			
 			for(int i = 0;i<prod.size();i++) {
 				Expr current = prod.get(i);
-				if(current instanceof Prod) {
+				if(current.typeName().equals("prod")) {
 					for(int j = 0;j<current.size();j++) prod.add(current.get(j));//add all the sub expressions into this product
 					prod.remove(i);//remove the sub product
 					i--;//shift back after deletion
@@ -219,14 +297,14 @@ public class Prod extends Expr{
 	static Rule expoIntoBase = new Rule("power of integers with exponent being product"){
 		@Override
 		public Expr applyRuleToExpr(Expr e,CasInfo casInfo){
-			Prod prod = (Prod)e;
+			Func prod = (Func)e;
 			
 			for(int i = 0;i<prod.size();i++) {
 				Expr current = prod.get(i);
 				if(current.typeName().equals("power")) {
 					Func currentPower = (Func)current;
-					if(currentPower.getExpo() instanceof Prod && currentPower.getBase() instanceof Num) {
-						Prod expoProd = (Prod)currentPower.getExpo();
+					if(currentPower.getExpo().typeName().equals("prod") && currentPower.getBase() instanceof Num) {
+						Func expoProd = (Func)currentPower.getExpo();
 						
 						for(int j = 0;j<expoProd.size();j++) {
 							if(expoProd.get(j) instanceof Num) {
@@ -255,7 +333,7 @@ public class Prod extends Expr{
 	static Rule multiplyIntBases = new Rule("multiply int bases"){
 		@Override
 		public Expr applyRuleToExpr(Expr e,CasInfo casInfo){
-			Prod prod = (Prod)e;
+			Func prod = (Func)e;
 			
 			for(int i = 0;i<prod.size();i++) {
 				Expr current = prod.get(i);
@@ -296,7 +374,7 @@ public class Prod extends Expr{
 	static Rule expandIntBases = new Rule("prime factor and expand int bases"){
 		@Override
 		public Expr applyRuleToExpr(Expr e,CasInfo casInfo){
-			Prod prod = (Prod)e;
+			Func prod = (Func)e;
 			
 			for(int i = 0;i<prod.size();i++) {
 				Expr current = prod.get(i);
@@ -309,14 +387,14 @@ public class Prod extends Expr{
 						
 						if(numBase.getRealValue().isProbablePrime(128) || numBase.getRealValue().equals(BigInteger.valueOf(-1))) continue;//skip primes
 						
-						Prod primeFactors = primeFactor(numBase);
+						Func primeFactorsProd = primeFactor(numBase);
 						
-						for(int j = 0;j<primeFactors.size();j++) {
-							Func factor = (Func)primeFactors.get(j);
+						for(int j = 0;j<primeFactorsProd.size();j++) {
+							Func factor = (Func)primeFactorsProd.get(j);
 							if(((Num)factor.getExpo()).getRealValue().equals(BigInteger.ONE)) {
 								prod.add(power(factor.getBase(),currentPower.getExpo().copy()));
 							}else {
-								if(currentPower.getExpo() instanceof Prod) {
+								if(currentPower.getExpo().typeName().equals("prod")) {
 									currentPower.getExpo().add(factor.getExpo());
 									prod.add(power(factor.getBase(),currentPower.getExpo().simplify(casInfo)));
 								}else {
@@ -342,20 +420,20 @@ public class Prod extends Expr{
 	static Rule multiplyLikeTerms = new Rule("multiply like terms"){
 		@Override
 		public Expr applyRuleToExpr(Expr e,CasInfo casInfo){
-			Prod prod = (Prod)e;
+			Func prod = (Func)e;
 			
 			for(int i = 0;i < prod.size();i++) {
 				
 				Expr current = prod.get(i);//get the current object in the array check
 				
-				Expr expo = new Sum();//create a sum object for the exponent
+				Expr expoSum = sum();//create a sum object for the exponent
 				
 				if(current instanceof Num) continue;//ignore integers
 				
 				
 				Func currentCasted = Power.cast(current);	
 				current = currentCasted.getBase();//extract out the base and reassign current, current now represents the base of power
-				expo.add(currentCasted.getExpo());//extract out the exponent
+				expoSum.add(currentCasted.getExpo());//extract out the exponent
 				
 				boolean found = false;
 				for(int j = i+1; j< prod.size();j++) {
@@ -365,7 +443,7 @@ public class Prod extends Expr{
 					
 					Func otherCasted = Power.cast(other);
 					if(otherCasted.getBase().equals(current)) {//if other has equal base
-						expo.add(otherCasted.getExpo());
+						expoSum.add(otherCasted.getExpo());
 						prod.remove(j);
 						j--;
 						found = true;
@@ -373,7 +451,7 @@ public class Prod extends Expr{
 				}
 				
 				if(found) {
-					Expr repl = power(current,expo);//replacement
+					Expr repl = power(current,expoSum);//replacement
 					prod.set(i,repl.simplify(casInfo));//modify the element with the replacement
 				}
 				
@@ -386,7 +464,7 @@ public class Prod extends Expr{
 	static Rule zeroInProd = new Rule("zero in the product"){
 		@Override
 		public Expr applyRuleToExpr(Expr e,CasInfo casInfo){
-			Prod prod = (Prod)e;
+			Func prod = (Func)e;
 			
 			boolean foundZero = false;
 			for(int i = 0;i < prod.size();i++) {
@@ -409,7 +487,7 @@ public class Prod extends Expr{
 	static Rule multiplyIntegers = new Rule("multiply integers"){
 		@Override
 		public Expr applyRuleToExpr(Expr e,CasInfo casInfo){
-			Prod prod = (Prod)e;
+			Func prod = (Func)e;
 			
 			Num total = Num.ONE;
 			
@@ -433,9 +511,9 @@ public class Prod extends Expr{
 	static Rule reduceTrigProd = new Rule("reducing trig product") {//tan(x)*cos(x) -> sin(x)
 		@Override
 		public Expr applyRuleToExpr(Expr e,CasInfo casInfo){
-			Prod prod = (Prod)e;
+			Func prod = (Func)e;
 			
-			Prod newNumerProd = new Prod();
+			Func newNumerProd = prod();
 			
 			for(int i = 0;i < prod.size();i++) {
 				TermInfo termInfo = getTermInfo(prod.get(i));
@@ -535,12 +613,12 @@ public class Prod extends Expr{
 		
 		@Override
 		public Expr applyRuleToExpr(Expr e,CasInfo casInfo){
-			Prod prod = (Prod)e;
+			Func prod = (Func)e;
 			
 			for(int i = 0;i<prod.size();i++) {
 				Func currentCasted = Power.cast(prod.get(i));
-				if( currentCasted.getBase() instanceof Sum && currentCasted.getBase().size() == 2 ) {
-					Sum currentSum = (Sum)currentCasted.getBase();
+				if( currentCasted.getBase().typeName().equals("sum") && currentCasted.getBase().size() == 2 ) {
+					Func currentSum = (Func)currentCasted.getBase();
 					Num num = null;
 					Expr other = null;
 					
@@ -567,7 +645,7 @@ public class Prod extends Expr{
 						if(out != null) {
 							prod.remove(j);
 							prod.remove(i);
-							if(out instanceof Prod) {
+							if(out.typeName().equals("prod")) {
 								for(int k = 0;k<out.size();k++) prod.add(out.get(k));
 							}else prod.add(out);
 							
@@ -586,28 +664,28 @@ public class Prod extends Expr{
 	static Rule productWithMatrix = new Rule("product with matrix") {//multiplication of each element
 		@Override
 		public Expr applyRuleToExpr(Expr e,CasInfo casInfo){
-			Prod prod = (Prod)e;
+			Func prod = (Func)e;
 			if(prod.containsType("mat")) {
-				Prod matricies = new Prod();
-				Prod nonMatricies = new Prod();
+				Func matriciesProd = prod();
+				Func nonMatriciesProd = prod();
 				
 				for(int i = 0;i<prod.size();i++) {
 					if(prod.get(i) instanceof Mat) {
-						matricies.add(prod.get(i));
+						matriciesProd.add(prod.get(i));
 					}else {
-						nonMatricies.add(prod.get(i));
+						nonMatriciesProd.add(prod.get(i));
 					}
 				}
 				
-				if(matricies.size()>0) {
-					Mat total = (Mat)matricies.get(0);
-					for(int i = 1;i<matricies.size();i++) {
-						Mat other = (Mat)matricies.get(i);
+				if(matriciesProd.size()>0) {
+					Mat total = (Mat)matriciesProd.get(0);
+					for(int i = 1;i<matriciesProd.size();i++) {
+						Mat other = (Mat)matriciesProd.get(i);
 						
 						for(int row = 0;row<total.rows();row++) {
 							for(int col = 0;col<total.cols();col++) {
 								
-								Prod elprod = Prod.cast(total.getElement(row, col));
+								Func elprod = Prod.cast(total.getElement(row, col));
 								elprod.add(other.getElement(row, col));
 								
 								total.setElement(row, col, elprod  );
@@ -620,8 +698,8 @@ public class Prod extends Expr{
 					for(int row = 0;row<total.rows();row++) {
 						for(int col = 0;col<total.cols();col++) {
 							
-							Prod elprod = Prod.cast(total.getElement(row, col));
-							elprod.add(nonMatricies);
+							Func elprod = Prod.cast(total.getElement(row, col));
+							elprod.add(nonMatriciesProd);
 							
 							total.setElement(row, col, elprod  );
 							
@@ -640,12 +718,12 @@ public class Prod extends Expr{
 	static Rule compressRoots = new Rule("compress roots together"){
 		@Override
 		public Expr applyRuleToExpr(Expr e,CasInfo casInfo){
-			Prod prod = (Prod)e;
+			Func prod = (Func)e;
 			
 			for(int i = 0;i<prod.size();i++) {
 				if(prod.get(i).typeName().equals("power") && ((Func)prod.get(i)).getExpo().typeName().equals("div") ) {
 					Func current = (Func) prod.get(i);
-					Prod prodBase = Prod.cast(current.getBase());
+					Func baseProd = Prod.cast(current.getBase());
 					boolean changed = false;
 					
 					for(int j = i+1;j<prod.size();j++) {
@@ -654,10 +732,10 @@ public class Prod extends Expr{
 							Func other = (Func)prod.get(j);
 							if(other.getExpo().equals(current.getExpo())) {
 								
-								if(other.getBase() instanceof Prod) {
-									for(int k = 0;k<other.getBase().size();k++) prodBase.add(other.getBase().get(k));
+								if(other.getBase().typeName().equals("prod")) {
+									for(int k = 0;k<other.getBase().size();k++) baseProd.add(other.getBase().get(k));
 								}else {
-									prodBase.add(other.getBase());
+									baseProd.add(other.getBase());
 								}
 								changed = true;
 								prod.remove(j);
@@ -667,7 +745,7 @@ public class Prod extends Expr{
 						
 					}
 					if(changed) {
-						current.setBase( Prod.unCast(prodBase));
+						current.setBase( Prod.unCast(baseProd));
 						//System.out.println(current);
 						
 						prod.set(i, current.simplify(casInfo) );
@@ -681,110 +759,35 @@ public class Prod extends Expr{
 		
 	};
 	
-	
-	static Rule mainSequenceRule = null;
-	
-	public static void loadRules(){
-		mainSequenceRule = new Rule(new Rule[]{
-			factorSubSums,
-			reduceTrigProd,
-			trigExpandElements,
-			combineWithDiv,
-			prodContainsProd,
-			expandIntBases,
-			multConj,
-			multiplyLikeTerms,
-			compressRoots,
-			expoIntoBase,
-			multiplyIntBases,
-			reSimplifyIntBasePowers,
-			multiplyIntegers,
-			zeroInProd,
-			epsilonInfReduction,
-			productWithMatrix,
-			aloneProd
-		},"main sequence");
-		mainSequenceRule.init();
+	public static Func cast(Expr e) {//converts it to a prod, returns prod
+		if(e.typeName().equals("prod")) {
+			return (Func)e;
+		}
+		Func outProd = Cas.prod();
+		outProd.add(e);
+		return outProd;
 	}
 	
-	@Override
-	public Rule getRule() {
-		return mainSequenceRule;
+	public static Func combineProds(Func aProd,Func bProd) {//creates a new object with a combine product, returns product
+		Func outProd = Cas.prod();
+		for(int i = 0;i<aProd.size();i++) {
+			outProd.add(aProd.get(i).copy());
+		}
+		for(int i = 0;i<bProd.size();i++) {
+			outProd.add(bProd.get(i).copy());
+		}
+		return outProd;
 	}
 	
-	@Override
-	public String toString() {
-		String out = "";
-		Expr prodCopy = copy();
-		if(prodCopy.size() < 2) out+="alone product:";
-		int indexOfSwap = 0;
-		if(prodCopy.size()>1) {
-			if(!(prodCopy.get() instanceof Num)) {//bring number to front
-				for(int i = 0;i<prodCopy.size();i++) {
-					if(prodCopy.get(i) instanceof Num) {
-						indexOfSwap = i;
-						break;
-					}
-				}
-			}
-			//swap
-			Expr temp = prodCopy.get(indexOfSwap);
-			prodCopy.set(indexOfSwap,prodCopy.get());
-			prodCopy.set(0,temp);
-		}
-		
-		for(int i = 0;i < prodCopy.size();i++) {
-			boolean paren = false,div = false;
-			Expr e = prodCopy.get(i);
-			
-			if(i == 0 && e instanceof Num) if(((Num) e).getRealValue().equals(BigInteger.valueOf(-1))) {
-				out+='-';
-				continue;
-			}
-			
-			if(e instanceof Sum || e instanceof Prod) paren = true;
-			
-			if(div) out+='/';
-			if(paren) out+='(';
-			out+=e.toString();
-			if(paren) out+=')';
-			
-			
-			if(i != prodCopy.size()-1) out+="*";
-			
-		}
-		return out;
-	}
-	
-	public static Prod cast(Expr e) {//converts it to a prod
-		if(e instanceof Prod) {
-			return (Prod)e;
-		}
-		Prod out = new Prod();
-		out.add(e);
-		return out;
-	}
-	
-	public static Prod combineProds(Prod a,Prod b) {//creates a new object with a combine product
-		Prod out = new Prod();
-		for(int i = 0;i<a.size();i++) {
-			out.add(a.get(i).copy());
-		}
-		for(int i = 0;i<b.size();i++) {
-			out.add(b.get(i).copy());
-		}
-		return out;
-	}
-	
-	public static Prod combine(Expr a,Expr b) {//like the prod(a,b) function but handles it better, avoids prods in prods
-		Prod aCasted = Prod.cast(a),bCasted = Prod.cast(b);
-		return Prod.combineProds(aCasted, bCasted);
+	public static Func combine(Expr a,Expr b) {//like the prod(a,b) function but handles it better, avoids prods in prods, returns a prod
+		Func aCastedProd = Prod.cast(a),bCasted = Prod.cast(b);
+		return Prod.combineProds(aCastedProd, bCasted);
 	}
 	
 	public static Expr unCast(Expr e) {//if it does not need to be a prod it will return back something else
-		if(e instanceof Prod) {
+		if(e.typeName().equals("prod")) {
 			if(e.size()==0) {
-				return num(1);
+				return Cas.num(1);
 			}else if(e.size() == 1) {
 				return e.get();
 			}else {
@@ -792,25 +795,5 @@ public class Prod extends Expr{
 			}
 		}
 		return e;
-	}
-	
-	@Override
-	public ComplexFloat convertToFloat(Func varDefs) {
-		ComplexFloat total = new ComplexFloat(1,0);
-		for(int i = 0;i<size();i++) total=ComplexFloat.mult(total, get(i).convertToFloat(varDefs));
-		return total;
-	}
-	
-	@Override
-	public String typeName() {
-		return "prod";
-	}
-
-	@Override
-	public String help() {
-		return "* operator\n"
-				+ "examples\n"
-				+ "2*3->6\n"
-				+ "x*x*y->x^2*y";
 	}
 }

@@ -1,14 +1,13 @@
 package cas.programming;
 
-import cas.Expr;
 import cas.Cas;
-import cas.CasInfo;
 import cas.SimpleFuncs;
+import cas.base.CasInfo;
+import cas.base.Expr;
+import cas.base.Func;
 import cas.lang.Ask;
 import cas.matrix.Dot;
-import cas.primitive.Prod;
 import cas.primitive.Sequence;
-import cas.primitive.Sum;
 
 /*
  * the stack editor is a basic calculator interface based on rpn with an algebraic and word based extension
@@ -156,7 +155,7 @@ public class StackEditor extends Cas {
 	public void add() {
 		if (sLast() == null)
 			return;
-		if (sLast() instanceof Sum) {
+		if (sLast().typeName().equals("sum")) {
 			sLast().add(last());
 			stack.remove(size() - 1);
 		} else {
@@ -169,7 +168,7 @@ public class StackEditor extends Cas {
 	public void subtract() {
 		if (sLast() == null)
 			return;
-		if (sLast() instanceof Sum) {
+		if (sLast().typeName().equals("sum")) {
 			sLast().add(neg(last()));
 			stack.remove(size() - 1);
 		} else {
@@ -182,7 +181,7 @@ public class StackEditor extends Cas {
 	public void multiply() {
 		if (sLast() == null)
 			return;
-		if (sLast() instanceof Prod) {
+		if (sLast().typeName().equals("prod")) {
 			sLast().add(last());
 			stack.remove(size() - 1);
 		} else {
@@ -340,7 +339,7 @@ public class StackEditor extends Cas {
 	}
 	
 	public void addAll() {
-		Sum sum = new Sum();
+		Func sum = sum();
 		
 		for(int i = 0;i<size();i++) {
 			sum.add(stack.get(i));
@@ -350,7 +349,7 @@ public class StackEditor extends Cas {
 	}
 	
 	public void multAll() {
-		Prod prod = new Prod();
+		Func prod = prod();
 		
 		for(int i = 0;i<size();i++) {
 			prod.add(stack.get(i));

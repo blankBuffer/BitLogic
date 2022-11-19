@@ -1,18 +1,22 @@
 package cas.programming;
 
-import cas.*;
+import cas.base.CasInfo;
+import cas.base.ComplexFloat;
+import cas.base.Expr;
+import cas.base.Func;
+import cas.base.Rule;
 import cas.lang.Interpreter;
 import cas.primitive.*;
 
 public class Define extends Expr{
 	public Define() {
-		simplifyChildren = false;
+		//simplifyChildren = false;
 	}//
 	
 	public Define(Expr toBeAssigned,Expr assignment) {
 		add(toBeAssigned);
 		add(assignment);
-		simplifyChildren = false;
+		//simplifyChildren = false; TODO
 	}
 	
 	public Expr getLeftSide() {

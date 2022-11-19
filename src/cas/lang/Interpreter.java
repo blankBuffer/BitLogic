@@ -4,6 +4,8 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 import cas.*;
+import cas.base.Expr;
+import cas.base.Func;
 import cas.primitive.*;
 import cas.programming.*;
 import cas.matrix.*;
@@ -12,13 +14,13 @@ public class Interpreter extends Cas{
 	
 	public static Expr SUCCESS = var("done!");
 	
-	public static Expr createExpr(String string){
+	public static Expr createExpr(String string) throws RuntimeException{
 		try {
 			ArrayList<String> tokens = generateTokens(string);
 			return createExprFromTokens(tokens,0);
-		}catch(Exception e) {
+		} catch (Exception e) {
 			e.printStackTrace();
-			return null;
+			throw new RuntimeException("error parsing");
 		}
 	}
 	
@@ -367,7 +369,7 @@ public class Interpreter extends Cas{
 		}
 		if(isSum) {
 			tokens.add("+");
-			Expr sum = new Sum();
+			Expr sum = sum();
 			int indexOfLastAdd = 0;
 			boolean nextIsSub = false;
 			for(int i = 0;i<tokens.size();i++) {
@@ -379,7 +381,7 @@ public class Interpreter extends Cas{
 						
 						if(nextIsSub) {
 							Expr toBeAdded = createExprFromTokens(tokenSet,rec+1);
-							if(toBeAdded instanceof Prod) {
+							if(toBeAdded.typeName().equals("prod")) {
 								boolean foundNum = false;
 								for(int k = 0;k<toBeAdded.size();k++) {
 									if(toBeAdded.get(k) instanceof Num) {
@@ -429,8 +431,8 @@ public class Interpreter extends Cas{
 		}
 		if(tokens.contains("*") || tokens.contains("/")) {
 			tokens.add("*");
-			Expr numerProd = new Prod();
-			Expr denomProd = new Prod();
+			Expr numerProd = prod();
+			Expr denomProd = prod();
 			int indexOfLastProd = 0;
 			boolean nextDiv = false;
 			for(int i = 0;i<tokens.size();i++) {
@@ -451,7 +453,7 @@ public class Interpreter extends Cas{
 			if(numerProd.size() == 1) numerProd = numerProd.get();
 			if(denomProd.size() == 1) denomProd = denomProd.get();
 			
-			if(denomProd instanceof Prod && denomProd.size() == 0) {
+			if(denomProd.typeName().equals("prod") && denomProd.size() == 0) {
 				return numerProd;
 			}
 			return div(numerProd,denomProd);

@@ -1,8 +1,9 @@
 package cas.primitive;
 
-import cas.ComplexFloat;
-import cas.Expr;
-import cas.Rule;
+import cas.base.ComplexFloat;
+import cas.base.Expr;
+import cas.base.Func;
+import cas.base.Rule;
 
 /*
  * this is a list of items where the order MATTERS and CAN have repeats

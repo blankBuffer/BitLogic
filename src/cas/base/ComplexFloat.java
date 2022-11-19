@@ -1,4 +1,4 @@
-package cas;
+package cas.base;
 
 import java.io.Serializable;
 

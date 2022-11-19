@@ -1,6 +1,10 @@
 package cas.primitive;
 
-import cas.*;
+import cas.base.CasInfo;
+import cas.base.ComplexFloat;
+import cas.base.Expr;
+import cas.base.Func;
+import cas.base.Rule;
 
 public class Approx{
 	

@@ -16,6 +16,8 @@ import java.util.Set;
 import java.util.TimeZone;
 
 import cas.*;
+import cas.base.Expr;
+import cas.base.Func;
 import cas.graphics.Plot;
 import cas.primitive.*;
 import ui.UI;

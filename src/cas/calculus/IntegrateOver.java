@@ -1,13 +1,13 @@
 package cas.calculus;
 
-import cas.ComplexFloat;
-import cas.Expr;
+import cas.base.CasInfo;
+import cas.base.ComplexFloat;
+import cas.base.Expr;
+import cas.base.Func;
+import cas.base.Rule;
 import cas.Cas;
-import cas.Rule;
-import cas.CasInfo;
 import cas.primitive.Equ;
 import cas.primitive.FloatExpr;
-import cas.primitive.Func;
 import cas.primitive.Var;
 
 public class IntegrateOver{

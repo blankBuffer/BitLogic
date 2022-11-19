@@ -3,6 +3,11 @@ package cas.special;
 import java.math.BigInteger;
 
 import cas.*;
+import cas.base.CasInfo;
+import cas.base.ComplexFloat;
+import cas.base.Expr;
+import cas.base.Func;
+import cas.base.Rule;
 import cas.primitive.*;
 
 public class Gamma{
@@ -26,7 +31,7 @@ public class Gamma{
 					if(gamma.get().typeName().equals("div") && Div.isNumericalAndReal(((Func)gamma.get())) ) {
 						
 						Func casted = (Func)gamma.get();
-						Sum sum = Div.mixedFraction(casted);
+						Func sum = Div.mixedFraction(casted);
 						if(sum != null && sum.get(1).typeName().equals("div") && ((Func)sum.get(1)).getNumer().equals(Num.ONE)  && ((Func)sum.get(1)).getDenom().equals(Num.TWO)) {
 							
 							BigInteger n = ((Num)sum.get(0)).getRealValue();

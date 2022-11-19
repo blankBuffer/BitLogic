@@ -3,9 +3,11 @@ package cas;
 import java.io.Serializable;
 import java.util.HashMap;
 
+import cas.base.Expr;
+import cas.base.Func;
+import cas.base.Rule;
 import cas.primitive.Becomes;
 import cas.primitive.Equ;
-import cas.primitive.Func;
 
 public class Defs extends Cas implements Serializable{
 	private static final long serialVersionUID = 4654953050013809971L;

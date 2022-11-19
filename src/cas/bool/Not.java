@@ -1,10 +1,10 @@
 package cas.bool;
 
-import cas.ComplexFloat;
-import cas.Expr;
-import cas.Rule;
-import cas.CasInfo;
-import cas.primitive.Func;
+import cas.base.CasInfo;
+import cas.base.ComplexFloat;
+import cas.base.Expr;
+import cas.base.Func;
+import cas.base.Rule;
 import cas.primitive.Var;
 
 public class Not{

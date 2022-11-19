@@ -1,6 +1,9 @@
 package cas.bool;
 
-import cas.*;
+import cas.base.CasInfo;
+import cas.base.Expr;
+import cas.base.Func;
+import cas.base.Rule;
 import cas.primitive.*;
 
 public class BoolTableToExpr{

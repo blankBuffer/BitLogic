@@ -1,16 +1,19 @@
 package cas.programming;
 
-import cas.*;
+import cas.base.CasInfo;
+import cas.base.ComplexFloat;
+import cas.base.Expr;
+import cas.base.Func;
+import cas.base.Rule;
 import cas.bool.BoolState;
-import cas.primitive.Func;
 
 public class Ternary extends Expr{
 	public Ternary() {
-		simplifyChildren = false;
+		//simplifyChildren = false;
 	}//
 	
 	public Ternary(Expr toBeEvaled,Expr ifTrue,Expr ifFalse) {
-		simplifyChildren = false;
+		//simplifyChildren = false;
 		add(toBeEvaled);
 		add(ifTrue);
 		add(ifFalse);

@@ -7,6 +7,16 @@ import java.util.HashMap;
 import cas.lang.*;
 import cas.primitive.*;
 import cas.special.*;
+import cas.algebra.Distr;
+import cas.algebra.Factor;
+import cas.algebra.Gcd;
+import cas.algebra.Solve;
+import cas.base.CasInfo;
+import cas.base.ComplexFloat;
+import cas.base.Expr;
+import cas.base.Func;
+import cas.base.Rule;
+import cas.base.StandardRules;
 import cas.bool.*;
 import cas.calculus.Diff;
 import cas.calculus.Integrate;
@@ -15,49 +25,7 @@ import cas.calculus.IntegrateOver;
 public class SimpleFuncs extends Cas{
 
 	private static HashMap<String,Func> funcs = new HashMap<String,Func>();
-	static boolean FUNCTION_UNLOCKED = false;//ability to create new functions on the fly, must be turned off during loading of CAS to prevent spelling errors
-	
-	public static Rule fullExpand = new Rule("full expand"){
-
-		@Override
-		public Expr applyRuleToExpr(Expr e,CasInfo casInfo){
-			if(e instanceof Prod){
-				for(int i = 0;i<e.size();i++){
-					if(e.get(i).typeName().equals("power")){
-						Func casted = (Func)e.get(i);
-						if( isPositiveRealNum(casted.getExpo()) && casted.getBase() instanceof Sum){
-							e.set(i, multinomial(casted.getBase(),(Num)casted.getExpo(),casInfo));
-						}
-					}
-				}
-				
-				Expr result = distr(e).simplify(casInfo);
-				return result;
-				
-			}else if(e instanceof Sum){
-				Expr sum = new Sum();
-				
-				for(int i = 0;i<e.size();i++){
-					sum.add( fullExpand.applyRuleToExpr(e.get(i), casInfo) );
-				}
-				sum = sum.simplify(casInfo);
-				return sum;
-			}else if(e.typeName().equals("power")){
-				Func casted = (Func)e;
-				casted.setBase(fullExpand.applyRuleToExpr(casted.getBase(), casInfo));
-				if( isPositiveRealNum(casted.getExpo()) && casted.getBase() instanceof Sum){
-					Expr result = multinomial(casted.getBase(),(Num)casted.getExpo(),casInfo);
-					return result.simplify(casInfo);
-				}
-			}else if(e.typeName().equals("div")) {
-				Func innerDiv = (Func)e;
-				innerDiv.setNumer(fullExpand.applyRuleToExpr(innerDiv.getNumer(), casInfo));
-				return distr(innerDiv).simplify(casInfo);
-			}
-			
-			return e.simplify(casInfo);
-		}
-	};
+	public static boolean FUNCTION_UNLOCKED = false;//ability to create new functions on the fly, must be turned off during loading of CAS to prevent spelling errors
 	
 	static Func tree = new Func("tree",1);
 	static Func size = new Func("size",1);
@@ -75,7 +43,6 @@ public class SimpleFuncs extends Cas{
 	static Func latex = new Func("latex",1);
 	static Func subst = new Func("subst",2);
 	static Func comparison = new Func("comparison",1);
-	static Func expand = new Func("expand",1);
 	static Func taylor = new Func("taylor",3);
 	static Func gui = new Func("gui",0);
 	static Func nParams = new Func("nParams",1);
@@ -133,10 +100,24 @@ public class SimpleFuncs extends Cas{
 	static Func becomes,equ;
 	static Func exprSet;
 	static Func gcd;
+	static Func sum;
+	static Func div;
+	static Func diff,integrate;
+	static Func ln;
+	static Func lambertW;
+	static Func distr,factor;
+	static Func solve;
+	static Func integrateOver;
+	static Func gamma;
+	static Func abs;
+	static Func expand;
+	static Func prod;
 	
-	public static void loadRules(){
-		
-		//
+	public static boolean functionsConstructed = false;
+	
+	public static void functionsConstructor() {
+		if(functionsConstructed) return;
+		System.out.println("constructing functions...");
 		
 		power = new Func("power",2,Power.loader);
 		sin = new Func("sin",1,Trig.sinLoader);
@@ -155,6 +136,20 @@ public class SimpleFuncs extends Cas{
 		equ = new Func("equ",2,Equ.equLoader);
 		exprSet = new Func("set",-1,ExprSet.exprSetLoader);
 		gcd = new Func("gcd",-1,Gcd.gcdLoader);
+		sum = new Func("sum",-1,Sum.sumLoader);
+		div = new Func("div",2,Div.divLoader);
+		diff = new Func("diff",2,Diff.diffLoader);
+		ln = new Func("ln",1,Ln.lnLoader);
+		integrate = new Func("integrate",2,Integrate.integrateLoader);
+		lambertW = new Func("lambertW",1,LambertW.lambertwLoader);
+		distr = new Func("distr",1,Distr.distrLoader);
+		factor = new Func("factor",1,Factor.factorLoader);
+		solve = new Func("solve",2,Solve.solveLoader);
+		integrateOver = new Func("integrateOver",4,IntegrateOver.integrateOverLoader);
+		gamma = new Func("gamma",1,Gamma.gammaLoader);
+		abs = new Func("abs",1,Abs.absLoader);
+		expand = new Func("expand",1,Distr.expandLoader);
+		prod = new Func("prod",-1,Prod.prodLoader);
 		
 		addFunc(power);
 		addFunc(sin);
@@ -172,21 +167,31 @@ public class SimpleFuncs extends Cas{
 		addFunc(becomes);
 		addFunc(equ);
 		addFunc(gcd);
+		addFunc(sum);
+		addFunc(div);
+		addFunc(diff);
+		addFunc(ln);
+		addFunc(integrate);
+		addFunc(lambertW);
+		addFunc(distr);
+		addFunc(factor);
+		addFunc(solve);
+		addFunc(integrateOver);
+		addFunc(gamma);
+		addFunc(abs);
+		addFunc(expand);
+		addFunc(prod);
 		
-		addFunc(new Func("div",2,Div.divLoader));
+		functionsConstructed = true;
+	}
+	
+	public static void loadRules(){
+		
+		//
+		
+		functionsConstructor();
 		
 		Cas.initExprTemp();
-		
-		addFunc(new Func("abs",1,Abs.absLoader));
-		addFunc(new Func("ln",1,Ln.lnLoader));
-		addFunc(new Func("gamma",1,Gamma.gammaLoader));
-		addFunc(new Func("lambertW",1,LambertW.lambertwLoader));
-		addFunc(new Func("diff",2,Diff.diffLoader));
-		addFunc(new Func("integrate",2,Integrate.integrateLoader));
-		addFunc(new Func("factor",1,Factor.factorLoader));
-		addFunc(new Func("distr",1,Distr.distrLoader));
-		addFunc(new Func("solve",2,Solve.solveLoader));
-		addFunc(new Func("integrateOver",4,IntegrateOver.integrateOverLoader));
 		
 		//
 		addFunc(choose);
@@ -205,7 +210,6 @@ public class SimpleFuncs extends Cas{
 		addFunc(latex);
 		addFunc(subst);
 		addFunc(comparison);
-		addFunc(expand);
 		addFunc(taylor);
 		addFunc(gui);
 		addFunc(nParams);
@@ -263,7 +267,7 @@ public class SimpleFuncs extends Cas{
 		
 		//
 		
-		tree.simplifyChildren = false;
+		tree.behavior.simplifyChildren = false;
 		tree.behavior.rule = new Rule("show the tree of the expression"){
 			
 
@@ -274,7 +278,7 @@ public class SimpleFuncs extends Cas{
 			}
 		};
 		
-		size.simplifyChildren = false;
+		size.behavior.simplifyChildren = false;
 		size.behavior.rule = new Rule("get size of sub expression"){
 			
 
@@ -294,7 +298,7 @@ public class SimpleFuncs extends Cas{
 			}
 		};
 		
-		get.simplifyChildren = false;
+		get.behavior.simplifyChildren = false;
 		get.behavior.rule = new Rule("get sub expression"){
 			
 
@@ -417,7 +421,7 @@ public class SimpleFuncs extends Cas{
 			}
 		};
 		
-		conv.simplifyChildren = false;
+		conv.behavior.simplifyChildren = false;
 		conv.behavior.rule = new Rule("unit conversion") {
 			
 			
@@ -435,7 +439,7 @@ public class SimpleFuncs extends Cas{
 			}
 		};
 		
-		latex.simplifyChildren = false;
+		latex.behavior.simplifyChildren = false;
 		latex.behavior.rule = new Rule("LaTeX language conversion") {
 			
 			
@@ -493,18 +497,6 @@ public class SimpleFuncs extends Cas{
 			}
 		};
 		
-		expand.simplifyChildren = false;
-		expand.behavior.rule = new Rule("expand") {
-			
-			
-			@Override
-			public Expr applyRuleToExpr(Expr e,CasInfo casInfo) {
-				Func f = (Func)e;
-				return fullExpand.applyRuleToExpr(f.get(), casInfo);
-			}
-		};
-		expand.behavior.toFloat = Func.nothingFunc;
-		
 		taylor.behavior.rule = new Rule("taylor series"){
 			
 			
@@ -519,16 +511,16 @@ public class SimpleFuncs extends Cas{
 				Num n = (Num)f.get(2);
 				
 				
-				Sum out = new Sum();
+				Func outSum = sum();
 				
 				for(int i = 0;i<n.getRealValue().intValue();i++) {
 					
-					out.add( div(prod(expr.replace(equ),power(sub(v,Equ.getRightSide(equ)),num(i))),num(factorial(BigInteger.valueOf(i)))));
+					outSum.add( div(prod(expr.replace(equ),power(sub(v,Equ.getRightSide(equ)),num(i))),num(factorial(BigInteger.valueOf(i)))));
 					
 					expr = diff(expr,v).simplify(casInfo);
 				}
 				
-				return out.simplify(casInfo);
+				return outSum.simplify(casInfo);
 			}
 		};
 		
@@ -554,7 +546,7 @@ public class SimpleFuncs extends Cas{
 			}
 		};
 		
-		isType.simplifyChildren = false;
+		isType.behavior.simplifyChildren = false;
 		isType.behavior.rule = new Rule("check type") {
 			
 			
@@ -566,7 +558,7 @@ public class SimpleFuncs extends Cas{
 			}
 		};
 		
-		contains.simplifyChildren = false;
+		contains.behavior.simplifyChildren = false;
 		contains.behavior.rule = new Rule("check if first argument contains the second argument"){
 			
 			
@@ -838,7 +830,7 @@ public class SimpleFuncs extends Cas{
 			@Override
 			public Expr applyRuleToExpr(Expr e,CasInfo casInfo) {
 				Sequence seq = (Sequence)e.get();
-				Sum sum = new Sum();
+				Func sum = sum();
 				for(int i = 0;i<seq.size();i++) {
 					sum.add(seq.get(i));
 				}
@@ -947,7 +939,7 @@ public class SimpleFuncs extends Cas{
 			}
 		};
 		
-		similar.simplifyChildren = false;
+		similar.behavior.simplifyChildren = false;
 		similar.behavior.rule = new Rule("expressions are similar"){
 			
 			
@@ -956,7 +948,7 @@ public class SimpleFuncs extends Cas{
 				return bool(Rule.strictSimilarExpr(e.get(0), e.get(1)));
 			}
 		};
-		fastSimilar.simplifyChildren = false;
+		fastSimilar.behavior.simplifyChildren = false;
 		fastSimilar.behavior.rule = new Rule("expressions are similar computed quickly"){
 			
 			
@@ -966,7 +958,7 @@ public class SimpleFuncs extends Cas{
 			}
 		};
 		
-		sortExpr.simplifyChildren = false;
+		sortExpr.behavior.simplifyChildren = false;
 		sortExpr.behavior.rule = new Rule("sort expression into cononical arangement") {
 			
 			
@@ -978,7 +970,7 @@ public class SimpleFuncs extends Cas{
 			}
 		};
 		
-		delete.simplifyChildren = false;
+		delete.behavior.simplifyChildren = false;
 		delete.behavior.rule = new Rule("delete variable or function") {
 			
 			
@@ -992,7 +984,7 @@ public class SimpleFuncs extends Cas{
 			}
 		};
 		
-		help.simplifyChildren = false;
+		help.behavior.simplifyChildren = false;
 		help.behavior.rule = new Rule("help function") {
 			
 			@Override
@@ -1021,7 +1013,7 @@ public class SimpleFuncs extends Cas{
 			}
 		};
 		
-		fastEquals.simplifyChildren = false;
+		fastEquals.behavior.simplifyChildren = false;
 		fastEquals.behavior.rule = new Rule("faste comparison") {
 			
 			

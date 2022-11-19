@@ -26,10 +26,10 @@ import javax.swing.text.BadLocationException;
 import javax.swing.text.SimpleAttributeSet;
 import javax.swing.text.StyleConstants;
 
-import cas.Expr;
 import cas.Cas;
-import cas.Rule;
 import cas.SimpleFuncs;
+import cas.base.Expr;
+import cas.base.Rule;
 import cas.graphics.ExprRender;
 import cas.graphics.Plot;
 import cas.lang.Interpreter;

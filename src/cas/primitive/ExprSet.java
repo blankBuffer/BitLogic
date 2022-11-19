@@ -1,9 +1,10 @@
 package cas.primitive;
 
-import cas.ComplexFloat;
-import cas.Expr;
-import cas.Rule;
-import cas.CasInfo;
+import cas.base.CasInfo;
+import cas.base.ComplexFloat;
+import cas.base.Expr;
+import cas.base.Func;
+import cas.base.Rule;
 import cas.Cas;
 
 /*
@@ -99,15 +100,6 @@ public class ExprSet{
 			return out;
 		}
 		return Cas.exprSet(e);
-	}
-	
-	static Rule mainSequenceRule = null;
-
-	public static void loadRules(){
-		mainSequenceRule = new Rule(new Rule[]{
-				
-		},"main sequence");
-		mainSequenceRule.init();
 	}
 
 }

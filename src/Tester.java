@@ -1,4 +1,6 @@
 import cas.*;
+import cas.base.CasInfo;
+import cas.base.Expr;
 
 public class Tester {
 	
@@ -16,7 +18,7 @@ public class Tester {
 		passes = passes & testExpr.equals(expected);
 		if(verbose) testExpr.print();
 		if(verbose) System.out.println(" : "+passes);
-		if(!passes) System.out.println("expected: "+expected);
+		if(!passes) System.out.println("expected: "+expected+" got :"+testExpr);
 		return passes;
 	}
 	
@@ -116,14 +118,75 @@ public class Tester {
 					testCase(Cas.sqrt(Cas.power(Cas.var("x"), Cas.num(2))),Cas.abs(Cas.var("x")),casInfo);
 			
 		}
+		{//sums
+			//x+x -> 2*x
+			passes = passes &
+					testCase(Cas.sum(Cas.var("x"),Cas.var("x")),Cas.prod(Cas.num(2),Cas.var("x")),casInfo);
+			//2*x+x -> 3*x
+			passes = passes &
+					testCase(Cas.sum(Cas.prod(Cas.num(2),Cas.var("x")),Cas.var("x")),Cas.prod(Cas.num(3),Cas.var("x")),casInfo);
+			//x+2*x -> 3*x
+			passes = passes &
+					testCase(Cas.sum(Cas.var("x"),Cas.prod(Cas.num(2),Cas.var("x"))),Cas.prod(Cas.num(3),Cas.var("x")),casInfo);
+			//3*x+2*x -> 5*x
+			passes = passes &
+					testCase(Cas.sum(Cas.prod(Cas.num(3),Cas.var("x")),Cas.prod(Cas.num(2),Cas.var("x"))),Cas.prod(Cas.num(5),Cas.var("x")),casInfo);
+			
+		}
 		
 		if(verbose) System.out.println("passed basic algebra test: "+passes);
+		return passes;
+	}
+	
+	private boolean testParse(String toParse,Expr expected) {
+		boolean passed = Cas.createExpr(toParse).equals(expected);
+		if(verbose) System.out.println("parsed "+toParse+" : "+passed);
+		if(!passed) System.out.println("failed to parse '"+toParse+"' correctly");
+		return passed;
+	}
+	
+	public boolean parseTest() {
+		boolean passes = true;
+		
+		{//arithmetic
+			passes = passes & testParse("16",Cas.num(16));
+			passes = passes & testParse("-71",Cas.num(-71));
+			passes = passes & testParse("x",Cas.var("x"));
+			passes = passes & testParse("2+3",Cas.sum(Cas.num(2),Cas.num(3)));
+			passes = passes & testParse("-2+3",Cas.sum(Cas.num(-2),Cas.num(3)));
+			passes = passes & testParse("2-3",Cas.sum(Cas.num(2), Cas.num(-3)));
+			passes = passes & testParse("-2-3",Cas.sum(Cas.num(-2), Cas.num(-3)));
+			passes = passes & testParse("-2+3",Cas.sum(Cas.num(-2), Cas.num(3)));
+			passes = passes & testParse("2*3",Cas.prod(Cas.num(2),Cas.num(3)));
+			passes = passes & testParse("2*-3",Cas.prod(Cas.num(2),Cas.num(-3)));
+			passes = passes & testParse("-2*3",Cas.prod(Cas.num(-2),Cas.num(3)));
+			passes = passes & testParse("-2*-3",Cas.prod(Cas.num(-2),Cas.num(-3)));
+			passes = passes & testParse("2^3",Cas.power(Cas.num(2), Cas.num(3)));
+			passes = passes & testParse("(-2)^3",Cas.power(Cas.num(-2), Cas.num(3)));
+			passes = passes & testParse("-2^3",Cas.neg(Cas.power(Cas.num(2), Cas.num(3))));
+			passes = passes & testParse("2^-3",Cas.power(Cas.num(2), Cas.num(-3)));
+			passes = passes & testParse("2/3",Cas.div(Cas.num(2), Cas.num(3)));
+			passes = passes & testParse("-2/3",Cas.div(Cas.num(-2), Cas.num(3)));
+			passes = passes & testParse("2/-3",Cas.div(Cas.num(2), Cas.num(-3)));
+		}
+		
+		{//functions
+			passes = passes & testParse("sin(x)",Cas.sin(Cas.var("x")));
+			passes = passes & testParse("integrate(sin(3*x),x)",Cas.integrate(Cas.sin(Cas.prod(Cas.num(3),Cas.var("x"))), Cas.var("x")));
+		}
+		
+		if(verbose) System.out.println("passed parsing test: "+passes);
 		return passes;
 	}
 	
 	public boolean runAllTests(boolean verbose){
 		boolean passes = true;
 		if(verbose) System.out.println("running all tests");
+		
+		SimpleFuncs.functionsConstructor();
+		
+		passes = passes & parseTest();
+		
 		Cas.load();
 		CasInfo casInfo = new CasInfo();
 		passes = passes & arithmeticTest(casInfo);

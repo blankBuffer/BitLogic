@@ -3,7 +3,13 @@ package cas.primitive;
 import java.math.BigInteger;
 import java.util.ArrayList;
 
-import cas.*;
+import cas.algebra.Solve;
+import cas.base.CasInfo;
+import cas.base.ComplexFloat;
+import cas.base.Expr;
+import cas.base.Func;
+import cas.base.Rule;
+import cas.base.StandardRules;
 import cas.bool.*;
 
 public class Abs{
@@ -80,9 +86,9 @@ public class Abs{
 					
 					Var v = varcounts.get(0).v;
 					
-					Expr polynomialSum = new Sum();
+					Expr polynomialSum = sum();
 					
-					Sum innerSum = Sum.cast(abs.get());
+					Func innerSum = Sum.cast(abs.get());
 					
 					Expr theoryMin = sum(),theoryMax = sum();
 					
@@ -172,8 +178,8 @@ public class Abs{
 				public Expr applyRuleToExpr(Expr e,CasInfo casInfo) {
 					Func abs = (Func)e;
 					
-					if(abs.get() instanceof Prod) {
-						Prod innerProd = (Prod)abs.get();
+					if(abs.get().typeName().equals("prod")) {
+						Func innerProd = (Func)abs.get();
 						
 						for(int i = 0;i<innerProd.size();i++) {
 							innerProd.set(i, abs(innerProd.get(i)) );

@@ -1,7 +1,8 @@
 package cas.primitive;
 
-import cas.ComplexFloat;
-import cas.Expr;
+import cas.base.ComplexFloat;
+import cas.base.Expr;
+import cas.base.Func;
 
 public class Equ{
 	public static Func.FuncLoader equLoader = new Func.FuncLoader() {

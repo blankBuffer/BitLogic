@@ -1,8 +1,6 @@
-package cas.primitive;
+package cas.base;
 
-import cas.ComplexFloat;
-import cas.Expr;
-import cas.Rule;
+import cas.primitive.Var;
 
 public class Func extends Expr{
 
@@ -85,7 +83,6 @@ public class Func extends Expr{
 		for(int i = 0;i<size();i++){
 			out.add(get(i).copy());
 		}
-		out.simplifyChildren = simplifyChildren;
 		out.behavior = behavior;
 		out.flags.set(flags);
 		return out;

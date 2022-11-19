@@ -1,9 +1,24 @@
-package cas.primitive;
+package cas.algebra;
 import java.math.BigInteger;
 import java.util.ArrayList;
 
 import cas.*;
+import cas.base.CasInfo;
+import cas.base.ComplexFloat;
+import cas.base.Expr;
+import cas.base.Func;
+import cas.base.Rule;
 import cas.bool.BoolState;
+import cas.primitive.Div;
+import cas.primitive.Equ;
+import cas.primitive.Num;
+import cas.primitive.Prod;
+import cas.primitive.Sequence;
+import cas.primitive.Sum;
+import cas.primitive.Var;
+import cas.primitive.Greater;
+import cas.primitive.Less;
+import cas.primitive.FloatExpr;
 
 public class Solve{
 	
@@ -137,23 +152,23 @@ public class Solve{
 							Func equ = getEqu(solve);
 							Var v = solve.getVar();
 							
-							if(Equ.getLeftSide(equ) instanceof Prod) {
-								Prod leftSide = (Prod)Equ.getLeftSide(equ);
-								if(leftSide.size() == 2) {
+							if(Equ.getLeftSide(equ).typeName().equals("prod")) {
+								Func leftSideProd = (Func)Equ.getLeftSide(equ);
+								if(leftSideProd.size() == 2) {
 									Expr varPart = null,sumPart = null;
 									
-									if(leftSide.get(0) instanceof Sum) {
-										sumPart = leftSide.get(0);
-										varPart = leftSide.get(1);
-									}else if(leftSide.get(1) instanceof Sum) {
-										sumPart = leftSide.get(1);
-										varPart = leftSide.get(0);
+									if(leftSideProd.get(0).typeName().equals("sum")) {
+										sumPart = leftSideProd.get(0);
+										varPart = leftSideProd.get(1);
+									}else if(leftSideProd.get(1).typeName().equals("sum")) {
+										sumPart = leftSideProd.get(1);
+										varPart = leftSideProd.get(0);
 									}
 									
 									if(varPart == null || sumPart == null) return solve;
 										
-									Expr constantParts = new Sum();
-									Expr variableParts = new Sum();
+									Expr constantParts = sum();
+									Expr variableParts = sum();
 									
 									for(int i = 0;i<sumPart.size();i++) {
 										if(sumPart.get(i).contains(varPart)) {
@@ -292,12 +307,12 @@ public class Solve{
 							
 							Var v = solve.getVar();
 							
-							if(Equ.getRightSide(getEqu(solve)).equals(Num.ZERO) && Equ.getLeftSide(getEqu(solve)) instanceof Prod) {
+							if(Equ.getRightSide(getEqu(solve)).equals(Num.ZERO) && Equ.getLeftSide(getEqu(solve)).typeName().equals("prod")) {
 								Func solutions = exprSet();
-								Prod leftSide = (Prod)Equ.getLeftSide(getEqu(solve));
+								Func leftSideProd = (Func)Equ.getLeftSide(getEqu(solve));
 								
-								for(int i = 0;i<leftSide.size();i++) {
-									Expr current = leftSide.get(i);
+								for(int i = 0;i<leftSideProd.size();i++) {
+									Expr current = leftSideProd.get(i);
 									if(current.contains(v)) {
 										Expr solution = solve( equ(current,num(0)), v).simplify(casInfo);
 										if(!(solution.typeName().equals("solve"))) {
@@ -613,22 +628,22 @@ public class Solve{
 			Func solve = (Func)e;
 			Var v = solve.getVar();
 			
-			if(getLeftSideGeneric(solve.getComparison()) instanceof Sum){
-				Sum leftSide = (Sum)getLeftSideGeneric(solve.getComparison());
-				Sum rightSide = Sum.cast(getRightSideGeneric(solve.getComparison()));
+			if(getLeftSideGeneric(solve.getComparison()).typeName().equals("sum")){
+				Func leftSideSum = (Func)getLeftSideGeneric(solve.getComparison());
+				Func rightSideSum = Sum.cast(getRightSideGeneric(solve.getComparison()));
 				
-				for(int i = 0;i < leftSide.size();i++){
-					Expr current = leftSide.get(i);
+				for(int i = 0;i < leftSideSum.size();i++){
+					Expr current = leftSideSum.get(i);
 					
 					if(!current.contains(v)){
-						leftSide.remove(i);
-						rightSide.add(neg(current));
+						leftSideSum.remove(i);
+						rightSideSum.add(neg(current));
 						i--;
 					}
 				}
 				
-				setLeftSideGeneric(solve.getComparison(),Sum.unCast(leftSide));
-				setRightSideGeneric(solve.getComparison(),rightSide.simplify(casInfo));
+				setLeftSideGeneric(solve.getComparison(),Sum.unCast(leftSideSum));
+				setRightSideGeneric(solve.getComparison(),rightSideSum.simplify(casInfo));
 			}
 			
 			return solve;
@@ -641,29 +656,29 @@ public class Solve{
 			Func solve = (Func)e;
 			Var v = solve.getVar();
 			
-			if(getLeftSideGeneric(solve.getComparison()) instanceof Prod){
-				Prod leftSide = (Prod)getLeftSideGeneric(solve.getComparison());
-				Prod rightSide = Prod.cast(getRightSideGeneric(solve.getComparison()));
+			if(getLeftSideGeneric(solve.getComparison()).typeName().equals("prod")){
+				Func leftSideProd = (Func)getLeftSideGeneric(solve.getComparison());
+				Func rightSideProd = Prod.cast(getRightSideGeneric(solve.getComparison()));
 				
 				boolean flip = false;
 				boolean isComp = solve.getComparison() instanceof Less || solve.getComparison() instanceof Greater;
 				
-				for(int i = 0;i < leftSide.size();i++){
-					Expr current = leftSide.get(i);
+				for(int i = 0;i < leftSideProd.size();i++){
+					Expr current = leftSideProd.get(i);
 					
 					if(isComp && !current.containsVars() && comparison(equLess(current,num(0))).simplify(casInfo).equals(BoolState.TRUE) ){
 						flip = !flip;
 					}
 					
 					if(!current.contains(v)){
-						leftSide.remove(i);
-						rightSide.add(inv(current));
+						leftSideProd.remove(i);
+						rightSideProd.add(inv(current));
 						i--;
 					}
 				}
 				
-				setLeftSideGeneric(solve.getComparison(),Sum.unCast(leftSide));
-				setRightSideGeneric(solve.getComparison(),rightSide.simplify(casInfo));
+				setLeftSideGeneric(solve.getComparison(),Sum.unCast(leftSideProd));
+				setRightSideGeneric(solve.getComparison(),rightSideProd.simplify(casInfo));
 				if(flip) flipComparison(solve);
 				
 			}
@@ -676,7 +691,7 @@ public class Solve{
 		@Override
 		public Expr applyRuleToExpr(Expr e,CasInfo casInfo){
 			Func solve = (Func)e;
-			if(getLeftSideGeneric(solve.getComparison()) instanceof Sum) {
+			if(getLeftSideGeneric(solve.getComparison()).typeName().equals("sum")) {
 				setLeftSideGeneric(solve.getComparison(), factor(getLeftSideGeneric(solve.getComparison())).simplify(casInfo));
 			}
 			return solve;
@@ -686,7 +701,7 @@ public class Solve{
 		@Override
 		public Expr applyRuleToExpr(Expr e,CasInfo casInfo){
 			Func solve = (Func)e;
-			if(getLeftSideGeneric(solve.getComparison()) instanceof Sum) {
+			if(getLeftSideGeneric(solve.getComparison()).typeName().equals("sum")) {
 				setLeftSideGeneric(solve.getComparison(), distr(getLeftSideGeneric(solve.getComparison())).simplify(casInfo));
 			}
 			return solve;

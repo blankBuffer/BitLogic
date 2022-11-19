@@ -2,6 +2,9 @@ import java.io.File;
 import java.util.Scanner;
 
 import cas.*;
+import cas.base.CasInfo;
+import cas.base.Expr;
+import cas.base.Rule;
 import cas.lang.Ask;
 import ui.UI;
 

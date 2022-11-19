@@ -2,6 +2,11 @@ package cas.primitive;
 import java.math.BigInteger;
 
 import cas.*;
+import cas.base.CasInfo;
+import cas.base.ComplexFloat;
+import cas.base.Expr;
+import cas.base.Func;
+import cas.base.Rule;
 import cas.bool.BoolState;
 import cas.calculus.Limit;
 
@@ -160,13 +165,13 @@ public class Power{
 					Func pow = (Func)e;
 					
 					if(pow.getBase().equals(Var.E)) {
-						Prod expoProd = null;
+						Func expoProd = null;
 						Func expoDiv = null;
-						if(pow.getExpo().typeName().equals("div") && ((Func)pow.getExpo()).getNumer() instanceof Prod ) {
+						if(pow.getExpo().typeName().equals("div") && ((Func)pow.getExpo()).getNumer().typeName().equals("prod") ) {
 							expoDiv = (Func)pow.getExpo();
-							expoProd = (Prod)expoDiv.getNumer();
-						}else if(pow.getExpo() instanceof Prod) {
-							expoProd = (Prod)pow.getExpo();
+							expoProd = (Func)expoDiv.getNumer();
+						}else if(pow.getExpo().typeName().equals("prod")) {
+							expoProd = (Func)pow.getExpo();
 						}
 						
 						if(expoProd != null) {
@@ -203,9 +208,9 @@ public class Power{
 				@Override
 				public Expr applyRuleToExpr(Expr e,CasInfo casInfo){
 					Func pow = (Func)e;
-					if(pow.getExpo() instanceof Sum && pow.getBase().equals(Var.E)) {
-						Sum expoSum = (Sum)pow.getExpo();
-						Prod outerProd = new Prod();
+					if(pow.getExpo().typeName().equals("sum") && pow.getBase().equals(Var.E)) {
+						Func expoSum = (Func)pow.getExpo();
+						Func outerProd = prod();
 						for(int i = 0;i<expoSum.size();i++) {
 							if(expoSum.get(i).typeName().equals("ln")) {
 								outerProd.add(expoSum.get(i).get());
@@ -235,13 +240,13 @@ public class Power{
 						
 						//if expo is a frac turn it into a mixed fraction sum
 						
-						Sum fracSum = null;
+						Func fracSum = null;
 						if(pow.getExpo().typeName().equals("div")) fracSum = Div.mixedFraction((Func)pow.getExpo());
 						if(fracSum!=null) {
 							pow.setExpo(fracSum);
 						}
 						
-						if(pow.getExpo() instanceof Sum) {
+						if(pow.getExpo().typeName().equals("sum")) {
 							Expr expo = pow.getExpo();
 							for(int i = 0;i<expo.size();i++) {
 								
@@ -282,7 +287,7 @@ public class Power{
 						
 						power.setBase(pp.getBase());
 						
-						if(power.getExpo() instanceof Prod) power.getExpo().add(pp.getExpo());
+						if(power.getExpo().typeName().equals("prod")) power.getExpo().add(pp.getExpo());
 						else power.setExpo(prod(power.getExpo(),pp.getExpo()));
 						
 						power.setExpo(power.getExpo().simplify(casInfo));
@@ -299,8 +304,8 @@ public class Power{
 				public Expr applyRuleToExpr(Expr e,CasInfo casInfo){
 					Func pow = (Func)e;
 					
-					if(pow.getBase() instanceof Prod && !(pow.getExpo().typeName().equals("div"))) {
-						Prod casted = (Prod)pow.getBase().copy();
+					if(pow.getBase().typeName().equals("prod") && !(pow.getExpo().typeName().equals("div"))) {
+						Func castedProd = (Func)pow.getBase().copy();
 						Func frac = null;
 						if(pow.getExpo().typeName().equals("div")) frac = (Func)pow.getExpo();
 						boolean createsComplexNumber = false;
@@ -308,22 +313,22 @@ public class Power{
 							if(((Num)frac.getDenom()).getRealValue().mod(BigInteger.TWO).equals(BigInteger.ZERO)) createsComplexNumber = true;//root in the form (x)^(a/(2*n))
 						}
 						
-						Prod out = new Prod();
-						for(int i = 0;i<casted.size();i++) {
-							Expr expr = casted.get(i);
+						Func outProd = prod();
+						for(int i = 0;i<castedProd.size();i++) {
+							Expr expr = castedProd.get(i);
 							if(createsComplexNumber && expr.negative()){
 								pow.setBase(distr(pow.getBase()).simplify(casInfo));
 								return pow;
 							}
-							out.add(power(expr,pow.getExpo()).simplify(casInfo) );
-							casted.remove(i);
+							outProd.add(power(expr,pow.getExpo()).simplify(casInfo) );
+							castedProd.remove(i);
 							i--;
 						}
-						if(casted.size() > 0) {
+						if(castedProd.size() > 0) {
 							pow.setBase(pow.getBase().simplify(casInfo));
-							out.add(pow);
+							outProd.add(pow);
 						}
-						return out.simplify(casInfo);
+						return outProd.simplify(casInfo);
 					}
 					
 					return pow;
@@ -386,16 +391,16 @@ public class Power{
 				public Expr applyRuleToExpr(Expr e,CasInfo casInfo){
 					Func pow = (Func)e;
 					
-					if(pow.getExpo() instanceof Prod || pow.getExpo().typeName().equals("div")) {
-						Prod prod = null;
+					if(pow.getExpo().typeName().equals("prod") || pow.getExpo().typeName().equals("div")) {
+						Func prod = null;
 						Func div = null;
-						if(pow.getExpo() instanceof Prod) {
-							prod = (Prod)pow.getExpo();
+						if(pow.getExpo().typeName().equals("prod")) {
+							prod = (Func)pow.getExpo();
 							div = Div.cast(prod);
 						}else {
-							if( ((Func)pow.getExpo()).getNumer() instanceof Prod ) {
+							if( ((Func)pow.getExpo()).getNumer().typeName().equals("prod") ) {
 								div = (Func) pow.getExpo();
-								prod = (Prod) div.getNumer();
+								prod = (Func) div.getNumer();
 							}else {
 								return pow;
 							}
@@ -473,11 +478,11 @@ public class Power{
 				public Expr applyRuleToExpr(Expr e,CasInfo casInfo){
 					Func pow = (Func)e;
 					
-					if(pow.getExpo().typeName().equals("div") && pow.getBase() instanceof Prod) {
-						Prod baseProd = (Prod)pow.getBase();
+					if(pow.getExpo().typeName().equals("div") && pow.getBase().typeName().equals("prod")) {
+						Func baseProd = (Func)pow.getBase();
 						Func expoDiv = (Func)pow.getExpo();
 						
-						Prod out = new Prod();
+						Func outProd = prod();
 						for(int i = 0;i<baseProd.size();i++) {
 							if(baseProd.get(i).typeName().equals("power")) {
 								Func subPow = (Func)baseProd.get(i);
@@ -486,7 +491,7 @@ public class Power{
 									Func subPowExpoDiv = (Func)subPow.getExpo();
 									if(subPowExpoDiv.getNumer().equals(expoDiv.getDenom())) {
 										
-										out.add(power(subPow.getBase(),div(expoDiv.getNumer(),subPowExpoDiv.getDenom())));
+										outProd.add(power(subPow.getBase(),div(expoDiv.getNumer(),subPowExpoDiv.getDenom())));
 										
 										baseProd.remove(i);
 										i--;
@@ -494,7 +499,7 @@ public class Power{
 								}else {
 									if(expoDiv.getDenom().equals(subPow.getExpo())) {
 										
-										out.add(power(subPow,expoDiv));
+										outProd.add(power(subPow,expoDiv));
 										
 										baseProd.remove(i);
 										i--;
@@ -507,18 +512,18 @@ public class Power{
 								if(computed instanceof Num) {
 									baseProd.remove(i);
 									i--;
-									out.add(computed);
-								}else if(computed instanceof Prod) {
-									out.add(computed.get(0));
+									outProd.add(computed);
+								}else if(computed.typeName().equals("prod")) {
+									outProd.add(computed.get(0));
 									baseProd.set(i, computed.get(1).get());
 									i--;
 								}
 								
 							}
 						}
-						if(out.size()>0) {
-							out.add(pow);
-							return out.simplify(casInfo);
+						if(outProd.size()>0) {
+							outProd.add(pow);
+							return outProd.simplify(casInfo);
 						}
 					}
 					
@@ -531,24 +536,24 @@ public class Power{
 				public Expr applyRuleToExpr(Expr e,CasInfo casInfo){
 					Func pow = (Func)e;
 					
-					if(pow.getBase() instanceof Prod && pow.getExpo().typeName().equals("div")) {
-						Prod innerProd = (Prod)pow.getBase();
+					if(pow.getBase().typeName().equals("prod") && pow.getExpo().typeName().equals("div")) {
+						Func innerProd = (Func)pow.getBase();
 						
-						Prod out = new Prod();
+						Func outProd = prod();
 						
 						for(int i = 0;i<innerProd.size();i++) {
 							if(innerProd.get(i).typeName().equals("power") && ((Func)innerProd.get(i)).getExpo().typeName().equals("div") ) {
 								Func innerPow = (Func)innerProd.get(i);
 								
-								out.add(power(innerPow.getBase(),prod(pow.getExpo(),innerPow.getExpo())));
+								outProd.add(power(innerPow.getBase(),prod(pow.getExpo(),innerPow.getExpo())));
 								innerProd.remove(i);
 								i--;
 							}
 						}
 						
-						if(out.size()>0) {
-							out.add(pow);
-							return out.simplify(casInfo);
+						if(outProd.size()>0) {
+							outProd.add(pow);
+							return outProd.simplify(casInfo);
 						}
 						
 					}
@@ -562,7 +567,7 @@ public class Power{
 				public Expr applyRuleToExpr(Expr e,CasInfo casInfo){
 					Func pow = (Func)e;
 					
-					if(pow.getExpo().typeName().equals("div") && (pow.getBase() instanceof Prod || pow.getBase() instanceof Sum)) {
+					if(pow.getExpo().typeName().equals("div") && (pow.getBase().typeName().equals("prod") || pow.getBase().typeName().equals("sum"))) {
 						pow.setBase(distr(pow.getBase()).simplify(casInfo));
 					}
 					
@@ -658,7 +663,7 @@ public class Power{
 						boolean useParenOnBase = false;//parentheses if
 						//base is a negative integer
 						//base is a sum or product or power
-						if(owner.getBase() instanceof Sum || owner.getBase() instanceof Prod || owner.getBase().typeName().equals("power") || owner.getBase().typeName().equals("div")) useParenOnBase = true;
+						if(owner.getBase().typeName().equals("sum") || owner.getBase().typeName().equals("prod") || owner.getBase().typeName().equals("power") || owner.getBase().typeName().equals("div")) useParenOnBase = true;
 						if(owner.getBase() instanceof Num) {
 							Num baseCasted = (Num)owner.getBase();
 							if(baseCasted.getRealValue().signum() == -1) useParenOnBase = true;
@@ -669,7 +674,7 @@ public class Power{
 						out+="^";
 						
 						boolean useParenOnExpo = false;
-						if(owner.getExpo() instanceof Sum || owner.getExpo() instanceof Prod || owner.getExpo().typeName().equals("power") || owner.getExpo().typeName().equals("div")) useParenOnExpo = true;
+						if(owner.getExpo().typeName().equals("sum") || owner.getExpo().typeName().equals("prod") || owner.getExpo().typeName().equals("power") || owner.getExpo().typeName().equals("div")) useParenOnExpo = true;
 						if(useParenOnExpo) out+="(";
 						out+=owner.getExpo().toString();
 						if(useParenOnExpo) out+=")";

@@ -12,6 +12,9 @@ import java.util.ArrayList;
 import java.util.HashMap;
 
 import cas.*;
+import cas.base.Expr;
+import cas.base.Func;
+import cas.base.Rule;
 import cas.primitive.*;
 import cas.bool.*;
 import cas.calculus.*;
@@ -210,7 +213,7 @@ public class ExprRender extends Cas{//sort of a wrap of the image type but keeps
 					drawImage(baseImg,sqrtWid,smallShift*2,baseImg.getWidth(),baseImg.getHeight());
 					graphics.fillRect(sqrtWid,smallShift,getWidth(),overBarHeight);
 				}else {
-					if(pow.getBase() instanceof Prod || pow.getBase() instanceof Sum || pow.getBase().typeName().equals("div") || pow.getBase().typeName().equals("power") || (pow.getBase() instanceof Num && pow.getBase().negative()) ) {
+					if(pow.getBase().typeName().equals("prod") || pow.getBase().typeName().equals("sum") || pow.getBase().typeName().equals("div") || pow.getBase().typeName().equals("power") || (pow.getBase() instanceof Num && pow.getBase().negative()) ) {
 						baseImg.makeParen(pow.getBase());
 					}else {
 						baseImg.makeExpr(pow.getBase());
@@ -259,7 +262,7 @@ public class ExprRender extends Cas{//sort of a wrap of the image type but keeps
 				rightImg.makeExpr(rightSide);
 				
 				makeImgSeries(new ExprImg[]{leftImg,equImg,rightImg});
-			}else if(e instanceof Sum) {
+			}else if(e.typeName().equals("sum")) {
 				ExprImg plusImg = newExprImg();
 				plusImg.makeString("+");
 				ExprImg minusImg = newExprImg();
@@ -279,7 +282,7 @@ public class ExprRender extends Cas{//sort of a wrap of the image type but keeps
 							absElement = innerNum.negate();
 							negative = true;
 						}
-					}else if(absElement instanceof Prod) {
+					}else if(absElement.typeName().equals("prod")) {
 						for(int j = 0;j<absElement.size();j++) {
 							if(absElement.get(j) instanceof Num) {
 								Num innerNum = (Num)absElement.get(j);
@@ -310,8 +313,8 @@ public class ExprRender extends Cas{//sort of a wrap of the image type but keeps
 				for(int i = 0;i<imgs.size();i++)exprImgs[i] = imgs.get(i);
 						
 				makeImgSeries(exprImgs);
-			}else if(e instanceof Prod) {
-				Prod prodCopy = (Prod)e.copy();
+			}else if(e.typeName().equals("prod")) {
+				Func prodCopy = (Func)e.copy();
 				
 				ExprImg multImg = newExprImg();
 				multImg.makeString("*");
@@ -340,7 +343,7 @@ public class ExprRender extends Cas{//sort of a wrap of the image type but keeps
 				
 				for(int i = 0;i<prodCopy.size();i++) {
 					ExprImg imgEl = newExprImg();
-					if(prodCopy.get(i) instanceof Sum) imgEl.makeParen(prodCopy.get(i));
+					if(prodCopy.get(i).typeName().equals("sum")) imgEl.makeParen(prodCopy.get(i));
 					else imgEl.makeExpr(prodCopy.get(i));
 					imgs.add(imgEl);
 					if(i!=prodCopy.size()-1) imgs.add(multImg);

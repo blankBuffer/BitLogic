@@ -1,6 +1,11 @@
 package cas.special;
 
 import cas.*;
+import cas.base.CasInfo;
+import cas.base.ComplexFloat;
+import cas.base.Expr;
+import cas.base.Func;
+import cas.base.Rule;
 import cas.primitive.*;
 
 /*

@@ -1,13 +1,11 @@
 package cas.matrix;
 
-import cas.ComplexFloat;
-import cas.Expr;
-import cas.Rule;
-import cas.CasInfo;
-import cas.primitive.Func;
-import cas.primitive.Prod;
+import cas.base.CasInfo;
+import cas.base.ComplexFloat;
+import cas.base.Expr;
+import cas.base.Func;
+import cas.base.Rule;
 import cas.primitive.Sequence;
-import cas.primitive.Sum;
 import cas.primitive.Var;
 
 public class Dot extends Expr{
@@ -31,7 +29,7 @@ public class Dot extends Expr{
 							Sequence totalRow = total.getRow(row);
 							Sequence otherCol = other.getCol(col);
 							
-							Sum sum = new Sum();
+							Func sum = sum();
 							for(int j = 0;j<totalRow.size();j++) {
 								sum.add( prod(totalRow.get(j),otherCol.get(j)) );
 							}
@@ -88,7 +86,7 @@ public class Dot extends Expr{
 	public String toString() {
 		String out = "";
 		for(int i = 0;i<size();i++) {
-			boolean paren = !(get(i) instanceof Var) && (get(i) instanceof Mat) && !(get(i) instanceof Prod) && !(get(i) instanceof Func);
+			boolean paren = !(get(i) instanceof Var) && (get(i) instanceof Mat) && !(get(i).typeName().equals("prod")) && !(get(i) instanceof Func);
 			if(paren) out+="(";
 			out+=get(i);
 			if(paren) out+=")";

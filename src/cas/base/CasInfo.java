@@ -1,6 +1,9 @@
-package cas;
+package cas.base;
 
 import java.io.Serializable;
+
+import cas.Cas;
+import cas.Defs;
 
 public class CasInfo extends Cas implements Serializable{
 	

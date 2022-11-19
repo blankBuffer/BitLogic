@@ -1,15 +1,13 @@
 package cas.calculus;
 
-import cas.ComplexFloat;
-import cas.Expr;
-import cas.Rule;
-import cas.CasInfo;
-import cas.StandardRules;
+import cas.base.CasInfo;
+import cas.base.ComplexFloat;
+import cas.base.Expr;
+import cas.base.Func;
+import cas.base.Rule;
+import cas.base.StandardRules;
 import cas.primitive.Equ;
 import cas.primitive.FloatExpr;
-import cas.primitive.Func;
-import cas.primitive.Prod;
-import cas.primitive.Sum;
 import cas.primitive.Var;
 
 public class Diff{
@@ -50,16 +48,16 @@ public class Diff{
 				@Override
 				public Expr applyRuleToExpr(Expr e,CasInfo casInfo){
 					Func d = (Func)e;
-					if(d.get() instanceof Prod){
-						Prod inner = (Prod)d.get();
+					if(d.get().typeName().equals("prod")){
+						Func innerProd = (Func)d.get();
 						
-						Sum out = new Sum();
-						for(int i = 0;i<inner.size();i++){
-							Expr copy = inner.copy();
+						Func outSum = sum();
+						for(int i = 0;i<innerProd.size();i++){
+							Expr copy = innerProd.copy();
 							copy.set(i, diff(copy.get(i),d.getVar()));
-							out.add(copy);
+							outSum.add(copy);
 						}
-						return out.simplify(casInfo);
+						return outSum.simplify(casInfo);
 						
 					}
 					return d;

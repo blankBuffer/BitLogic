@@ -1,8 +1,8 @@
-package cas;
+package cas.base;
 
+import cas.Cas;
 import cas.primitive.Num;
 import cas.primitive.Sequence;
-import cas.primitive.Sum;
 import cas.primitive.Var;
 
 public class StandardRules extends Cas{
@@ -69,18 +69,18 @@ public class StandardRules extends Cas{
 		@Override
 		public Expr applyRuleToExpr(Expr e,CasInfo casInfo){
 			Expr expr = e.get();
-			if(expr instanceof Sum){
+			if(expr.typeName().equals("sum")){
 				Expr depletedExpr = e.copy();
 				depletedExpr.set(0, Num.ZERO);
 				
-				Sum out = new Sum();
+				Func outSum = sum();
 				
 				for(int i = 0;i<expr.size();i++){
 					Expr current = depletedExpr.copy();
 					current.set(0,expr.get(i));
-					out.add(current);
+					outSum.add(current);
 				}
-				return out.simplify(casInfo);
+				return outSum.simplify(casInfo);
 			}
 			return e;
 		}

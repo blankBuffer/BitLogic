@@ -1,9 +1,10 @@
 package cas.calculus;
 
-import cas.CasInfo;
-import cas.ComplexFloat;
-import cas.Expr;
-import cas.Rule;
+import cas.base.CasInfo;
+import cas.base.ComplexFloat;
+import cas.base.Expr;
+import cas.base.Func;
+import cas.base.Rule;
 import cas.primitive.*;
 
 public class Range extends Expr{

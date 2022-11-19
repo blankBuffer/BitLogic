@@ -2,9 +2,10 @@ package cas.primitive;
 
 import java.io.Serializable;
 
-import cas.ComplexFloat;
-import cas.Expr;
-import cas.Rule;
+import cas.base.ComplexFloat;
+import cas.base.Expr;
+import cas.base.Func;
+import cas.base.Rule;
 
 public class Var extends Expr{
 	

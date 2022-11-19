@@ -2,11 +2,12 @@ package cas.primitive;
 
 import java.math.BigInteger;
 
-import cas.ComplexFloat;
-import cas.Expr;
+import cas.base.CasInfo;
+import cas.base.ComplexFloat;
+import cas.base.Expr;
+import cas.base.Func;
+import cas.base.Rule;
 import cas.Cas;
-import cas.Rule;
-import cas.CasInfo;
 import cas.calculus.Limit;
 import cas.matrix.Mat;
 
@@ -45,8 +46,8 @@ public class Div{
 				@Override
 				public String generateString(Func owner) {
 					String out = "";
-					boolean numerNeedsParen = owner.getNumer() instanceof Prod || owner.getNumer() instanceof Sum || owner.getNumer().typeName().equals("div");
-					boolean denomNeedsParen = owner.getDenom() instanceof Prod || owner.getDenom() instanceof Sum || owner.getDenom().typeName().equals("div");
+					boolean numerNeedsParen = owner.getNumer().typeName().equals("prod") || owner.getNumer().typeName().equals("sum") || owner.getNumer().typeName().equals("div");
+					boolean denomNeedsParen = owner.getDenom().typeName().equals("prod") || owner.getDenom().typeName().equals("sum") || owner.getDenom().typeName().equals("div");
 					
 					if(numerNeedsParen) out += "(";
 					out+=owner.getNumer().toString();
@@ -117,21 +118,21 @@ public class Div{
 			
 			boolean prodInTrig = false;
 			boolean nonProdInTrig = false;
-			if(div.getNumer() instanceof Prod){
-				prodInTrig |= Prod.foundProdInTrigInProd((Prod)div.getNumer());
-				nonProdInTrig |= Prod.foundNonProdInTrigInProd((Prod)div.getNumer());
+			if(div.getNumer().typeName().equals("prod")){
+				prodInTrig |= Prod.foundProdInTrigInProd((Func)div.getNumer());
+				nonProdInTrig |= Prod.foundNonProdInTrigInProd((Func)div.getNumer());
 			}else if(div.getNumer().typeName().equals("sin") || div.getNumer().typeName().equals("cos") || div.getNumer().typeName().equals("tan")){
-				if(div.getNumer().get() instanceof Prod){
+				if(div.getNumer().get().typeName().equals("prod")){
 					prodInTrig = true;
 				}else{
 					nonProdInTrig = true;
 				}
 			}
-			if(div.getDenom() instanceof Prod){
-				prodInTrig |= Prod.foundProdInTrigInProd((Prod)div.getDenom());
-				nonProdInTrig |= Prod.foundNonProdInTrigInProd((Prod)div.getDenom());
+			if(div.getDenom().typeName().equals("prod")){
+				prodInTrig |= Prod.foundProdInTrigInProd((Func)div.getDenom());
+				nonProdInTrig |= Prod.foundNonProdInTrigInProd((Func)div.getDenom());
 			}else if(div.getDenom().typeName().equals("sin") || div.getDenom().typeName().equals("cos") || div.getDenom().typeName().equals("tan")){
-				if(div.getDenom().get() instanceof Prod){
+				if(div.getDenom().get().typeName().equals("prod")){
 					prodInTrig = true;
 				}else{
 					nonProdInTrig = true;
@@ -151,7 +152,7 @@ public class Div{
 		@Override
 		public Expr applyRuleToExpr(Expr e,CasInfo casInfo){
 			Func div = (Func)e;
-			Prod numerProd = Prod.cast(div.getNumer()), denomProd = Prod.cast(div.getDenom());
+			Func numerProd = Prod.cast(div.getNumer()), denomProd = Prod.cast(div.getDenom());
 			
 			outer:for(int i = 0;i < numerProd.size();i++) {
 				
@@ -272,7 +273,7 @@ public class Div{
 			if(div.getNumer() instanceof Num) {
 				numer = (Num)div.getNumer();
 				numerIsNum = true;
-			}else if(div.getNumer() instanceof Prod) {
+			}else if(div.getNumer().typeName().equals("prod")) {
 				for(int i = 0;i<div.getNumer().size();i++) {
 					if(div.getNumer().get(i) instanceof Num) {
 						numerIsProd = true;
@@ -290,7 +291,7 @@ public class Div{
 			
 			if(div.getDenom() instanceof Num) {
 				denom = (Num)div.getDenom();
-			}else if(div.getDenom() instanceof Prod) {
+			}else if(div.getDenom().typeName().equals("prod")) {
 				for(int i = 0;i<div.getDenom().size();i++) {
 					if(div.getDenom().get(i) instanceof Num) {
 						denomIsProd = true;
@@ -392,11 +393,11 @@ public class Div{
 		public Expr applyRuleToExpr(Expr e,CasInfo casInfo){
 			Func div = (Func)e;
 			
-			Prod numerProd = Prod.cast(div.getNumer());
-			Prod denomProd = Prod.cast(div.getDenom());
+			Func numerProd = Prod.cast(div.getNumer());
+			Func denomProd = Prod.cast(div.getDenom());
 			
-			Prod newNumerProd = new Prod();
-			Prod newDenomProd = new Prod();
+			Func newNumerProd = prod();
+			Func newDenomProd = prod();
 			
 			for(int i = 0;i<numerProd.size();i++) {
 				Prod.TermInfo termInfo = Prod.getTermInfo(numerProd.get(i));
@@ -518,8 +519,8 @@ public class Div{
 		public Expr applyRuleToExpr(Expr e,CasInfo casInfo){
 			Func div = (Func)e;
 			
-			Prod numerProd = Prod.cast( div.getNumer() );
-			Prod denomProd = Prod.cast( div.getDenom() );
+			Func numerProd = Prod.cast( div.getNumer() );
+			Func denomProd = Prod.cast( div.getDenom() );
 			
 			outer:for(int i = 0;i < denomProd.size();i++) {
 				if(denomProd.get(i).typeName().equals("abs")) {
@@ -604,46 +605,46 @@ public class Div{
 			rootForm = createExpr("a^(b/c)");
 		}
 		
-		public boolean prodInForm(Prod prod,CasInfo casInfo) {//also factors the root base
+		public boolean prodInForm(Func prod,CasInfo casInfo) {//also factors the root base
 			boolean inForm = false;
 			for(int i = 0;i<prod.size();i++) {
 				if(Rule.fastSimilarExpr(rootForm, prod.get(i))) {
 					Func pow = (Func)prod.get(i);
 					
-					if(pow.getBase() instanceof Sum) {
+					if(pow.getBase().typeName().equals("sum")) {
 						pow.setBase(factor(pow.getBase()).simplify(casInfo));
 					}
 					
-					if(pow.getBase() instanceof Prod) inForm = true;
+					if(pow.getBase().typeName().equals("prod")) inForm = true;
 				}
 			}
 			return inForm;
 		}
-		public Prod expandRoots(Prod prod,CasInfo casInfo) {
-			Prod out = new Prod();
+		public Func expandRoots(Func prod,CasInfo casInfo) {//returns prod
+			Func outProd = prod();
 			for(int i = 0;i<prod.size();i++) {
 				Expr current = prod.get(i);
-				if(Rule.fastSimilarExpr(rootForm, current) && current.get() instanceof Prod) {
+				if(Rule.fastSimilarExpr(rootForm, current) && current.get().typeName().equals("prod")) {
 					
 					Expr expo = ((Func)current).getExpo();
-					Prod base = (Prod)prod.get(i).get();
-					for(int j = 0;j<base.size();j++) {
-						out.add(power(base.get(j),expo).simplify(casInfo));
+					Func baseProd = (Func)prod.get(i).get();
+					for(int j = 0;j<baseProd.size();j++) {
+						outProd.add(power(baseProd.get(j),expo).simplify(casInfo));
 					}
 					
 				}else {
-					out.add(prod.get(i));
+					outProd.add(prod.get(i));
 				}
 			}
-			return out;
+			return outProd;
 		}
 		
 		@Override
 		public Expr applyRuleToExpr(Expr e,CasInfo casInfo){
 			Func div = (Func)e;
 			
-			Prod numerProd = Prod.cast(div.getNumer());
-			Prod denomProd = Prod.cast(div.getDenom());
+			Func numerProd = Prod.cast(div.getNumer());
+			Func denomProd = Prod.cast(div.getDenom());
 			
 			boolean inForm = prodInForm(numerProd,casInfo) | prodInForm(denomProd,casInfo);//but use single | operator because we don't want short circuit evaluation
 		
@@ -685,17 +686,17 @@ public class Div{
 		public Expr applyRuleToExpr(Expr e,CasInfo casInfo){
 			Func div = (Func)e;
 			
-			Prod numer = Prod.cast(div.getNumer());
-			Prod denom = Prod.cast(div.getDenom());
+			Func numerProd = Prod.cast(div.getNumer());
+			Func denomProd = Prod.cast(div.getDenom());
 			
-			outer:for(int i = 0;i<numer.size();i++) {//numer variant
-				if(Rule.similarWithCondition(negativeRootNum, numer.get(i), negativeRootNumCond)) {
-					Func numerRoot = (Func)numer.get(i);
+			outer:for(int i = 0;i<numerProd.size();i++) {//numer variant
+				if(Rule.similarWithCondition(negativeRootNum, numerProd.get(i), negativeRootNumCond)) {
+					Func numerRoot = (Func)numerProd.get(i);
 					
-					for(int j = 0;j<denom.size();j++) {
-						Expr compare = denom.get(j);
+					for(int j = 0;j<denomProd.size();j++) {
+						Expr compare = denomProd.get(j);
 						if(compare.typeName().equals("power") && ((Func)compare).getExpo().equals(numerRoot.getExpo()) && (((Func)compare).getBase().containsVars() || isNegativeRealNum(((Func)compare).getBase()) ) ) {
-							Func denomPow = (Func)denom.get(j);
+							Func denomPow = (Func)denomProd.get(j);
 							denomPow.setBase(neg(denomPow.getBase()));
 							numerRoot.setBase( numerRoot.getBase().strangeAbs(casInfo) );
 							continue outer;
@@ -705,14 +706,14 @@ public class Div{
 				}
 			}
 			
-			outer:for(int i = 0;i<denom.size();i++) {//denom variant
-				if(Rule.similarWithCondition(negativeRootNum, denom.get(i), negativeRootNumCond)) {
-					Func denomRoot = (Func)denom.get(i);
+			outer:for(int i = 0;i<denomProd.size();i++) {//denom variant
+				if(Rule.similarWithCondition(negativeRootNum, denomProd.get(i), negativeRootNumCond)) {
+					Func denomRoot = (Func)denomProd.get(i);
 					
-					for(int j = 0;j<numer.size();j++) {
-						Expr compare = numer.get(j);
+					for(int j = 0;j<numerProd.size();j++) {
+						Expr compare = numerProd.get(j);
 						if(compare.typeName().equals("power") && ((Func)compare).getExpo().equals(denomRoot.getExpo()) && (((Func)compare).getBase().containsVars() || isNegativeRealNum(((Func)compare).getBase()) ) ) {
-							Func numerPow = (Func)numer.get(j);
+							Func numerPow = (Func)numerProd.get(j);
 							numerPow.setBase(neg(numerPow.getBase()));
 							denomRoot.setBase( denomRoot.getBase().strangeAbs(casInfo) );
 							continue outer;
@@ -739,8 +740,8 @@ public class Div{
 		assert frac.typeName().equals("div") : "expected a div";
 		
 		if(frac.getDenom() instanceof Num && !((Num)frac.getDenom()).isComplex()) {
-			if(frac.getNumer() instanceof Prod && frac.getNumer().size() == 2) {
-				Prod numerProdCopy = (Prod)frac.getNumer().copy();
+			if(frac.getNumer().typeName().equals("prod") && frac.getNumer().size() == 2) {
+				Func numerProdCopy = (Func)frac.getNumer().copy();
 				for(int i = 0;i<2;i++) {
 					if(numerProdCopy.get(i).equals(Var.PI)) {
 						numerProdCopy.remove(i);
@@ -778,7 +779,7 @@ public class Div{
 		return Cas.div(newNumer,newDenom);
 	}
 	
-	public static Sum mixedFraction(Func frac) {//the fractional part of the sum will always be positive
+	public static Func mixedFraction(Func frac) {//the fractional part of the sum will always be positive
 		assert frac.typeName().equals("div") : "expected a div";
 		if(Div.isNumericalAndReal(frac)) {
 			Num a = (Num)frac.getNumer();

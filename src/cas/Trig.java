@@ -1,6 +1,13 @@
 package cas;
 
 import java.math.BigInteger;
+
+import cas.base.CasInfo;
+import cas.base.ComplexFloat;
+import cas.base.Expr;
+import cas.base.Func;
+import cas.base.Rule;
+import cas.base.StandardRules;
 import cas.primitive.*;
 
 public class Trig {
@@ -26,7 +33,7 @@ public class Trig {
 						return num(0);
 					}else if(innerExpr.equals(Var.PI)) {
 						return num(0);
-					}else if(innerExpr instanceof Prod && innerExpr.size() == 2) {
+					}else if(innerExpr.typeName().equals("prod") && innerExpr.size() == 2) {
 						if(innerExpr.get(1).equals(Var.PI) && isRealNum(innerExpr.get(0))) {
 							return num(0);
 						}else if(innerExpr.get(0).equals(Var.PI) && isRealNum(innerExpr.get(1))) {
@@ -67,7 +74,7 @@ public class Trig {
 							
 						}
 						
-					}else if(innerExpr instanceof Sum) {//sin(x-pi/4) can be turned into sin(x+7*pi/4) because sin has symmetry
+					}else if(innerExpr.typeName().equals("sum")) {//sin(x-pi/4) can be turned into sin(x+7*pi/4) because sin has symmetry
 						for(int i = 0;i<innerExpr.size();i++) {
 							if(innerExpr.get(i).typeName().equals("div") && !innerExpr.get(i).containsVars() && innerExpr.get(i).contains(Var.PI)) {
 								
@@ -147,7 +154,7 @@ public class Trig {
 						out = num(1);
 					}else if(innerExpr.equals(Var.PI)) {
 						out = num(-1);
-					}else if(innerExpr instanceof Prod && innerExpr.size() == 2) {
+					}else if(innerExpr.typeName().equals("prod") && innerExpr.size() == 2) {
 						if(innerExpr.get(1).equals(Var.PI) && isRealNum(innerExpr.get(0)) ) {
 							return ((Num)innerExpr.get(0)).getRealValue().mod(BigInteger.TWO).equals(BigInteger.ZERO) ? num(1) : num(-1);
 						}else if(innerExpr.get(0).equals(Var.PI) && isRealNum(innerExpr.get(1))) {
@@ -188,7 +195,7 @@ public class Trig {
 							
 						}
 						
-					}else if(innerExpr instanceof Sum) {//cos(x-pi/4) can be turned into sin(x+7*pi/4) because sin has symmetry
+					}else if(innerExpr.typeName().equals("sum")) {//cos(x-pi/4) can be turned into sin(x+7*pi/4) because sin has symmetry
 						for(int i = 0;i<innerExpr.size();i++) {
 							if(innerExpr.get(i).typeName().equals("div") && !innerExpr.get(i).containsVars() && innerExpr.get(i).contains(Var.PI)) {
 								Func frac = Div.ratioOfUnitCircle((Func)innerExpr.get(i));
@@ -244,7 +251,7 @@ public class Trig {
 					Expr innerExpr = tan.get();
 					if(innerExpr.equals(num(BigInteger.ZERO)) || innerExpr.equals(Var.PI)) {
 						return num(0);
-					}else if(innerExpr instanceof Prod && innerExpr.size() == 2) {
+					}else if(innerExpr.typeName().equals("prod") && innerExpr.size() == 2) {
 						if(innerExpr.get(1).equals(Var.PI) && isRealNum(innerExpr.get(0))) {
 							return num(0);
 						}else if(innerExpr.get(0).equals(Var.PI) && isRealNum(innerExpr.get(1))) {
@@ -281,7 +288,7 @@ public class Trig {
 							}
 							
 						}
-					}else if(innerExpr instanceof Sum){
+					}else if(innerExpr.typeName().equals("sum")){
 						for(int i = 0;i<innerExpr.size();i++) {
 							if(innerExpr.get(i).typeName().equals("div") && !innerExpr.get(i).containsVars() && innerExpr.get(i).contains(Var.PI)) {
 								

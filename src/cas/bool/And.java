@@ -1,11 +1,11 @@
 package cas.bool;
 
-import cas.ComplexFloat;
-import cas.Expr;
+import cas.base.CasInfo;
+import cas.base.ComplexFloat;
+import cas.base.Expr;
+import cas.base.Func;
+import cas.base.Rule;
 import cas.Cas;
-import cas.Rule;
-import cas.CasInfo;
-import cas.primitive.Func;
 
 public class And{
 	
