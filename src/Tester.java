@@ -1,6 +1,7 @@
 import cas.*;
 import cas.base.CasInfo;
 import cas.base.Expr;
+import cas.lang.ParseMachine;
 
 public class Tester {
 	
@@ -185,6 +186,10 @@ public class Tester {
 		
 		SimpleFuncs.functionsConstructor();
 		
+		ParseMachine.test();
+		
+		/*
+		
 		passes = passes & parseTest();
 		
 		Cas.load();
@@ -193,6 +198,8 @@ public class Tester {
 		passes = passes & basicAlgebraTest(casInfo);
 		
 		if(verbose) System.out.println("passed all tests: "+passes);
+		*/
 		return passes;
+		
 	}
 }

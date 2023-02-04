@@ -335,8 +335,12 @@ public class Cas {
 	public static Define define(Expr left,Expr right) {
 		return new Define(left,right);
 	}
-	public static Ternary ternary(Expr toBeEvaled,Expr ifTrue,Expr ifFalse) {
-		return new Ternary(toBeEvaled,ifTrue,ifFalse);
+	public static Func ternary(Expr toBeEvaled,Expr ifTrue,Expr ifFalse) {
+		Func out = (Func)SimpleFuncs.ternary.copy();
+		out.add(toBeEvaled);
+		out.add(ifTrue);
+		out.add(ifFalse);
+		return out;
 	}
 	public static Range range(Expr min,Expr max,Expr e,Var v) {
 		return new Range(min,max,e,v);

@@ -404,7 +404,6 @@ public class Rule extends Expr{
 		Next.loadRules();
 		Range.loadRules();
 		
-		Ternary.loadRules();
 		Transpose.loadRules();
 		
 		loadingPercent = 70;

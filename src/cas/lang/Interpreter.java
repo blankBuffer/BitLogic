@@ -308,6 +308,7 @@ public class Interpreter extends Cas{
 			return params;
 			
 		}
+		
 		if(tokens.contains("->")) {
 			ArrayList<ArrayList<String>> tokenGroups = splitTokensIntoGroups(tokens,"->");
 			Expr leftSide = createExprFromTokens(tokenGroups.get(0),rec+1);

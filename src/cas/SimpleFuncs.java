@@ -6,6 +6,7 @@ import java.util.HashMap;
 
 import cas.lang.*;
 import cas.primitive.*;
+import cas.programming.Ternary;
 import cas.special.*;
 import cas.algebra.Distr;
 import cas.algebra.Factor;
@@ -112,6 +113,7 @@ public class SimpleFuncs extends Cas{
 	static Func abs;
 	static Func expand;
 	static Func prod;
+	static Func ternary;
 	
 	public static boolean functionsConstructed = false;
 	
@@ -150,6 +152,7 @@ public class SimpleFuncs extends Cas{
 		abs = new Func("abs",1,Abs.absLoader);
 		expand = new Func("expand",1,Distr.expandLoader);
 		prod = new Func("prod",-1,Prod.prodLoader);
+		ternary = new Func("ternary",3,Ternary.ternaryLoader);
 		
 		addFunc(power);
 		addFunc(sin);
@@ -181,6 +184,7 @@ public class SimpleFuncs extends Cas{
 		addFunc(abs);
 		addFunc(expand);
 		addFunc(prod);
+		addFunc(ternary);
 		
 		functionsConstructed = true;
 	}
