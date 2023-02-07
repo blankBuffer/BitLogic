@@ -1,7 +1,7 @@
 import cas.*;
 import cas.base.CasInfo;
 import cas.base.Expr;
-import cas.lang.ParseMachine;
+import cas.lang.MetaLang;
 
 public class Tester {
 	
@@ -186,7 +186,7 @@ public class Tester {
 		
 		SimpleFuncs.functionsConstructor();
 		
-		ParseMachine.test();
+		MetaLang.test();
 		
 		/*
 		

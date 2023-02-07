@@ -2,6 +2,7 @@ package cas.lang;
 
 import java.io.File;
 import java.io.FileNotFoundException;
+import java.math.BigInteger;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Scanner;
@@ -9,146 +10,41 @@ import java.util.Scanner;
 
 public class ParseMachine {
 	
-	public static void test() {
-		MetaLang.init();
+	/*
+	 * Give it a parseNode and some build instructions and it build any object
+	 */
+	
+	public static String getFileAsString(String fileName) {
+		String out = "";
+		Scanner scanner;
+		try {
+			scanner = new Scanner(new File(fileName));
+			while(scanner.hasNextLine()) {
+				out+=scanner.nextLine();
+				out+="\n";
+			}
+		} catch (FileNotFoundException e) {
+			System.err.println("file not found! : \""+fileName+"\"");
+		}
 		
-		@SuppressWarnings("unused")
-		ParseRule language = MetaLang.createParseStructureFromFile("resources/bitlogic_syntax.pm");
+		return out;
 	}
 	
 	public static abstract class ParseAction{
 		abstract void doAction(ParseNode parseNode);
 	}
-	
-	static class MetaLang{
+	public static class ObjectBuilder{
+		private HashMap<String,ParseAction> parseNodeTypeToInstruction = new HashMap<String,ParseAction>();
 		
-		static ParseRule metaLangDef = null;
-		
-		static HashMap<String,ParseAction> parseNodeTypeToInstruction = new HashMap<String,ParseAction>();
-		
-		static void init() {
-			metaLangDef = new ParseRule(//meta syntax
-					tokenRule("quote_sym","\\'"),
-					new ParseRule(ParseRule.REMOVE_OPERATOR,"string",ruleNodeChar("'"),ruleNode(NODE_SEQUENCE),ruleNodeChar("'")),
-					new ParseRule(DELETE,ruleNodeChar(" \n\t")),
-					tokenRule("becomes","->"),
-					new ParseRule("name",ruleNodeChar("abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ_")),
-					new ParseRule(ParseRule.MERGE,"name",ruleNode("name"),ruleNode("name")),
-					new ParseRule("rule_node",ruleNode("name"),ruleNodeChar("("),ruleNode(NODE_SEQUENCE),ruleNodeChar(")")),
-					new ParseRule("data",ruleNode("name")),
-					new ParseRule("data",ruleNode("string")),
-					new ParseRule(ParseRule.REMOVE_OPERATOR,"rule_node_sequence",ruleNode("rule_node")),
-					new ParseRule(ParseRule.MERGE,"rule_node_sequence",ruleNode("rule_node_sequence"),ruleNodeChar(","),ruleNode("rule_node_sequence")),
-					new ParseRule("flags",contextRuleNodeChar(":|"),ruleNode("data")),
-					new ParseRule(ParseRule.MERGE,"flags",ruleNode("flags"),ruleNodeChar("|"),ruleNode("flags")),
-					new ParseRule("syntax_rule",ruleNodeChar("["),ruleNode("rule_node_sequence"),ruleNode("becomes"),ruleNode("data"),ruleNodeChar("]")),
-					new ParseRule("syntax_rule",ruleNodeChar("["),ruleNode("rule_node_sequence"),ruleNode("becomes"),ruleNode("data"),ruleNodeChar(":"),ruleNode("flags"),ruleNodeChar("]")),
-					
-					new ParseRule(ParseRule.LOOP,
-						new ParseRule("syntax_rule_sequence",ruleNode("syntax_rule"),ruleNodeChar(","),ruleNode("syntax_rule")),
-						new ParseRule(ParseRule.MERGE,"syntax_rule_sequence",ruleNode("syntax_rule"),ruleNodeChar(","),ruleNode("syntax_rule_sequence")),
-						new ParseRule(ParseRule.MERGE,"syntax_rule_sequence",ruleNode("syntax_rule_sequence"),ruleNodeChar(","),ruleNode("syntax_rule")),
-						new ParseRule("syntax_rule",ruleNodeChar("["),ruleNode("syntax_rule_sequence"),ruleNodeChar("]")),
-						new ParseRule("syntax_rule",ruleNodeChar("["),ruleNode("syntax_rule_sequence"),ruleNodeChar(":"),ruleNode("flags"),ruleNodeChar("]"))
-					)
-				);
-			
-			parseNodeTypeToInstruction.put("string", new ParseAction() {
-				@Override
-				public void doAction(ParseNode parseNode) {
-					ParseNode param = parseNode.getNode(0);
-					String out = "";
-					for(int i = 0;i<param.size();i++) out += param.getNode(i).leaf_char;
-					parseNode.object = out;
-				}
-			});
-			parseNodeTypeToInstruction.put("name", new ParseAction() {
-
-				@Override
-				void doAction(ParseNode parseNode) {
-					String out = "";
-					for(int i = 0;i<parseNode.size();i++) out += parseNode.getNode(i).leaf_char;
-					parseNode.object = out;
-				}
-				
-			});
-			parseNodeTypeToInstruction.put("rule_node", new ParseAction() {
-
-				@Override
-				void doAction(ParseNode parseNode) {
-					String content = (String)(parseNode.getNode(2).getNode(0).getNode(0).object);
-					String name = (String)(parseNode.getNode(0).object);
-					
-					if(name.equals("node")) {
-						parseNode.object = ruleNode(content);
-					}else if(name.equals("char")) {
-						parseNode.object = ruleNodeChar(content);
-					}
-				}
-			});
-			parseNodeTypeToInstruction.put("syntax_rule", new ParseAction() {
-				@Override
-				void doAction(ParseNode parseNode) {
-					if(parseNode.getNode(1).type.equals("syntax_rule_sequence")) {
-						ParseNode srs = parseNode.getNode(1);
-						
-						int n_elements = (srs.size()+1)/2;
-						
-						ParseRule[] rules = new ParseRule[n_elements];
-						
-						for(int i = 0;i<n_elements;i++) {
-							int index = (i)*2;
-							
-							rules[i] = (ParseRule)srs.getNode(index).object;
-						}
-						
-						int flags = ParseRule.NONE;
-						
-						
-						if(parseNode.size() == 5) {
-							ParseNode flagsNode = parseNode.getNode(3); 
-							
-							flags = getFlags(flagsNode);
-						}
-						
-						parseNode.object = new ParseRule(flags,rules);
-						
-					}else if(parseNode.getNode(1).type.equals("rule_node_sequence")) {
-						ParseNode rns = parseNode.getNode(1);
-						
-						int n_elements = (rns.size()+1)/2;
-						
-						RuleNode[] ruleNodes = new RuleNode[n_elements];
-						
-						for(int i = 0;i<n_elements;i++) {
-							int index = (i)*2;
-							
-							ruleNodes[i] = (RuleNode)rns.getNode(index).object;
-							
-						}
-						
-						String outType = (String)(parseNode.getNode(3).getNode(0).object);
-						
-						int flags = ParseRule.NONE;
-						
-						if(parseNode.size() == 7) {
-							ParseNode flagsNode = parseNode.getNode(5); 
-							
-							flags = getFlags(flagsNode);
-						}
-						
-						parseNode.object = new ParseRule(flags,outType,ruleNodes);
-						
-					}
-				}
-			});
-			
+		public void addBuildInstruction(String type,ParseAction parseAction) {
+			parseNodeTypeToInstruction.put(type, parseAction);
+		}
+		public Object build(ParseNode node) {
+			generateObjectsInNodes(node);
+			return node.getOutput();
 		}
 		
-		public static void generateObjectsInNodes(ParseNode parseNode) {//this is for the meta lang
-			
-			
-			
+		private void generateObjectsInNodes(ParseNode parseNode) {//this is for the meta lang
 			for(int i = 0;i<parseNode.size();i++) {
 				generateObjectsInNodes(parseNode.getNode(i));
 			}
@@ -157,78 +53,7 @@ public class ParseMachine {
 			if(whatToDo != null) whatToDo.doAction(parseNode);
 		}
 		
-		public static int getFlags(ParseNode flagsNode) {
-			int flags = ParseRule.NONE;
-			for(int i = 0;i<flagsNode.size();i++) {
-				String flagStr = (String)(flagsNode.getNode(i).getNode(0).object);
-				
-				if(flagStr.equals("MERGE")) {
-					flags|=ParseRule.MERGE;
-				}else if(flagStr.equals("LOOP")) {
-					flags|=ParseRule.LOOP;
-				}else if(flagStr.equals("REMOVE_OPERATOR")) {
-					flags|=ParseRule.REMOVE_OPERATOR;
-				}else if(flagStr.equals("NONE")) {
-					//no code
-				}else {
-					System.err.println("Flag not recognized! : "+flagStr);
-				}
-				
-			}
-			
-			return flags;
-		}
-		
-		
-		public static ParseRule createParseStructure(String parseMachineText) {
-			ParseNode langParseTree = baseParse(parseMachineText,metaLangDef);
-			
-			generateObjectsInNodes(langParseTree);
-			
-			ParseRule out = null;
-			try {
-				out = (ParseRule)langParseTree.object;
-			}catch(Exception e) {
-				System.err.println("failed to parse language description, unexpected output!");
-				System.err.println("Generation output...");
-				System.out.println(langParseTree);
-				return null;
-			}
-			
-			if(out == null) {
-				System.err.println("failed to parse language description, no output!");
-				System.err.println("Generation output...");
-				System.out.println(langParseTree);
-				return null;
-			}
-			
-			System.out.println("Syntax Definition loaded!");
-			
-			return out;
-		}
-		public static ParseRule createParseStructureFromFile(String fileName) {
-			System.out.println("Loading Syntax Definition from : \""+fileName+"\"");
-			
-			String parseMachineText = "";
-			
-			File syntaxFile = new File(fileName);
-			
-			try {
-				Scanner myReader = new Scanner(syntaxFile);
-				while (myReader.hasNextLine()) {
-					parseMachineText += myReader.nextLine();
-					parseMachineText += "\n";
-				}
-				myReader.close();
-			} catch (FileNotFoundException e) {
-				System.err.println("syntax file not found!");
-			}
-			
-			return createParseStructure(parseMachineText);
-		}
 	}
-	
-	
 	
 	public static ParseNode baseParse(String toParse,ParseRule parseRules) {
 		ParseNode parseNode = breakUp(toParse);
@@ -243,47 +68,48 @@ public class ParseMachine {
 	}
 	
 	static final String NO_TYPE = "NO_TYPE";
-	static final String NODE_SEQUENCE = "NODE_SEQUENCE";
+	static final String NODE_SEQUENCE = "NODE_SEQUENCE";//special
+	static final String TYPE_CLASS = "TYPE_CLASS";
 	static final String ANY = "ANY";
 	static final String UNKNOWN_TYPE = "UNKNOWN";
 	static final String CHAR = "CHAR";
 	static final String NEG_CHAR = "NEG_CHAR";
+	static final String NEG_TYPE = "NEG_TYPE";
 	static final String ANY_CHAR = "ANY_CHAR";
 	static final String PARSE_PARAM = "PARSE_PARAM";//parameter for a down parse
-	
-	static final String DELETE = "DELETE";//TODO
+	static final String DELETE = "DELETE";//TODO ad
 	
 	static char EMPTY_CHAR = 'ε';//classic epsilon notation
-	
-	
-	//operator types for down parse
-	static final int OPERATOR = 0b0;
-	static final int ENCAP = 0b1;//things like parenthesis
-	//the operator is on the left and everything else is on the right
-	static final int OPERATOR_LEFT = 0b10;
-	static final int OPERATOR_RIGHT = 0b100;//opposite of operator left
-	static final int NOT_OPERATOR = 0b1000;//not parse-able
 	
 	//easy construct
 	static RuleNode ruleNode(String type) {
 		return new RuleNode(type,false);
 	}
 	static RuleNode ruleNodeChar(String charClass) {
-		return new RuleNode(charClass,CHAR,false);
+		return new RuleNode(CHAR,charClass,false);
 	}
 	static RuleNode ruleNodeNegChar(String charClass) {
-		return new RuleNode(charClass,NEG_CHAR,false);
+		return new RuleNode(NEG_CHAR,charClass,false);
+	}
+	static RuleNode ruleNodeNegTypeClass(RuleNode... types) {
+		return new RuleNode(NEG_TYPE,types,false);
+	}
+	static RuleNode ruleNodeTypeClass(RuleNode... types) {
+		return new RuleNode(TYPE_CLASS,types,false);
 	}
 	static RuleNode contextRuleNode(String type) {
 		return new RuleNode(type,true);
 	}
 	static RuleNode contextRuleNodeChar(String charClass) {
-		return new RuleNode(charClass,CHAR,true);
+		return new RuleNode(CHAR,charClass,true);
 	}
 	static RuleNode contextRuleNodeNegChar(String charClass) {
-		return new RuleNode(charClass,NEG_CHAR,true);
+		return new RuleNode(NEG_CHAR,charClass,true);
 	}
-	static ParseRule tokenRule(String outName,String token) {
+	static RuleNode contextRuleNodeTypeClass(RuleNode... types) {
+		return new RuleNode(TYPE_CLASS,types,true);
+	}
+	static ParseRule tokenRule(String outName,String token) {//matches token set
 		RuleNode[] nodes = new RuleNode[token.length()];
 		int i = 0;
 		for(char c:token.toCharArray()) {
@@ -291,7 +117,6 @@ public class ParseMachine {
 			i++;
 		}
 		return new ParseRule(outName,nodes);
-		
 	}
 	//
 	
@@ -301,15 +126,7 @@ public class ParseMachine {
 		private String type = null;
 		private ArrayList<ParseNode> childNodes = null;
 		private boolean fullyParsed = false;
-		
 		private Object object = null;//what the node represents
-		
-		public Object getOutput() {
-			return object;
-		}
-		public void setOutput(Object object) {
-			this.object = object;
-		}
 		
 		ParseNode(){
 			this.type = UNKNOWN_TYPE;
@@ -324,21 +141,81 @@ public class ParseMachine {
 			this.type = CHAR;
 			this.fullyParsed = true;
 		}
-		ParseNode getNode(int i) {
+		
+		//public methods
+		
+		public ParseNode getNode(int i) {
 			return childNodes.get(i);
 		}
-		void setNode(int i,ParseNode node) {
+		public Object getOutput() {
+			return object;
+		}
+		public void setOutput(Object object) {
+			this.object = object;
+		}
+		public int size() {
+			if(childNodes != null) return childNodes.size();
+			else return 0;
+		}
+		public int endIndex() {
+			return this.size()-1;
+		}
+		public boolean hasElementByName(String name) {
+			for(ParseNode n:childNodes) {
+				if(n.type.equals(name)) return true;
+			}
+			return false;
+		}
+		
+		public ParseNode getElementByName(String name) {
+			for(ParseNode n:childNodes) {
+				if(n.type.equals(name)) return n;
+			}
+			return null;
+		}
+		
+		public void generateStringToOutput() {//converts leaf char sequence into string and stores it in output object
+			String str = "";
+			for(ParseNode n:childNodes) {
+				if(n.type.equals(CHAR)) {
+					str+=n.leaf_char;
+				}else {
+					n.generateStringToOutput();
+					str+=((String)n.getOutput());
+				}
+			}
+			this.setOutput(str);
+		}
+		
+		public void generateIntegerToOutput() {
+			generateStringToOutput();
+			this.setOutput(Integer.parseInt((String)this.getOutput()));
+		}
+		
+		public void generateBigIntToOutput() {
+			generateStringToOutput();
+			this.setOutput(new BigInteger((String)this.getOutput()));
+		}
+		
+		@Override
+		public String toString() {
+			return toString(0);
+		}
+		
+		//private methods
+		
+		private void setNode(int i,ParseNode node) {
 			childNodes.set(i,node);
 		}
-		void addNode(ParseNode node) {
+		private void addNode(ParseNode node) {
 			if(childNodes == null) childNodes = new ArrayList<ParseNode>();
 			childNodes.add(node);
 		}
-		void removeNode(int i) {
+		private void removeNode(int i) {
 			childNodes.remove(i);
 		}
 		
-		ParseNode abstractRegion(int startIndex,int endIndex,String outType,boolean fullyParsed) {//end index is inclusive
+		private ParseNode abstractRegion(int startIndex,int endIndex,String outType,boolean fullyParsed) {//end index is inclusive
 			ParseNode paramNode = new ParseNode(outType);
 			paramNode.fullyParsed = fullyParsed;
 			for(int i = startIndex;i<=endIndex;i++) {
@@ -348,17 +225,9 @@ public class ParseMachine {
 				removeNode(i);
 			}
 			setNode(startIndex,paramNode);
-			return paramNode;
+			return paramNode;//return the node if needed by other code
 		}
-		
-		int size() {
-			if(childNodes != null) return childNodes.size();
-			else return 0;
-		}
-		int endIndex() {
-			return this.size()-1;
-		}
-		void merge() {
+		private void merge() {
 			if(childNodes != null) {
 				ArrayList<ParseNode> repl = new ArrayList<ParseNode>();
 				for(ParseNode child:childNodes) {
@@ -378,7 +247,7 @@ public class ParseMachine {
 			String out = "";
 			for(int i = 0;i<tab;i++) out+="\t";
 			if(type.equals(CHAR)) {
-				out+="CHAR: "+leaf_char+" , fp: "+fullyParsed+" , object: {"+object+"}\n";
+				out+="CHAR: "+ (leaf_char == '\n'? "NEWLINE":leaf_char) +" , fp: "+fullyParsed+" , object: {"+object+"}\n";
 			}else {
 				out+="type: "+type+" , fp: "+fullyParsed+" , object: {"+object+"}\n";
 			}
@@ -388,20 +257,22 @@ public class ParseMachine {
 			return out;
 		}
 		
-		@Override
-		public String toString() {
-			return toString(0);
-		}
 	}
 	
-	private static class RuleNode{
+	static class RuleNode{
 		private String charClass = null;
+		private RuleNode[] typeClass = null;
 		private String type = NO_TYPE;
 		//context nodes are nodes on the left most or right most that are not converted to tree but are required to build tree
 		private boolean contextBased = false;
 		
-		RuleNode(String charClass,String type,boolean contextBased){
+		RuleNode(String type,String charClass,boolean contextBased){
 			this.charClass = charClass;
+			this.type = type;
+			this.contextBased = contextBased;
+		}
+		RuleNode(String type,RuleNode[] typeClass,boolean contextBased){
+			this.typeClass = typeClass;
 			this.type = type;
 			this.contextBased = contextBased;
 		}
@@ -433,23 +304,43 @@ public class ParseMachine {
 			if(parseNode.type.equals(this.type)) {
 				if(this.type.equals(CHAR)) {
 					if(this.hasChar(parseNode.leaf_char)) return true;
-				}else return true;
+				}
+				else return true;
 			}else if(this.type.equals(ANY_CHAR) && parseNode.type.equals(CHAR)) {
 				return true;
 			}else if(this.type.equals(NEG_CHAR) && parseNode.type.equals(CHAR)) {
 				if(!this.hasChar(parseNode.leaf_char)) return true;
 			}else if(this.type.equals(ANY)) {
 				return true;
+			}else if(this.type.equals(TYPE_CLASS)) {
+				for(RuleNode rn:typeClass) {
+					if(rn.followsRule(parseNode)) return true;
+				}
+				return false;
+			}else if(this.type.equals(NEG_TYPE)) {
+				boolean found = false;
+				for(RuleNode rn:typeClass) {
+					if(rn.followsRule(parseNode)) found = true;
+				}
+				return !found;
 			}
 			return false;
 		}
 	}
 	
-	private static class ParseRule{
+	static class ParseRule{
 		//flags
 		//up parse is bottom up and down parse is top down parsing
-		static int NONE = 0b0,MERGE = 0b1,REMOVE_OPERATOR = 0b10000,LOOP = 0b10;//removes the operator as its usually not needed
+		static int NONE = 0b0,MERGE = 0b1,REMOVE_OPERATOR = 0b10,LOOP = 0b100;//removes the operator as its usually not needed
 		//flags END
+		
+		//operator types for down parse
+		static final int OPERATOR = 0b0;
+		static final int ENCAP = 0b1;//things like parenthesis
+		//the operator is on the left and everything else is on the right
+		static final int OPERATOR_LEFT = 0b10;
+		static final int OPERATOR_RIGHT = 0b100;//opposite of operator left
+		static final int NOT_OPERATOR = 0b1000;//not parse-able
 		
 		static boolean DOWN_PARSE = true,UP_PARSE = false;
 		
@@ -594,7 +485,10 @@ public class ParseMachine {
 					boolean same = true;
 					
 					for(int i = 0;i<leftEncapLength && same;i++) {
-						if(!get(i).equals( get( endIndex()-rightEncapLength+1+i ) ) ) same = false;
+						if(!get(i).equals( get( endIndex()-rightEncapLength+1+i ) ) ) {
+							same = false;
+							break;
+						}
 					}
 					
 					if(same) leftRightEncapUnique = false;//left and right encap symbols are the same
@@ -605,11 +499,13 @@ public class ParseMachine {
 			//example {any,something,something_else}
 			else if(this.size() >= 2 && this.get(0).type.equals(NODE_SEQUENCE) && countType(NODE_SEQUENCE,1,endIndex()) == 0) {
 				downParseType = OPERATOR_RIGHT;
+				operatorLength = size()-1;
 			}
 			//last token is any and everything before has a type
 			//example {something,something_else,any}
 			else if(this.size() >= 2 && endsWithType(NODE_SEQUENCE) && countType(NODE_SEQUENCE,0,endIndex()-1) == 0) {
 				downParseType = OPERATOR_LEFT;
+				operatorLength = size()-1;
 			}
 			//first and last token are 'any' everything in between is an operator
 			else if(this.size()>= 3 && startsWithType(NODE_SEQUENCE) && endsWithType(NODE_SEQUENCE) && countType(NODE_SEQUENCE,1,endIndex()-1) == 0) {
@@ -671,13 +567,82 @@ public class ParseMachine {
 	}
 	
 	static boolean applyDownParse(ParseNode parseNode,ParseRule parseRule) {
-		if(parseRule.downParseType == OPERATOR) {
+		if(parseRule.downParseType == ParseRule.OPERATOR) {
 			return applyOperatorDownParse(parseNode,parseRule);
-		}else if(parseRule.downParseType == ENCAP) {
+		}else if(parseRule.downParseType == ParseRule.ENCAP) {
 			return applyEncapDownParse(parseNode,parseRule);
+		}else if(parseRule.downParseType == ParseRule.OPERATOR_LEFT) {
+			return applyOperatorLeftDownParse(parseNode,parseRule);
+		}else if(parseRule.downParseType == ParseRule.OPERATOR_RIGHT) {
+			return applyOperatorRightDownParse(parseNode,parseRule);
 		}
 		//TODO
 		return false;
+	}
+	
+	static boolean applyOperatorRightDownParse(ParseNode parseNode,ParseRule parseRule) {
+		boolean made_changes = false;
+		
+		int startIndex = -1;
+		
+		for(int i = parseNode.endIndex()-parseRule.operatorLength+1;i >= 0 ;i-- ) {//right to left search
+			if(parseRule.matchesRegion(parseNode, i, 1, parseRule.endIndex() )) {
+				startIndex = i;
+				break;
+			}
+		}
+		
+		if(startIndex != -1) {
+			ParseNode out = parseNode.abstractRegion(0, startIndex-1+parseRule.operatorLength-parseRule.rightSideContextSize, parseRule.outType, true);
+			int actualOperatorLength = parseRule.operatorLength-parseRule.rightSideContextSize;
+			
+			out.abstractRegion(0, out.endIndex()-actualOperatorLength, PARSE_PARAM, false);
+			
+			
+			if(parseRule.removeOperator()) {//keep popping end index
+				for(int i = 0;i<actualOperatorLength;i++) {
+					out.removeNode(out.endIndex());
+				}
+			}
+			
+			
+			made_changes = true;
+		}
+		
+		
+		
+		return made_changes;
+	}
+	
+	
+	static boolean applyOperatorLeftDownParse(ParseNode parseNode,ParseRule parseRule) {
+		boolean made_changes = false;
+		int startIndex = -1;
+		
+		for(int i = 0;i<=parseNode.endIndex()-parseRule.operatorLength+1;i++){//move from left to right
+			if(parseRule.matchesRegion(parseNode, i, 0, parseRule.operatorLength-1 )) {
+				startIndex = i;
+				break;
+			}
+		}
+		
+		if(startIndex != -1) {
+			ParseNode out = parseNode.abstractRegion(startIndex+parseRule.leftSideContextSize, parseNode.endIndex(), parseRule.outType, true);
+			
+			int actualOperatorLength = parseRule.operatorLength-parseRule.leftSideContextSize;
+			
+			out.abstractRegion(actualOperatorLength, out.endIndex(), PARSE_PARAM, false);
+			
+			if(parseRule.removeOperator()) {//keep popping front index
+				for(int i = 0;i<actualOperatorLength;i++) {
+					out.removeNode(0);
+				}
+			}
+			
+			made_changes = true;
+		}
+		
+		return made_changes;
 	}
 	
 	static boolean applyEncapDownParse(ParseNode parseNode,ParseRule parseRule) {
