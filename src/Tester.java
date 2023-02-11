@@ -185,8 +185,12 @@ public class Tester {
 		if(verbose) System.out.println("running all tests");
 		
 		SimpleFuncs.functionsConstructor();
-		
-		MetaLang.test();
+		MetaLang.init();
+		try {
+			MetaLang.loadLanguageFromFile("resources/example_syntax.pm");
+		}catch(Exception e) {
+			e.printStackTrace();
+		}
 		
 		/*
 		

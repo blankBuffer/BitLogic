@@ -31,7 +31,10 @@ public class ParseMachine {
 	}
 	
 	public static abstract class ParseAction{
-		abstract void doAction(ParseNode parseNode);
+		abstract void doAction(ParseNode parseNode) throws Exception;
+		void init() throws Exception{
+			
+		}
 	}
 	public static class ObjectBuilder{
 		private HashMap<String,ParseAction> parseNodeTypeToInstruction = new HashMap<String,ParseAction>();
@@ -39,20 +42,41 @@ public class ParseMachine {
 		public void addBuildInstruction(String type,ParseAction parseAction) {
 			parseNodeTypeToInstruction.put(type, parseAction);
 		}
+		public void init() {
+			try {
+				for(ParseAction a:parseNodeTypeToInstruction.values()) {
+					a.init();
+				}
+			}catch(Exception e) {
+				System.err.println("Error encoutered in object builder initialization!");
+				e.printStackTrace();
+			}
+		}
 		public Object build(ParseNode node) {
-			generateObjectsInNodes(node);
+			try {
+				generateObjectsInNodes(node);
+			}catch(Exception e) {
+				System.err.println("Error encountered while building object");
+				e.printStackTrace();
+			}
+			if(node.getOutput() == null) {
+				System.err.println("Failed to build object, null object at root");
+				System.err.println("dump of parse tree");
+				System.out.println(node);
+			}
 			return node.getOutput();
 		}
 		
-		private void generateObjectsInNodes(ParseNode parseNode) {//this is for the meta lang
+		private void generateObjectsInNodes(ParseNode parseNode) throws Exception {//this is for the meta lang
 			for(int i = 0;i<parseNode.size();i++) {
 				generateObjectsInNodes(parseNode.getNode(i));
 			}
 			
 			ParseAction whatToDo = parseNodeTypeToInstruction.get(parseNode.type);
-			if(whatToDo != null) whatToDo.doAction(parseNode);
+			if(whatToDo != null) {
+				whatToDo.doAction(parseNode);
+			}
 		}
-		
 	}
 	
 	public static ParseNode baseParse(String toParse,ParseRule parseRules) {
@@ -143,6 +167,14 @@ public class ParseMachine {
 		}
 		
 		//public methods
+		
+		public String getType() {
+			return type;
+		}
+		
+		public char getLeafChar() {
+			return leaf_char;
+		}
 		
 		public ParseNode getNode(int i) {
 			return childNodes.get(i);

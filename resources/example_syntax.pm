@@ -4,7 +4,7 @@
 [//multi section rule
 	[//rule
 		//single line comment
-		type("some_type"),//type rule node
+		type("some_\"type\""),//type rule node
 		char("abc"),//character class rule node
 		/*
 			many-line 
@@ -13,7 +13,7 @@
 		typeClass(char("x"),type("no"))//some set of rule nodes as a rule node
 		->
 		randoli//output
-		:test,tester//flags
+		:REMOVE_OPERATOR,NONE//flags
 		
 	],
 	[
@@ -22,12 +22,13 @@
 		typeClass(char("x"),type("no"))
 		->
 		rando
-		:test,tester
+		:MERGE,LOOP
 	],
 	[//no flags example
 		type("car")
 		->
 		vehicle
-	]
-	:extra_data//dont need flags for a rule list juse showing example
+	],
+	token("hey","blob")
+	:LOOP//dont need flags for a rule list juse showing example
 ]
