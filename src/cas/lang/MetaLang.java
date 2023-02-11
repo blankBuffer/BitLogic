@@ -21,7 +21,6 @@ public class MetaLang {
 		String fileText = ParseMachine.getFileAsString(fileName);
 		ParseNode parseTree = ParseMachine.baseParse(fileText,metaLangDef);
 		ParseRule parseRule = (ParseRule)parseRuleBuilder.build(parseTree);
-		
 		if(parseRule != null) {
 			System.out.println("Done loading language from file: "+fileName);
 		}else {
@@ -361,7 +360,8 @@ public class MetaLang {
 						parseNode.setOutput(parseRule);
 						
 					}else if(parseRuleParam.hasElementByName("parseRuleList")) {
-						ArrayList<ParseRule> parseRules = new ArrayList<ParseRule>();
+						@SuppressWarnings("unchecked")
+						ArrayList<ParseRule> parseRules = (ArrayList<ParseRule>)(parseRuleParam.getElementByName("parseRuleList").getOutput());
 						
 						ParseRule compositeRule = new ParseRule(flags,parseRules.toArray(new ParseRule[parseRules.size()]));
 						parseNode.setOutput(compositeRule);
