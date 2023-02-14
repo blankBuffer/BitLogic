@@ -15,9 +15,22 @@ public class Interpreter extends Cas{
 	public static Expr SUCCESS = var("done!");
 	
 	public static Expr createExpr(String string) throws RuntimeException{
+		
 		try {
 			ArrayList<String> tokens = generateTokens(string);
-			return createExprFromTokens(tokens,0);
+			
+			Expr toCheck = Interpreter2.createExpr(string);//new parsing method
+			Expr classic = createExprFromTokens(tokens,0);//old parsing method
+			
+			
+			if(!toCheck.equals(classic)) {
+				System.err.println("input:    "+string);
+				System.err.println("classic:  "+classic);
+				System.err.println("new:      "+toCheck);
+			}
+			
+			
+			return toCheck;
 		} catch (Exception e) {
 			e.printStackTrace();
 			throw new RuntimeException("error parsing");
@@ -26,7 +39,17 @@ public class Interpreter extends Cas{
 	
 	public static Expr createExprWithThrow(String string) throws Exception{
 		ArrayList<String> tokens = generateTokens(string);
-		return createExprFromTokens(tokens,0);
+		Expr classic = createExprFromTokens(tokens,0);//old parsing method
+		Expr toCheck = Interpreter2.createExpr(string);//new parsing method
+		
+		if(!toCheck.equals(classic)) {
+			System.err.println("input:    "+string);
+			System.err.println("classic:  "+classic);
+			System.err.println("new:      "+toCheck);
+		}
+		
+		
+		return toCheck;
 	}
 	
 	static Expr createExprFromToken(String token) throws Exception {
@@ -34,6 +57,7 @@ public class Interpreter extends Cas{
 		tokens.add(token);
 		return createExprFromTokens(tokens,0);
 	}
+	
 	
 	static void errors(ArrayList<String> tokens) throws Exception {
 		//System.out.println(tokens);
@@ -45,23 +69,6 @@ public class Interpreter extends Cas{
 		String lastToken = tokens.get(tokens.size()-1);
 		if(lastToken.equals("+") || lastToken.equals("-") || lastToken.equals("*") || lastToken.equals("/") || lastToken.equals("^") || lastToken.equals(",")) throw new Exception("ending with invalid token");//should not end with any of these
 		
-	}
-	static Pattern isOperatorPattern = Pattern.compile("[+\\-*^/,=><!;:\\~\\&\\|\\[\\]\\{\\}\\(\\)\\.\\?]");
-	public static boolean isOperator(String string) {
-		Matcher m = isOperatorPattern.matcher(string);
-		return m.matches();
-	}
-	
-	static Pattern isProbablyExprPattern = Pattern.compile("pi|i|e|.*[(0-9)(+\\-*^/,=><!;:\\~\\&\\|\\[\\]\\{\\}\\(\\)\\.\\?].*");
-	public static boolean isProbablyExpr(String string) {
-		Matcher m = isProbablyExprPattern.matcher(string);
-		return m.matches();
-	}
-	
-	static Pattern containsOperatorsPattern = Pattern.compile(".*[+\\-*/^,=><!;:\\~\\&\\|\\[\\]\\{\\}\\(\\)\\.\\?].*");
-	public static boolean containsOperators(String string) {
-		Matcher m = containsOperatorsPattern.matcher(string);
-		return m.matches();
 	}
 	
 	public static boolean isLeftBracket(char ch) {
@@ -201,6 +208,12 @@ public class Interpreter extends Cas{
 			}
 			
 		}
+	}
+	
+	static Pattern containsOperatorsPattern = Pattern.compile(".*[+\\-*/^,=><!;:\\~\\&\\|\\[\\]\\{\\}\\(\\)\\.\\?].*");
+	public static boolean containsOperators(String string) {
+		Matcher m = containsOperatorsPattern.matcher(string);
+		return m.matches();
 	}
 	
 	static Expr createExprFromTokens(ArrayList<String> tokens,int rec) throws Exception{

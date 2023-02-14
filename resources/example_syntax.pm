@@ -29,6 +29,6 @@
 		->
 		vehicle
 	],
-	token("hey","blob")
+	token("hey",blob)
 	:LOOP//dont need flags for a rule list juse showing example
 ]

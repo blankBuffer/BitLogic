@@ -14,6 +14,8 @@ import java.util.HashMap;
 import java.util.Scanner;
 import java.util.Set;
 import java.util.TimeZone;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 import cas.*;
 import cas.base.Expr;
@@ -128,7 +130,7 @@ public class Ask extends Cas{
 		for(int i = 0;i<tokens.size();i++) {
 			if(tokens.get(i).isBlank()) continue;
 			String s = tokens.get(i);
-			if(Interpreter.isProbablyExpr(s)) {
+			if(isProbablyExpr(s)) {
 				indexes.add(i);
 			}
 		}
@@ -374,7 +376,7 @@ public class Ask extends Cas{
 	
 	static int indexOfExpr(int startSearchAtIndex,int limit,ArrayList<String> tokens) {
 		for(int i = startSearchAtIndex;i<startSearchAtIndex+limit && i<tokens.size();i++) {
-			if(Interpreter.isProbablyExpr(tokens.get(i))) {
+			if(isProbablyExpr(tokens.get(i))) {
 				return i;
 			}
 		}
@@ -409,14 +411,27 @@ public class Ask extends Cas{
 		return SimpleFuncs.isFunc(funcName) && SimpleFuncs.getExpectectedParams(funcName) == 1;
 	}
 	
+	static Pattern isOperatorPattern = Pattern.compile("[+\\-*^/,=><!;:\\~\\&\\|\\[\\]\\{\\}\\(\\)\\.\\?]");
+	public static boolean isOperator(String string) {
+		Matcher m = isOperatorPattern.matcher(string);
+		return m.matches();
+	}
+	
+	public static boolean isLeftBracket(char ch) {
+		return ch == '[' || ch == '{' || ch == '(';
+	}
+	public static boolean isRightBracket(char ch) {
+		return ch == ']' || ch == '}' || ch == ')';
+	}
+	
 	static void combineTrailingOperatorTokens(ArrayList<String> tokens){//'2^ 3' -> '2^3'
 		
 		for(int i = 0;i<tokens.size()-1;i++) {
 			String s = tokens.get(i);
 			char leftEndChar = s.charAt(s.length()-1);
-			boolean leftHasOperator = !Interpreter.isRightBracket(leftEndChar) && Interpreter.isOperator(String.valueOf(leftEndChar));
+			boolean leftHasOperator = !isRightBracket(leftEndChar) && isOperator(String.valueOf(leftEndChar));
 			char rightStartChar = tokens.get(i+1).charAt(0);
-			boolean rightHasOperator = Interpreter.isOperator(String.valueOf(rightStartChar)) && !Interpreter.isLeftBracket(rightStartChar) && rightStartChar != '~';
+			boolean rightHasOperator = isOperator(String.valueOf(rightStartChar)) && !isLeftBracket(rightStartChar) && rightStartChar != '~';
 			
 			boolean eitherIsFunctionName = SimpleFuncs.isFunc(s) || SimpleFuncs.isFunc(tokens.get(i+1));
 			
@@ -444,6 +459,13 @@ public class Ask extends Cas{
 		}
 	}
 	
+	
+	static Pattern containsOperatorsPattern = Pattern.compile(".*[+\\-*/^,=><!;:\\~\\&\\|\\[\\]\\{\\}\\(\\)\\.\\?].*");
+	public static boolean containsOperators(String string) {
+		Matcher m = containsOperatorsPattern.matcher(string);
+		return m.matches();
+	}
+	
 	static ArrayList<String> bannedNumberNounPairs = new ArrayList<String>();//three dollar -> 3*dollar is fine but 3 from is not 3*from
 	static void numberNounPair(ArrayList<String> tokens){//four apples -> 4*apple
 		
@@ -459,9 +481,9 @@ public class Ask extends Cas{
 		
 		for(int i = 0;i<tokens.size()-1;i++) {
 			if(tokens.get(i).matches("([0-9]+)|(neg\\([0-9]+\\))")) {
-				if(!Interpreter.containsOperators(tokens.get(i+1)) && !bannedNumberNounPairs.contains(tokens.get(i+1))) {
+				if(!containsOperators(tokens.get(i+1)) && !bannedNumberNounPairs.contains(tokens.get(i+1))) {
 					String stripped = tokens.get(i+1);
-					if(!Interpreter.isProbablyExpr(tokens.get(i+1)) && stripped.length() > 1 && stripped.charAt(stripped.length()-1) == 's') {
+					if(!isProbablyExpr(tokens.get(i+1)) && stripped.length() > 1 && stripped.charAt(stripped.length()-1) == 's') {
 						stripped = stripped.substring(0, stripped.length()-1);//strips the 's' apples -> apple
 					}
 					tokens.set(i, tokens.get(i)+"*"+stripped);
@@ -469,6 +491,12 @@ public class Ask extends Cas{
 				}
 			}
 		}
+	}
+	
+	static Pattern isProbablyExprPattern = Pattern.compile("pi|i|e|.*[(0-9)(+\\-*^/,=><!;:\\~\\&\\|\\[\\]\\{\\}\\(\\)\\.\\?].*");
+	public static boolean isProbablyExpr(String string) {
+		Matcher m = isProbablyExprPattern.matcher(string);
+		return m.matches();
 	}
 	
 	static HashMap<String,String> ordinalReplacement = new HashMap<String,String>();
@@ -496,7 +524,7 @@ public class Ask extends Cas{
 			}
 			if(ordinalReplacement.containsKey(token)){
 				if(tokens.get(i-1).equals("a")) tokens.set(i-1, "1");
-				if(Interpreter.isProbablyExpr(tokens.get(i-1))){
+				if(isProbablyExpr(tokens.get(i-1))){
 					String numberVersion = ordinalReplacement.get(token);
 					tokens.set(i-1, tokens.get(i-1)+"/"+numberVersion);
 					tokens.remove(i);
@@ -556,7 +584,7 @@ public class Ask extends Cas{
 			if(token.contains("*")){
 				String[] parts = token.split("\\*");
 				if(parts.length == 2 && (Unit.unitNames.contains(parts[1]) || token.contains("degree"))){
-					if(Interpreter.containsOperators(parts[0]) || Interpreter.containsOperators(parts[1])) return;
+					if(containsOperators(parts[0]) || containsOperators(parts[1])) return;
 					try {
 						String fromUnit = parts[1];
 						if(fromUnit.equals("degree")){
@@ -815,9 +843,9 @@ public class Ask extends Cas{
 		
 	}
 	
-	public static Expr ask(String question) throws Exception {
+	public static Expr ask(String question) {
 		
-		if(!question.contains(" ")) return Interpreter.createExprWithThrow(question);
+		if(!question.contains(" ")) return Interpreter2.createExpr(question);
 		
 		boolean endsInQuestionMark = question.charAt(question.length()-1) == '?';
 		
@@ -848,12 +876,12 @@ public class Ask extends Cas{
 		}
 		
 		if(tokens.size() == 1) {
-			return Interpreter.createExprWithThrow(tokens.get(0));
+			return Interpreter2.createExpr(tokens.get(0));
 		}
 		
 		//last resort
 		if(indexes.size() == 1) {
-			return Interpreter.createExprWithThrow(tokens.get(indexes.get(0)));
+			return Interpreter2.createExpr(tokens.get(indexes.get(0)));
 		}
 		if(tokens.contains("why")) {
 			return var("I don't know, 'why' questions are not my thing");

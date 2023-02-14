@@ -39,6 +39,23 @@ public class MetaLang {
 		 */
 		
 		metaLangDef = new ParseRule(
+				
+				//escape sequences
+				new ParseRule(
+						//quote character escape sequence for strings
+						ParseMachine.tokenRule("quote_char", "\\\""),
+						ParseMachine.tokenRule("newline_char", "\\\n"),
+						ParseMachine.tokenRule("tab_char", "\\\t"),
+						ParseMachine.tokenRule("backslash_char", "\\\\")
+				),
+			   
+				//define a string as anything in quotes
+				new ParseRule(ParseRule.REMOVE_OPERATOR,"string",
+					ParseMachine.ruleNodeChar("\""),
+					ParseMachine.ruleNode(ParseMachine.NODE_SEQUENCE),
+					ParseMachine.ruleNodeChar("\"")
+				),
+				
 				//define comment as a // or /**/
 				new ParseRule(
 					new ParseRule("comment",//comment starts with double slash
@@ -61,22 +78,6 @@ public class MetaLang {
 				//remove comments, spaces, newlines and tabs
 				new ParseRule(ParseMachine.DELETE,
 					ParseMachine.ruleNodeTypeClass(ParseMachine.ruleNodeChar(" \n\t"),ParseMachine.ruleNode("comment"))
-				),
-				
-				//escape sequences
-				new ParseRule(
-						//quote character escape sequence for strings
-						ParseMachine.tokenRule("quote_char", "\\\""),
-						ParseMachine.tokenRule("newline_char", "\\\n"),
-						ParseMachine.tokenRule("tab_char", "\\\t"),
-						ParseMachine.tokenRule("backslash_char", "\\\\")
-				),
-			   
-				//define a string as anything in quotes
-				new ParseRule(ParseRule.REMOVE_OPERATOR,"string",
-					ParseMachine.ruleNodeChar("\""),
-					ParseMachine.ruleNode(ParseMachine.NODE_SEQUENCE),
-					ParseMachine.ruleNodeChar("\"")
 				),
 				
 				//define becomes token as ->
@@ -181,9 +182,7 @@ public class MetaLang {
 				
 				for(int i = 0;i<param.size();i++) {
 					ParseNode curNode = param.getNode(i);
-					if(curNode.getType().equals(ParseMachine.CHAR)) {
-						out+=curNode.getLeafChar();
-					}else if(curNode.getType().equals("quote_char")) {
+					if(curNode.getType().equals("quote_char")) {
 						out+="\"";
 					}else if(curNode.getType().equals("newline_char")) {
 						out+="\n";
@@ -191,6 +190,9 @@ public class MetaLang {
 						out+="\t";
 					}else if(curNode.getType().equals("backslash_char")) {
 						out+="\\";
+					}else {
+						curNode.generateStringToOutput();
+						out+=(String)curNode.getOutput();
 					}
 				}
 				
@@ -333,8 +335,8 @@ public class MetaLang {
 					
 					ParseNode parenParam = parseNode.getElementByName("paren").getNode(0);
 					
-					outType = (String)parenParam.getNode(0).getOutput();
-					charSeq = (String)parenParam.getNode(2).getOutput();
+					outType = (String)parenParam.getNode(2).getOutput();
+					charSeq = (String)parenParam.getNode(0).getOutput();
 					
 					ParseRule tokenRule = ParseMachine.tokenRule(outType, charSeq);
 					

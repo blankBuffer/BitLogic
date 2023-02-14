@@ -1,6 +1,7 @@
 import cas.*;
 import cas.base.CasInfo;
 import cas.base.Expr;
+import cas.lang.Interpreter2;
 import cas.lang.MetaLang;
 
 public class Tester {
@@ -186,11 +187,7 @@ public class Tester {
 		
 		SimpleFuncs.functionsConstructor();
 		MetaLang.init();
-		try {
-			MetaLang.loadLanguageFromFile("resources/example_syntax.pm");
-		}catch(Exception e) {
-			e.printStackTrace();
-		}
+		Interpreter2.init();
 		
 		/*
 		

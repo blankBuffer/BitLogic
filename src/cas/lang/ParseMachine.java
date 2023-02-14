@@ -92,6 +92,7 @@ public class ParseMachine {
 	}
 	
 	static final String NO_TYPE = "NO_TYPE";
+	static final String EMPTY_NODE = "EMPTY_NODE";
 	static final String NODE_SEQUENCE = "NODE_SEQUENCE";//special
 	static final String TYPE_CLASS = "TYPE_CLASS";
 	static final String ANY = "ANY";
@@ -208,10 +209,10 @@ public class ParseMachine {
 		
 		public void generateStringToOutput() {//converts leaf char sequence into string and stores it in output object
 			String str = "";
-			for(ParseNode n:childNodes) {
-				if(n.type.equals(CHAR)) {
-					str+=n.leaf_char;
-				}else {
+			if(this.type.equals(CHAR)) {
+				str += this.leaf_char;
+			}else {
+				for(ParseNode n:childNodes) {
 					n.generateStringToOutput();
 					str+=((String)n.getOutput());
 				}
@@ -248,6 +249,9 @@ public class ParseMachine {
 		}
 		
 		private ParseNode abstractRegion(int startIndex,int endIndex,String outType,boolean fullyParsed) {//end index is inclusive
+
+			if(endIndex<startIndex) return new ParseNode(EMPTY_NODE);//can't abstract
+
 			ParseNode paramNode = new ParseNode(outType);
 			paramNode.fullyParsed = fullyParsed;
 			for(int i = startIndex;i<=endIndex;i++) {
@@ -279,9 +283,9 @@ public class ParseMachine {
 			String out = "";
 			for(int i = 0;i<tab;i++) out+="\t";
 			if(type.equals(CHAR)) {
-				out+="CHAR: "+ (leaf_char == '\n'? "NEWLINE":leaf_char) +" , fp: "+fullyParsed+" , object: {"+object+"}\n";
+				out+="CHAR: "+ (leaf_char == '\n'? "NEWLINE":leaf_char) +" , fp: "+fullyParsed+" , object: {"+object+"} "+(object == null? "no class" : object.getClass().getCanonicalName())+"\n";
 			}else {
-				out+="type: "+type+" , fp: "+fullyParsed+" , object: {"+object+"}\n";
+				out+="type: "+type+" , fp: "+fullyParsed+" , object: {"+object+"} "+(object == null? "no class" : object.getClass().getCanonicalName())+"\n";
 			}
 			if(childNodes != null) {
 				for(ParseNode child:childNodes) out+=child.toString(tab+1);
@@ -553,13 +557,25 @@ public class ParseMachine {
 		@Override
 		public String toString() {
 			String out = "";
-			if(upParse()) out += "upParseRule(";
-			else out += "downParseRule(";
-			for(RuleNode rn:pattern) {
-				out+=rn;
-				out+=",";
+			if(childRules != null) {
+				out+="[";
+				for(int i = 0;i<childRules.length;i++) {
+					out+=childRules[i];
+					
+					if(i != childRules.length-1) {
+						out+=",";
+					}
+				}
+				out+="]";
+			}else {
+				if(upParse()) out += "upParseRule(";
+				else out += "downParseRule(";
+				for(RuleNode rn:pattern) {
+					out+=rn;
+					out+=",";
+				}
+				out+=" -> "+outType+")";
 			}
-			out+=" -> "+outType+")";
 			return out;
 		}
 	}

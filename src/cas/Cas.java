@@ -26,7 +26,7 @@ public class Cas {
 	public static final Expr nullExpr = null;
 	
 	public static Expr createExpr(String expr) {
-		return Interpreter.createExpr(expr);
+		return Interpreter2.createExpr(expr);
 	}
 	
 	public static void load(){
