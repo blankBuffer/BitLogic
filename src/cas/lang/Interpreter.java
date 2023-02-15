@@ -1,524 +1,432 @@
 package cas.lang;
-import java.util.ArrayList;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 
-import cas.*;
+import java.math.BigInteger;
+
+import cas.Cas;
+import cas.SimpleFuncs;
 import cas.base.Expr;
-import cas.base.Func;
-import cas.primitive.*;
-import cas.programming.*;
-import cas.matrix.*;
+import cas.lang.ParseMachine.ObjectBuilder;
+import cas.lang.ParseMachine.ParseAction;
+import cas.lang.ParseMachine.ParseNode;
+import cas.lang.ParseMachine.ParseRule;
+import cas.primitive.Num;
+import cas.primitive.Sum;
 
 public class Interpreter extends Cas{
+	private static boolean loaded = false;
 	
-	public static Expr SUCCESS = var("done!");
+	static ParseRule bitLogicSyntax = null;
+	static ObjectBuilder exprBuilder = null;
 	
-	public static Expr createExpr(String string) throws RuntimeException{
+	public static Expr createExpr(String toParse) {
+		//System.out.println("building with new expr builder: "+toParse);
+		ParseNode pn = ParseMachine.baseParse(toParse, bitLogicSyntax);
+		Expr out = (Expr) exprBuilder.build(pn);
+		return out;
+	}
+	
+	public static void init() {
+		if(loaded) return;
 		
+		System.out.println("- Loading BitLogic expression builder...");
 		try {
-			ArrayList<String> tokens = generateTokens(string);
-			
-			Expr toCheck = Interpreter2.createExpr(string);//new parsing method
-			Expr classic = createExprFromTokens(tokens,0);//old parsing method
-			
-			
-			if(!toCheck.equals(classic)) {
-				System.err.println("input:    "+string);
-				System.err.println("classic:  "+classic);
-				System.err.println("new:      "+toCheck);
-			}
-			
-			
-			return toCheck;
+			bitLogicSyntax = MetaLang.loadLanguageFromFile("resources/bitlogic_syntax.pm");
 		} catch (Exception e) {
 			e.printStackTrace();
-			throw new RuntimeException("error parsing");
-		}
-	}
-	
-	public static Expr createExprWithThrow(String string) throws Exception{
-		ArrayList<String> tokens = generateTokens(string);
-		Expr classic = createExprFromTokens(tokens,0);//old parsing method
-		Expr toCheck = Interpreter2.createExpr(string);//new parsing method
-		
-		if(!toCheck.equals(classic)) {
-			System.err.println("input:    "+string);
-			System.err.println("classic:  "+classic);
-			System.err.println("new:      "+toCheck);
 		}
 		
+		exprBuilder = new ObjectBuilder();
 		
-		return toCheck;
-	}
-	
-	static Expr createExprFromToken(String token) throws Exception {
-		ArrayList<String> tokens = new ArrayList<String>();
-		tokens.add(token);
-		return createExprFromTokens(tokens,0);
-	}
-	
-	
-	static void errors(ArrayList<String> tokens) throws Exception {
-		//System.out.println(tokens);
-		if(tokens == null) throw new Exception("missing tokens");
-		
-		String initToken = tokens.get(0);
-		if(initToken.equals("+") || initToken.equals("*") || initToken.equals("/") || initToken.equals("^") || initToken.equals(",")) throw new Exception("starting with invalid token");//should not start with any of these
-		
-		String lastToken = tokens.get(tokens.size()-1);
-		if(lastToken.equals("+") || lastToken.equals("-") || lastToken.equals("*") || lastToken.equals("/") || lastToken.equals("^") || lastToken.equals(",")) throw new Exception("ending with invalid token");//should not end with any of these
-		
-	}
-	
-	public static boolean isLeftBracket(char ch) {
-		return ch == '[' || ch == '{' || ch == '(';
-	}
-	public static boolean isRightBracket(char ch) {
-		return ch == ']' || ch == '}' || ch == ')';
-	}
-	
-	public static int indexOfMatchingBracket(String s,int startIndex) throws Exception {
-		char startingChar = s.charAt(startIndex);
-		char endingChar = 0;
-		if(startingChar == '[') endingChar = ']';
-		else if(startingChar == '{') endingChar = '}';
-		else if(startingChar == '(') endingChar = ')';
-		
-		int count = 1;
-		
-		int result = -1;
-		
-		for(int i = startIndex+1;i<s.length();i++) {
-			char currentChar = s.charAt(i);
-			if(currentChar == startingChar) count++;
-			if(currentChar == endingChar) count--;
-			
-			if(count == 0 && result == -1) {
-				result = i;
+		exprBuilder.addBuildInstruction("num", new ParseAction() {
+			@Override
+			Object doAction(ParseNode parseNode) throws Exception {
+				parseNode.generateBigIntToOutput();
+				BigInteger value = (BigInteger)parseNode.getOutput();
+				return num(value);
 			}
-		}
-		if(result < 0) throw new Exception("missing bracket: '"+endingChar+"' try "+s+endingChar);
-		if(count > 0) {
-			String rewrite = s.substring(0,result)+s.substring(result+1,s.length());
-			throw new Exception("too many brackets: '"+endingChar+"' try "+rewrite);
-		}
-		return result;
-	}
-	
-	static ArrayList<String> groupTokens(ArrayList<String> tokens,int startIndex,int endIndex){//end index not included
-		ArrayList<String> out = new ArrayList<String>();
-		for(int i = startIndex;i<endIndex;i++) out.add(tokens.get(i));
-		return out;
-	}
-	
-	static int findToken(ArrayList<String> tokens,String token,int startPoint) {
-		for(int i = startPoint;i<tokens.size();i++) if(tokens.get(i).equals(token)) return i;
-		return -1;
-	}
-	
-	static ArrayList<ArrayList<String>> splitTokensIntoGroups(ArrayList<String> tokens,String splitterToken){
-		ArrayList<ArrayList<String>> groups = new ArrayList<ArrayList<String>>();
-		
-		int indexOfLastSplitterToken = -1;
-		
-		while(indexOfLastSplitterToken != tokens.size()) {
-			int indexOfNextSplitterToken = findToken(tokens,splitterToken,indexOfLastSplitterToken+1);
-			if(indexOfNextSplitterToken == -1) indexOfNextSplitterToken = tokens.size();
-			
-			groups.add( groupTokens(tokens,indexOfLastSplitterToken+1,indexOfNextSplitterToken) );
-			indexOfLastSplitterToken = indexOfNextSplitterToken;
-		}
-		
-		return groups;
-	}
-	
-	static String combineTokensIntoString(ArrayList<String> tokens,int startIndex,int endIndex) {
-		String out = "";
-		for(int i = startIndex;i<endIndex;i++) {
-			out+=tokens.get(i);
-		}
-		return out;
-	}
-	
-	public static void removeTokens(ArrayList<String> tokens,int startIndex,int endIndex) {
-		for(int i = endIndex-1;i>=startIndex;i--) {
-			tokens.remove(i);
-		}
-	}
-	
-	public static void combineTokens(ArrayList<String> tokens,int startIndex,int endIndex) {
-		String newToken = combineTokensIntoString(tokens,startIndex,endIndex);
-		removeTokens(tokens,startIndex+1,endIndex);
-		tokens.set(startIndex, newToken);
-	}
-	
-	public static void groupFloatingPointTokens(ArrayList<String> tokens) {
-		if(tokens.contains(".")) {
-			for(int i = 0;i<tokens.size()-1;i++){//floating point reading
-				if(i+6<tokens.size()+1 && tokens.get(i).equals("-") && tokens.get(i+1).matches("([0-9])+") && tokens.get(i+2).equals(".") && tokens.get(i+3).matches("([0-9])*(e|E)") && tokens.get(i+4).equals("-") && tokens.get(i+5).matches("([0-9])+")) {
-					combineTokens(tokens,i,i+6);
-					tokens.add(i, "+");
+		});
+		exprBuilder.addBuildInstruction("var", new ParseAction() {
+
+			@Override
+			Object doAction(ParseNode parseNode) throws Exception {
+				parseNode.generateStringToOutput();
+				String varName = (String)parseNode.getOutput();
+				if(varName.equals("i")) {
+					return Num.I;
 				}
-				if(i+5<tokens.size()+1 && tokens.get(i).matches("([0-9])+") && tokens.get(i+1).equals(".") && tokens.get(i+2).matches("([0-9])*(e|E)") && tokens.get(i+3).equals("-") && tokens.get(i+4).matches("([0-9])+")) {
-					combineTokens(tokens,i,i+5);
-				}
-				if(i+4<tokens.size()+1 && tokens.get(i).equals("-") && tokens.get(i+1).matches("([0-9])+") && tokens.get(i+2).equals(".") && tokens.get(i+3).matches("([0-9])*(e|E)?([0-9])*")) {
-					combineTokens(tokens,i,i+4);
-					tokens.add(i, "+");
-				}
-				if(i+3<tokens.size()+1 && tokens.get(i).matches("([0-9])+") && tokens.get(i+1).equals(".") && tokens.get(i+2).matches("([0-9])*(e|E)?([0-9])*")) {
-					combineTokens(tokens,i,i+3);
-				}
-				
-				if(i+2<tokens.size()+1 && tokens.get(i).equals(".") && tokens.get(i+1).matches("([0-9])+")){
-					combineTokens(tokens,i,i+2);
-				}
-				if(i+3<tokens.size()+1 && tokens.get(i).equals("-") && tokens.get(i+1).equals(".") && tokens.get(i+2).matches("([0-9])+")){
-					combineTokens(tokens,i,i+3);
-				}
-			}
-		}
-	}
-	
-	private static ArrayList<String> multiSymbolOperators = new ArrayList<String>();
-	static {
-		multiSymbolOperators.add("->");
-		multiSymbolOperators.add(":=");
-	}
-	private static void makeMultiSymbolOperators(ArrayList<String> tokens) {
-		for(int i = 0;i < tokens.size();i++) {
-			String fullToken = tokens.get(i);
-			if(fullToken.isBlank() || fullToken.length()>1) continue; 
-			
-			char token = fullToken.charAt(0);
-			if(!isBasicOperator(token)) continue;
-			symbolLoop:for(String multiSymbol:multiSymbolOperators) {
-				if(multiSymbol.charAt(0) == token) {
-					for(int j = 1;j<multiSymbol.length();j++) {
-						if(!(tokens.get(i+j).length() == 1 && multiSymbol.charAt(j) == tokens.get(i+j).charAt(0))) continue symbolLoop;
-					}
-					
-					for(int j = i+multiSymbol.length()-1;j>i;j--) {
-						tokens.remove(j);
-					}
-					tokens.set(i, multiSymbol);
-					
+				String lc = varName.toLowerCase();
+				if(lc.equals("true")) {
+					return bool(true);
+				}else if(lc.equals("false")) {
+					return bool(false);
+				}else {
+					return var(varName);
 				}
 			}
 			
-		}
-	}
-	
-	static Pattern containsOperatorsPattern = Pattern.compile(".*[+\\-*/^,=><!;:\\~\\&\\|\\[\\]\\{\\}\\(\\)\\.\\?].*");
-	public static boolean containsOperators(String string) {
-		Matcher m = containsOperatorsPattern.matcher(string);
-		return m.matches();
-	}
-	
-	static Expr createExprFromTokens(ArrayList<String> tokens,int rec) throws Exception{
-		if(tokens.size() == 0) return null;
-		if(rec > 40){
-			throw new Exception("recursion in expression reading");
-		}
-		//System.out.println("Received: "+tokens);
-		errors(tokens);
-		
-		makeMultiSymbolOperators(tokens);
-		groupFloatingPointTokens(tokens);
-		
-		if(tokens.size() == 1) {//reading basics
-			String string = tokens.get(0);
-			
-			if(string.matches("[0-9]+")){
-				return num(string);
+		});
+		exprBuilder.addBuildInstruction("pow", new ParseAction() {
+			@Override
+			Object doAction(ParseNode parseNode) throws Exception {
+				Expr base = (Expr)parseNode.getNode(0).getOutput();
+				Expr expo = (Expr)parseNode.getNode(2).getNode(0).getOutput();
+				
+				if(base == null) throw new Exception("got a null base expr while building pow");
+				if(expo == null) throw new Exception("got a null expo expr while building pow");
+				
+				return power(base,expo);
 			}
-			if(string.matches("[\\-]?[0-9]*(([\\.][0-9]*)|([\\.][0-9]*[e|E][\\-]?[0-9]+))")) {
-				return floatExpr(string);
-			}
-			if(!containsOperators(string)){//variable
-				String lowered = string.toLowerCase();
-				if(string.equals("i")) return num(0,1);
-				else if(lowered.equals("true")) return bool(true);
-				else if(lowered.equals("false")) return bool(false);
-				else if(lowered.equals("degree")) return div(pi(),num(180));
-				else{//variables
-					return var(string);
-				}
-			}
-			if( isLeftBracket(string.charAt(0)) ) {//token is in brackets
+		});
+		exprBuilder.addBuildInstruction("sum", new ParseAction() {
+			private static int ADD = 0,SUB = 1;
+			
+			@Override
+			Object doAction(ParseNode parseNode) throws Exception {
+				Expr sum = sum();
 				
-				String subPart = string.substring(1,string.length()-1);
+				int currentMode = ADD;
 				
-				ArrayList<String> subTokens = generateTokens(subPart);
-				Expr outExpr = createExprFromTokens(subTokens,rec+1);
-				
-				if(string.startsWith("(")) {
-					return outExpr;
-				}else if(string.startsWith("[")){
-					if(outExpr instanceof Params) return Sequence.cast(outExpr);
-					else if(outExpr == null) return sequence();
-					return sequence(outExpr);
-				}else if(string.startsWith("{")){
-					if(outExpr instanceof Params) return ExprSet.cast(outExpr);
-					else if(outExpr == null) return exprSet();
-					return exprSet(outExpr);
-				}
-				
-			}
-		}
-		
-		if(tokens.size() == 2) {//reading functions	
-			String op = tokens.get(0);
-			if(op.matches("[a-zA-Z]+") && !tokens.get(1).equals("!")) {
-				if(op.isBlank()) throw new Exception("confusing parenthesis");
-				Expr params = Params.cast( createExprFromToken(tokens.get(1)));
-				
-				
-				Expr[] paramsArray = new Expr[params.size()];
-				
-				for(int i = 0;i<params.size();i++) {
-					paramsArray[i] = params.get(i);
-				}
-				
-				
-				Expr f = SimpleFuncs.getFuncByName(op,paramsArray);
-				return f;
-			}
-			
-		}
-		
-		if(tokens.contains(";")) {
-			Script scr = new Script();
-			int indexOfLastComma = 0;
-			
-			for(int i = 0;i<tokens.size();i++) {
-				String token = tokens.get(i);
-				if(token.equals(";")) {
-					
-					ArrayList<String> tokenSet = new ArrayList<String>();
-					for(int j = indexOfLastComma;j<i;j++)  tokenSet.add(tokens.get(j));
-					scr.add(createExprFromTokens(tokenSet,rec+1));
-					indexOfLastComma = i+1;
-				}
-			}
-			
-			return scr;
-			
-		}
-		if(tokens.contains(":=")) {
-			int indexOfAssign = tokens.indexOf(":=");
-			ArrayList<String> leftSide = groupTokens(tokens,0,indexOfAssign);
-			ArrayList<String> rightSide = groupTokens(tokens,indexOfAssign+1,tokens.size());
-			
-			return define(createExprFromTokens(leftSide,rec+1),createExprFromTokens(rightSide,rec+1));
-			
-		}
-		if(tokens.contains(",")) {
-			Params params = new Params();
-			ArrayList<ArrayList<String>> tokenGroups = splitTokensIntoGroups(tokens,",");
-			for(ArrayList<String> group:tokenGroups) params.add( createExprFromTokens(group,rec+1) );
-			return params;
-			
-		}
-		
-		if(tokens.contains("->")) {
-			ArrayList<ArrayList<String>> tokenGroups = splitTokensIntoGroups(tokens,"->");
-			Expr leftSide = createExprFromTokens(tokenGroups.get(0),rec+1);
-			Expr rightSide = createExprFromTokens(tokenGroups.get(1),rec+1);
-			return becomes(leftSide,rightSide);
-		}
-		
-		if(tokens.contains("?") && tokens.contains(":")) {//ternary case
-			
-			int questionMarkIndex = tokens.indexOf("?");
-			ArrayList<String> toBeEvaled = groupTokens(tokens,0,questionMarkIndex);
-			int colonIndex = tokens.indexOf(":");
-			ArrayList<String> ifTrue = groupTokens(tokens,questionMarkIndex+1,colonIndex);
-			ArrayList<String> ifFalse = groupTokens(tokens,colonIndex+1,tokens.size());
-			return ternary( createExprFromTokens(toBeEvaled,rec+1),createExprFromTokens(ifTrue,rec+1),createExprFromTokens(ifFalse,rec+1) );
-		}
-		
-		if(tokens.contains("=") || tokens.contains(">") || tokens.contains("<")) {//is equation
-			
-			int indexOfEq = tokens.indexOf("=");
-			int indexOfGreater = tokens.indexOf(">");
-			int indexOfLess = tokens.indexOf("<");
-			int indexOfEquToken = Math.max(Math.max(indexOfEq, indexOfLess),indexOfGreater);
-			
-			char symbol = tokens.get(indexOfEquToken).charAt(0);
-			Expr leftSide = createExprFromTokens(groupTokens(tokens,0,indexOfEquToken),rec+1);
-			Expr rightSide = createExprFromTokens(groupTokens(tokens,indexOfEquToken+1,tokens.size()),rec+1);
-			
-			if(symbol == '=') return equ(leftSide,rightSide);
-			if(symbol == '>') return equGreater(leftSide,rightSide);
-			if(symbol == '<') return equLess(leftSide,rightSide);
-			
-		}
-		
-		if(tokens.contains("|")){
-			Func or = or();
-			ArrayList<ArrayList<String>> tokenGroups = splitTokensIntoGroups(tokens,"|");
-			for(ArrayList<String> group:tokenGroups) or.add( createExprFromTokens(group,rec+1) );
-			return or;
-		}
-		if(tokens.contains("&")){
-			Func and = and();
-			ArrayList<ArrayList<String>> tokenGroups = splitTokensIntoGroups(tokens,"&");
-			for(ArrayList<String> group:tokenGroups) and.add( createExprFromTokens(group,rec+1) );
-			return and;
-		}
-		if(tokens.get(0).equals("~")){
-			tokens.remove(0);
-			return not(createExprFromTokens(tokens,rec+1));
-		}
-		
-		boolean isSum = false;
-		for(int i = 0;i<tokens.size();i++) {
-			String token = tokens.get(i);
-			if(token.equals("+") || token.equals("-")  &&   (i==0 ? true : ! (tokens.get(i-1).equals("*")||tokens.get(i-1).equals("/")||tokens.get(i-1).equals("^")) )   ) {//avoids error of misinterpreting x*-2*5 as a sum
-				isSum = true;
-				break;
-			}
-		}
-		if(isSum) {
-			tokens.add("+");
-			Expr sum = sum();
-			int indexOfLastAdd = 0;
-			boolean nextIsSub = false;
-			for(int i = 0;i<tokens.size();i++) {
-				String token = tokens.get(i);
-				if(token.equals("+") || token.equals("-")) {
-					if(i != 0) {
-						if(tokens.get(i-1).equals("^") || tokens.get(i-1).equals("/") || tokens.get(i-1).equals("*")) continue;//avoids error created by e^-x+x where the negative is actually in the exponent same things with x+y/-2
-						ArrayList<String> tokenSet = groupTokens(tokens,indexOfLastAdd,i);
-						
-						if(nextIsSub) {
-							Expr toBeAdded = createExprFromTokens(tokenSet,rec+1);
-							if(toBeAdded.typeName().equals("prod")) {
-								boolean foundNum = false;
-								for(int k = 0;k<toBeAdded.size();k++) {
-									if(toBeAdded.get(k) instanceof Num) {
-										Num negatedVersion = ((Num)toBeAdded.get(k)).negate();
-										toBeAdded.set(k, negatedVersion);
-										foundNum = true;
+				for(int i = 0;i<parseNode.size();i++) {
+					ParseNode current = parseNode.getNode(i);
+					if(current.getType().equals(ParseMachine.CHAR)) {
+						if(current.getLeafChar() == '-') currentMode = SUB;
+						else if(current.getLeafChar() == '+') currentMode = ADD;
+					}else {
+						ParseNode param = current.getNode(0);
+						Expr expr = (Expr)param.getOutput();
+						if(expr == null) throw new Exception("got a null expr while building sum");
+						if(currentMode == ADD) {
+							sum.add(expr);
+						}else if(currentMode == SUB){
+							if(expr.typeName().equals("num")) sum.add(((Num)expr).negate());
+							else if(expr.typeName().equals("prod")) {
+								boolean finished = false;
+								for(int j = 0;j < expr.size();j++) {
+									Expr prodEl = expr.get(j);
+									
+									if(prodEl.typeName().equals("num")) {
+										expr.set(j, ((Num)prodEl).negate() );
+										finished = true;
 										break;
 									}
 								}
-								if(!foundNum) {
-									toBeAdded.add(num(-1));
+								if(!finished) {
+									expr.add(num(-1));
 								}
-								sum.add(toBeAdded);
-							}else if(toBeAdded instanceof Num) {
-								sum.add( ((Num)toBeAdded).negate() );
-							}else sum.add(neg(toBeAdded));
-						}else {
-							sum.add(createExprFromTokens(tokenSet,rec+1));
-						}
-					}
-					indexOfLastAdd = i;
-					nextIsSub = false;
-					boolean goingThroughOperators = true;
-					for (int j = i;goingThroughOperators&&j<tokens.size();j++) {
-						if(tokens.get(j).equals("-")) {
-							nextIsSub=!nextIsSub;
-						}
-						if(j+1<tokens.size()) {
-							if(!(tokens.get(j+1).equals("-") || tokens.get(j+1).equals("+"))) {
-								goingThroughOperators = false;
+								sum.add(expr);
 							}
+							else sum.add(neg(expr));
 						}
-						tokens.remove(j);
-						j--;
 					}
 				}
+				return Sum.unCast(sum);
 			}
-			if(sum.size() == 1) return sum.get();
-			return sum;
-		}
+		});
+		exprBuilder.addBuildInstruction("prod", new ParseAction() {
+			private static int NUMER = 0,DENOM = 1;
+			
+			@Override
+			Object doAction(ParseNode parseNode) throws Exception {
+				Expr numer = prod();
+				Expr denom = prod();
+				
+				int currentMode = NUMER;
+				
+				for(int i = 0;i<parseNode.size();i++) {
+					ParseNode current = parseNode.getNode(i);
+					if(current.getType().equals(ParseMachine.CHAR)) {
+						if(current.getLeafChar() == '/') currentMode = DENOM;
+						else if(current.getLeafChar() == '*') currentMode = NUMER;
+					}else {
+						ParseNode param = current.getNode(0);
+						Expr expr = (Expr)param.getOutput();
+						if(expr == null) throw new Exception("got a null expr while building sum");
+						if(currentMode == NUMER) {
+							numer.add(expr);
+						}else if(currentMode == DENOM){
+							denom.add(expr);
+						}
+					}
+				}
+				
+				if(denom.size() == 0) {
+					return numer;
+				}
+				
+				if(numer.size() == 1) numer = numer.get();
+				if(denom.size() == 1) denom = denom.get();
+				
+				return div(numer,denom);
+			}
+		});
+		exprBuilder.addBuildInstruction("neg", new ParseAction() {
+
+			@Override
+			Object doAction(ParseNode parseNode) throws Exception {
+				Expr innerExpr = (Expr)parseNode.getNode(1).getOutput();
+				if(innerExpr == null) throw new Exception("got a null expr when building neg");
+				
+				Expr negOut = null;
+				if(innerExpr.typeName().equals("num")) {
+					negOut = ((Num)innerExpr).negate();
+				}else {
+					negOut = neg(innerExpr);
+				}
+				
+				return negOut;
+			}
+			
+		});
 		
-		if(tokens.contains(".")) {
-			Dot dot = new Dot();
-			ArrayList<ArrayList<String>> tokenGroups = splitTokensIntoGroups(tokens,".");
-			for(ArrayList<String> group:tokenGroups) dot.add( createExprFromTokens(group,rec+1) );
-			return dot;
-		}
-		if(tokens.contains("*") || tokens.contains("/")) {
-			tokens.add("*");
-			Expr numerProd = prod();
-			Expr denomProd = prod();
-			int indexOfLastProd = 0;
-			boolean nextDiv = false;
-			for(int i = 0;i<tokens.size();i++) {
-				String token = tokens.get(i);
-				if(token.equals("*") || token.equals("/")) {
-					ArrayList<String> tokenSet = groupTokens(tokens,indexOfLastProd,i);
+		exprBuilder.addBuildInstruction("paren", new ParseAction() {
+
+			@Override
+			Object doAction(ParseNode parseNode) throws Exception {
+				if(parseNode.size() == 0) return null;
+				
+				if(parseNode.getNode(0).getNode(0).getType().equals("info_list")) {
+					//ignore
+					return null;
+				}else {
+					Expr innerExpr = (Expr)parseNode.getNode(0).getNode(0).getOutput();
+					if(innerExpr == null) throw new Exception("got a null expr when building paren");
 					
-					if(nextDiv) denomProd.add(createExprFromTokens(tokenSet,rec+1));
-					else numerProd.add(createExprFromTokens(tokenSet,rec+1));
-					if(token.equals("/")) nextDiv = true;
-					else nextDiv = false;
-					
-					indexOfLastProd = i+1;
+					return innerExpr;
 				}
 			}
-			
-			
-			if(numerProd.size() == 1) numerProd = numerProd.get();
-			if(denomProd.size() == 1) denomProd = denomProd.get();
-			
-			if(denomProd.typeName().equals("prod") && denomProd.size() == 0) {
-				return numerProd;
-			}
-			return div(numerProd,denomProd);
-		}
-		if(tokens.contains("^")) {
-			int indexOfPowToken = tokens.indexOf("^");
-			Expr base = createExprFromTokens(groupTokens(tokens,0,indexOfPowToken),rec+1);
-			Expr expo = createExprFromTokens(groupTokens(tokens,indexOfPowToken+1,tokens.size()),rec+1);
-			
-			return power(base,expo);
-		}
-		if(tokens.get(tokens.size()-1).equals("!")) {
-			return gamma( sum(createExprFromTokens(groupTokens(tokens,0,tokens.size()-1),rec+1),num(1)) );
-		}
+		});
 		
-		throw new Exception("unrecognized format:"+tokens);
-	}
-	
-	
-	private static char[] basicOperators = new char[] {
-		'*','+','-','^','/',',','=','!',':',';','&','|','~','<','>','.','?'
-	};
-	private static boolean isBasicOperator(char c) {
-		for(char o:basicOperators) {
-			if(o == c) return true;
-		}
-		return false;
-	}
-	
-	static ArrayList<String> generateTokens(String string) throws Exception{//splits up a string into its relevant subsections and removes parentheses	
-		ArrayList<String> tokens = new ArrayList<String>();
-		//split apart
-		String currentToken = "";
-		for(int i = 0;i<string.length();i++) {
-			char currentChar = string.charAt(i);
-			if(isBasicOperator(currentChar)) {
-				if(!currentToken.isEmpty()) tokens.add(currentToken);
-				currentToken = "";
-				tokens.add(Character.toString(currentChar));
-			}else if(isLeftBracket(currentChar)) {
-				if(!currentToken.isEmpty()) tokens.add(currentToken);
-				currentToken = "";
-				int endIndex = indexOfMatchingBracket(string,i);
-				tokens.add( string.substring(i, endIndex+1 ) );
-				i=endIndex;
-			}else {
-				currentToken+=currentChar;
+		exprBuilder.addBuildInstruction("func", new ParseAction() {
+
+			@Override
+			Object doAction(ParseNode parseNode) throws Exception {
+				String funcName = (String)parseNode.getElementByName("var").getOutput().toString();
+				
+				ParseNode paren = parseNode.getElementByName("paren");
+				Expr func = null;
+				
+				if(paren.size() == 0) {
+					func = SimpleFuncs.getFuncByName(funcName);
+				}else {
+					Expr[] paramsArray = null;
+					ParseNode parenContents = paren.getNode(0);
+					if(parenContents.hasElementByName("info_list")) {//many elements
+						ParseNode infoList = parenContents.getElementByName("info_list");
+						int nElements = infoList.size();
+						
+						paramsArray = new Expr[nElements];
+						for(int i = 0;i<nElements;i++) {
+							paramsArray[i] = (Expr)infoList.getNode(i).getNode(0).getOutput();
+						}
+						
+					}else {
+						int nElements = 1;
+						
+						paramsArray = new Expr[nElements];
+						
+						paramsArray[0] = (Expr)parenContents.getNode(0).getOutput();
+					}
+					func = SimpleFuncs.getFuncByName(funcName,paramsArray);
+				}
+				return func;
 			}
-		}
-		if(!currentToken.isEmpty()) tokens.add(currentToken);
+			
+		});
 		
-		return tokens;
+		exprBuilder.addBuildInstruction("becomes", new ParseAction() {
+			@Override
+			Object doAction(ParseNode parseNode) throws Exception {
+				Expr fromExpr = (Expr)parseNode.getNode(0).getNode(0).getOutput();
+				Expr toExpr = (Expr)parseNode.getNode(1).getNode(0).getOutput();
+				
+				if(fromExpr == null) throw new Exception("got a null from expr while building becomes");
+				if(toExpr == null) throw new Exception("got a null to expr while building becomes");
+				
+				return becomes(fromExpr,toExpr);
+			}
+		});
+		
+		exprBuilder.addBuildInstruction("less", new ParseAction() {
+
+			@Override
+			Object doAction(ParseNode parseNode) throws Exception {
+				Expr leftSide = (Expr)parseNode.getNode(0).getNode(0).getOutput();
+				Expr rightSide = (Expr)parseNode.getNode(1).getNode(0).getOutput();
+				
+				if(leftSide == null) throw new Exception("got a null left expr while building less");
+				if(rightSide == null) throw new Exception("got a null right expr while building less");
+				
+				return equLess(leftSide,rightSide);
+			}
+			
+		});
+		
+		exprBuilder.addBuildInstruction("greater", new ParseAction() {
+
+			@Override
+			Object doAction(ParseNode parseNode) throws Exception {
+				Expr leftSide = (Expr)parseNode.getNode(0).getNode(0).getOutput();
+				Expr rightSide = (Expr)parseNode.getNode(1).getNode(0).getOutput();
+				
+				if(leftSide == null) throw new Exception("got a null left expr while building greater");
+				if(rightSide == null) throw new Exception("got a null right expr while building greater");
+				
+				return equGreater(leftSide,rightSide);
+			}
+			
+		});
+		
+		exprBuilder.addBuildInstruction("equ", new ParseAction() {
+
+			@Override
+			Object doAction(ParseNode parseNode) throws Exception {
+				Expr leftSide = (Expr)parseNode.getNode(0).getNode(0).getOutput();
+				Expr rightSide = (Expr)parseNode.getNode(1).getNode(0).getOutput();
+				
+				if(leftSide == null) throw new Exception("got a null left expr while building equ");
+				if(rightSide == null) throw new Exception("got a null right expr while building equ");
+				
+				return equ(leftSide,rightSide);
+			}
+			
+		});
+		
+		exprBuilder.addBuildInstruction("and", new ParseAction() {
+
+			@Override
+			Object doAction(ParseNode parseNode) throws Exception {
+				Expr and = and();
+				
+				for(int i = 0;i<parseNode.size();i++) {
+					ParseNode current = parseNode.getNode(i);
+					Expr currentExpr = (Expr)current.getNode(0).getOutput();
+					if(currentExpr == null) throw new Exception("got a null expr while building and");
+					and.add(currentExpr);
+				}
+				
+				return and;
+			}
+		});
+		
+		exprBuilder.addBuildInstruction("or", new ParseAction() {
+
+			@Override
+			Object doAction(ParseNode parseNode) throws Exception {
+				Expr or = or();
+				
+				for(int i = 0;i<parseNode.size();i++) {
+					ParseNode current = parseNode.getNode(i);
+					Expr currentExpr = (Expr)current.getNode(0).getOutput();
+					if(currentExpr == null) throw new Exception("got a null expr while building or");
+					or.add(currentExpr);
+				}
+				
+				return or;
+			}
+		});
+		
+		exprBuilder.addBuildInstruction("not", new ParseAction() {
+
+			@Override
+			Object doAction(ParseNode parseNode) throws Exception {
+				Expr innerExpr = (Expr)parseNode.getNode(0).getNode(0).getOutput();
+				if(innerExpr == null) throw new Exception("got a null expr while building not");
+				
+				return not(innerExpr);
+			}
+			
+		});
+		
+		exprBuilder.addBuildInstruction("ternary", new ParseAction() {
+
+			@Override
+			Object doAction(ParseNode parseNode) throws Exception {
+				ParseNode header = parseNode.getElementByName("ternary_header");
+				
+				Expr headerExpr = (Expr)header.getNode(0).getNode(0).getOutput();
+				
+				ParseNode ternaryResults = parseNode.getNode(1).getNode(0);
+
+				Expr ifTrue = (Expr)ternaryResults.getNode(0).getNode(0).getOutput();
+				Expr ifFalse = (Expr)ternaryResults.getNode(1).getNode(0).getOutput();
+				
+				if(headerExpr == null) throw new Exception("got a null expr in header while building ternary expression");
+				if(ifTrue == null) throw new Exception("got a null expr in true output while building ternary expression");
+				if(ifFalse == null) throw new Exception("got a null expr in false output while building ternary expression");
+				
+				Expr ternaryOut = ternary(headerExpr, ifTrue, ifFalse);
+				
+				return ternaryOut;
+			}
+			
+		});
+		
+		exprBuilder.addBuildInstruction("set", new ParseAction() {
+
+			@Override
+			Object doAction(ParseNode parseNode) throws Exception {
+				ParseNode infoList = parseNode.getNode(0).getNode(0);
+				Expr exprSet = exprSet();
+				
+				for(int i = 0;i<infoList.size();i++) {
+					Expr currentExpr = (Expr)infoList.getNode(i).getNode(0).getOutput();
+					if(currentExpr == null) throw new Exception("got a null expr in list of set expr");
+					exprSet.add(currentExpr);
+				}
+				
+				return exprSet;
+			}
+			
+		});
+		
+		exprBuilder.addBuildInstruction("sequence", new ParseAction() {
+
+			@Override
+			Object doAction(ParseNode parseNode) throws Exception {
+				ParseNode infoList = parseNode.getNode(0).getNode(0);
+				Expr exprSequence = sequence();
+				
+				for(int i = 0;i<infoList.size();i++) {
+					Expr currentExpr = (Expr)infoList.getNode(i).getNode(0).getOutput();
+					if(currentExpr == null) throw new Exception("got a null expr in list of sequence expr");
+					exprSequence.add(currentExpr);
+				}
+				
+				return exprSequence;
+			}
+			
+		});
+		
+		exprBuilder.addBuildInstruction("float", new ParseAction() {
+
+			@Override
+			Object doAction(ParseNode parseNode) throws Exception {
+				parseNode.generateFloat64ToOutput();
+				Expr floatExpr = Cas.floatExpr((Double)parseNode.getOutput());
+				return floatExpr;
+			}
+			
+		});
+		
+		exprBuilder.addBuildInstruction("dot", new ParseAction() {
+
+			@Override
+			Object doAction(ParseNode parseNode) throws Exception {
+				Expr dotExpr = dot();
+				
+				for(int i = 0;i<parseNode.size();i++) {
+					Expr dotEl = (Expr)parseNode.getNode(i).getNode(0).getOutput();
+					if(dotEl == null) throw new Exception("got a null expr while building dot expr");
+					dotExpr.add(dotEl);
+				}
+				
+				return dotExpr;
+			}
+			
+		});
+		
+		exprBuilder.init();
+		loaded = true;
+		System.out.println("- Done loading BitLogic expression builder!");
 	}
 }

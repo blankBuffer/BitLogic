@@ -14,15 +14,14 @@ public class MetaLang {
 	
 	private static boolean loaded = false;
 
-	static ParseRule metaLangDef = null;
 	static ObjectBuilder parseRuleBuilder = null;
 	
 	public static ParseRule loadLanguageFromFile(String fileName) throws Exception {
+		System.out.println("- Loading language from file: "+fileName+" ...");
 		String fileText = ParseMachine.getFileAsString(fileName);
-		ParseNode parseTree = ParseMachine.baseParse(fileText,metaLangDef);
-		ParseRule parseRule = (ParseRule)parseRuleBuilder.build(parseTree);
+		ParseRule parseRule = (ParseRule)parseRuleBuilder.build(fileText);
 		if(parseRule != null) {
-			System.out.println("Done loading language from file: "+fileName);
+			System.out.println("- Done loading language from file: "+fileName+" !");
 		}else {
 			throw new Exception("Language parse error");
 		}
@@ -32,13 +31,15 @@ public class MetaLang {
 	public static void init() {
 		if(loaded) return;
 		
+		System.out.println("- Loading Meta language...");
+		
 		//hard-coded definition of the meta language
 		/*
 		 * This syntax structure might be changed slightly in the future.
 		 * I'm probably only going to add features not remove any
 		 */
 		
-		metaLangDef = new ParseRule(
+		ParseRule metaLangDef = new ParseRule(
 				
 				//escape sequences
 				new ParseRule(
@@ -174,9 +175,11 @@ public class MetaLang {
 		
 		parseRuleBuilder = new ObjectBuilder();
 		
+		parseRuleBuilder.setLang(metaLangDef);
+		
 		parseRuleBuilder.addBuildInstruction("string", new ParseAction() {
 			@Override
-			void doAction(ParseNode parseNode) {
+			Object doAction(ParseNode parseNode) {
 				String out = "";
 				ParseNode param = parseNode.getNode(0);
 				
@@ -196,20 +199,15 @@ public class MetaLang {
 					}
 				}
 				
-				parseNode.setOutput(out);
+				return out;
 			}
 		});
 		
-		parseRuleBuilder.addBuildInstruction("name", new ParseAction() {
-			@Override
-			void doAction(ParseNode parseNode) {
-				parseNode.generateStringToOutput();
-			}
-		});
+		parseRuleBuilder.addBuildInstruction("name", ParseMachine.generateStringAction);
 		
 		parseRuleBuilder.addBuildInstruction("ruleNodeList", new ParseAction() {
 			@Override
-			void doAction(ParseNode parseNode) throws Exception {
+			Object doAction(ParseNode parseNode) throws Exception {
 				ArrayList<RuleNode> ruleNodes = new ArrayList<RuleNode>();
 				
 				for(int i = 0;i<parseNode.size();i++) {
@@ -225,14 +223,14 @@ public class MetaLang {
 					
 				}
 				
-				parseNode.setOutput(ruleNodes);
+				return ruleNodes;
 			}
 		});
 		
 		parseRuleBuilder.addBuildInstruction("ruleNode", new ParseAction() {
 			@SuppressWarnings("unchecked")
 			@Override
-			void doAction(ParseNode parseNode) throws Exception {
+			Object doAction(ParseNode parseNode) throws Exception {
 				String type = (String)parseNode.getElementByName("name").getOutput();
 				
 				ParseNode contents = parseNode.getElementByName("paren").getNode(0).getNode(0);
@@ -248,25 +246,25 @@ public class MetaLang {
 				
 				//char stuff
 				if(type.equals("char")) {
-					parseNode.setOutput(ParseMachine.ruleNodeChar(str));
+					return ParseMachine.ruleNodeChar(str);
 				}else if(type.equals("negChar")) {
-					parseNode.setOutput(ParseMachine.ruleNodeNegChar(str));
+					return ParseMachine.ruleNodeNegChar(str);
 				}else if(type.equals("contextChar")) {
-					parseNode.setOutput(ParseMachine.contextRuleNodeChar(str));
+					return ParseMachine.contextRuleNodeChar(str);
 				}else if(type.equals("contextNegChar")) {
-					parseNode.setOutput(ParseMachine.contextRuleNodeNegChar(str));
+					return ParseMachine.contextRuleNodeNegChar(str);
 				}
 				//types
 				else if(type.equals("type")) {
-					parseNode.setOutput(ParseMachine.ruleNode(str));
+					return ParseMachine.ruleNode(str);
 				}else if(type.equals("contextType")) {
-					parseNode.setOutput(ParseMachine.contextRuleNode(str));
+					return ParseMachine.contextRuleNode(str);
 				}else if(type.equals("typeClass")) {
-					parseNode.setOutput(ParseMachine.ruleNodeTypeClass( ruleNodes.toArray( new RuleNode[ruleNodes.size()] ) ));
+					return ParseMachine.ruleNodeTypeClass( ruleNodes.toArray( new RuleNode[ruleNodes.size()] ) );
 				}else if(type.equals("contextTypeClass")) {
-					parseNode.setOutput(ParseMachine.contextRuleNodeTypeClass( ruleNodes.toArray( new RuleNode[ruleNodes.size()] ) ));
+					return ParseMachine.contextRuleNodeTypeClass( ruleNodes.toArray( new RuleNode[ruleNodes.size()] ) );
 				}else if(type.equals("negTypeClass")) {
-					parseNode.setOutput(ParseMachine.ruleNodeNegTypeClass( ruleNodes.toArray( new RuleNode[ruleNodes.size()] ) ));
+					return ParseMachine.ruleNodeNegTypeClass( ruleNodes.toArray( new RuleNode[ruleNodes.size()] ) );
 				}else {
 					throw new Exception("unkown parseNode type: "+type);
 				}
@@ -287,9 +285,9 @@ public class MetaLang {
 			}
 			
 			@Override
-			void doAction(ParseNode parseNode) throws Exception {
+			Object doAction(ParseNode parseNode) throws Exception {
 				ParseNode param = parseNode.getNode(0);
-				Integer flags = ParseRule.NONE;
+				int flags = ParseRule.NONE;
 				
 				for(int i = 0;i<param.size();i++) {
 					ParseNode current = param.getNode(i);
@@ -301,14 +299,14 @@ public class MetaLang {
 					}
 				}
 				
-				parseNode.setOutput(flags);
+				return flags;
 			}
 		});
 		
 		parseRuleBuilder.addBuildInstruction("parseRuleList", new ParseAction() {
 
 			@Override
-			void doAction(ParseNode parseNode) {
+			Object doAction(ParseNode parseNode) {
 				ArrayList<ParseRule> parseRules = new ArrayList<ParseRule>();
 				
 				for(int i = 0;i<parseNode.size();i++) {
@@ -321,14 +319,14 @@ public class MetaLang {
 				}
 				
 				
-				parseNode.setOutput(parseRules);
+				return parseRules;
 			}
 			
 		});
 		
 		parseRuleBuilder.addBuildInstruction("parseRule", new ParseAction() {
 			@Override
-			void doAction(ParseNode parseNode) {
+			Object doAction(ParseNode parseNode) throws Exception {
 				if(parseNode.hasElementByName("token")) {
 					String outType;
 					String charSeq;
@@ -340,7 +338,7 @@ public class MetaLang {
 					
 					ParseRule tokenRule = ParseMachine.tokenRule(outType, charSeq);
 					
-					parseNode.setOutput(tokenRule);
+					return tokenRule;
 				}else {
 					ParseNode parseRuleParam = parseNode.getNode(0);
 					
@@ -359,20 +357,22 @@ public class MetaLang {
 						
 						ParseRule parseRule = new ParseRule(flags,outType,ruleNodes.toArray(new RuleNode[ruleNodes.size()]));
 						
-						parseNode.setOutput(parseRule);
+						return parseRule;
 						
 					}else if(parseRuleParam.hasElementByName("parseRuleList")) {
 						@SuppressWarnings("unchecked")
 						ArrayList<ParseRule> parseRules = (ArrayList<ParseRule>)(parseRuleParam.getElementByName("parseRuleList").getOutput());
 						
 						ParseRule compositeRule = new ParseRule(flags,parseRules.toArray(new ParseRule[parseRules.size()]));
-						parseNode.setOutput(compositeRule);
+						return compositeRule;
 					}else if(parseRuleParam.hasElementByName("parseRule")){
 						ParseRule pr = (ParseRule)(parseRuleParam.getElementByName("parseRule").getOutput());
 						
 						ParseRule outRule = new ParseRule(flags,pr);
 						
-						parseNode.setOutput(outRule);
+						return outRule;
+					}else {
+						throw new Exception("error while building parseRule object");
 					}
 					
 				}
@@ -382,6 +382,7 @@ public class MetaLang {
 		
 		parseRuleBuilder.init();
 		loaded = true;
+		System.out.println("- Done loading Meta language!");
 	}
 	
 }

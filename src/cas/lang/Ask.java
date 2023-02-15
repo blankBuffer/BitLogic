@@ -845,7 +845,7 @@ public class Ask extends Cas{
 	
 	public static Expr ask(String question) {
 		
-		if(!question.contains(" ")) return Interpreter2.createExpr(question);
+		if(!question.contains(" ")) return Interpreter.createExpr(question);
 		
 		boolean endsInQuestionMark = question.charAt(question.length()-1) == '?';
 		
@@ -876,12 +876,12 @@ public class Ask extends Cas{
 		}
 		
 		if(tokens.size() == 1) {
-			return Interpreter2.createExpr(tokens.get(0));
+			return Interpreter.createExpr(tokens.get(0));
 		}
 		
 		//last resort
 		if(indexes.size() == 1) {
-			return Interpreter2.createExpr(tokens.get(indexes.get(0)));
+			return Interpreter.createExpr(tokens.get(indexes.get(0)));
 		}
 		if(tokens.contains("why")) {
 			return var("I don't know, 'why' questions are not my thing");

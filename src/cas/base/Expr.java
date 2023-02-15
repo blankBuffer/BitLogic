@@ -274,9 +274,10 @@ public abstract class Expr extends Cas{
 			int highest  = Integer.MIN_VALUE;
 			int index = 0;
 			for(int i = 0;i<castedSum.size();i++) {
-				int current = castedSum.get(i).removeCoefficients().hashCode();//its very important to use the absolute value
-				if(current>highest) {
-					highest = current;
+				Expr current = castedSum.get(i);
+				int currentHash = current.removeCoefficients().hashCode();//its very important to use the absolute value
+				if(currentHash>highest) {
+					highest = currentHash;
 					index = i;
 				}
 			}

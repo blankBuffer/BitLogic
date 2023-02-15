@@ -32,7 +32,7 @@ import cas.base.Expr;
 import cas.base.Rule;
 import cas.graphics.ExprRender;
 import cas.graphics.Plot;
-import cas.lang.Interpreter2;
+import cas.lang.Interpreter;
 import cas.programming.StackEditor;
 
 public class CalcWindow extends JFrame{
@@ -68,7 +68,7 @@ public class CalcWindow extends JFrame{
 		public void setFocusedExprDefault() {
 			if(!terminalIn.getText().isEmpty()) {
 				try {
-					focusedExpr = Interpreter2.createExpr(terminalIn.getText());
+					focusedExpr = Interpreter.createExpr(terminalIn.getText());
 					imgExprPanel.repaint();
 				}catch(Exception e1) {
 				}

@@ -1,10 +1,62 @@
+package test;
+import java.io.File;
+import java.util.Scanner;
+
 import cas.*;
 import cas.base.CasInfo;
 import cas.base.Expr;
-import cas.lang.Interpreter2;
-import cas.lang.MetaLang;
+import cas.base.Rule;
+import cas.lang.Ask;
 
+
+/*
+ * The giant tester file
+ * This tests things from parsing to simplification and more
+ * Tester is a non static class, you must create Tester object first before running tests
+ * the runScript does not require an instance
+ */
 public class Tester {
+	
+	/*
+	 * basically simplifies every line in the file.
+	 * Currently used mostly for testing with the bitLogicTest.bl file
+	 * Lines that start with '#' are comment lines and are not run
+	 * In verbose mode it shows every before and after computation
+	 */
+	public static void runScript(String fileName,boolean verbose) {
+		Rule.loadCompileSimplifyRules();
+		long oldTime = System.nanoTime();
+		Scanner sc = null;
+		int currentLine = 0;
+		try {
+			sc = new Scanner(new File(fileName));
+			CasInfo casInfo = new CasInfo();
+			System.out.println("running "+fileName+" test script...");
+			while(sc.hasNextLine()) {
+				String line = sc.nextLine();
+				currentLine++;
+				if(line.startsWith("#")) continue;
+				if(verbose) System.out.print(line+" -> ");
+				Expr response = null;
+				
+				response = Ask.ask(line);
+				
+				if(response != null) {
+					if(verbose) System.out.print(response+" -> ");
+					response = response.simplify(casInfo);
+					if(verbose)System.out.println(response);
+				}
+			}
+			sc.close();
+		} catch (Exception e) {
+			e.printStackTrace();
+			System.out.println("fail at line: "+currentLine);
+			if(sc != null) sc.close();
+			return;
+		}
+		long delta = System.nanoTime() - oldTime;
+		System.out.println("took " + delta / 1000000.0 + " ms to finish script!");
+	}
 	
 	boolean verbose = true;
 	
@@ -186,8 +238,6 @@ public class Tester {
 		if(verbose) System.out.println("running all tests");
 		
 		SimpleFuncs.functionsConstructor();
-		MetaLang.init();
-		Interpreter2.init();
 		
 		/*
 		

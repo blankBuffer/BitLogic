@@ -26,11 +26,15 @@ public class Cas {
 	public static final Expr nullExpr = null;
 	
 	public static Expr createExpr(String expr) {
-		return Interpreter2.createExpr(expr);
+		return Interpreter.createExpr(expr);
 	}
 	
 	public static void load(){
+		System.out.println("Loading BitLogic CAS...");
+		MetaLang.init();
+		Interpreter.init();
 		Rule.loadCompileSimplifyRules();
+		System.out.println("Done loading CAS");
 	}
 	
 	public static class IndexSet{

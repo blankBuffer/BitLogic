@@ -187,6 +187,7 @@ public class SimpleFuncs extends Cas{
 		addFunc(ternary);
 		
 		functionsConstructed = true;
+		System.out.println("done constructing functions");
 	}
 	
 	public static void loadRules(){
@@ -984,7 +985,7 @@ public class SimpleFuncs extends Cas{
 				
 				if(inner instanceof Var)casInfo.definitions.removeVar(inner.toString());
 				else if(inner instanceof Func) casInfo.definitions.removeFunc(inner.typeName());
-				return Interpreter.SUCCESS;
+				return Var.SUCCESS;
 			}
 		};
 		

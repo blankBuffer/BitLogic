@@ -391,6 +391,7 @@ public class Rule extends Expr{
 	}
 	
 	private static void loadTypeRules() {
+		System.out.println("loading rules into memory...");
 		SimpleFuncs.loadRules();
 		StandardRules.loadRules();
 		
@@ -408,7 +409,7 @@ public class Rule extends Expr{
 		
 		loadingPercent = 70;
 		
-		System.out.println("rules loaded");
+		System.out.println("rules loaded into memory");
 		RULES_LOADED = true;
 	}
 	
@@ -436,16 +437,17 @@ public class Rule extends Expr{
 	
 	public static void loadCompileSimplifyRules(){//loads and simpoifies everything, faster runtime, ,much slower runtime
 		if(ALL_LOADED) return;
-		System.out.println("loading CAS rules...");
+		
+		loadTypeRules();
+		
 		long startTime = System.nanoTime();
 		
 		random = new Random(761234897);
 		
-		loadTypeRules();
-		
 		float incr = 20.0f/allPatternBasedRules.size();
 		
 		loadBannedPreSimplifyFunctions();
+		System.out.println("simplifying rules...");
 		for(int i = 0;i<allPatternBasedRules.size();i++) {//simplify
 			Rule r = (Rule)allPatternBasedRules.get(i);
 			boolean doNotSimplify = true;
@@ -470,12 +472,12 @@ public class Rule extends Expr{
 		
 		loadingPercent = 90;
 		
-		Ask.loadBasicQuestions();
-		
 		SimpleFuncs.FUNCTION_UNLOCKED = true;
 		
 		long endTime = System.nanoTime();
-		System.out.println("done loading and simplifying "+ruleCount+" Rules! took "+((endTime-startTime)/1000000.0)+" ms");
+		System.out.println("done simplifying "+ruleCount+" Rules! took "+((endTime-startTime)/1000000.0)+" ms");
+		
+		Ask.loadBasicQuestions();
 		
 		loadingPercent = 100;
 		ALL_LOADED = true;

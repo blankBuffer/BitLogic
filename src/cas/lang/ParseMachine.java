@@ -31,13 +31,62 @@ public class ParseMachine {
 	}
 	
 	public static abstract class ParseAction{
-		abstract void doAction(ParseNode parseNode) throws Exception;
+		abstract Object doAction(ParseNode parseNode) throws Exception;
 		void init() throws Exception{
 			
 		}
 	}
+	
+	public static final ParseAction generateStringAction = new ParseAction() {
+
+		@Override
+		Object doAction(ParseNode parseNode) throws Exception {
+			parseNode.generateStringToOutput();
+			return parseNode.getOutput();
+		}
+		
+	};
+	
+	public static final ParseAction generateIntegerAction = new ParseAction() {
+
+		@Override
+		Object doAction(ParseNode parseNode) throws Exception {
+			parseNode.generateIntegerToOutput();
+			return parseNode.getOutput();
+		}
+		
+	};
+	
+	public static final ParseAction generateBigIntAction = new ParseAction() {
+
+		@Override
+		Object doAction(ParseNode parseNode) throws Exception {
+			parseNode.generateBigIntToOutput();
+			return parseNode.getOutput();
+		}
+		
+	};
+	
+	public static final ParseAction generateFloat64Action = new ParseAction() {
+
+		@Override
+		Object doAction(ParseNode parseNode) throws Exception {
+			parseNode.generateFloat64ToOutput();
+			return parseNode.getOutput();
+		}
+		
+	};
+	
 	public static class ObjectBuilder{
 		private HashMap<String,ParseAction> parseNodeTypeToInstruction = new HashMap<String,ParseAction>();
+		ParseRule langDescription = null;
+		
+		public void setLang(ParseRule langDescription) {
+			this.langDescription = langDescription;
+		}
+		public void setLang(String metaLangFileName) throws Exception {
+			MetaLang.loadLanguageFromFile(metaLangFileName);
+		}
 		
 		public void addBuildInstruction(String type,ParseAction parseAction) {
 			parseNodeTypeToInstruction.put(type, parseAction);
@@ -51,6 +100,10 @@ public class ParseMachine {
 				System.err.println("Error encoutered in object builder initialization!");
 				e.printStackTrace();
 			}
+		}
+		public Object build(String toParse) {
+			ParseNode parseNode = baseParse(toParse, langDescription);
+			return build(parseNode);
 		}
 		public Object build(ParseNode node) {
 			try {
@@ -74,7 +127,7 @@ public class ParseMachine {
 			
 			ParseAction whatToDo = parseNodeTypeToInstruction.get(parseNode.type);
 			if(whatToDo != null) {
-				whatToDo.doAction(parseNode);
+				parseNode.setOutput(whatToDo.doAction(parseNode));
 			}
 		}
 	}
@@ -228,6 +281,11 @@ public class ParseMachine {
 		public void generateBigIntToOutput() {
 			generateStringToOutput();
 			this.setOutput(new BigInteger((String)this.getOutput()));
+		}
+		
+		public void generateFloat64ToOutput() {
+			generateStringToOutput();
+			this.setOutput(Double.parseDouble((String)this.getOutput()));
 		}
 		
 		@Override

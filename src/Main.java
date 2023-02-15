@@ -1,70 +1,73 @@
-import java.io.File;
-import java.util.Scanner;
-
 import cas.*;
 import cas.base.CasInfo;
-import cas.base.Expr;
-import cas.base.Rule;
 import cas.lang.Ask;
+import test.Tester;
 import ui.UI;
 
+/*
+ * The main entry class for the bitlogic program
+ */
 public class Main extends Cas{
 	
-	public static void runScript(String fileName,boolean verbose) {
-		Rule.loadCompileSimplifyRules();
-		long oldTime = System.nanoTime();
-		Scanner sc = null;
-		int currentLine = 0;
-		try {
-			sc = new Scanner(new File(fileName));
-			CasInfo casInfo = new CasInfo();
-			System.out.println("running "+fileName+" test script...");
-			while(sc.hasNextLine()) {
-				String line = sc.nextLine();
-				currentLine++;
-				if(line.startsWith("#")) continue;
-				if(verbose) System.out.print(line+" -> ");
-				Expr response = null;
-				
-				response = Ask.ask(line);
-				
-				if(response != null) {
-					if(verbose) System.out.print(response+" -> ");
-					response = response.simplify(casInfo);
-					if(verbose)System.out.println(response);
-				}
-			}
-			sc.close();
-		} catch (Exception e) {
-			e.printStackTrace();
-			System.out.println("fail at line: "+currentLine);
-			if(sc != null) sc.close();
-			return;
-		}
-		long delta = System.nanoTime() - oldTime;
-		System.out.println("took " + delta / 1000000.0 + " ms to finish script!");
-	}
+	//program start modes
 	
+	/*
+	 * start the program with swing UI
+	 * this has the plot and fancy math graphical text etc
+	 */
+	static final int GRAPHICAL_MODE = 0b0;
+	/*
+	 * this mode is like a machine query with a mix of features
+	 * it uses a mix of 
+	 *     natural language processing 
+	 *     RPN (reverse polish notation) with stack
+	 *     function syntax
+	 *     algebraic input (normal math notation)
+	 */
+	static final int TERMINAL_MODE = 0b1;
+	
+	/*
+	 * This mode is used just for testing and debugging
+	 */
+	static final int TEST_MODE = 0b10;
+	
+	/*
+	 * graphical mode is the default for now since simps will find that easy
+	 * TODO add a preference file for start mode
+	 */
+	static final int DEFAULT_START_MODE = GRAPHICAL_MODE;
+	
+	/*
+	 * Program flags are not case sensitive and minus '-' and '_' are ignored
+	 */
 	public static void main(String[] args) {
 		
-		Tester tester = new Tester();
-		tester.runAllTests(true);
 		
-		
-		
-		int gui = 1;
-		boolean clearTerm = false;
+		int startMode = DEFAULT_START_MODE;
+		boolean clearTerm = false;//flag for startCommandLineInterface
 		
 		for(int i = 0;i<args.length;i++) {
-			String arg = args[i];
-			if(arg.equals("gui")) gui = 1;
-			else if(arg.equals("no-gui")) gui = 2;
-			else if(arg.equals("clear-term")) clearTerm = true;
-			else if(arg.equals("-s")) {
-				runScript(args[i+1], true);
+			String arg = (args[i]).toLowerCase().replaceAll("[-_]", "");
+			
+			if(arg.equals("gui")) startMode = GRAPHICAL_MODE;
+			else if(arg.equals("nogui") || arg.equals("term")) startMode = TERMINAL_MODE;
+			else if(arg.equals("t") || arg.equals("test")) startMode = TEST_MODE;
+			
+			else if(arg.equals("ct") || arg.equals("clearterm")) clearTerm = true;
+			/*
+			 * run file line by line for testing. Simply pass fileName
+			 */
+			else if(arg.equals("s") || arg.equals("script")) {
+				String fileName = args[i+1];
+				Tester.runScript(fileName, true);
 				System.exit(0);
-			}else if(arg.equals("-e")) {
-				Rule.loadCompileSimplifyRules();
+			}
+			/*
+			 * simplify a single expression
+			 * example ./start e "5*7"
+			 */
+			else if(arg.equals("e") || arg.equals("execute")) {
+				Cas.load();
 				try {
 					String q = args[i+1];
 					System.out.println("question: "+q);
@@ -76,9 +79,10 @@ public class Main extends Cas{
 			}
 		}
 		
-		if(gui == 1) UI.startGraphicalInterface();
-		else if(gui == 2) UI.startCommandLineInterface(clearTerm);
-		
+		//start main user interfaces
+		if(startMode == GRAPHICAL_MODE) UI.startGraphicalInterface();
+		else if(startMode == TERMINAL_MODE) UI.startCommandLineInterface(clearTerm);
+		else if(startMode == TEST_MODE) UI.startTest();
 		
 	}
 

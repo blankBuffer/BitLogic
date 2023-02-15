@@ -4,8 +4,9 @@ import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
 
-import cas.base.Rule;
+import cas.Cas;
 import cas.programming.StackEditor;
+import test.Tester;
 
 public class UI {
 	
@@ -35,7 +36,9 @@ public class UI {
 		
 		System.out.println(UI.fancyIntro());
 		System.out.println("type \"quit\" and hit ENTER to quit");
-		Rule.loadCompileSimplifyRules();
+		
+		Cas.load();
+		
 		StackEditor editor = new StackEditor();
 		BufferedReader bf = new BufferedReader(new InputStreamReader(System.in));
 		
@@ -55,6 +58,11 @@ public class UI {
 			if(result == StackEditor.QUIT) break;
 		}
 		
+	}
+	
+	public static void startTest() {
+		Tester tester = new Tester();
+		tester.runAllTests(true);
 	}
 	
 	public static void startGraphicalInterface() {

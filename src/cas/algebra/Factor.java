@@ -87,15 +87,33 @@ public class Factor{
 		}
 	};
 	
+	/*
+	 * if the polynomial is in the form 
+	 * (x^n-b) such that n is even, then it becomes
+	 * (x^(n/2)-sqrt(b))*(x^(n/2)+sqrt(b))
+	 * 
+	 * there are some conditions to avoid square roots in the answer
+	 * 
+	 * TODO
+	 * potential issues factor(x^4-b^2) will work but factor(x^4-b^4) might not work
+	 * also it might be incompatible with the form -x^4+b since -x^4 wont be detected as a power
+	 * 
+	 * 
+	 */
 	static Rule power2Reduction = new Rule("power of 2 polynomial"){
 		@Override
 		public Expr applyRuleToExpr(Expr e,CasInfo casInfo) {
 			Func factor = (Func)e;
 			Expr expr = factor.get();
+			
+			//get the variable we are working with
 			Var v = mostCommonVar(expr);
+			
+			//if its a sum of length 2 and is in polynomial form
 			if(expr.typeName().equals("sum") && v!=null && expr.size() == 2 && isPlainPolynomial(expr,v)) {
 				Func pow = null;
 				Expr other = null;
+				//find x^n and b, two cases x^n+b or b+x^n
 				if(expr.get(0).typeName().equals("power")) {
 					pow = (Func)expr.get(0);
 					other = expr.get(1);
@@ -104,13 +122,20 @@ public class Factor{
 					other = expr.get(0);
 				}
 				
-				
+				//check if found and if b is negative and if exponent mod 2 is zero AKA even
 				if(pow != null && other != null && other.negative() && isPositiveRealNum(pow.getExpo()) && ((Num)pow.getExpo()).getRealValue().mod(BigInteger.TWO).equals(BigInteger.ZERO) ) {
+					//disable absolute value mode, example we don't want sqrt(x^2) to become abs(x) we just want x
 					CasInfo noAbsVersion = new CasInfo(casInfo);
 					noAbsVersion.setAllowAbs(false);
 					
-					Expr newPow = sqrt(pow).simplify(noAbsVersion);
-					Expr newOther = sqrt(neg(other)).simplify(noAbsVersion);
+					Expr newPow = sqrt(pow).simplify(noAbsVersion);//sqrt(x^n) = x^(n/2)
+					//the neg is there because the b term is technically (-b) so we have to make it positive again to avoid complex numbers
+					Expr newOther = sqrt(neg(other)).simplify(noAbsVersion);//sqrt(b)
+					
+					/*
+					 * make sure sqrt(b) does not result in a root or product as that increases complexity
+					 * why might it become a product? remember b could be an integer and that sqrt(12) results in 2*sqrt(3)
+					 */
 					
 					if(!(newOther.typeName().equals("power") || newOther.typeName().equals("prod"))) {
 						

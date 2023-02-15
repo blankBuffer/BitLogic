@@ -5,7 +5,6 @@ import cas.base.ComplexFloat;
 import cas.base.Expr;
 import cas.base.Func;
 import cas.base.Rule;
-import cas.lang.Interpreter;
 import cas.primitive.*;
 
 public class Define extends Expr{
@@ -36,7 +35,7 @@ public class Define extends Expr{
 			}else if(def.getLeftSide() instanceof Func) {
 				casInfo.definitions.addFuncRule(becomes(def.getLeftSide(),def.getRightSide()));
 			}
-			return Interpreter.SUCCESS;
+			return Var.SUCCESS;
 		}
 		
 	};
