@@ -2,7 +2,6 @@ package cas.base;
 
 import cas.Cas;
 import cas.primitive.Num;
-import cas.primitive.Sequence;
 import cas.primitive.Var;
 
 public class StandardRules extends Cas{
@@ -92,10 +91,10 @@ public class StandardRules extends Cas{
 			Expr expr = e.get();
 			Var v = e.getVar();
 			
-			Sequence res = seperateByVar(expr,v);
-			if(!res.get(0).equals(Num.ONE)) {
-				e.set(0, res.get(1));
-				return prod(res.get(0),e).simplify(casInfo);
+			Func resSequence = seperateByVar(expr,v);
+			if(!resSequence.get(0).equals(Num.ONE)) {
+				e.set(0, resSequence.get(1));
+				return prod(resSequence.get(0),e).simplify(casInfo);
 			}
 			
 			return e;

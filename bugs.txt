@@ -1,0 +1,5 @@
+sqrt((2*s+r)^2) - fixed
+
+solve x^2-r*x-s^2-r*s=0 in terms of x - works but result is ugly
+
+sqrt((-r)^2+1*((r+s)*s)*4) - fixed

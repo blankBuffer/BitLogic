@@ -65,7 +65,7 @@ public class MetaLang {
 					),
 					new ParseRule(ParseRule.MERGE,"comment",//comment merges with any character other than newline into its own node
 						ParseMachine.ruleNode("comment"),
-						ParseMachine.ruleNodeNegChar("\n")
+						ParseMachine.ruleNodeNegTypeClass(ParseMachine.ruleNodeChar("\n"))
 					),
 					new ParseRule("comment",
 						ParseMachine.ruleNodeChar("/"),
@@ -92,7 +92,15 @@ public class MetaLang {
 				),
 				
 				//token token :)
-				ParseMachine.tokenRule("token", "token"),
+				new ParseRule("token",
+						ParseMachine.ruleNodeChar("t"),
+						ParseMachine.ruleNodeChar("o"),
+						ParseMachine.ruleNodeChar("k"),
+						ParseMachine.ruleNodeChar("e"),
+						ParseMachine.ruleNodeChar("n"),
+						ParseMachine.contextRuleNode("paren")
+				),
+				//ParseMachine.tokenRule("token", "token"),
 				
 				//special token parse rule
 				new ParseRule("parseRule",

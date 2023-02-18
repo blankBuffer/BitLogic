@@ -7,6 +7,8 @@ import cas.base.CasInfo;
 import cas.base.Expr;
 import cas.base.Rule;
 import cas.lang.Ask;
+import cas.lang.MetaLang;
+import cas.lang.RpnInterpreter;
 
 
 /*
@@ -238,6 +240,9 @@ public class Tester {
 		if(verbose) System.out.println("running all tests");
 		
 		SimpleFuncs.functionsConstructor();
+		
+		MetaLang.init();
+		RpnInterpreter.test();
 		
 		/*
 		

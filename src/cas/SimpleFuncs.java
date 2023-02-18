@@ -100,6 +100,7 @@ public class SimpleFuncs extends Cas{
 	static Func approx;
 	static Func becomes,equ;
 	static Func exprSet;
+	static Func sequence;
 	static Func gcd;
 	static Func sum;
 	static Func div;
@@ -137,6 +138,7 @@ public class SimpleFuncs extends Cas{
 		becomes = new Func("becomes",2,Becomes.becomesLoader);
 		equ = new Func("equ",2,Equ.equLoader);
 		exprSet = new Func("set",-1,ExprSet.exprSetLoader);
+		sequence = new Func("sequence",-1,Sequence.sequenceLoader);
 		gcd = new Func("gcd",-1,Gcd.gcdLoader);
 		sum = new Func("sum",-1,Sum.sumLoader);
 		div = new Func("div",2,Div.divLoader);
@@ -261,6 +263,7 @@ public class SimpleFuncs extends Cas{
 		addFunc(fastEquals);
 		
 		addFunc(exprSet);
+		addFunc(sequence);
 		
 		for(String s:funcs.keySet()) {
 			functionNames.add(s);
@@ -774,7 +777,7 @@ public class SimpleFuncs extends Cas{
 				
 				int needed = ((Num)e.get(1)).getRealValue().intValue()-e.get().size();
 				
-				Expr extended = next( (Sequence)e.get() , num(needed) ).simplify(casInfo);
+				Expr extended = next( (Func)e.get() , num(needed) ).simplify(casInfo);
 				
 				if(extended instanceof Next) {
 					for(int i = 0;i<needed;i++) {
@@ -795,11 +798,11 @@ public class SimpleFuncs extends Cas{
 			public Expr applyRuleToExpr(Expr e,CasInfo casInfo) {
 				int newSize = ((Num)e.get(1)).getRealValue().intValue();
 				
-				Sequence truncated = new Sequence();
+				Func truncatedSequence = sequence();
 				for(int i = 0;i<newSize;i++) {
-					truncated.add(e.get(0).get(i));
+					truncatedSequence.add(e.get(0).get(i));
 				}
-				return truncated;
+				return truncatedSequence;
 			}
 		};
 		subSeq.behavior.rule = new Rule("get the sub sequence from start to end, end is non inclusive") {
@@ -809,35 +812,35 @@ public class SimpleFuncs extends Cas{
 				int start = ((Num)e.get(1)).getRealValue().intValue();
 				int end = ((Num)e.get(2)).getRealValue().intValue();
 				
-				Sequence truncated = new Sequence();
+				Func truncatedSequence = sequence();
 				for(int i = start;i<end;i++) {
-					truncated.add(e.get(0).get(i));
+					truncatedSequence.add(e.get(0).get(i));
 				}
-				return truncated;
+				return truncatedSequence;
 			}
 		};
 		revSeq.behavior.rule = new Rule("revserse the sequence") {
 			
 			@Override
 			public Expr applyRuleToExpr(Expr e,CasInfo casInfo) {
-				Sequence oldSeq = (Sequence)e.get(0);
-				Sequence newSeq = new Sequence();
+				Func oldSequence = (Func)e.get(0);
+				Func newSequence = sequence();
 				
-				for(int i = oldSeq.size()-1;i>=0;i--) {
-					newSeq.add(oldSeq.get(i));
+				for(int i = oldSequence.size()-1;i>=0;i--) {
+					newSequence.add(oldSequence.get(i));
 				}
 				
-				return newSeq;
+				return newSequence;
 			}
 		};
 		sumSeq.behavior.rule = new Rule("add elements of sequence"){
 			
 			@Override
 			public Expr applyRuleToExpr(Expr e,CasInfo casInfo) {
-				Sequence seq = (Sequence)e.get();
+				Func sequence = (Func)e.get();
 				Func sum = sum();
-				for(int i = 0;i<seq.size();i++) {
-					sum.add(seq.get(i));
+				for(int i = 0;i<sequence.size();i++) {
+					sum.add(sequence.get(i));
 				}
 				return sum.simplify(casInfo);
 			}
@@ -1004,11 +1007,11 @@ public class SimpleFuncs extends Cas{
 			
 			@Override
 			public Expr applyRuleToExpr(Expr e,CasInfo casInfo) {
-				Sequence poly = polyExtract(e.get(0), (Var)e.get(1) ,casInfo);
+				Func polySequence = polyExtract(e.get(0), (Var)e.get(1) ,casInfo);
 				Func solutionsSet = exprSet();
 				
-				if(poly!=null) {
-					ArrayList<Double> solutionsArrayList = Solve.polySolve(poly);
+				if(polySequence!=null) {
+					ArrayList<Double> solutionsArrayList = Solve.polySolve(polySequence);
 					for(double solution:solutionsArrayList) {
 						solutionsSet.add(floatExpr(solution));
 					}
@@ -1126,9 +1129,9 @@ public class SimpleFuncs extends Cas{
 		if(funcName.equals("exp")) return exp(params[0]);
 		if(funcName.equals("inv")) return inv(params[0]);
 		if(funcName.equals("neg")) return neg(params[0]);
-		if(funcName.equals("mat")) return mat((Sequence)params[0]);
+		if(funcName.equals("mat")) return mat((Func)params[0]);
 		if(funcName.equals("transpose")) return transpose(params[0]);
-		if(funcName.equals("next")) return next((Sequence)params[0],(Num)params[1]);
+		if(funcName.equals("next")) return next((Func)params[0],(Num)params[1]);
 		
 		if(funcName.equals("gcd")) return gcd(params);
 		

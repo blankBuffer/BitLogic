@@ -17,9 +17,9 @@ public class BoolTableToExpr{
 				Expr generateTerm(Func inOutBecomes,Func vars) {
 					if(Becomes.getRightSide(inOutBecomes).equals(BoolState.TRUE)) {
 						Func termAnd = and();
-						Sequence in = (Sequence) Becomes.getLeftSide(inOutBecomes);
-						for(int i = 0;i<in.size();i++) {
-							if(in.get(i).equals(BoolState.TRUE)) {
+						Func inSequence = (Func) Becomes.getLeftSide(inOutBecomes);
+						for(int i = 0;i<inSequence.size();i++) {
+							if(inSequence.get(i).equals(BoolState.TRUE)) {
 								termAnd.add( vars.get(i) );
 							}else {
 								termAnd.add( not(vars.get(i)) );

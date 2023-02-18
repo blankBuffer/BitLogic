@@ -5,7 +5,6 @@ import cas.base.ComplexFloat;
 import cas.base.Expr;
 import cas.base.Func;
 import cas.base.Rule;
-import cas.primitive.Sequence;
 
 public class Transpose extends Expr{
 	public Transpose(){}//
@@ -69,12 +68,12 @@ public class Transpose extends Expr{
 			if(e.get() instanceof Mat) {
 				Mat mat = (Mat)e.get();
 				
-				Sequence newRows = new Sequence();
+				Func newRowsSequence = sequence();
 				for(int i = 0;i<mat.cols();i++) {
-					newRows.add(mat.getCol(i));
+					newRowsSequence.add(mat.getCol(i));
 				}
 				
-				return mat(newRows);
+				return mat(newRowsSequence);
 			}
 			return e;
 		}

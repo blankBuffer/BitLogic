@@ -200,10 +200,10 @@ public class Plot extends JPanel{
 		}
 	}
 	
-	static void renderPlots2D(Graphics g,Sequence stack,PlotWindowParams plotWindowParams,Dimension windowSize,int detail){//renders all the lines and geometry
+	static void renderPlots2D(Graphics g,Func stackSequence,PlotWindowParams plotWindowParams,Dimension windowSize,int detail){//renders all the lines and geometry
 		
-		for(int i = 0;i<stack.size();i++) {
-			Expr expr = stack.get(i);
+		for(int i = 0;i<stackSequence.size();i++) {
+			Expr expr = stackSequence.get(i);
 			
 			if(expr.typeName().equals("hide")) continue;
 			if(expr.typeName().equals("show")) expr = expr.get();
@@ -223,9 +223,9 @@ public class Plot extends JPanel{
 				}else {
 					equPlot2D(g,expr,plotWindowParams,windowSize,detail);
 				}
-			}else if(expr.typeName().equals("set") || expr instanceof Sequence){
-				Sequence subList = Sequence.cast(expr);
-				renderPlots2D(g,subList,plotWindowParams,windowSize,detail);
+			}else if(expr.typeName().equals("set") || expr.typeName().equals("sequence")){
+				Func subSequence = Sequence.cast(expr);
+				renderPlots2D(g,subSequence,plotWindowParams,windowSize,detail);
 			}else if(expr.typeName().equals("point")) {
 				double x = expr.get(0).convertToFloat(Cas.exprSet()).real;
 				double y = expr.get(1).convertToFloat(Cas.exprSet()).real;
@@ -240,7 +240,7 @@ public class Plot extends JPanel{
 		}
 	}
 	
-	public static BufferedImage renderGraph2D(Sequence stack,PlotWindowParams plotWindowParams,Dimension windowSize,Color backgroundColor,Color foregroundColor,int detail) {
+	public static BufferedImage renderGraph2D(Func stackSequence,PlotWindowParams plotWindowParams,Dimension windowSize,Color backgroundColor,Color foregroundColor,int detail) {
 		BufferedImage out = new BufferedImage((int)windowSize.getWidth(),(int)windowSize.getHeight(),BufferedImage.TYPE_INT_RGB);
 		
 		Graphics g = out.createGraphics();
@@ -252,7 +252,7 @@ public class Plot extends JPanel{
 		g2.setStroke(new BasicStroke(4));
 		
 		
-		renderPlots2D(g,stack,plotWindowParams,windowSize,detail);
+		renderPlots2D(g,stackSequence,plotWindowParams,windowSize,detail);
 		DecimalFormat numberFormat = new DecimalFormat("#.000");
 		
 		g.setColor(foregroundColor);
@@ -315,7 +315,7 @@ public class Plot extends JPanel{
 		}
 	}
 	
-	public static BufferedImage renderGraph3D(Sequence stack,PlotWindowParams plotWindowParams,Dimension windowSize,Color backgroundColor,Color foregroundColor,int resolution) {
+	public static BufferedImage renderGraph3D(Func stackSequence,PlotWindowParams plotWindowParams,Dimension windowSize,Color backgroundColor,Color foregroundColor,int resolution) {
 		BufferedImage out = new BufferedImage((int)windowSize.getWidth(),(int)windowSize.getHeight(),BufferedImage.TYPE_INT_RGB);
 		
 		Graphics g = out.createGraphics();
@@ -323,7 +323,7 @@ public class Plot extends JPanel{
 		g.setColor(backgroundColor);
 		g.fillRect(0, 0, (int)windowSize.getWidth(), (int)windowSize.getHeight());
 		
-		if(stack.size()>0) {
+		if(stackSequence.size()>0) {
 			
 			g.setColor(foregroundColor);
 			
@@ -336,7 +336,7 @@ public class Plot extends JPanel{
 			int xRes = resolution,yRes = resolution;
 			Point[][] points = new Point[yRes][xRes];
 			
-			Expr function = stack.get(stack.size()-1);
+			Expr function = stackSequence.get(stackSequence.size()-1);
 			//calculate function
 			for(int yIndex = 0;yIndex < yRes;yIndex++) {
 				double y = (plotWindowParams.yMax-plotWindowParams.yMin)*((double)yIndex/(yRes-1))+plotWindowParams.yMin;
@@ -426,13 +426,13 @@ public class Plot extends JPanel{
 		return out;
 	}
 	
-	public static BufferedImage renderGraphComplex(Sequence stack,PlotWindowParams plotWindowParams,Dimension windowSize,int detail) {
+	public static BufferedImage renderGraphComplex(Func stackSequence,PlotWindowParams plotWindowParams,Dimension windowSize,int detail) {
 		BufferedImage out = new BufferedImage((int)windowSize.getWidth(),(int)windowSize.getHeight(),BufferedImage.TYPE_INT_RGB);
 		Graphics g = out.createGraphics();
 		
-		if(stack.size() > 0) {
+		if(stackSequence.size() > 0) {
 
-			Expr expr = stack.get(stack.size()-1);
+			Expr expr = stackSequence.get(stackSequence.size()-1);
 			
 			Func varDefEqu = Cas.equ(Cas.var("z"),Cas.floatExpr(0));
 			Func varDefsSet = Cas.exprSet();
@@ -469,9 +469,9 @@ public class Plot extends JPanel{
 	BufferedImage graphImage = null;//cached plot image so it does not redraw when nothing changes
 	int lastGraphHash = 0;
 	
-	void renderGraphWithMouse(Graphics graphics,Sequence stack,int mode) {//everything, the background the plots
+	void renderGraphWithMouse(Graphics graphics,Func stackSequence,int mode) {//everything, the background the plots
 		//create hash
-		int stackHash = stack.hashCode();
+		int stackHash = stackSequence.hashCode();
 		
 		stackHash+=Double.hashCode(plotParams.xMin)*908305804;
 		stackHash+=Double.hashCode(plotParams.xMax)*879128337;
@@ -489,17 +489,17 @@ public class Plot extends JPanel{
 		int defaultDetail = 4;
 		int defaultResolution = 48;
 		if(mode == MODE_2D) {
-			if(graphImage == null) graphImage = renderGraph2D(stack,plotParams,getSize(),backgroundColor,foregroundColor,defaultDetail);
+			if(graphImage == null) graphImage = renderGraph2D(stackSequence,plotParams,getSize(),backgroundColor,foregroundColor,defaultDetail);
 		
 			graphics.drawImage(graphImage,0,0,null);
 			graphics.setColor(foregroundColor);
 			graphics.drawString("x: "+(float)convertToInternalPositionX(mouseX,plotParams,getSize()), mouseX+40, mouseY);
 			graphics.drawString("y: "+(float)convertToInternalPositionY(mouseY,plotParams,getSize()), mouseX+40, mouseY+20);
 		}else if(mode == MODE_3D) {
-			if(graphImage == null) graphImage = renderGraph3D(stack,plotParams,getSize(),backgroundColor,foregroundColor,defaultResolution);
+			if(graphImage == null) graphImage = renderGraph3D(stackSequence,plotParams,getSize(),backgroundColor,foregroundColor,defaultResolution);
 			graphics.drawImage(graphImage,0,0,null);
 		}else if(mode == MODE_COMPLEX) {
-			if(graphImage == null) graphImage = renderGraphComplex(stack,plotParams,getSize(),defaultDetail);
+			if(graphImage == null) graphImage = renderGraphComplex(stackSequence,plotParams,getSize(),defaultDetail);
 		
 			graphics.drawImage(graphImage,0,0,null);
 			graphics.drawString("R: "+(float)convertToInternalPositionX(mouseX,plotParams,getSize()), mouseX+40, mouseY);
@@ -509,7 +509,7 @@ public class Plot extends JPanel{
 	
 	@Override
 	public void paintComponent(Graphics g) {
-		renderGraphWithMouse(g,stackEditor.stack,mode);
+		renderGraphWithMouse(g,stackEditor.stackSequence,mode);
 	}
 	
 	public Plot(StackEditor stackEditor) {

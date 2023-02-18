@@ -357,23 +357,23 @@ public class Limit extends Expr{
 				Func innerSum = (Func)lim.getExpr();
 				
 				for(int i = 0;i<innerSum.size();i++) {
-					Sequence parts = seperateByVar(innerSum.get(i),lim.getVar());
-					if(Rule.similarWithCondition(rootForm, parts.get(1), condition)) {
-						Func innerPow = (Func)parts.get(1);
-						Sequence innerPoly = polyExtract(innerPow.getBase(),lim.getVar(),casInfo);
-						if(innerPoly == null) return lim;
+					Func partsSequence = seperateByVar(innerSum.get(i),lim.getVar());
+					if(Rule.similarWithCondition(rootForm, partsSequence.get(1), condition)) {
+						Func innerPow = (Func)partsSequence.get(1);
+						Func innerPolySequence = polyExtract(innerPow.getBase(),lim.getVar(),casInfo);
+						if(innerPolySequence == null) return lim;
 						Num n = (Num) ((Func)innerPow.getExpo()).getDenom();
 						if(!isPositiveRealNum(n)) return lim;
-						if(innerPoly.size()-1 == n.getRealValue().intValue()) {
-							Expr a = innerPoly.get(innerPoly.size()-1);
-							Expr b = innerPoly.get(innerPoly.size()-2);
+						if(innerPolySequence.size()-1 == n.getRealValue().intValue()) {
+							Expr a = innerPolySequence.get(innerPolySequence.size()-1);
+							Expr b = innerPolySequence.get(innerPolySequence.size()-2);
 							
 							Expr repl = null;
 							
 							if(lim.getValue().equals(Var.INF) || n.getRealValue().mod(BigInteger.TWO).equals(BigInteger.ONE)) {
-								repl = sum(prod(power(a,inv(n)),lim.getVar(),parts.get(0)), div(prod(b,power(a,inv(n)),parts.get(0)),prod(a,n)) );
+								repl = sum(prod(power(a,inv(n)),lim.getVar(),partsSequence.get(0)), div(prod(b,power(a,inv(n)),partsSequence.get(0)),prod(a,n)) );
 							}else {
-								repl = sum(prod(num(-1),power(a,inv(n)),lim.getVar(),parts.get(0)), div(prod(num(-1),b,power(a,inv(b)),parts.get(0)),prod(a,n)) );
+								repl = sum(prod(num(-1),power(a,inv(n)),lim.getVar(),partsSequence.get(0)), div(prod(num(-1),b,power(a,inv(b)),partsSequence.get(0)),prod(a,n)) );
 							}
 							
 							innerSum.set(i, repl);

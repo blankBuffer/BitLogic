@@ -10,14 +10,14 @@ import cas.primitive.Sequence;
 public class Mat extends Expr{
 	
 	public Mat(){}//
-	public Mat(Sequence e) {
-		add(e);
+	public Mat(Func sequenceExpr) {
+		add(sequenceExpr);
 	}
 	
 	public Mat(int rows, int cols) {
-		Sequence allRows = new Sequence();
+		Func allRows = sequence();
 		for(int i = 0;i<rows;i++) {
-			Sequence row = new Sequence();
+			Func row = sequence();
 			for(int j = 0;j<cols;j++) row.add(num(0));
 			
 			allRows.add(row);
@@ -32,12 +32,12 @@ public class Mat extends Expr{
 		return get().size();
 	}
 	
-	public Sequence getRow(int row) {
-		return (Sequence)get().get(row);
+	public Func getRow(int row) {//returns sequence
+		return (Func)get().get(row);
 	}
 	
-	public Sequence getCol(int col) {
-		Sequence out = sequence();
+	public Func getCol(int col) {//returns sequence
+		Func out = sequence();
 		
 		for(int i = 0;i<rows();i++) {
 			out.add( getRow(i).get(col) );
@@ -57,11 +57,11 @@ public class Mat extends Expr{
 	}
 	
 	public boolean correctFormat() {
-		if(!(get() instanceof Sequence)) return false;
-		Sequence inner = (Sequence)get();
-		if(inner.size() == 0) return false;
-		for(int i = 0;i<inner.size();i++) {
-			if(!(inner.get(i) instanceof Sequence && getRow(i).size() == cols()  )) return false;
+		if(!(get().typeName().equals("sequence"))) return false;
+		Func innerSequence = (Func)get();
+		if(innerSequence.size() == 0) return false;
+		for(int i = 0;i<innerSequence.size();i++) {
+			if(!(innerSequence.get(i).typeName().equals("sequence") && getRow(i).size() == cols()  )) return false;
 		}
 		
 		return true;
@@ -71,17 +71,17 @@ public class Mat extends Expr{
 		@Override
 		public Expr applyRuleToExpr(Expr e,CasInfo casInfo) {
 			Mat mat = (Mat)e;
-			Sequence inner = Sequence.cast( mat.get() );
+			Func innerSequence = Sequence.cast( mat.get() );
 			
-			for(int i = 0;i < inner.size();i++) {
-				if(!(inner.get(i) instanceof Sequence)) {
-					inner.set(i, Sequence.cast(inner.get(i)));
+			for(int i = 0;i < innerSequence.size();i++) {
+				if(!(innerSequence.get(i).typeName().equals("sequence"))) {
+					innerSequence.set(i, Sequence.cast(innerSequence.get(i)));
 				}
 			}
 			
-			if(inner.size() == 0) inner.add(sequence());
+			if(innerSequence.size() == 0) innerSequence.add(sequence());
 			
-			mat.set(0, inner);
+			mat.set(0, innerSequence);
 			
 			return mat;
 		}

@@ -353,7 +353,7 @@ public class ExprRender extends Cas{//sort of a wrap of the image type but keeps
 				for(int i = 0;i<imgs.size();i++)exprImgs[i] = imgs.get(i);
 						
 				makeImgSeries(exprImgs);
-			}else if(e.typeName().equals("set") || e instanceof Sequence) {
+			}else if(e.typeName().equals("set") || e.typeName().equals("sequence")) {
 				ExprImg leftBrac = newExprImg();
 				ExprImg rightBrac = newExprImg();
 				

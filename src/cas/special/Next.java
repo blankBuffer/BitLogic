@@ -16,13 +16,13 @@ public class Next extends Expr{
 	
 	public Next() {}//
 	
-	public Next(Sequence sequence,Num steps) {
+	public Next(Func sequence,Num steps) {
 		add(sequence);
 		add(steps);
 	}
 	
-	public Sequence getSequence() {
-		return (Sequence)get();
+	public Func getSequence() {
+		return (Func)get();
 	}
 	
 	public Num getNum() {//number of new terms we want to generate
@@ -34,20 +34,20 @@ public class Next extends Expr{
 		@Override
 		public Expr applyRuleToExpr(Expr e,CasInfo casInfo) {
 			Next next = (Next)e;
-			Sequence s = next.getSequence();
+			Func seq = next.getSequence();
 			
-			if(s.size()>=4) {
-				Expr first = s.get(0);
-				Expr second = s.get(1);
-				for(int i = 2;i<s.size();i++) {
+			if(seq.size()>=4) {
+				Expr first = seq.get(0);
+				Expr second = seq.get(1);
+				for(int i = 2;i<seq.size();i++) {
 					Expr expected = sum(first,second).simplify(casInfo);
-					if(s.get(i).equals(expected)) {
+					if(seq.get(i).equals(expected)) {
 						first = second;
 						second = expected;
 						
 					}else return next;
 				}
-				Sequence newSeq = new Sequence();
+				Func newSeq = sequence();
 				for(int i = 0;i<next.getNum().getRealValue().intValue();i++) {
 					Expr expected = sum(first,second).simplify(casInfo);
 					newSeq.add(expected);
@@ -74,13 +74,13 @@ public class Next extends Expr{
 		public Expr applyRuleToExpr(Expr e,CasInfo casInfo) {
 			if(USED_GEO) return e;
 			Next next = (Next)e;
-			Sequence s = next.getSequence();
-			if(s.size()>=4) {
-				Sequence ratioSequence = new Sequence();
-				for(int i = 1;i<s.size();i++) {
-					if(s.get(i-1).equals(Num.ZERO)) return next;//cant divide by zero
+			Func seq = next.getSequence();
+			if(seq.size()>=4) {
+				Func ratioSequence = sequence();
+				for(int i = 1;i<seq.size();i++) {
+					if(seq.get(i-1).equals(Num.ZERO)) return next;//cant divide by zero
 					
-					Expr ratio = div(s.get(i),s.get(i-1)).simplify(casInfo);
+					Expr ratio = div(seq.get(i),seq.get(i-1)).simplify(casInfo);
 					ratioSequence.add(ratio);
 				}
 				USED_GEO = true;
@@ -89,8 +89,8 @@ public class Next extends Expr{
 				
 				if(nextRatios instanceof Next) return next;
 				
-				Sequence newSeq = new Sequence();
-				Expr last = s.get(s.size()-1);
+				Func newSeq = sequence();
+				Expr last = seq.get(seq.size()-1);
 				for(int i = 0;i<next.getNum().getRealValue().intValue();i++) {
 					last = prod(last,nextRatios.get(i)).simplify(casInfo);
 					newSeq.add(last);
@@ -108,16 +108,16 @@ public class Next extends Expr{
 		@Override
 		public Expr applyRuleToExpr(Expr e,CasInfo casInfo) {
 			Next next = (Next)e;
-			Sequence s = next.getSequence();
+			Func seq = next.getSequence();
 			
-			Expr start = s.get(0);
-			outer:for(int loopSize = 1;loopSize<s.size()/2+1;loopSize++) {
-				if(s.get(loopSize).equals(start)) {
-					for(int i = loopSize;i<s.size();i++) {
-						if(!s.get(i).equals(s.get(i%loopSize))) continue outer;
+			Expr start = seq.get(0);
+			outer:for(int loopSize = 1;loopSize<seq.size()/2+1;loopSize++) {
+				if(seq.get(loopSize).equals(start)) {
+					for(int i = loopSize;i<seq.size();i++) {
+						if(!seq.get(i).equals(seq.get(i%loopSize))) continue outer;
 					}
-					Sequence newSeq = new Sequence();
-					for(int i = 0;i<next.getNum().getRealValue().intValue();i++) newSeq.add(s.get( (s.size()+i)%loopSize ));
+					Func newSeq = sequence();
+					for(int i = 0;i<next.getNum().getRealValue().intValue();i++) newSeq.add(seq.get( (seq.size()+i)%loopSize ));
 					return newSeq;
 				}
 			}	
@@ -138,21 +138,21 @@ public class Next extends Expr{
 		public Expr applyRuleToExpr(Expr e,CasInfo casInfo) {
 			if(USED_STEP || USED_GEO || USED_COEF) return e;
 			Next next = (Next)e;
-			Sequence s = next.getSequence();
+			Func seq = next.getSequence();
 			
-			outer:for(int step = 2;step<=6 && s.size()/step>=3;step++) {//limit to 6 and number of cycles >= 3
+			outer:for(int step = 2;step<=6 && seq.size()/step>=3;step++) {//limit to 6 and number of cycles >= 3
 				//System.out.println("str:"+step+" "+e);
 				
-				Sequence[] subSequences = new Sequence[step];
-				for(int i = 0;i<subSequences.length;i++) subSequences[i] = new Sequence();
+				Func[] subSequences = new Func[step];
+				for(int i = 0;i<subSequences.length;i++) subSequences[i] = sequence();
 				
-				for(int i = 0;i<s.size();i++) {
-					subSequences[i%step].add(s.get(i));
+				for(int i = 0;i<seq.size();i++) {
+					subSequences[i%step].add(seq.get(i));
 				}
 				
 				//for(int i = 0;i<subSequences.length;i++) System.out.println(subSequences[i]);
 				
-				int startingPoint = s.size()%step;
+				int startingPoint = seq.size()%step;
 				int remain = next.getNum().getRealValue().intValue();
 				
 				int maxChunkSize = remain/step;
@@ -187,17 +187,17 @@ public class Next extends Expr{
 				
 				int[] indexTracker = new int[step];
 				
-				Sequence out = new Sequence();
+				Func outSeq = sequence();
 				for(int i = startingPoint;i<startingPoint+remain;i++) {
 					int j = i%step;
 					if(chunkSizes[j]>0) {
-						out.add(contSequences[j].get(indexTracker[j]));
+						outSeq.add(contSequences[j].get(indexTracker[j]));
 						indexTracker[j]++;
 						chunkSizes[j]--;
 					}
 				}
 				System.out.println(step);
-				return out;
+				return outSeq;
 				
 			}
 			
@@ -216,27 +216,27 @@ public class Next extends Expr{
 			if(USED_COEF) return e;
 			
 			Next next = (Next)e;
-			Sequence s = next.getSequence();
+			Func seq = next.getSequence();
 			
-			if(!s.containsVars()) return next;
+			if(!seq.containsVars()) return next;
 			
-			Sequence coefs = new Sequence();
-			Sequence exprs = new Sequence();
+			Func coefsSeq = sequence();
+			Func exprsSeq = sequence();
 			
-			for(int i = 0;i<s.size();i++) {
-				Sequence part = seperateCoef(s.get(i));
+			for(int i = 0;i<seq.size();i++) {
+				Func partsSeq = seperateCoef(seq.get(i));
 				
-				coefs.add(part.get(0));
-				exprs.add(part.get(1));
+				coefsSeq.add(partsSeq.get(0));
+				exprsSeq.add(partsSeq.get(1));
 			}
 			USED_COEF = true;
-			Expr nextCoefs = next(coefs,next.getNum()).simplify(casInfo);
-			Expr nextExprs = next(exprs,next.getNum()).simplify(casInfo);
+			Expr nextCoefs = next(coefsSeq,next.getNum()).simplify(casInfo);
+			Expr nextExprs = next(exprsSeq,next.getNum()).simplify(casInfo);
 			USED_COEF = false;
 			
 			if(nextCoefs instanceof Next || nextExprs instanceof Next) return next;
 			
-			Sequence newSeq = new Sequence();
+			Func newSeq = sequence();
 			for(int i = 0;i<next.getNum().getRealValue().intValue();i++) {
 				newSeq.add(prod(nextCoefs.get(i),nextExprs.get(i)).simplify(casInfo));
 			}
@@ -248,26 +248,26 @@ public class Next extends Expr{
 		@Override
 		public Expr applyRuleToExpr(Expr e,CasInfo casInfo) {
 			Next next = (Next)e;
-			Sequence s = next.getSequence();
+			Func seq = next.getSequence();
 			
-			if(s.get(0).typeName().equals("div") || s.get(1).typeName().equals("div")) {
+			if(seq.get(0).typeName().equals("div") || seq.get(1).typeName().equals("div")) {
 				
-				Sequence numerS = new Sequence();
-				Sequence denomS = new Sequence();
+				Func numerSeq = sequence();
+				Func denomSeq = sequence();
 				
-				for(int i = 0;i<s.size();i++) {
-					Func div = Div.cast(s.get(i));
+				for(int i = 0;i<seq.size();i++) {
+					Func div = Div.cast(seq.get(i));
 					
-					numerS.add(div.getNumer());
-					denomS.add(div.getDenom());
+					numerSeq.add(div.getNumer());
+					denomSeq.add(div.getDenom());
 				}
 				
-				Expr nextNumers = next(numerS,next.getNum()).simplify(casInfo);
-				Expr nextDenoms = next(denomS,next.getNum()).simplify(casInfo);
+				Expr nextNumers = next(numerSeq,next.getNum()).simplify(casInfo);
+				Expr nextDenoms = next(denomSeq,next.getNum()).simplify(casInfo);
 				
 				if(nextNumers instanceof Next || nextDenoms instanceof Next) return next;
 				
-				Sequence newSeq = new Sequence();
+				Func newSeq = sequence();
 				for(int i = 0;i<next.getNum().getRealValue().intValue();i++) {
 					newSeq.add(div(nextNumers.get(i),nextDenoms.get(i)).simplify(casInfo));
 				}
@@ -286,26 +286,26 @@ public class Next extends Expr{
 		@Override
 		public Expr applyRuleToExpr(Expr e,CasInfo casInfo) {
 			Next next = (Next)e;
-			Sequence s = next.getSequence();
+			Func seq = next.getSequence();
 			
-			if(s.get(0).typeName().equals("power") || s.get(1).typeName().equals("power") || s.get(s.size()-1).typeName().equals("power") || s.get(s.size()-2).typeName().equals("power")) {
+			if(seq.get(0).typeName().equals("power") || seq.get(1).typeName().equals("power") || seq.get(seq.size()-1).typeName().equals("power") || seq.get(seq.size()-2).typeName().equals("power")) {
 				
-				Sequence baseS = new Sequence();
-				Sequence expoS = new Sequence();
+				Func baseSeq = sequence();
+				Func expoSeq = sequence();
 				
-				for(int i = 0;i<s.size();i++) {
-					Func pow = Power.cast(s.get(i));
+				for(int i = 0;i<seq.size();i++) {
+					Func pow = Power.cast(seq.get(i));
 					
-					baseS.add(pow.getBase());
-					expoS.add(pow.getExpo());
+					baseSeq.add(pow.getBase());
+					expoSeq.add(pow.getExpo());
 				}
 				
-				Expr nextBases = next(baseS,next.getNum()).simplify(casInfo);
-				Expr nextExpos = next(expoS,next.getNum()).simplify(casInfo);
+				Expr nextBases = next(baseSeq,next.getNum()).simplify(casInfo);
+				Expr nextExpos = next(expoSeq,next.getNum()).simplify(casInfo);
 				
 				if(nextBases instanceof Next || nextExpos instanceof Next) return next;
 				
-				Sequence newSeq = new Sequence();
+				Func newSeq = sequence();
 				for(int i = 0;i<next.getNum().getRealValue().intValue();i++) {
 					newSeq.add(power(nextBases.get(i),nextExpos.get(i)).simplify(casInfo));
 				}
@@ -321,38 +321,40 @@ public class Next extends Expr{
 	 * standard way of predicting the next number in a sequences
 	 */
 	static Rule polynomial = new Rule("is a polynomial sequence") {
-		boolean allSame(Sequence s) {
-			for(int i = 1;i<s.size();i++) {
-				if(!s.get(i).equals(s.get(0))) return false;
+		boolean allSame(Func seq) {
+			for(int i = 1;i<seq.size();i++) {
+				if(!seq.get(i).equals(seq.get(0))) return false;
 			}
 			return true;
 		}
 		
-		Sequence getDifferenceSequence(Sequence original,CasInfo casInfo) {
-			Sequence newSequence = new Sequence();
-			for(int i = 0;i<original.size()-1;i++) {
-				newSequence.add( sub(original.get(i+1),original.get(i)).simplify(casInfo) );
+		//returns sequence
+		Func getDifferenceSequence(Func originalSequence,CasInfo casInfo) {
+			Func newSequence = sequence();
+			for(int i = 0;i<originalSequence.size()-1;i++) {
+				newSequence.add( sub(originalSequence.get(i+1),originalSequence.get(i)).simplify(casInfo) );
 			}
 			return newSequence;
 		}
 		
-		Sequence getNext(Sequence s,CasInfo casInfo,int size,int num) {
+		//returns sequence
+		Func getNext(Func sequence,CasInfo casInfo,int size,int num) {
 			if(size == 0) return null;
-			Sequence newSeq = new Sequence();
-			if(allSame(s)) {
+			Func newSeq = sequence();
+			if(allSame(sequence)) {
 				for(int i = 0;i<num;i++) {
-					newSeq.add(s.get(0));
+					newSeq.add(sequence.get(0));
 				}
 				return newSeq;
 			}
-			Sequence difference = getDifferenceSequence(s,casInfo);
+			Func differenceSequence = getDifferenceSequence(sequence,casInfo);
 			
-			Sequence deltas = getNext(difference,casInfo,size-1,num);
-			if(deltas == null) return null;
+			Func deltasSequence = getNext(differenceSequence,casInfo,size-1,num);
+			if(deltasSequence == null) return null;
 			
-			newSeq.add( sum(s.get(s.size()-1),deltas.get(0)).simplify(casInfo) );
+			newSeq.add( sum(sequence.get(sequence.size()-1),deltasSequence.get(0)).simplify(casInfo) );
 			for(int i = 1;newSeq.size()<num;i++) {
-				newSeq.add( sum(newSeq.get(newSeq.size()-1),deltas.get(i)).simplify(casInfo) );
+				newSeq.add( sum(newSeq.get(newSeq.size()-1),deltasSequence.get(i)).simplify(casInfo) );
 			}
 			
 			return newSeq;
@@ -361,8 +363,8 @@ public class Next extends Expr{
 		@Override
 		public Expr applyRuleToExpr(Expr e,CasInfo casInfo) {
 			Next next = (Next)e;
-			Sequence s = next.getSequence();
-			Expr expected = getNext(s,casInfo,s.size()/2+1,next.getNum().getRealValue().intValue());
+			Func sequence = next.getSequence();
+			Expr expected = getNext(sequence,casInfo,sequence.size()/2+1,next.getNum().getRealValue().intValue());
 			
 			if(expected != null) {
 				return expected;
@@ -377,13 +379,13 @@ public class Next extends Expr{
 		@Override
 		public Expr applyRuleToExpr(Expr e,CasInfo casInfo) {
 			Next next = (Next)e;
-			if(next.getNum().equals(Num.ZERO)) return new Sequence();
+			if(next.getNum().equals(Num.ZERO)) return sequence();
 			else if(next.getSequence().size() == 1) {
-				Sequence out = new Sequence();
+				Func outSequence = sequence();
 				for(int i = 0;i<next.getNum().getRealValue().intValue();i++) {
-					out.add(next.getSequence().get());
+					outSequence.add(next.getSequence().get());
 				}
-				return out;
+				return outSequence;
 			}
 			return next;
 		}
@@ -396,13 +398,13 @@ public class Next extends Expr{
 		@Override
 		public Expr applyRuleToExpr(Expr e,CasInfo casInfo) {
 			Next next = (Next)e;
-			Sequence s = next.getSequence();
+			Func sequence = next.getSequence();
 			
-			String firstTypeName = s.get(0).typeName();
-			if(SimpleFuncs.isFunc(firstTypeName) && s.get(0).size() == 1) {
-				for(int i = 1;i<s.size();i++) if(!(s.get(i).typeName().equals(firstTypeName)&& s.get(i).size() == 1)) return next;
-				Sequence subSequence = new Sequence();
-				for(int i = 0;i<s.size();i++) subSequence.add(s.get(i).get());
+			String firstTypeName = sequence.get(0).typeName();
+			if(SimpleFuncs.isFunc(firstTypeName) && sequence.get(0).size() == 1) {
+				for(int i = 1;i<sequence.size();i++) if(!(sequence.get(i).typeName().equals(firstTypeName)&& sequence.get(i).size() == 1)) return next;
+				Func subSequence = sequence();
+				for(int i = 0;i<sequence.size();i++) subSequence.add(sequence.get(i).get());
 				
 				Expr expectedInner = next(subSequence,next.getNum()).simplify(casInfo);
 				

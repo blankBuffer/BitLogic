@@ -14,6 +14,8 @@ import cas.bool.*;
 
 public class Integrate{
 	
+	static Var uSubVar;
+	
 	public static Func.FuncLoader integrateLoader = new Func.FuncLoader() {
 		
 		/*
@@ -38,6 +40,8 @@ public class Integrate{
 		
 		@Override
 		public void load(Func owner) {
+			
+			uSubVar = Cas.var("𝓾");//u substitution internal variable name
 			
 			Rule polynomial = new Rule(new Rule[] {
 					new Rule("integrate(1,x)->x","integral of a 1"),
@@ -184,9 +188,9 @@ public class Integrate{
 					if(!isPositiveRealNum(denomPow.getExpo())) return integ;
 					Num n = (Num)denomPow.getExpo();
 					
-					Sequence coef = polyExtract(denomPow.getBase() ,integ.getVar(),casInfo);
-					if(coef == null || coef.size() != 3) return integ;
-					Func equsSet = exprSet(  equ(var("a"),coef.get(2)) , equ(var("b"),coef.get(1)) , equ(var("c"),coef.get(0)) , equ(var("n"),n) , equ(var("x"),integ.getVar()) );
+					Func coefSequence = polyExtract(denomPow.getBase() ,integ.getVar(),casInfo);
+					if(coefSequence == null || coefSequence.size() != 3) return integ;
+					Func equsSet = exprSet(  equ(var("a"),coefSequence.get(2)) , equ(var("b"),coefSequence.get(1)) , equ(var("c"),coefSequence.get(0)) , equ(var("n"),n) , equ(var("x"),integ.getVar()) );
 					
 					return ans.replace(equsSet).simplify(casInfo);
 				}
@@ -347,13 +351,6 @@ public class Integrate{
 					return e;
 				}
 				
-				Var uSubVar;
-				
-				@Override
-				public void init(){
-					uSubVar = var("0u");
-				}
-				
 				@Override
 				public Expr applyRuleToExpr(Expr e,CasInfo casInfo){
 					Func integ = (Func)e;
@@ -393,7 +390,7 @@ public class Integrate{
 					if(u != null) {
 						while(true) {//try normal u and innermost u sub
 							if(!u.equals(integ.getVar())) {
-								Func eq = equ(u,uSubVar);//im calling it 0u since variables normally can't start with number
+								Func eq = equ(u,uSubVar);
 								
 								Expr diffObj = diff(u,(Var)integ.getVar().copy()).simplify(casInfo);
 								if(diffObj.containsType("diff")) return integ;
@@ -513,10 +510,10 @@ public class Integrate{
 					Func integ = (Func)e;
 					if(Rule.fastSimilarExpr(sqrtObj, integ.get())) {
 						//System.out.println(e);
-						Sequence coefs = polyExtract(e.get().get(),integ.getVar(),casInfo);
-						if(coefs == null) return integ;
-						if(coefs.size() == 3) {
-							Func equsSet = exprSet( equ(var("c"),coefs.get(0)) , equ(var("b"),coefs.get(1)) , equ(var("a"),coefs.get(2)) , equ(var("x"),integ.getVar()) );
+						Func coefsSequence = polyExtract(e.get().get(),integ.getVar(),casInfo);
+						if(coefsSequence == null) return integ;
+						if(coefsSequence.size() == 3) {
+							Func equsSet = exprSet( equ(var("c"),coefsSequence.get(0)) , equ(var("b"),coefsSequence.get(1)) , equ(var("a"),coefsSequence.get(2)) , equ(var("x"),integ.getVar()) );
 							boolean aPositive = check.replace(equsSet).simplify(casInfo).equals(BoolState.TRUE);
 							Expr out;
 							if(aPositive) {
@@ -626,9 +623,9 @@ public class Integrate{
 					Func innerDiv = (Func)integ.get();
 					if( innerDiv.getNumer().equals(v) && degree(innerDiv.getDenom(),v).equals(BigInteger.TWO) ) {//simple form can proceed
 						
-						Sequence poly = polyExtract(innerDiv.getDenom(),v,casInfo);
-						if(poly == null) return e;
-						Expr c = poly.get(0),b = poly.get(1),a = poly.get(2);
+						Func polySequence = polyExtract(innerDiv.getDenom(),v,casInfo);
+						if(polySequence == null) return e;
+						Expr c = polySequence.get(0),b = polySequence.get(1),a = polySequence.get(2);
 						Func subTableSet = exprSet(equ(var("0a"),a),equ(var("0b"),b),equ(var("0c"),c),equ(var("x"),v));
 
 						Expr k = this.k.replace(subTableSet).simplify(casInfo);
@@ -651,6 +648,7 @@ public class Integrate{
 				
 			};
 			
+			//TODO change variable names to obscure utf8 characters
 			Rule inverseQuadratic = new Rule("inverse quadratic"){//robust
 				Expr arctanCase;
 				Expr check;
@@ -670,9 +668,9 @@ public class Integrate{
 					
 					if(integ.get().typeName().equals("div") && !((Func)integ.get()).getNumer().contains(integ.getVar())) {
 						Expr denom = ((Func)integ.get()).getDenom();
-						Sequence poly = polyExtract(denom, integ.getVar(), casInfo);
-						if(poly != null && poly.size() == 3) {
-							Expr c = poly.get(0),b = poly.get(1),a = poly.get(2);
+						Func polySequence = polyExtract(denom, integ.getVar(), casInfo);
+						if(polySequence != null && polySequence.size() == 3) {
+							Expr c = polySequence.get(0),b = polySequence.get(1),a = polySequence.get(2);
 							Func subTableSet = exprSet(equ(var("0a"),a),equ(var("0b"),b),equ(var("0c"),c),equ(var("x"),integ.getVar()));
 							
 							Expr check = this.check.replace(subTableSet).simplify(casInfo);
@@ -771,7 +769,7 @@ public class Integrate{
 				@Override
 				public Expr applyRuleToExpr(Expr expr,CasInfo casInfo) {
 					
-					if(expr.containsType("integrate") || expr.contains(var("0u"))) return expr;//obviously in the middle of processing if you encounter u
+					if(expr.containsType("integrate") || expr.contains(uSubVar)) return expr;//obviously in the middle of processing if you encounter u
 					
 					if(!casInfo.allowComplexNumbers()) {
 						expr = applyAbs(expr,casInfo);

@@ -8,20 +8,17 @@ import cas.base.Expr;
 import cas.lang.ParseMachine.ObjectBuilder;
 import cas.lang.ParseMachine.ParseAction;
 import cas.lang.ParseMachine.ParseNode;
-import cas.lang.ParseMachine.ParseRule;
 import cas.primitive.Num;
 import cas.primitive.Sum;
 
 public class Interpreter extends Cas{
 	private static boolean loaded = false;
 	
-	static ParseRule bitLogicSyntax = null;
 	static ObjectBuilder exprBuilder = null;
 	
 	public static Expr createExpr(String toParse) {
 		//System.out.println("building with new expr builder: "+toParse);
-		ParseNode pn = ParseMachine.baseParse(toParse, bitLogicSyntax);
-		Expr out = (Expr) exprBuilder.build(pn);
+		Expr out = (Expr) exprBuilder.build(toParse);
 		return out;
 	}
 	
@@ -29,13 +26,13 @@ public class Interpreter extends Cas{
 		if(loaded) return;
 		
 		System.out.println("- Loading BitLogic expression builder...");
+		
+		exprBuilder = new ObjectBuilder();
 		try {
-			bitLogicSyntax = MetaLang.loadLanguageFromFile("resources/bitlogic_syntax.pm");
+			exprBuilder.setLang("resources/bitlogic_syntax.pm");
 		} catch (Exception e) {
 			e.printStackTrace();
 		}
-		
-		exprBuilder = new ObjectBuilder();
 		
 		exprBuilder.addBuildInstruction("num", new ParseAction() {
 			@Override

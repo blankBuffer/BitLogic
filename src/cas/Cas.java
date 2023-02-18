@@ -315,8 +315,8 @@ public class Cas {
 		out.add(expr);
 		return out;
 	}
-	public static Mat mat(Sequence e) {
-		return new Mat(e);
+	public static Mat mat(Func exprSequence) {
+		return new Mat(exprSequence);
 	}
 	public static Mat mat(int rows,int cols) {
 		return new Mat(rows,cols);
@@ -333,8 +333,8 @@ public class Cas {
 	public static Transpose transpose(Expr e) {
 		return new Transpose(e);
 	}
-	public static Next next(Sequence s,Num num) {
-		return new Next(s,num);
+	public static Next next(Func sequence,Num num) {
+		return new Next(sequence,num);
 	}
 	public static Define define(Expr left,Expr right) {
 		return new Define(left,right);
@@ -360,11 +360,9 @@ public class Cas {
 		out.add(varsSet);
 		return out;
 	}
-	public static Sequence sequence(Expr... exprs) {
-		Sequence out = new Sequence();
-		for(Expr e:exprs) {
-			out.add(e);
-		}
+	public static Func sequence(Expr... exprs) {
+		Func out = (Func) SimpleFuncs.sequence.copy();
+		for(Expr expr:exprs) out.add(expr);
 		return out;
 	}
 	public static Func comparison(Expr equ) {
@@ -420,10 +418,10 @@ public class Cas {
 			
 			boolean needsCombination = containsComplexNumbers(denomFactored);
 			
-			Sequence parts = seperateByVar(denomFactored,v);
+			Func partsSequence = seperateByVar(denomFactored,v);
 			
-			Expr denomCoef = parts.get(0);
-			denomFactored = Prod.cast(parts.get(1));
+			Expr denomCoef = partsSequence.get(0);
+			denomFactored = Prod.cast(partsSequence.get(1));
 			
 			if(!allLinearTerms(denomFactored,v)) return expr;//make sure its a product of linear terms
 			frac.setDenom(denomFactored);
@@ -457,8 +455,8 @@ public class Cas {
 				
 				Func currentTerm = Power.cast(denomFactored.get(i));
 				
-				Sequence poly = polyExtract(currentTerm.getBase(),v,casInfo);
-				Expr linearTermCoef = poly.get(1);
+				Func polySequence = polyExtract(currentTerm.getBase(),v,casInfo);
+				Expr linearTermCoef = polySequence.get(1);
 				Func solutionEqu = (Func)ExprSet.cast(solve(equ(currentTerm,Num.ZERO),v).simplify(casInfo)).get();
 				
 				
@@ -470,7 +468,7 @@ public class Cas {
 					
 					Expr functionOut = currentFunction.replace(solutionEqu);
 					
-					chara.add( exprSet(num(outSum.size()),poly.get(0),poly.get(1),num(currentExpo)) );//index , constant , linear coeff, exponent
+					chara.add( exprSet(num(outSum.size()),polySequence.get(0),polySequence.get(1),num(currentExpo)) );//index , constant , linear coeff, exponent
 					
 					Expr numer = div(functionOut,prod(denomCoef,power(linearTermCoef,num(j)), num(factorial(j))));
 					Expr newTerm = div(numer,  power(currentTerm.getBase(),num(currentExpo))  );
@@ -538,10 +536,10 @@ public class Cas {
 	public static Expr polyDiv(Expr expr,Var v,CasInfo casInfo) {
 		if(expr.typeName().equals("div")) {
 			Func frac = (Func)expr.copy();
-			Sequence numPoly = polyExtract(distr(frac.getNumer()).simplify(casInfo),v,casInfo);
-			Sequence denPoly = polyExtract(distr(frac.getDenom()).simplify(casInfo),v,casInfo);
-			if(numPoly != null && denPoly != null && numPoly.size()>=denPoly.size()) {
-				Sequence[] result = polyDiv(numPoly,denPoly,casInfo);
+			Func numPolySequence = polyExtract(distr(frac.getNumer()).simplify(casInfo),v,casInfo);
+			Func denPolySequence = polyExtract(distr(frac.getDenom()).simplify(casInfo),v,casInfo);
+			if(numPolySequence != null && denPolySequence != null && numPolySequence.size()>=denPolySequence.size()) {
+				Func[] result = polyDiv(numPolySequence,denPolySequence,casInfo);
 				Expr outPart =  exprListToPoly(result[0],v,casInfo);
 				Expr remainPart =  div(exprListToPoly(result[1],v,casInfo),frac.getDenom());
 				expr = sum(outPart,remainPart);
@@ -550,37 +548,37 @@ public class Cas {
 		return expr;
 	}
 	
-	public static Sequence[] polyDiv(Sequence num,Sequence den,CasInfo casInfo) {//returns output + remainder
-		Sequence remain = (Sequence)num.copy();
+	public static Func[] polyDiv(Func numeratorSequence,Func denominatorSequence,CasInfo casInfo) {//returns [output] + [remainder]
+		Func remainSequence = (Func)numeratorSequence.copy();
 		Num zero = num(0);
 		
-		Sequence out = sequence();
+		Func outSequence = sequence();
 		
-		while(remain.size() >= den.size()) {
-			if(den.get(den.size()-1).equals(zero)) {//avoid divide by zero situation
-				out.add(0, zero.copy());
-				remain.remove(remain.size()-1);//pop last element
+		while(remainSequence.size() >= denominatorSequence.size()) {
+			if(denominatorSequence.get(denominatorSequence.size()-1).equals(zero)) {//avoid divide by zero situation
+				outSequence.add(0, zero.copy());
+				remainSequence.remove(remainSequence.size()-1);//pop last element
 				continue;
 			}
 			
 			
-			Expr coef = div(remain.get(remain.size()-1).copy(),den.get(den.size()-1).copy()).simplify(casInfo);
-			out.add(0, coef);
+			Expr coef = div(remainSequence.get(remainSequence.size()-1).copy(),denominatorSequence.get(denominatorSequence.size()-1).copy()).simplify(casInfo);
+			outSequence.add(0, coef);
 			coef = neg(coef);
 			
 			
-			for(int i = remain.size()-den.size();i<remain.size()-1;i++) {//we can skip last one since we know it will be deleted
-				remain.set(i, sum( prod(den.get(i-(remain.size()-den.size()) ),coef) ,remain.get(i)).simplify(casInfo) );
+			for(int i = remainSequence.size()-denominatorSequence.size();i<remainSequence.size()-1;i++) {//we can skip last one since we know it will be deleted
+				remainSequence.set(i, sum( prod(denominatorSequence.get(i-(remainSequence.size()-denominatorSequence.size()) ),coef) ,remainSequence.get(i)).simplify(casInfo) );
 			}
-			remain.remove(remain.size()-1);//pop last element
+			remainSequence.remove(remainSequence.size()-1);//pop last element
 			
 			
 		}
-		while(remain.size()>0 && remain.get(remain.size()-1).equals(zero)) {//clean zeros off end
-			remain.remove(remain.size()-1);
+		while(remainSequence.size()>0 && remainSequence.get(remainSequence.size()-1).equals(zero)) {//clean zeros off end
+			remainSequence.remove(remainSequence.size()-1);
 		}
 		
-		return new Sequence[] { out,remain };
+		return new Func[] { outSequence,remainSequence };
 	}
 	
 	public static BigInteger degree(Expr expr,Var v) {//returns -1 if it is not possible
@@ -703,34 +701,39 @@ public class Cas {
 		return isRealNum(e) && e.negative();
 	}
 	
-	public static Sequence polyExtract(Expr expr,Var v,CasInfo casInfo) {
+	/*
+	 * extracts the coefficients from an expression in the standard polynomial format
+	 * example polyExtract(1+x^2+a*x^4,x) -> [1,0,1,0,a]
+	 * 
+	 */
+	public static Func polyExtract(Expr expr,Var v,CasInfo casInfo) {//returns sequence
 		BigInteger maxDegree = BigInteger.valueOf(16);
-		Sequence coef = sequence();
+		Func coefSequence = sequence();
 		Func sum = Sum.cast(expr);
 		for(int i = 0;i<sum.size();i++) {
 			Expr e = sum.get(i);
 			BigInteger degree = BigInteger.ZERO;
 			Expr contents = null;
 			if(e.contains(v)) {
-				Sequence parts = seperateByVar(e,v);
-				if(parts.get(1).equals(v)) {
-					contents = parts.get(0);
+				Func partsSequence = seperateByVar(e,v);
+				if(partsSequence.get(1).equals(v)) {
+					contents = partsSequence.get(0);
 					degree = BigInteger.ONE;
-				}else if(parts.get(1).typeName().equals("power")) {
-					Func casted = (Func)parts.get(1);
+				}else if(partsSequence.get(1).typeName().equals("power")) {
+					Func casted = (Func)partsSequence.get(1);
 					if(casted.getBase().equals(v) && isPositiveRealNum(casted.getExpo())) {
 						degree = ((Num)casted.getExpo()).getRealValue();
 					}else return null;
-					contents = parts.get(0);
+					contents = partsSequence.get(0);
 				}else return null;
 			}else contents = e;
 			if(degree.compareTo(maxDegree) == 1) return null;//don't want too big of a polynomial
-			while(BigInteger.valueOf(coef.size()).compareTo(degree) <= 0) coef.add(num(0));//resize coef length to fit degree size
+			while(BigInteger.valueOf(coefSequence.size()).compareTo(degree) <= 0) coefSequence.add(num(0));//resize coef length to fit degree size
 			int degreeInt = degree.intValue();
-			coef.set(degreeInt,sum(coef.get(degreeInt),contents));
+			coefSequence.set(degreeInt,sum(coefSequence.get(degreeInt),contents));
 		}
-		coef.simplifyChildren(casInfo);
-		return coef;
+		coefSequence.simplifyChildren(casInfo);
+		return coefSequence;
 	}
 	
 	public static Expr stripNonVarPartsFromProd(Expr e,Expr v) {//a*x^2/c -> x^2, its like the opposite of getting the coefficient
@@ -755,11 +758,11 @@ public class Cas {
 		return num(1);
 	}
 	
-	public static Sequence seperateByVar(Expr e,Expr v) {//returns {coef,var parts}
-		Sequence out = sequence();
+	public static Func seperateByVar(Expr e,Expr v) {//returns [coef,var parts]
+		Func outSequence = sequence();
 		if(!e.contains(v)) {
-			out.add(e.copy());
-			out.add(num(1));
+			outSequence.add(e.copy());
+			outSequence.add(num(1));
 		}else if(e.typeName().equals("prod")) {
 			Expr outCopy = e.copy();
 			Expr coefProd = prod();
@@ -772,71 +775,71 @@ public class Cas {
 				}
 			}
 			
-			out.add(Prod.unCast(coefProd));
-			out.add(Prod.unCast(outCopy));
+			outSequence.add(Prod.unCast(coefProd));
+			outSequence.add(Prod.unCast(outCopy));
 			
 		}else if(e.typeName().equals("div")) {
 			Func castedDiv = (Func)e;
-			Sequence numer = seperateByVar(castedDiv.getNumer(),v);
-			Sequence denom = seperateByVar(castedDiv.getDenom(),v);
+			Func numerSequence = seperateByVar(castedDiv.getNumer(),v);
+			Func denomSequence = seperateByVar(castedDiv.getDenom(),v);
 			
-			Expr coef = Div.unCast(div(numer.get(0),denom.get(0)));
-			Expr newExpr = Div.unCast(div(numer.get(1),denom.get(1)));
+			Expr coef = Div.unCast(div(numerSequence.get(0),denomSequence.get(0)));
+			Expr newExpr = Div.unCast(div(numerSequence.get(1),denomSequence.get(1)));
 			
-			out.add(coef);
-			out.add(newExpr);
+			outSequence.add(coef);
+			outSequence.add(newExpr);
 			
 		}else {
-			out.add(num(1));
-			out.add(e.copy());
+			outSequence.add(num(1));
+			outSequence.add(e.copy());
 		}
-		return out;
+		return outSequence;
 	}
 	
-	public static Sequence seperateCoef(Expr e) {//returns [coef,remain]
-		Sequence out = sequence();
+	public static Func seperateCoef(Expr e) {//returns [coef,remain]
+		Func outSeq = sequence();
 		if(e.typeName().equals("prod")) {
 			Func prodCopy = (Func)e.copy();
 			for(int i = 0;i<prodCopy.size();i++) {
 				if(prodCopy.get(i) instanceof Num) {
-					out.add(prodCopy.get(i));
+					outSeq.add(prodCopy.get(i));
 					prodCopy.remove(i);
 					i--;
 				}
 			}
-			if(out.size() == 0) {
-				out.add(num(1));
+			if(outSeq.size() == 0) {
+				outSeq.add(num(1));
 			}
-			out.add(Prod.unCast(prodCopy));
+			outSeq.add(Prod.unCast(prodCopy));
 		}else if(e.typeName().equals("div")) {
 			Func castedDiv = (Func)e;
-			Sequence numer = seperateCoef(castedDiv.getNumer());
-			Sequence denom = seperateCoef(castedDiv.getDenom());
-			Expr newCoef = Div.unCast(div(numer.get(0),denom.get(0)));
-			Expr newExpr = Div.unCast(div(numer.get(1),denom.get(1)));
-			out.add(newCoef);
-			out.add(newExpr);
+			Func numerSeq = seperateCoef(castedDiv.getNumer());
+			Func denomSeq = seperateCoef(castedDiv.getDenom());
+			Expr newCoef = Div.unCast(div(numerSeq.get(0),denomSeq.get(0)));
+			Expr newExpr = Div.unCast(div(numerSeq.get(1),denomSeq.get(1)));
+			outSeq.add(newCoef);
+			outSeq.add(newExpr);
 		}else if(e instanceof Num) {
-			out.add(e.copy());
-			out.add(num(1));
+			outSeq.add(e.copy());
+			outSeq.add(num(1));
 		}else {
-			out.add(num(1));
-			out.add(e.copy());
+			outSeq.add(num(1));
+			outSeq.add(e.copy());
 		}
 		
-		return out;
+		return outSeq;
 	}
 	
-	protected static Expr exprListToPoly(Sequence poly,Var v,CasInfo casInfo){
-		if(poly.size()==0) return num(0);
+	protected static Expr exprListToPoly(Func polySequence,Var v,CasInfo casInfo){
+		if(polySequence.size()==0) return num(0);
 		Func outSum = sum();
-		for(int i = 0;i<poly.size();i++) {
+		for(int i = 0;i<polySequence.size();i++) {
 			if(i == 0) {
-				outSum.add(poly.get(i));
+				outSum.add(polySequence.get(i));
 			}else if(i == 1){
-				outSum.add(prod(poly.get(i),v));
+				outSum.add(prod(polySequence.get(i),v));
 			}else {
-				outSum.add(prod(poly.get(i),power(v,num(i))));
+				outSum.add(prod(polySequence.get(i),power(v,num(i))));
 			}
 		}
 		
@@ -894,7 +897,9 @@ public class Cas {
 		return power(n.copy(),num(1));
 	}
 	
-	public static Sequence basicRealAndImagComponents(Expr e,CasInfo casInfo) {//does obvious separation of real and imaginary components
+	//does obvious separation of real and imaginary components
+	//returns a sequence
+	public static Func basicRealAndImagComponents(Expr e,CasInfo casInfo) {
 		if(e instanceof Num) {
 			Num n = (Num)e;
 			return sequence(num(n.getRealValue()),num(n.getImagValue()));
@@ -912,7 +917,7 @@ public class Cas {
 						num.setRealValue(num.getImagValue());
 						num.setImagValue(BigInteger.ZERO);
 						eCopyProd.flags.simple = false;
-						return (Sequence) sequence(num(0),eCopyProd).simplify(casInfo);
+						return (Func) sequence(num(0),eCopyProd).simplify(casInfo);
 					}else {
 						
 						Func imagCopyProd = (Func)e.copy();
@@ -928,16 +933,16 @@ public class Cas {
 		}
 		
 		if(e.typeName().equals("sum")) {
-			Sequence out = sequence(sum(),sum());
+			Func outSequence = sequence(sum(),sum());
 			for(int i = 0;i<e.size();i++) {
-				Sequence seperatedEl = basicRealAndImagComponents(e.get(i),casInfo);
+				Func seperatedElSequence = basicRealAndImagComponents(e.get(i),casInfo);
 				
-				out.get(0).add(seperatedEl.get(0));
-				out.get(1).add(seperatedEl.get(1));
+				outSequence.get(0).add(seperatedElSequence.get(0));
+				outSequence.get(1).add(seperatedElSequence.get(1));
 				
 			}
 			
-			return (Sequence)out.simplify(casInfo);
+			return (Func)outSequence.simplify(casInfo);
 		}
 		
 		return sequence(e.copy(),num(0));

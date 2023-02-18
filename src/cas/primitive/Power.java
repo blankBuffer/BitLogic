@@ -20,7 +20,7 @@ public class Power{
 			
 			Rule baseHasPower = new Rule("(a^b)^c->a^(b*c)","relaxedPower()|isType(b,num)&isType(c,num)|(comparison(a>0)&isType(a,num))","base has power");
 			Rule baseHasPowerAbs = new Rule("(a^b)^c->abs(a)^(b*c)","isType(result(b/2),num)&~allowComplexNumbers()","base has power");
-			
+			Rule rootInRoot = new Rule("(a^b)^c->a^(b*c)","isType(b,div)&isType(c,div)","root in root");
 			Rule expoOfZero = new Rule("a^0->1","~comparison(a=0)","exponent is zero");
 			Rule isI = new Rule("sqrt(-1)->i","allowComplexNumbers()","is equal to i");
 			Rule eToLn = new Rule("e^ln(a)->a","e to ln");
@@ -531,7 +531,7 @@ public class Power{
 				}
 			};
 			
-			Rule rootInRoot = new Rule("root in root") {
+			Rule rootInProdInRoot = new Rule("root in product in root") {
 				@Override
 				public Expr applyRuleToExpr(Expr e,CasInfo casInfo){
 					Func pow = (Func)e;
@@ -595,10 +595,10 @@ public class Power{
 				factorExponent,
 				
 				baseHasPower,
+				baseHasPowerAbs,
+				rootInRoot,
 				
 				eulersIdentity,
-				
-				baseHasPowerAbs,
 				
 				baseOfPowerIsAbsExpoEven,
 				
@@ -610,16 +610,31 @@ public class Power{
 				isEPower,
 				logInExpoProdToBase,
 				
+				/*
 				powerOfOne,
 				expoOfZero,
+				*/
 				
 				expOfLambertW,
 				expOfLambertWProd,
 				
 				factorBase,
+				
+				/*
+				 * baseHasPower again in case factor base has 
+				 * sqrt(x^2+2*x+1) -> sqrt((x+1)^2) -> either x+1 or abs(x+1)
+				 */
+				///
+				baseHasPower,
+				baseHasPowerAbs,
+				powerOfOne,
+				expoOfZero,
+				//
+				
+				
 				fracInBase,
 				productInBase,
-				rootInRoot,
+				rootInProdInRoot,
 				
 				rootNumSimp,
 				

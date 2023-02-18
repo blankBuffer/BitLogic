@@ -234,11 +234,11 @@ public class CalcWindow extends JFrame{
 					for(int i = 0;i<currentStack.size();i++) {
 						ImageIcon imgIcn = null;
 						try {
-							if(currentStack.stack.get(i).equals(currentStack.stackOld.get(i))) {
+							if(currentStack.stackSequence.get(i).equals(currentStack.stackOld.get(i))) {
 								imgIcn = oldStackImages.get(i);
 							}
 						}catch(IndexOutOfBoundsException e2) {}
-						if(imgIcn == null) imgIcn = new ImageIcon( ExprRender.createImg(currentStack.stack.get(i), bestBlue ,18 ) );
+						if(imgIcn == null) imgIcn = new ImageIcon( ExprRender.createImg(currentStack.stackSequence.get(i), bestBlue ,18 ) );
 						stackImages.add(imgIcn);
 					}
 					oldStackImages = (ArrayList<ImageIcon>)stackImages.clone();
@@ -246,7 +246,7 @@ public class CalcWindow extends JFrame{
 					if(clearTerminal) terminalOutPane.getDocument().remove(0, terminalOutPane.getDocument().getLength());
 					addTextln("▛▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▜");
 					for(int i = 0;i<currentStack.size();i++) {
-						addTextln("#"+(i+1)+" approx: "+currentStack.stack.get(i).convertToFloat(Cas.exprSet()).toString(), redText);
+						addTextln("#"+(i+1)+" approx: "+currentStack.stackSequence.get(i).convertToFloat(Cas.exprSet()).toString(), redText);
 						
 						StackButtonGroup stackButtonGroup = new StackButtonGroup();
 						
@@ -258,8 +258,8 @@ public class CalcWindow extends JFrame{
 							stackButtonGroup.editButton = makeStackButton("edit",new ActionListener() {
 								@Override
 								public void actionPerformed(ActionEvent e) {
-									terminalIn.setText(currentStack.stack.get(iObj).toString());
-									currentStack.stack.remove(iObj);
+									terminalIn.setText(currentStack.stackSequence.get(iObj).toString());
+									currentStack.stackSequence.remove(iObj);
 									terminalOutUpdate.actionPerformed(null);
 								}
 							});
@@ -267,7 +267,7 @@ public class CalcWindow extends JFrame{
 							showCheckBox.addActionListener(new ActionListener() {
 								@Override
 								public void actionPerformed(ActionEvent e) {
-									Expr expr = currentStack.stack.get(iObj);
+									Expr expr = currentStack.stackSequence.get(iObj);
 									
 									if(expr.typeName().equals("show") || expr.typeName().equals("hide")) {
 										expr = expr.get();
@@ -278,7 +278,7 @@ public class CalcWindow extends JFrame{
 											expr = SimpleFuncs.getFuncByName("hide", expr);
 										} catch (Exception e1) {}
 									}
-									currentStack.stack.set(iObj,expr);
+									currentStack.stackSequence.set(iObj,expr);
 									terminalOutUpdate.actionPerformed(null);
 								}
 							});
@@ -302,7 +302,7 @@ public class CalcWindow extends JFrame{
 						
 						addTextln("");
 						
-						addTextln( "text: "+currentStack.stack.get(i), redText);
+						addTextln( "text: "+currentStack.stackSequence.get(i), redText);
 						
 						ImageIcon imgIcn = stackImages.get(i);
 						

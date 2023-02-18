@@ -92,7 +92,7 @@ public class ExprSet{
 	public static Func cast(Expr e) {
 		if(e == null) return Cas.exprSet();
 		if(e.typeName().equals("set")) return (Func)e;
-		if(e instanceof Params || e instanceof Sequence) {
+		if(e instanceof Params || e.typeName().equals("sequence")) {
 			Func out = Cas.exprSet();
 			for(int i = 0;i<e.size();i++) {
 				out.add(e.get(i));

@@ -52,7 +52,7 @@ public class Rule extends Expr{
 	 * sin(2*k)*a^b
 	 * it would generate a part set of [k,a,b] assuming the expression is sorted
 	 */
-	private Sequence patternParts = null;
+	private Func patternPartsSequence = null;
 	
 	
 	/*
@@ -74,7 +74,7 @@ public class Rule extends Expr{
 	 * list of all pattern based rules in the CAS
 	 * we store it so that we can simplify the patterns before being used
 	 */
-	private static Sequence allPatternBasedRules = sequence();
+	private static ArrayList<Rule> allPatternBasedRules = null;
 	
 	public Rule(String pattern,String name){
 		patternStr = pattern;
@@ -120,8 +120,8 @@ public class Rule extends Expr{
 		if(pattern != null) {
 			Becomes.getLeftSide(pattern).sort();//sort the patterns left side into a standardized order
 			
-			patternParts = generateTemplateParts(Becomes.getLeftSide(pattern));
-			matchingSetsForPattern = generateTemplateMatchingSets(patternParts);
+			patternPartsSequence = generateTemplateParts(Becomes.getLeftSide(pattern));
+			matchingSetsForPattern = generateTemplateMatchingSets(patternPartsSequence);
 			
 			allPatternBasedRules.add(this);
 		}
@@ -152,13 +152,13 @@ public class Rule extends Expr{
 	 * 
 	 * the function returns false if it cannot accomplish the task because the expression is not similar to the template
 	 */
-	private static boolean getPartsBasedOnTemplate(Sequence exprsPartsOut,Expr template,Expr expr) {
+	private static boolean getPartsBasedOnTemplate(Func exprsPartsOutSequence,Expr template,Expr expr) {
 		if(template instanceof Var && ((Var)template).isGeneric()) {
-			exprsPartsOut.add(expr.copy());
+			exprsPartsOutSequence.add(expr.copy());
 		}else{
 			if(template.size()==expr.size() && template.typeName().equals(expr.typeName())) {
 				for(int i = 0;i<template.size();i++) {
-					if(!getPartsBasedOnTemplate(exprsPartsOut,template.get(i),expr.get(i))) return false;
+					if(!getPartsBasedOnTemplate(exprsPartsOutSequence,template.get(i),expr.get(i))) return false;
 				}
 			}else {
 				return false;
@@ -171,18 +171,18 @@ public class Rule extends Expr{
 	 * creates the matching array sequences to describe where variable names are re-used
 	 * this is described above where sin(c*b)*a^b+a maps to {{1,3},{2,4}}
 	 */
-	private static ArrayList<IndexSet> generateTemplateMatchingSets(Sequence templateParts){
+	private static ArrayList<IndexSet> generateTemplateMatchingSets(Func templatePartsSequence){
 		Func usedVarsSet = exprSet();
 		ArrayList<IndexSet> matcherIndexSets = new ArrayList<IndexSet>();
-		for(int i = 0;i<templateParts.size();i++) {
+		for(int i = 0;i<templatePartsSequence.size();i++) {
 			
-			if(usedVarsSet.contains(templateParts.get(i))) continue;
+			if(usedVarsSet.contains(templatePartsSequence.get(i))) continue;
 			
 			IndexSet matchSet = new IndexSet();
 			matchSet.ints.add(i);
 			
-			for(int j = i+1;j<templateParts.size();j++) {
-				if(templateParts.get(i).equals(templateParts.get(j))) {
+			for(int j = i+1;j<templatePartsSequence.size();j++) {
+				if(templatePartsSequence.get(i).equals(templatePartsSequence.get(j))) {
 					matchSet.ints.add(j);
 					
 				}
@@ -190,30 +190,30 @@ public class Rule extends Expr{
 			
 			if(matchSet.ints.size() != 1) matcherIndexSets.add(matchSet);
 			
-			usedVarsSet.add(templateParts.get(i));
+			usedVarsSet.add(templatePartsSequence.get(i));
 		}
 		return matcherIndexSets;
 	}
 	
-	private static Sequence generateTemplateParts(Expr template) {//wrapper function
-		Sequence templateVarsOut = sequence();
-		generateTemplatePartsRec(templateVarsOut,template);
-		return templateVarsOut;
+	private static Func generateTemplateParts(Expr template) {//wrapper function, returns sequence
+		Func templateVarsOutSequence = sequence();
+		generateTemplatePartsRec(templateVarsOutSequence,template);
+		return templateVarsOutSequence;
 	}
-	private static void generateTemplatePartsRec(Sequence templateVarsOut,Expr template) {
+	private static void generateTemplatePartsRec(Func templateVarsOutSequence,Expr template) {
 		if(template instanceof Var && ((Var)template).isGeneric()) {
-			templateVarsOut.add(template.copy());
+			templateVarsOutSequence.add(template.copy());
 		}else{
 			for(int i = 0;i<template.size();i++) {
-				generateTemplatePartsRec(templateVarsOut,template.get(i));
+				generateTemplatePartsRec(templateVarsOutSequence,template.get(i));
 			}
 		}
 	}
 	
-	private static Func makeEqusFromParts(Sequence templateParts,Sequence otherParts) {//return set of equations
+	private static Func makeEqusFromParts(Func templatePartsSequence,Func otherPartsSequence) {//return set of equations
 		Func out = exprSet();
-		for(int i = 0;i<templateParts.size();i++) {
-			out.add(equ(templateParts.get(i),otherParts.get(i)));
+		for(int i = 0;i<templatePartsSequence.size();i++) {
+			out.add(equ(templatePartsSequence.get(i),otherPartsSequence.get(i)));
 		}
 		return out;
 	}
@@ -230,16 +230,16 @@ public class Rule extends Expr{
 			other.sort();
 			
 			if(!checked) {
-				Sequence otherParts = sequence();
+				Func otherPartsSequence = sequence();
 				
-				Sequence templateParts = generateTemplateParts(template);
-				ArrayList<IndexSet> matchingSets = generateTemplateMatchingSets(templateParts);
+				Func templatePartsSequence = generateTemplateParts(template);
+				ArrayList<IndexSet> matchingSets = generateTemplateMatchingSets(templatePartsSequence);
 				
-				boolean partsMatch = checkForMatches(matchingSets,otherParts,template,other);
+				boolean partsMatch = checkForMatches(matchingSets,otherPartsSequence,template,other);
 				if(condition == null) return partsMatch;
 				if(!partsMatch) return false;
 				
-				Func equsSet = makeEqusFromParts(templateParts,otherParts);
+				Func equsSet = makeEqusFromParts(templatePartsSequence,otherPartsSequence);
 				return condition.replace(equsSet).simplify(CasInfo.normal).equals(BoolState.TRUE);
 			}
 			
@@ -279,16 +279,16 @@ public class Rule extends Expr{
 	
 	static public Func getEqusFromTemplate(Expr template,Expr condition,Expr expr) {//returns set of equations
 		if(fastSimilarExpr(template,expr)) {
-			Sequence exprParts = sequence();
+			Func exprPartsSequence = sequence();
 			
-			Sequence templateParts = generateTemplateParts(template);
-			ArrayList<IndexSet> matchingSets = generateTemplateMatchingSets(templateParts);
+			Func templatePartsSequence = generateTemplateParts(template);
+			ArrayList<IndexSet> matchingSets = generateTemplateMatchingSets(templatePartsSequence);
 			
-			boolean match = checkForMatches(matchingSets,exprParts,template,expr);
+			boolean match = checkForMatches(matchingSets,exprPartsSequence,template,expr);
 			if(!match) {
 				return null;
 			}
-			Func equsSet = makeEqusFromParts(templateParts,exprParts);
+			Func equsSet = makeEqusFromParts(templatePartsSequence,exprPartsSequence);
 			
 			if(condition != null && !condition.replace(equsSet).simplify(CasInfo.normal).equals(BoolState.TRUE)) return null;
 			
@@ -302,18 +302,18 @@ public class Rule extends Expr{
 		return getEqusFromTemplate(template,null,expr);
 	}
 	
-	private static boolean checkForMatches(ArrayList<IndexSet> matchingSets,Sequence exprsParts,Expr template,Expr expr) {
+	private static boolean checkForMatches(ArrayList<IndexSet> matchingSets,Func exprsPartsSequence,Expr template,Expr expr) {
 		
 		template.sort();
 		expr.sort();
 		
-		if(!getPartsBasedOnTemplate(exprsParts,template,expr)) return false;
+		if(!getPartsBasedOnTemplate(exprsPartsSequence,template,expr)) return false;
 		
 		for(IndexSet set:matchingSets) {
-			Expr e = exprsParts.get(set.ints.get(0));
+			Expr e = exprsPartsSequence.get(set.ints.get(0));
 			for(int i = 1;i<set.ints.size();i++) {
 				
-				Expr e2 =  exprsParts.get(set.ints.get(i));
+				Expr e2 =  exprsPartsSequence.get(set.ints.get(i));
 				
 				if(!e2.equals(e)) return false;
 			}
@@ -323,7 +323,7 @@ public class Rule extends Expr{
 		return true;
 	}
 	
-	public static void initRules(Sequence ruleSequence) {
+	public static void initRules(Func ruleSequence) {
 		for(int i = 0;i<ruleSequence.size();i++) ((Rule)ruleSequence.get(i)).init();
 	}
 	public static void initRules(Rule[] ruleSequence) {
@@ -336,13 +336,13 @@ public class Rule extends Expr{
 		
 		if(cases == null) {
 			if(fastSimilarExpr(Becomes.getLeftSide(pattern),expr)) {
-				Sequence parts = sequence();
+				Func partsSequence = sequence();
 				
-				boolean match = checkForMatches(matchingSetsForPattern,parts,Becomes.getLeftSide(pattern),expr);
+				boolean match = checkForMatches(matchingSetsForPattern,partsSequence,Becomes.getLeftSide(pattern),expr);
 				if(!match) {
 					return expr;
 				}
-				Func equsSet = makeEqusFromParts(patternParts,parts);
+				Func equsSet = makeEqusFromParts(patternPartsSequence,partsSequence);
 				
 				if(condition != null) {
 					Expr condition = this.condition.replace(equsSet);
@@ -438,6 +438,8 @@ public class Rule extends Expr{
 	public static void loadCompileSimplifyRules(){//loads and simpoifies everything, faster runtime, ,much slower runtime
 		if(ALL_LOADED) return;
 		
+		allPatternBasedRules = new ArrayList<Rule>();
+		
 		loadTypeRules();
 		
 		long startTime = System.nanoTime();
@@ -450,7 +452,7 @@ public class Rule extends Expr{
 		System.out.println("simplifying rules...");
 		for(int i = 0;i<allPatternBasedRules.size();i++) {//simplify
 			Rule r = (Rule)allPatternBasedRules.get(i);
-			boolean doNotSimplify = true;
+			boolean doNotSimplify = false;
 			
 			for(String bannedType:bannedPreSimplifyFunctions) {
 				if(Becomes.getRightSide(r.pattern).containsType(bannedType)) {

@@ -159,11 +159,11 @@ public class Ln{
 			Func log = (Func)e;
 			
 			if(casInfo.allowComplexNumbers()) {
-				Sequence sep = basicRealAndImagComponents(e.get(),casInfo);
-				if(!sep.get(0).equals(Num.ZERO) && !sep.get(1).equals(Num.ZERO)) {
+				Func sepSequence = basicRealAndImagComponents(e.get(),casInfo);
+				if(!sepSequence.get(0).equals(Num.ZERO) && !sepSequence.get(1).equals(Num.ZERO)) {
 					//ln(a+b*i) -> ln(sqrt(a^2+b^2)*e^(i*atan(b/a))) -> ln(a^2+b^2)/2+i*atan(b/a)
 					
-					Expr out = sum(div(ln(sum(power(sep.get(0),num(2)),power(sep.get(1),num(2)))),num(2)),prod(num(0,1),atan(div(sep.get(1),sep.get(0)))));
+					Expr out = sum(div(ln(sum(power(sepSequence.get(0),num(2)),power(sepSequence.get(1),num(2)))),num(2)),prod(num(0,1),atan(div(sepSequence.get(1),sepSequence.get(0)))));
 					return out.simplify(casInfo);
 				}
 				

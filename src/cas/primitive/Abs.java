@@ -150,8 +150,8 @@ public class Abs{
 					
 					if(degree.mod(BigInteger.TWO).equals(BigInteger.ONE)) return abs;
 
-					Sequence poly = polyExtract(polynomialSum,v,casInfo);
-					boolean positive = poly.get(poly.size()-1).convertToFloat(exprSet()).real>0;
+					Func polySequence = polyExtract(polynomialSum,v,casInfo);
+					boolean positive = polySequence.get(polySequence.size()-1).convertToFloat(exprSet()).real>0;
 					if(positive) theoryMax = inf();
 					else theoryMin = neg(inf());
 					
@@ -227,10 +227,10 @@ public class Abs{
 				public Expr applyRuleToExpr(Expr e,CasInfo casInfo) {
 					Func abs = (Func)e;
 					
-					Sequence sep = basicRealAndImagComponents(abs.get(),casInfo);
+					Func sepSequence = basicRealAndImagComponents(abs.get(),casInfo);
 					
-					if(!sep.get(1).equals(Num.ZERO)) {
-						return sqrt( sum(power(sep.get(0),num(2)) , power(sep.get(1),num(2))) ).simplify(casInfo);
+					if(!sepSequence.get(1).equals(Num.ZERO)) {
+						return sqrt( sum(power(sepSequence.get(0),num(2)) , power(sepSequence.get(1),num(2))) ).simplify(casInfo);
 					}
 					
 					return abs;

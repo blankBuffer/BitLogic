@@ -85,7 +85,7 @@ public class ParseMachine {
 			this.langDescription = langDescription;
 		}
 		public void setLang(String metaLangFileName) throws Exception {
-			MetaLang.loadLanguageFromFile(metaLangFileName);
+			this.langDescription = MetaLang.loadLanguageFromFile(metaLangFileName);
 		}
 		
 		public void addBuildInstruction(String type,ParseAction parseAction) {

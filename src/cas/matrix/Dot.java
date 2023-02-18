@@ -5,7 +5,6 @@ import cas.base.ComplexFloat;
 import cas.base.Expr;
 import cas.base.Func;
 import cas.base.Rule;
-import cas.primitive.Sequence;
 import cas.primitive.Var;
 
 public class Dot extends Expr{
@@ -26,12 +25,12 @@ public class Dot extends Expr{
 					
 					for(int row = 0; row < newMat.rows();row++) {
 						for(int col = 0; col < newMat.cols();col++) {
-							Sequence totalRow = total.getRow(row);
-							Sequence otherCol = other.getCol(col);
+							Func totalRowSequence = total.getRow(row);
+							Func otherColSequence = other.getCol(col);
 							
 							Func sum = sum();
-							for(int j = 0;j<totalRow.size();j++) {
-								sum.add( prod(totalRow.get(j),otherCol.get(j)) );
+							for(int j = 0;j<totalRowSequence.size();j++) {
+								sum.add( prod(totalRowSequence.get(j),otherColSequence.get(j)) );
 							}
 							newMat.setElement(row, col, sum);
 							

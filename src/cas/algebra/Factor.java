@@ -61,15 +61,15 @@ public class Factor{
 			Var v = mostCommonVar(expr);
 			if(expr.typeName().equals("sum") && v != null && isPlainPolynomial(expr,v )) {
 				
-				Sequence coefs = polyExtract(expr,v,casInfo);
-				if(coefs == null) return e;
-				Num degree = num(coefs.size()-1);
+				Func coefsSequence = polyExtract(expr,v,casInfo);
+				if(coefsSequence == null) return e;
+				Num degree = num(coefsSequence.size()-1);
 				if(degree.getRealValue().compareTo(BigInteger.TWO) == -1) return e;
 				
-				if(coefs.containsType("sum")) return e;
+				if(coefsSequence.containsType("sum")) return e;
 				
-				Expr highestDegreeCoef = coefs.get(coefs.size()-1);
-				Expr lowestDegreeCoef = coefs.get(0);
+				Expr highestDegreeCoef = coefsSequence.get(coefsSequence.size()-1);
+				Expr lowestDegreeCoef = coefsSequence.get(0);
 				
 				Expr m = power(highestDegreeCoef ,inv(degree)).simplify(casInfo);
 				Expr b = power(lowestDegreeCoef ,inv(degree)).simplify(casInfo);
@@ -154,6 +154,16 @@ public class Factor{
 			new Rule("factor(x^4+a)->(x^2-a^(1/4)*sqrt(2)*x+sqrt(a))*(x^2+a^(1/4)*sqrt(2)*x+sqrt(a))","factorIrrationalRoots()&comparison(a>0)","factor quartics using special technique"),
 	},"factor quartics using special technique");
 	
+	
+	/*
+	 * 
+	 * factors quadratics in the general form a*x^(2*n)+b*x^n+c
+	 * this includes the normal a*x^2+b*x+c
+	 * 
+	 * 
+	 * 
+	 * TODO factor(r^2+4*s^2+4*s*r) needs to work
+	 */
 	static Rule quadraticFactor = new Rule("factor quadratics"){
 		@Override
 		public Expr applyRuleToExpr(Expr e,CasInfo casInfo) {
@@ -162,23 +172,34 @@ public class Factor{
 			
 			
 			if(expr.typeName().equals("sum")) {
-				Sequence coefs = null;
+				Func coefsSequence = null;
 				Expr x = mostCommonVar(expr);
 				if(x!=null) {
-					coefs = polyExtract(expr, (Var)x,casInfo);
+					coefsSequence = polyExtract(expr, (Var)x,casInfo);
 				}
 				
-				if(coefs != null) {
-					if(coefs.size() >= 3 && coefs.size()%2 == 1) {//quadratic form
-						//check discriminant
-						for(int i = 0;i<coefs.size();i++) {
-							if(!(coefs.get(i) instanceof Num || casInfo.factorIrrationalRoots())) {//should be a num or factoring irrational roots is allowed
-								return e;
-							}else if(i != 0&& i != coefs.size()-1 && i != (coefs.size()-1)/2 && !coefs.get(i).equals(Num.ZERO)) {//all between coefficients should be zero
-								return e;
+				if(coefsSequence != null) {
+					if(coefsSequence.size() >= 3 && coefsSequence.size()%2 == 1) {//quadratic form	
+						
+						//verify between coefficients zero
+						//for example x^4+x^2+1 in sequence form is [1,0,1,0,1]. Notice only three coefficients are non zero
+						for(int i = 0;i<coefsSequence.size();i++) {
+							
+							if(i == 0) continue;//constant
+							if(i == coefsSequence.size()-1) continue;//x^(2*n) term
+							if(i == (coefsSequence.size()-1)/2) continue;//x^n term
+							
+							Expr currentCoef = coefsSequence.get(i);
+							
+							if(!currentCoef.equals(Num.ZERO)) {//all between coefficients should be zero
+								return e;//invalid form
 							}
 						}
-						Expr a =  coefs.get(coefs.size()-1),b = coefs.get((coefs.size()-1)/2),c = coefs.get(0);
+						
+						//check discriminant
+						
+						//extract a b and c
+						Expr a =  coefsSequence.get(coefsSequence.size()-1),b = coefsSequence.get((coefsSequence.size()-1)/2),c = coefsSequence.get(0);
 						
 						if(!casInfo.allowComplexNumbers() && ( (a instanceof Num && ((Num)a).isComplex()) || (b instanceof Num && ((Num)b).isComplex()) || (c instanceof Num && ((Num)c).isComplex()) )) return e;
 						
@@ -197,7 +218,7 @@ public class Factor{
 							
 							Func outProd = prod();
 							
-							x = power(x,num((coefs.size()-1)/2));
+							x = power(x,num((coefsSequence.size()-1)/2));
 							
 							Func twoAXProd = prod(num(2),a,x);
 							outProd.add( sum(twoAXProd,b.copy(),prod(num(-1),discrNumSqrt)) );
@@ -276,8 +297,8 @@ public class Factor{
 					Func termPower = Power.cast(subTerm);
 					
 					if(!Div.isNumericalAndReal(Div.cast(termPower.getExpo()))) {
-						Sequence parts = seperateCoef(termPower.getExpo());
-						termPower = power(power(termPower.getBase(),parts.get(1)),parts.get(0));
+						Func partsSequence = seperateCoef(termPower.getExpo());
+						termPower = power(power(termPower.getBase(),partsSequence.get(1)),partsSequence.get(0));
 					}
 					
 					Num minExpoNum = getNumerOfPower(termPower);
@@ -296,8 +317,8 @@ public class Factor{
 							Func otherTermPower = Power.cast(otherSubTerm);
 							
 							if(!Div.isNumericalAndReal(Div.cast(otherTermPower.getExpo()))) {
-								Sequence parts = seperateCoef(otherTermPower.getExpo());
-								otherTermPower = power(power(otherTermPower.getBase(),parts.get(1)),parts.get(0));
+								Func partsSequence = seperateCoef(otherTermPower.getExpo());
+								otherTermPower = power(power(otherTermPower.getBase(),partsSequence.get(1)),partsSequence.get(0));
 							}
 							
 							if(otherTermPower.getBase().equals(termPower.getBase())) {
@@ -379,43 +400,43 @@ public class Factor{
 			if(expr.typeName().equals("sum") && v != null && isPlainPolynomial(expr,v) ) {
 				int degree = degree(expr,v).intValue();
 				if(degree < 2) return e;
-				Sequence poly = polyExtract(expr,v,casInfo);
-				if(poly == null) return e;
-				for(int i = 0;i<poly.size();i++) if(!(poly.get(i) instanceof Num)) return e;//must be all nums
-				ArrayList<Double> rootsAsFloat = Solve.polySolve(poly);
+				Func polySequence = polyExtract(expr,v,casInfo);
+				if(polySequence == null) return e;
+				for(int i = 0;i<polySequence.size();i++) if(!(polySequence.get(i) instanceof Num)) return e;//must be all nums
+				ArrayList<Double> rootsAsFloat = Solve.polySolve(polySequence);
 				Func outProd = prod();
 				//System.out.println(expr);
 				//System.out.println(rootsAsFloat);
 				for(double root:rootsAsFloat) {
 					if(Double.isNaN(root)) return e;
-					Sequence rootAsPoly = sequence();//the polynomial to be divided
+					Func rootAsPolySequence = sequence();//the polynomial to be divided
 					long[] frac =  toFraction(root);
-					rootAsPoly.add(num(-frac[0]));
+					rootAsPolySequence.add(num(-frac[0]));
 					
-					Sequence[] divided = null;//divided[1] is the remainder
+					Func[] dividedSequence = null;//divided[1] is the remainder
 					
 					//System.out.println("r "+root+" "+degree);
 					for(int i = 1;i<Math.min(8, degree);i++) {//this checks other factors like x^3-7, still integer root but a quadratic 
 						//System.out.println(frac[0]+"/"+frac[1]);
-						rootAsPoly.add(num(frac[1]));
-						divided = polyDiv(poly, rootAsPoly, casInfo);//try polynomial division
-						if(divided[1].size() == 0) break;//success
-						rootAsPoly.set(i, num(0));//shifting to next degree
+						rootAsPolySequence.add(num(frac[1]));
+						dividedSequence = polyDiv(polySequence, rootAsPolySequence, casInfo);//try polynomial division
+						if(dividedSequence[1].size() == 0) break;//success
+						rootAsPolySequence.set(i, num(0));//shifting to next degree
 						double newApprox = Math.pow(root,i+1);
 						//System.out.println(newApprox);
 						frac =  toFraction(newApprox);//shift to  next degree
-						rootAsPoly.set(0, num(-frac[0]));//shift to  next degree
+						rootAsPolySequence.set(0, num(-frac[0]));//shift to  next degree
 					}
 					
 					
-					if(divided != null && divided[1].size() == 0) {
-						outProd.add( exprListToPoly(rootAsPoly, v, casInfo) );
-						poly = divided[0];
-						degree = poly.size()-1;
+					if(dividedSequence != null && dividedSequence[1].size() == 0) {
+						outProd.add( exprListToPoly(rootAsPolySequence, v, casInfo) );
+						polySequence = dividedSequence[0];
+						degree = polySequence.size()-1;
 					}
 					
 				}
-				outProd.add( exprListToPoly(poly, v, casInfo) );
+				outProd.add( exprListToPoly(polySequence, v, casInfo) );
 				if(outProd.size() > 1) {
 					return outProd.simplify(casInfo);
 				}

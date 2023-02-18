@@ -269,9 +269,9 @@ public class Sum{
 						Expr coef = num(1);//coefficient
 						
 						if(current.typeName().equals("prod") || current.typeName().equals("div")) {//if its a product
-							Sequence parts = seperateCoef(current);
-							coef = parts.get(0);
-							current = parts.get(1);
+							Func partsSequence = seperateCoef(current);
+							coef = partsSequence.get(0);
+							current = partsSequence.get(1);
 						}
 						
 						boolean foundSame = false;
@@ -283,9 +283,9 @@ public class Sum{
 							Expr toCompCoef = num(1);
 							
 							if(toComp.typeName().equals("prod") || toComp.typeName().equals("div")) {
-								Sequence parts = seperateCoef(toComp);
-								toCompCoef = parts.get(0);
-								toComp = parts.get(1);
+								Func partsSequence = seperateCoef(toComp);
+								toCompCoef = partsSequence.get(0);
+								toComp = partsSequence.get(1);
 							}
 							
 							if(current.equals(toComp)) {

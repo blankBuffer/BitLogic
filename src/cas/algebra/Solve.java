@@ -30,7 +30,7 @@ public class Solve{
 		public void load(Func owner) {
 			
 			Rule solveSingleEqCase = new Rule("solved equation") {
-				Sequence loopedSequence;
+				Func loopedSequence;
 				
 				Rule moveToLeftSide;
 				Rule rightSideZeroCase;
@@ -196,7 +196,7 @@ public class Solve{
 										for(int i = 0;i<answer.size();i++) {
 											answer.set(i, solve( (Func)answer.get(i) ,v));
 										}
-										
+										System.out.println("technique used: "+answer);
 										return answer.simplify(casInfo);
 									}
 									
@@ -467,7 +467,7 @@ public class Solve{
 	}
 	
 	static Rule solveSetCase = new Rule("solve a set of equations") {
-		void removeAnEq(Func equsSet,Var v,CasInfo casInfo,Sequence removed) {//remove an equation reducing the problem
+		void removeAnEq(Func equsSet,Var v,CasInfo casInfo,Func removedSequence) {//remove an equation reducing the problem
 			CasInfo singleSolutionModeCasInfo = new CasInfo(casInfo);
 			singleSolutionModeCasInfo.setSingleSolutionMode(true);
 			
@@ -476,7 +476,7 @@ public class Solve{
 				if(solution.typeName().equals("set")) solution = solution.get();
 				else if(solution.typeName().equals("solve")) continue;
 				
-				removed.add(solution);
+				removedSequence.add(solution);
 				equsSet.remove(i);
 				
 				for(int j = 0;j<equsSet.size();j++) equsSet.set(j,equsSet.get(j).replace((Func)solution));
@@ -495,18 +495,18 @@ public class Solve{
 			Func varsSet = getVars(solve);
 			
 			Func reducedSet = (Func) getEqus(solve).copy();
-			Sequence removed = new Sequence();//keep reducing problem
+			Func removedSequence = sequence();//keep reducing problem
 			for(int i = 0;i<varsSet.size();i++) {
 				Var v = (Var)varsSet.get(i);
 				int oldSize = reducedSet.size();
-				removeAnEq(reducedSet,v,casInfo,removed);
+				removeAnEq(reducedSet,v,casInfo,removedSequence);
 				if(oldSize == reducedSet.size()) return e;//did not reduce, stop solve
 			}
 			Func variableSolutionsSet = exprSet();
 			
 			//work backwards
-			for(int i = removed.size()-1;i>=0;i--) {
-				Func currentEq = (Func)(removed.get(i).replace(variableSolutionsSet).simplify(casInfo));
+			for(int i = removedSequence.size()-1;i>=0;i--) {
+				Func currentEq = (Func)(removedSequence.get(i).replace(variableSolutionsSet).simplify(casInfo));
 				variableSolutionsSet.add(currentEq);
 			}
 			
@@ -515,7 +515,7 @@ public class Solve{
 	};
 	
 	public static Rule comparisonSolve = new Rule("solve a comparison"){
-		Sequence loopedSequence;
+		Func loopedSequence;
 		
 		Rule moveToLeftSide;
 		Rule powerCase;
@@ -768,15 +768,15 @@ public class Solve{
 		}
 		return guess;
 	}
-	public static ArrayList<Double> polySolve(Sequence poly) {//an algorithm i came up with to solve all roots of a polynomial
-		if(poly.size() == 1) return new ArrayList<Double>();
+	public static ArrayList<Double> polySolve(Func polySequence) {//an algorithm i came up with to solve all roots of a polynomial
+		if(polySequence.size() == 1) return new ArrayList<Double>();
 		//init polyArray
 		
-		double[] base = new double[poly.size()];
-		for(int i = 0;i<poly.size();i++) {
-			base[i] = poly.get(i).convertToFloat(Cas.exprSet()).real;
+		double[] base = new double[polySequence.size()];
+		for(int i = 0;i<polySequence.size();i++) {
+			base[i] = polySequence.get(i).convertToFloat(Cas.exprSet()).real;
 		}
-		double[][] table = new double[poly.size()-1][];
+		double[][] table = new double[polySequence.size()-1][];
 		
 		table[0] = base;
 		

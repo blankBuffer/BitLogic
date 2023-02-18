@@ -8,7 +8,6 @@ import cas.primitive.Div;
 import cas.primitive.Num;
 import cas.primitive.Power;
 import cas.primitive.Prod;
-import cas.primitive.Sequence;
 
 public class Gcd{
 	
@@ -21,13 +20,13 @@ public class Gcd{
 				Expr smallGcd(Expr a,Expr b) {//gcd of just two elements
 					Func subGcdProd = prod();
 					
-					Sequence aSep = seperateCoef(a);
-					a =	aSep.get(1);
-					Sequence bSep = seperateCoef(b);
-					b =	bSep.get(1);
+					Func aSepSequence = seperateCoef(a);
+					a =	aSepSequence.get(1);
+					Func bSepSequence = seperateCoef(b);
+					b =	bSepSequence.get(1);
 					
-					Func fracCoefA = Div.cast(aSep.get());
-					Func fracCoefB = Div.cast(bSep.get());
+					Func fracCoefA = Div.cast(aSepSequence.get());
+					Func fracCoefB = Div.cast(bSepSequence.get());
 					
 					subGcdProd.add(Div.unCast(div( num(((Num)fracCoefA.getNumer()).gcd().gcd(((Num)fracCoefB.getNumer()).gcd())) ,num(((Num)fracCoefA.getDenom()).gcd().gcd(((Num)fracCoefB.getDenom()).gcd())) )));
 					
