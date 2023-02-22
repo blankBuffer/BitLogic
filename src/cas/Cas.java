@@ -147,8 +147,11 @@ public class Cas {
 		return out;
 	}
 	
-	public static Limit limit(Expr e,Func becomes){
-		return new Limit(e,becomes);
+	public static Func limit(Expr e,Func becomes){
+		Func out = (Func) SimpleFuncs.limit.copy();
+		out.add(e);
+		out.add(becomes);
+		return out;
 	}
 	public static Func not(Expr expr) {
 		Func out = (Func) SimpleFuncs.not.copy();

@@ -19,9 +19,7 @@ import cas.base.Func;
 import cas.base.Rule;
 import cas.base.StandardRules;
 import cas.bool.*;
-import cas.calculus.Diff;
-import cas.calculus.Integrate;
-import cas.calculus.IntegrateOver;
+import cas.calculus.*;
 
 public class SimpleFuncs extends Cas{
 
@@ -104,7 +102,7 @@ public class SimpleFuncs extends Cas{
 	static Func gcd;
 	static Func sum;
 	static Func div;
-	static Func diff,integrate;
+	static Func diff,integrate,limit;
 	static Func ln;
 	static Func lambertW;
 	static Func distr,factor;
@@ -143,6 +141,7 @@ public class SimpleFuncs extends Cas{
 		sum = new Func("sum",-1,Sum.sumLoader);
 		div = new Func("div",2,Div.divLoader);
 		diff = new Func("diff",2,Diff.diffLoader);
+		limit = new Func("limit",2,Limit.limitLoader);
 		ln = new Func("ln",1,Ln.lnLoader);
 		integrate = new Func("integrate",2,Integrate.integrateLoader);
 		lambertW = new Func("lambertW",1,LambertW.lambertwLoader);
@@ -176,6 +175,7 @@ public class SimpleFuncs extends Cas{
 		addFunc(div);
 		addFunc(diff);
 		addFunc(ln);
+		addFunc(limit);
 		addFunc(integrate);
 		addFunc(lambertW);
 		addFunc(distr);

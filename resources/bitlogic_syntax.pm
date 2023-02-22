@@ -28,11 +28,6 @@ Do not modify this file unless you know what you are doing
 		[type("var"),type("num") -> var:MERGE],
 		[type("num"),type("var") -> var:MERGE]
 	],
-	//becomes
-	[
-		type("NODE_SEQUENCE"),type("becomes_char"),type("NODE_SEQUENCE") -> becomes
-		:REMOVE_OPERATOR
-	],
 	[//parenthesis
 		char("("),type("NODE_SEQUENCE"),char(")") -> paren
 		:REMOVE_OPERATOR
@@ -48,6 +43,11 @@ Do not modify this file unless you know what you are doing
 	//information list
 	[
 		type("NODE_SEQUENCE"),char(","),type("NODE_SEQUENCE") -> info_list
+		:REMOVE_OPERATOR
+	],
+	//becomes
+	[
+		type("NODE_SEQUENCE"),type("becomes_char"),type("NODE_SEQUENCE") -> becomes
 		:REMOVE_OPERATOR
 	],
 	[//ternary stuff

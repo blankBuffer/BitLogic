@@ -1,5 +1,6 @@
 package cas.base;
 
+import cas.calculus.Limit;
 import cas.primitive.Var;
 
 public class Func extends Expr{
@@ -159,6 +160,8 @@ public class Func extends Expr{
 			return (Var) get(1);
 		}else if(typeName().equals("integrateOver")){
 			return (Var) get(3);
+		}else if(typeName().equals("limit")) {
+			return Limit.getVar(this);
 		}
 		
 		throw new RuntimeException(typeName()+"invalid type for getVar()");
