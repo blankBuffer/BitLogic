@@ -59,7 +59,7 @@ public class Factor{
 			Expr expr = factor.get();
 			
 			Var v = mostCommonVar(expr);
-			if(expr.typeName().equals("sum") && v != null && isPlainPolynomial(expr,v )) {
+			if(expr.isType("sum") && v != null && isPlainPolynomial(expr,v )) {
 				
 				Func coefsSequence = polyExtract(expr,v,casInfo);
 				if(coefsSequence == null) return e;
@@ -110,14 +110,14 @@ public class Factor{
 			Var v = mostCommonVar(expr);
 			
 			//if its a sum of length 2 and is in polynomial form
-			if(expr.typeName().equals("sum") && v!=null && expr.size() == 2 && isPlainPolynomial(expr,v)) {
+			if(expr.isType("sum") && v!=null && expr.size() == 2 && isPlainPolynomial(expr,v)) {
 				Func pow = null;
 				Expr other = null;
 				//find x^n and b, two cases x^n+b or b+x^n
-				if(expr.get(0).typeName().equals("power")) {
+				if(expr.get(0).isType("power")) {
 					pow = (Func)expr.get(0);
 					other = expr.get(1);
-				}else if(expr.get(1).typeName().equals("power")) {
+				}else if(expr.get(1).isType("power")) {
 					pow = (Func)expr.get(1);
 					other = expr.get(0);
 				}
@@ -137,7 +137,7 @@ public class Factor{
 					 * why might it become a product? remember b could be an integer and that sqrt(12) results in 2*sqrt(3)
 					 */
 					
-					if(!(newOther.typeName().equals("power") || newOther.typeName().equals("prod"))) {
+					if(!(newOther.isType("power") || newOther.isType("prod"))) {
 						
 						return prod(sum(newPow,newOther),sum(newPow,neg(newOther))).simplify(casInfo);
 						
@@ -171,7 +171,7 @@ public class Factor{
 			Expr expr = factor.get();
 			
 			
-			if(expr.typeName().equals("sum")) {
+			if(expr.isType("sum")) {
 				Func coefsSequence = null;
 				Expr x = mostCommonVar(expr);
 				if(x!=null) {
@@ -242,7 +242,7 @@ public class Factor{
 		private Num getNumerOfPower(Func pow) {
 			if(pow.getExpo() instanceof Num) {
 				return (Num)pow.getExpo();
-			}else if(pow.getExpo().typeName().equals("div") && Div.isNumericalAndReal((Func)pow.getExpo()) ) {
+			}else if(pow.getExpo().isType("div") && Div.isNumericalAndReal((Func)pow.getExpo()) ) {
 				return (Num)((Func)pow.getExpo()).getNumer();
 			}else {
 				return num(1);
@@ -250,7 +250,7 @@ public class Factor{
 		}
 		
 		private Num getDenomOfPower(Func pow) {
-			if(pow.getExpo().typeName().equals("div") && Div.isNumericalAndReal((Func)pow.getExpo()) ) {
+			if(pow.getExpo().isType("div") && Div.isNumericalAndReal((Func)pow.getExpo()) ) {
 				return (Num)((Func)pow.getExpo()).getDenom();
 			}
 			return num(1);
@@ -262,10 +262,10 @@ public class Factor{
 			if(e.contains(Var.INF)) return factor;//can't factor infinity lmao
 			Expr expr = factor.get();
 		
-			if(expr.typeName().equals("sum")) {
+			if(expr.isType("sum")) {
 				boolean sumHasDiv = false;
 				for(int i = 0;i<expr.size();i++) {
-					if(expr.get(i).typeName().equals("div")) {
+					if(expr.get(i).isType("div")) {
 						sumHasDiv = true;
 						break;
 					}
@@ -374,10 +374,10 @@ public class Factor{
 			Func factor = (Func)e;
 			Expr expr = factor.get();
 			
-			if(expr.typeName().equals("prod")) {
+			if(expr.isType("prod")) {
 
 				for(int i = 0;i<expr.size();i++) {
-					if(expr.get(i).typeName().equals("sum")) {
+					if(expr.get(i).isType("sum")) {
 						Expr subSum = expr.get(i);
 						subSum.flags.simple = false;
 						expr.set(i, subSum.simplify(casInfo));
@@ -397,7 +397,7 @@ public class Factor{
 			
 			Var v = mostCommonVar(expr);
 			
-			if(expr.typeName().equals("sum") && v != null && isPlainPolynomial(expr,v) ) {
+			if(expr.isType("sum") && v != null && isPlainPolynomial(expr,v) ) {
 				int degree = degree(expr,v).intValue();
 				if(degree < 2) return e;
 				Func polySequence = polyExtract(expr,v,casInfo);

@@ -94,7 +94,7 @@ public class Rule extends Expr{
 		
 		if(patternStr != null) {
 			pattern = (Func) createExpr(patternStr);
-			if(!pattern.typeName().equals("becomes")) throw new RuntimeException("expected a becomes for a pattern!");
+			if(!pattern.isType("becomes")) throw new RuntimeException("expected a becomes for a pattern!");
 		}
 		
 		if(pattern != null) {
@@ -134,7 +134,7 @@ public class Rule extends Expr{
 		if(template instanceof Var && ((Var)template).isGeneric()) {
 			exprsPartsOutSequence.add(expr.copy());
 		}else{
-			if(template.size()==expr.size() && template.typeName().equals(expr.typeName())) {
+			if(template.size()==expr.size() && template.isType(expr.typeName())) {
 				for(int i = 0;i<template.size();i++) {
 					if(!getPartsBasedOnTemplate(exprsPartsOutSequence,template.get(i),expr.get(i))) return false;
 				}
@@ -200,7 +200,7 @@ public class Rule extends Expr{
 		if(other == null) return false;
 		if(template instanceof Var && ((Var) template).isGeneric()) return true;
 		
-		if(template.typeName().equals(other.typeName())) {
+		if(template.isType(other.typeName())) {
 			if(template instanceof Num || template instanceof BoolState || template instanceof FloatExpr || template instanceof Var) return template.equals(other);
 			if(template.size() != other.size()) return false;
 			
@@ -329,7 +329,7 @@ public class Rule extends Expr{
 				}
 				
 				Expr out = Becomes.getRightSide(pattern).replace(equsSet);
-				if(Becomes.getLeftSide(pattern).typeName().equals(Becomes.getRightSide(pattern).typeName())) {
+				if(Becomes.getLeftSide(pattern).isType(Becomes.getRightSide(pattern).typeName())) {
 					out.simplifyChildren(casInfo);
 				}else {
 					out = out.simplify(casInfo);

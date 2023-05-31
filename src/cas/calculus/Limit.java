@@ -50,9 +50,9 @@ public class Limit{
 				public Expr applyRuleToExpr(Expr e,CasInfo casInfo){
 					Func lim = (Func)e;
 					
-					if(lim.get().typeName().equals("div")) {
+					if(lim.get().isType("div")) {
 						Func innerDiv = (Func)lim.get();
-						if(innerDiv.getNumer().typeName().equals("power") && innerDiv.getDenom().typeName().equals("power")) {
+						if(innerDiv.getNumer().isType("power") && innerDiv.getDenom().isType("power")) {
 							Func numerPower = (Func)innerDiv.getNumer();
 							Func denomPower = (Func)innerDiv.getDenom();
 							
@@ -96,8 +96,8 @@ public class Limit{
 					e = stripNonVarPartsFromProd(e,v);
 					if(!e.contains(v)) return CONST;
 					if(isPolynomialUnstrict(e, v)) return POLY;
-					if(e.typeName().equals("power") && !e.get(0).contains(v) && posLinFunc(e.get(1), v,casInfo) ) return EXP;
-					if(e.typeName().equals("power") && posLinFunc(e.get(0),v,casInfo) && posLinFunc(e.get(1),v,casInfo)) return SUPER;
+					if(e.isType("power") && !e.get(0).contains(v) && posLinFunc(e.get(1), v,casInfo) ) return EXP;
+					if(e.isType("power") && posLinFunc(e.get(0),v,casInfo) && posLinFunc(e.get(1),v,casInfo)) return SUPER;
 					return UNKNOWN;//cannot compare too complicated
 				}
 				
@@ -117,12 +117,12 @@ public class Limit{
 					Func lim = (Func)e;
 					Var v = lim.getVar();
 					if(Limit.getValue(lim).equals(Var.INF)){
-						if(lim.get().typeName().equals("div")){
+						if(lim.get().isType("div")){
 							Func castedDiv = (Func)lim.get();
 							int comparison = compare(castedDiv.getNumer(),castedDiv.getDenom(),v,casInfo);
 							if(comparison == 1) return inf();
 							else if(comparison == -1) return epsilon();
-						}else if(lim.get().typeName().equals("sum")){//sum where one term grows much faster than the rest
+						}else if(lim.get().isType("sum")){//sum where one term grows much faster than the rest
 							Func castedSum = (Func)lim.get();
 							Expr biggest = castedSum.get(0);
 							
@@ -146,7 +146,7 @@ public class Limit{
 				@Override
 				public Expr applyRuleToExpr(Expr e,CasInfo casInfo){
 					Func lim = (Func)e;
-					if(lim.get().typeName().equals("power")) {
+					if(lim.get().isType("power")) {
 						Func innerPow = (Func)lim.get();
 						
 						Expr limOfBase = limit(innerPow.getBase(),Limit.getApproaches(lim)).simplify(casInfo);
@@ -186,7 +186,7 @@ public class Limit{
 				public Expr applyRuleToExpr(Expr e,CasInfo casInfo){
 					Func lim = (Func)e;
 					
-					if(lim.get().typeName().equals("div")) {
+					if(lim.get().isType("div")) {
 						Func innerDiv = (Func)lim.get();
 						
 						boolean numerIsRoot = Rule.similarWithCondition(rootExpr,innerDiv.getNumer(),rootCondition.replace(equ(lim.getVar(),var("x"))));
@@ -240,7 +240,7 @@ public class Limit{
 					
 					Var v = lim.getVar();
 					
-					if(lim.get().typeName().equals("div") && isInf(Limit.getValue(lim))) {
+					if(lim.get().isType("div") && isInf(Limit.getValue(lim))) {
 						Func innerDiv = (Func)lim.get();
 						
 						BigInteger numerDegree = degree(innerDiv.getNumer(),v);
@@ -318,7 +318,7 @@ public class Limit{
 				public Expr applyRuleToExpr(Expr e,CasInfo casInfo){
 					Func lim = (Func)e;
 					
-					if(isInf(Limit.getValue(lim)) && lim.get().typeName().equals("sum")) {
+					if(isInf(Limit.getValue(lim)) && lim.get().isType("sum")) {
 						Func innerSum = (Func)lim.get();
 						
 						for(int i = 0;i<innerSum.size();i++) {
@@ -364,25 +364,25 @@ public class Limit{
 				
 				public Expr replace(Expr e) {
 					boolean changed = false;
-					if(e.typeName().equals("gamma")) {
+					if(e.isType("gamma")) {
 						return toSterling.replace(equ(var("x"),e.get()));
-					}else if(e.typeName().equals("prod")) {
+					}else if(e.isType("prod")) {
 						for(int i = 0;i<e.size();i++) {
-							if(e.get(i).typeName().equals("gamma")) {
+							if(e.get(i).isType("gamma")) {
 								e.set(i, toSterling.replace(equ(var("x"),e.get(i).get())));
 								changed = true;
-							}else if(e.get(i).typeName().equals("power")) {
+							}else if(e.get(i).isType("power")) {
 								Func innerPower = (Func)e.get(i);
-								if(innerPower.getBase().typeName().equals("gamma")) {
+								if(innerPower.getBase().isType("gamma")) {
 									changed = true;
 									innerPower.setBase(toSterling.replace(equ(var("x"),innerPower.getBase().get())));
 								}
 							}
 						}
 						if(changed) return e;
-					}else if(e.typeName().equals("power")) {
+					}else if(e.isType("power")) {
 						Func innerPower = (Func)e;
-						if(innerPower.getBase().typeName().equals("gamma")) {
+						if(innerPower.getBase().isType("gamma")) {
 							changed = true;
 							innerPower.setBase(toSterling.replace(equ(var("x"),innerPower.getBase().get())));
 						}
@@ -397,7 +397,7 @@ public class Limit{
 					
 					if(!Limit.getValue(lim).equals(Var.INF)) return lim;
 					
-					if(lim.get().typeName().equals("div")) {
+					if(lim.get().isType("div")) {
 						boolean changed = false;
 						Func innerDiv = (Func)lim.get();
 						
@@ -428,7 +428,7 @@ public class Limit{
 				public Expr applyRuleToExpr(Expr e,CasInfo casInfo){
 					Func lim = (Func)e;
 					
-					if(lim.get().typeName().equals("div")) {
+					if(lim.get().isType("div")) {
 						Func innerDiv = (Func)lim.get();
 						
 						Expr limOfNumer = limit(innerDiv.getNumer(),Limit.getApproaches(lim)).simplify(casInfo);
@@ -493,7 +493,7 @@ public class Limit{
 	
 	//returns the direction of an expression right or left
 	public static short getDirection(Expr e){
-		if(e.typeName().equals("sum")){
+		if(e.isType("sum")){
 			Func innerSum = (Func)e;
 			for(int i = 0;i<innerSum.size();i++){
 				if(innerSum.get(i).equals(Var.EPSILON)){
@@ -512,7 +512,7 @@ public class Limit{
 	
 	
 	public static Expr stripDirection(Expr e){//does not modify input
-		if(e.typeName().equals("sum")){
+		if(e.isType("sum")){
 			Func innerSum = (Func)e;
 			for(int i = 0;i<innerSum.size();i++){
 				if(innerSum.get(i).equals(Var.EPSILON)){
@@ -537,7 +537,7 @@ public class Limit{
 		Expr epsilonAdder = direction == LEFT ? Cas.neg(Cas.epsilon()) : (  direction == RIGHT ? Cas.epsilon() : null);
 		
 		if(epsilonAdder != null){
-			if(e.typeName().equals("sum")){
+			if(e.isType("sum")){
 				e.add(epsilonAdder);
 				return e;
 			}

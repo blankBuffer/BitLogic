@@ -75,7 +75,7 @@ public class Range{
 						ComplexFloat maxApprox = Range.getMax(range).convertToFloat(exprSet());
 						
 						for(int i = 0;i<criticalPointsSet.size();i++) {
-							if(criticalPointsSet.get(i).typeName().equals("solve")) {//Unsolved state
+							if(criticalPointsSet.get(i).isType("solve")) {//Unsolved state
 								criticalPointsSet.remove(i);
 								i--;
 								continue;

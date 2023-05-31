@@ -99,11 +99,11 @@ public class Abs{
 							theoryMax.add(current);
 						}else if(isPlainPolynomial(current,v)){
 							polynomialSum.add(current);
-						}else if(current.typeName().equals("acos")) {
+						}else if(current.isType("acos")) {
 							theoryMax.add(pi());
-						}else if(current.typeName().equals("lambertW")) {
+						}else if(current.isType("lambertW")) {
 							theoryMin.add(num(-1));
-						}else if(current.typeName().equals("sin") || current.typeName().equals("cos")) {
+						}else if(current.isType("sin") || current.isType("cos")) {
 							theoryMin.add(num(-1));
 							theoryMax.add(num(1));
 						}else if(Rule.fastSimilarExpr(basicSinProd, current)) {
@@ -178,7 +178,7 @@ public class Abs{
 				public Expr applyRuleToExpr(Expr e,CasInfo casInfo) {
 					Func abs = (Func)e;
 					
-					if(abs.get().typeName().equals("prod")) {
+					if(abs.get().isType("prod")) {
 						Func innerProd = (Func)abs.get();
 						
 						for(int i = 0;i<innerProd.size();i++) {

@@ -181,7 +181,7 @@ public class ExprRender extends Cas{//sort of a wrap of the image type but keeps
 		public void makeExpr(Expr e) {//create image from expression
 			if(e instanceof Var || e instanceof Num || e instanceof FloatExpr || e instanceof BoolState) {
 				makeString(e.toString());
-			}else if(e.typeName().equals("power")) {
+			}else if(e.isType("power")) {
 				Func pow = (Func)e;
 				
 				ExprImg baseImg = newExprImg();
@@ -212,7 +212,7 @@ public class ExprRender extends Cas{//sort of a wrap of the image type but keeps
 					drawImage(baseImg,sqrtWid,smallShift*2,baseImg.getWidth(),baseImg.getHeight());
 					graphics.fillRect(sqrtWid,smallShift,getWidth(),overBarHeight);
 				}else {
-					if(pow.getBase().typeName().equals("prod") || pow.getBase().typeName().equals("sum") || pow.getBase().typeName().equals("div") || pow.getBase().typeName().equals("power") || (pow.getBase() instanceof Num && pow.getBase().negative()) ) {
+					if(pow.getBase().isType("prod") || pow.getBase().isType("sum") || pow.getBase().isType("div") || pow.getBase().isType("power") || (pow.getBase() instanceof Num && pow.getBase().negative()) ) {
 						baseImg.makeParen(pow.getBase());
 					}else {
 						baseImg.makeExpr(pow.getBase());
@@ -228,7 +228,7 @@ public class ExprRender extends Cas{//sort of a wrap of the image type but keeps
 					drawImage(baseImg,0,getHeight()-baseImg.getHeight(),baseImg.getWidth(),baseImg.getHeight());
 					drawImage(expoImg,getWidth()-expoImg.getWidth()*3/4,0,expoImg.getWidth()*3/4,expoImg.getHeight()*3/4);
 				}
-			}else if(e.typeName().equals("div")) {
+			}else if(e.isType("div")) {
 				Func div = (Func)e;
 				
 				ExprImg numerImg = newExprImg();
@@ -248,12 +248,12 @@ public class ExprRender extends Cas{//sort of a wrap of the image type but keeps
 				drawImage(numerImg,getWidth()/2-numerImg.getWidth()/2,0,numerImg.getWidth(),numerImg.getHeight());
 				graphics.fillRect(getWidth()/2-fractionSpacerWidth/2, numerImg.getHeight(), fractionSpacerWidth, fractionSpacerHeight);
 				drawImage(denomImg,getWidth()/2-denomImg.getWidth()/2,getHeight()-denomImg.getHeight(),denomImg.getWidth(),denomImg.getHeight());
-			}else if(e.typeName().equals("equ") || e.typeName().equals("greater") || e.typeName().equals("less")) {
+			}else if(e.isType("equ") || e.isType("greater") || e.isType("less")) {
 				Expr leftSide = getLeftSideGeneric(e);
 				Expr rightSide = getRightSideGeneric(e);
 				
 				ExprImg equImg = newExprImg();
-				equImg.makeString( (e.typeName().equals("equ")) ? "=" : ((e.typeName().equals("greater")) ? ">" : "<") );
+				equImg.makeString( (e.isType("equ")) ? "=" : ((e.isType("greater")) ? ">" : "<") );
 				
 				ExprImg leftImg = newExprImg();
 				leftImg.makeExpr(leftSide);
@@ -261,7 +261,7 @@ public class ExprRender extends Cas{//sort of a wrap of the image type but keeps
 				rightImg.makeExpr(rightSide);
 				
 				makeImgSeries(new ExprImg[]{leftImg,equImg,rightImg});
-			}else if(e.typeName().equals("sum")) {
+			}else if(e.isType("sum")) {
 				ExprImg plusImg = newExprImg();
 				plusImg.makeString("+");
 				ExprImg minusImg = newExprImg();
@@ -281,7 +281,7 @@ public class ExprRender extends Cas{//sort of a wrap of the image type but keeps
 							absElement = innerNum.negate();
 							negative = true;
 						}
-					}else if(absElement.typeName().equals("prod")) {
+					}else if(absElement.isType("prod")) {
 						for(int j = 0;j<absElement.size();j++) {
 							if(absElement.get(j) instanceof Num) {
 								Num innerNum = (Num)absElement.get(j);
@@ -312,7 +312,7 @@ public class ExprRender extends Cas{//sort of a wrap of the image type but keeps
 				for(int i = 0;i<imgs.size();i++)exprImgs[i] = imgs.get(i);
 						
 				makeImgSeries(exprImgs);
-			}else if(e.typeName().equals("prod")) {
+			}else if(e.isType("prod")) {
 				Func prodCopy = (Func)e.copy();
 				
 				ExprImg multImg = newExprImg();
@@ -342,7 +342,7 @@ public class ExprRender extends Cas{//sort of a wrap of the image type but keeps
 				
 				for(int i = 0;i<prodCopy.size();i++) {
 					ExprImg imgEl = newExprImg();
-					if(prodCopy.get(i).typeName().equals("sum")) imgEl.makeParen(prodCopy.get(i));
+					if(prodCopy.get(i).isType("sum")) imgEl.makeParen(prodCopy.get(i));
 					else imgEl.makeExpr(prodCopy.get(i));
 					imgs.add(imgEl);
 					if(i!=prodCopy.size()-1) imgs.add(multImg);
@@ -352,7 +352,7 @@ public class ExprRender extends Cas{//sort of a wrap of the image type but keeps
 				for(int i = 0;i<imgs.size();i++)exprImgs[i] = imgs.get(i);
 						
 				makeImgSeries(exprImgs);
-			}else if(e.typeName().equals("set") || e.typeName().equals("sequence")) {
+			}else if(e.isType("set") || e.isType("sequence")) {
 				ExprImg leftBrac = newExprImg();
 				ExprImg rightBrac = newExprImg();
 				
@@ -362,7 +362,7 @@ public class ExprRender extends Cas{//sort of a wrap of the image type but keeps
 				
 				setHeight(Math.max(parameters.getHeight(),fontSize()));
 				
-				if(e.typeName().equals("set")) {
+				if(e.isType("set")) {
 					leftBrac.makeString("{",getHeight());
 					rightBrac.makeString("}",getHeight());
 				}else {
@@ -379,7 +379,7 @@ public class ExprRender extends Cas{//sort of a wrap of the image type but keeps
 				drawImage(parameters,getFontWidth(),0,parameters.getWidth(),getHeight());
 				drawImage(rightBrac,getWidth()-getFontWidth(),0,getFontWidth(),getHeight());
 				
-			}else if(e.typeName().equals("and")) {
+			}else if(e.isType("and")) {
 				ExprImg andImg = newExprImg();
 				andImg.makeString("&");
 				
@@ -388,7 +388,7 @@ public class ExprRender extends Cas{//sort of a wrap of the image type but keeps
 				for(int i = 0;i<e.size();i++) {
 					ExprImg imgEl = newExprImg();
 					
-					if(e.get(i).typeName().equals("or")) imgEl.makeParen(e.get(i));
+					if(e.get(i).isType("or")) imgEl.makeParen(e.get(i));
 					else imgEl.makeExpr(e.get(i));
 					
 					imgs.add(imgEl);
@@ -400,7 +400,7 @@ public class ExprRender extends Cas{//sort of a wrap of the image type but keeps
 				for(int i = 0;i<imgs.size();i++)exprImgs[i] = imgs.get(i);
 						
 				makeImgSeries(exprImgs);
-			}else if(e.typeName().equals("or")) {
+			}else if(e.isType("or")) {
 				ExprImg orImg = newExprImg();
 				orImg.makeString("or");
 				
@@ -420,7 +420,7 @@ public class ExprRender extends Cas{//sort of a wrap of the image type but keeps
 				for(int i = 0;i<imgs.size();i++)exprImgs[i] = imgs.get(i);
 						
 				makeImgSeries(exprImgs);
-			}else if(e.typeName().equals("not")) {
+			}else if(e.isType("not")) {
 				ExprImg notImg = newExprImg();
 				notImg.makeString("~");
 				
@@ -430,7 +430,7 @@ public class ExprRender extends Cas{//sort of a wrap of the image type but keeps
 				else exprImg.makeParen(e.get());
 				
 				makeImgSeries(new ExprImg[] {notImg,exprImg});
-			}else if(e.typeName().equals("abs")) {
+			}else if(e.isType("abs")) {
 				ExprImg eImg = newExprImg();
 				eImg.makeExpr(e.get());
 				
@@ -446,7 +446,7 @@ public class ExprRender extends Cas{//sort of a wrap of the image type but keeps
 				drawImage(verticleBar,0,0,verticleBar.getWidth(),getHeight());
 				drawImage(eImg,verticleBar.getWidth(),0,eImg.getWidth(),getHeight());
 				drawImage(verticleBar,getWidth()-verticleBar.getWidth(),0,verticleBar.getWidth(),getHeight());
-			}else if(e.typeName().equals("integrate")) {
+			}else if(e.isType("integrate")) {
 				
 				ExprImg diffImg = newExprImg();
 				diffImg.makeString("∂");
@@ -489,7 +489,7 @@ public class ExprRender extends Cas{//sort of a wrap of the image type but keeps
 				currentX+=diffImg.getWidth();
 				drawImage(varImg,currentX,getFractionBar()-varImg.getHeight(),varImg.getWidth(),varImg.getHeight());
 				
-			}else if(e.typeName().equals("integrateOver")) {
+			}else if(e.isType("integrateOver")) {
 				
 				ExprImg diffImg = newExprImg();
 				diffImg.makeString("∂");
@@ -543,7 +543,7 @@ public class ExprRender extends Cas{//sort of a wrap of the image type but keeps
 				currentX+=diffImg.getWidth();
 				drawImage(varImg,currentX,getFractionBar()-varImg.getHeight(),varImg.getWidth(),varImg.getHeight());
 				
-			}else if(e.typeName().equals("becomes")) {
+			}else if(e.isType("becomes")) {
 				Func becomes = (Func)e;
 				
 				ExprImg leftSide = newExprImg();
@@ -555,7 +555,7 @@ public class ExprRender extends Cas{//sort of a wrap of the image type but keeps
 				arrowImg.makeString(" → ");
 				
 				makeImgSeries(new ExprImg[] {leftSide,arrowImg,rightSide  });
-			}else if(e.typeName().equals("diff")) {
+			}else if(e.isType("diff")) {
 				
 				ExprImg diffImg = newExprImg();
 				diffImg.makeExpr( div(var("∂"),var("∂"+nameExchange.getOrDefault(e.getVar().toString(), e.getVar().toString()))) );
@@ -588,7 +588,7 @@ public class ExprRender extends Cas{//sort of a wrap of the image type but keeps
 				currentX+=eImg.getWidth();
 				drawImage(rightBracket,currentX,0,getFontWidth(),getHeight());
 				
-			}else if(e.typeName().equals("mat") && Mat.correctFormat((Func)e) ) {
+			}else if(e.isType("mat") && Mat.correctFormat((Func)e) ) {
 				Func mat = (Func)e;
 				
 				int spacerSize = fontSize()/2;
@@ -640,7 +640,7 @@ public class ExprRender extends Cas{//sort of a wrap of the image type but keeps
 				
 				drawImage(rightBracket,getWidth()-rightBracket.getWidth(),0,rightBracket.getWidth(),getHeight());
 				
-			}else if(e.typeName().equals("dot")) {
+			}else if(e.isType("dot")) {
 				ExprImg multImg = newExprImg();
 				multImg.makeString("×");
 				

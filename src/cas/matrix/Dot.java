@@ -17,7 +17,7 @@ public class Dot{
 				public Expr applyRuleToExpr(Expr e,CasInfo casInfo) {
 					Func dot = (Func)e;
 					
-					if(dot.get(0).typeName().equals("mat")) {
+					if(dot.get(0).isType("mat")) {
 						Func totalMat = (Func)dot.get(0);
 						
 						for(int i = 1;i < dot.size();i++) {
@@ -54,7 +54,7 @@ public class Dot{
 					Func dot = (Func)e;
 					
 					for(int i = 0;i<dot.size();i++) {
-						if(dot.get(i).typeName().equals("dot")) {
+						if(dot.get(i).isType("dot")) {
 							Func subDot = (Func)dot.get(i);
 							dot.remove(i);
 							for(int j = 0;j<subDot.size();j++) dot.add(i+j, subDot.get(j));

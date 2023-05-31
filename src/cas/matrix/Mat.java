@@ -21,7 +21,7 @@ public class Mat{
 					Func innerSequence = Sequence.cast( mat.get() );
 					
 					for(int i = 0;i < innerSequence.size();i++) {
-						if(!(innerSequence.get(i).typeName().equals("sequence"))) {
+						if(!(innerSequence.get(i).isType("sequence"))) {
 							innerSequence.set(i, Sequence.cast(innerSequence.get(i)));
 						}
 					}
@@ -87,11 +87,11 @@ public class Mat{
 	
 	
 	public static boolean correctFormat(Func mat) {
-		if(!(mat.get().typeName().equals("sequence"))) return false;
+		if(!(mat.get().isType("sequence"))) return false;
 		Func innerSequence = (Func)mat.get();
 		if(innerSequence.size() == 0) return false;
 		for(int i = 0;i<innerSequence.size();i++) {
-			if(!(innerSequence.get(i).typeName().equals("sequence") && getRow(mat,i).size() == cols(mat)  )) return false;
+			if(!(innerSequence.get(i).isType("sequence") && getRow(mat,i).size() == cols(mat)  )) return false;
 		}
 		
 		return true;

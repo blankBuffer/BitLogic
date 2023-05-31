@@ -48,7 +48,7 @@ public class Diff{
 				@Override
 				public Expr applyRuleToExpr(Expr e,CasInfo casInfo){
 					Func d = (Func)e;
-					if(d.get().typeName().equals("prod")){
+					if(d.get().isType("prod")){
 						Func innerProd = (Func)d.get();
 						
 						Func outSum = sum();

@@ -199,12 +199,12 @@ public class Integrate{
 			
 			Rule integrationByParts = new Rule("integration by parts"){
 				boolean isTypeExtended(Expr e,String typeName) {//is that type or a power with base of that type
-					if(e.typeName().equals(typeName)) {
+					if(e.isType(typeName)) {
 						return true;
-					}else if(e.typeName().equals("power")) {
+					}else if(e.isType("power")) {
 						Func casted = (Func)e;
 						
-						return casted.getExpo() instanceof Num && casted.getBase().typeName().equals(typeName);
+						return casted.getExpo() instanceof Num && casted.getBase().isType(typeName);
 					}
 					return false;
 				}
@@ -281,16 +281,16 @@ public class Integrate{
 				@Override
 				public Expr applyRuleToExpr(Expr e,CasInfo casInfo){
 					Func integ = (Func)e;
-					if(integ.get().typeName().equals("div") && !integ.get().containsType("integrate")) {
+					if(integ.get().isType("div") && !integ.get().containsType("integrate")) {
 						Func innerDiv = (Func)integ.get().copy();
-						if(innerDiv.getDenom().typeName().equals("power")) {
+						if(innerDiv.getDenom().isType("power")) {
 							Func denomPower = (Func)innerDiv.getDenom();
 							Func expo = Div.cast(denomPower.getExpo());
 							if(Div.isNumericalAndReal(expo) && isPlainPolynomial(denomPower.getBase(),integ.getVar()) && degree(denomPower.getBase(),integ.getVar()).equals(BigInteger.ONE) ) {
 								if( ((Num)expo.getNumer()).getRealValue().compareTo( ((Num)expo.getDenom()).getRealValue() )  == 1) {//make sure the fraction is greater than 1
 									Expr integralOfDenom = integrate(inv(denomPower),integ.getVar()).simplify(casInfo);
 									Expr derivativeOfNumer = diff(innerDiv.getNumer(),integ.getVar()).simplify(casInfo);
-									if(!(derivativeOfNumer.typeName().equals("div") && ((Func)derivativeOfNumer).getDenom().contains(integ.getVar())  )) {
+									if(!(derivativeOfNumer.isType("div") && ((Func)derivativeOfNumer).getDenom().contains(integ.getVar())  )) {
 										Expr out = sub(prod(innerDiv.getNumer(),integralOfDenom),integrate( prod(derivativeOfNumer,integralOfDenom.copy()) ,integ.getVar()));
 										return out.simplify(casInfo);
 									}
@@ -334,7 +334,7 @@ public class Integrate{
 			Rule normalUSub = new Rule("normal u sub"){
 				public Expr getNextInnerFunction(Expr e,Var v) {
 					if(e.size()>0 && e.contains(v)){
-						if(e.typeName().equals("power") && !((Func)e).getBase().contains(v) && ((Func)e).getExpo().typeName().equals("prod")) {//if in the form of a^(b*x) return a^x
+						if(e.isType("power") && !((Func)e).getBase().contains(v) && ((Func)e).getExpo().isType("prod")) {//if in the form of a^(b*x) return a^x
 							return power(((Func)e).getBase(),v);
 						}
 						Expr highest = null;
@@ -357,12 +357,12 @@ public class Integrate{
 					
 					if(integ.contains(uSubVar) || integ.get().containsType("integrate") || isPolynomialUnstrict(integ.get(),integ.getVar())) return integ;
 					Expr u = null;
-					if(integ.get().typeName().equals("prod")) {
+					if(integ.get().isType("prod")) {
 						Func innerProd = (Func)integ.get();
 						long highestComplexity = 0;
 						int indexOfHighestComplexity = 0;
 						for(int i = 0;i<innerProd.size();i++) {
-							if(innerProd.get(i).typeName().equals("sum")) continue;//skip sums because thats usually du
+							if(innerProd.get(i).isType("sum")) continue;//skip sums because thats usually du
 							long current = innerProd.get(i).complexity();
 							if(current > highestComplexity) {
 								highestComplexity = current;
@@ -370,7 +370,7 @@ public class Integrate{
 							}
 						}
 						u = innerProd.get(indexOfHighestComplexity);
-					}else if(integ.get().typeName().equals("div")) {
+					}else if(integ.get().isType("div")) {
 						Func castedDiv =  ((Func)integ.get());
 						boolean logCase = !div(castedDiv.getNumer(),diff(castedDiv.getDenom() ,integ.getVar())).simplify(casInfo).contains(integ.getVar());
 						
@@ -408,10 +408,10 @@ public class Integrate{
 									CasInfo singleSolutionModeCasInfo = new CasInfo(casInfo);
 									singleSolutionModeCasInfo.setSingleSolutionMode(true);
 									Expr solved = solve(equ(uSubVar,u),integ.getVar()).simplify(singleSolutionModeCasInfo);
-									if(solved.typeName().equals("set")) {//just in case single solution mode accidently returns a list
+									if(solved.isType("set")) {//just in case single solution mode accidently returns a list
 										solved = solved.get();
 									}
-									if(!(solved.typeName().equals("solve"))) {
+									if(!(solved.isType("solve"))) {
 										solved = Equ.getRightSide(((Func)solved));
 										newExpr = integrate(newExpr.replace(equ(integ.getVar(),solved)),uSubVar);
 										newExpr = newExpr.simplify(casInfo);
@@ -441,7 +441,7 @@ public class Integrate{
 					Func integ = (Func)e;
 					
 					integ.set(0, partialFrac(integ.get(), integ.getVar(), casInfo) );
-					if(integ.get().typeName().equals("sum")){
+					if(integ.get().isType("sum")){
 						Expr out = StandardRules.linearOperator.applyRuleToExpr(integ, casInfo);
 						return out;
 					}
@@ -457,7 +457,7 @@ public class Integrate{
 					Func integ = (Func)e;
 					
 					integ.set(0, polyDiv(integ.get(), integ.getVar(), casInfo) );
-					if(integ.get().typeName().equals("sum")){
+					if(integ.get().isType("sum")){
 						return StandardRules.linearOperator.applyRuleToExpr(integ, casInfo);
 					}
 					
@@ -542,7 +542,7 @@ public class Integrate{
 			
 			Rule weierstrassSub = new Rule("weierstrass substitution") {
 				public Expr getSinOrCosInner(Expr e) {//search tree for inside of sin or cos
-					if(e.typeName().equals("sin") || e.typeName().equals("cos")) return e.get();
+					if(e.isType("sin") || e.isType("cos")) return e.get();
 					for(int i = 0;i<e.size();i++) {
 						Expr inner = getSinOrCosInner(e.get(i));
 						if(inner != null) return inner;
@@ -561,7 +561,7 @@ public class Integrate{
 				@Override
 				public Expr applyRuleToExpr(Expr e,CasInfo casInfo) {
 					Func integ = (Func)e;
-					if(!( (integ.containsType("sin") || integ.containsType("cos")) && integ.containsType("sum") && !(integ.get().typeName().equals("sum")) )) return integ;//needs sin or cos
+					if(!( (integ.containsType("sin") || integ.containsType("cos")) && integ.containsType("sum") && !(integ.get().isType("sum")) )) return integ;//needs sin or cos
 					
 					Expr innerTrig = getSinOrCosInner(integ.get());
 					if(innerTrig == null) return integ;
@@ -590,10 +590,10 @@ public class Integrate{
 				@Override
 				public Expr applyRuleToExpr(Expr e,CasInfo casInfo) {
 					Func integ = (Func)e;
-					if(integ.get().typeName().equals("power")) {
+					if(integ.get().isType("power")) {
 						Func inner = (Func)integ.get();
 						
-						if(inner.getExpo() instanceof Num && inner.getBase().typeName().equals("sum") && containsTrig(inner.getBase()) ) {
+						if(inner.getExpo() instanceof Num && inner.getBase().isType("sum") && containsTrig(inner.getBase()) ) {
 							integ.set(0, expand(integ.get()) );
 						}
 					}
@@ -618,7 +618,7 @@ public class Integrate{
 					Func integ = (Func)e;
 					
 					Var v = integ.getVar();
-					if(!(integ.get().typeName().equals("div"))) return e;
+					if(!(integ.get().isType("div"))) return e;
 					
 					Func innerDiv = (Func)integ.get();
 					if( innerDiv.getNumer().equals(v) && degree(innerDiv.getDenom(),v).equals(BigInteger.TWO) ) {//simple form can proceed
@@ -637,7 +637,7 @@ public class Integrate{
 						}
 						return this.kNegCase.replace(subTableSet).simplify(casInfo);
 						
-					}else if( innerDiv.getNumer().typeName().equals("sum") && degree(innerDiv.getNumer(),v).equals(BigInteger.ONE) ){//need to spit numerator
+					}else if( innerDiv.getNumer().isType("sum") && degree(innerDiv.getNumer(),v).equals(BigInteger.ONE) ){//need to spit numerator
 						integ.set(0,distr(integ.get()).simplify(casInfo));
 						return StandardRules.linearOperator.applyRuleToExpr(integ, casInfo);
 					}else {
@@ -666,7 +666,7 @@ public class Integrate{
 					
 					Func integ = (Func)e;
 					
-					if(integ.get().typeName().equals("div") && !((Func)integ.get()).getNumer().contains(integ.getVar())) {
+					if(integ.get().isType("div") && !((Func)integ.get()).getNumer().contains(integ.getVar())) {
 						Expr denom = ((Func)integ.get()).getDenom();
 						Func polySequence = polyExtract(denom, integ.getVar(), casInfo);
 						if(polySequence != null && polySequence.size() == 3) {
@@ -759,7 +759,7 @@ public class Integrate{
 			
 			owner.behavior.doneRule = new Rule("after integration cleanup") {
 				Expr applyAbs(Expr e,CasInfo casInfo) {
-					if(e.typeName().equals("ln") && !(e.get().typeName().equals("abs"))) return ln(abs(e.get())).simplify(casInfo);
+					if(e.isType("ln") && !(e.get().isType("abs"))) return ln(abs(e.get())).simplify(casInfo);
 					for(int i = 0;i<e.size();i++) {
 						e.set(i,applyAbs(e.get(i),casInfo));
 					}
@@ -776,7 +776,7 @@ public class Integrate{
 					}
 					expr = distr(expr.simplify(casInfo)).simplify(casInfo);
 					
-					if(expr.typeName().equals("sum")) {//remove any trailing constants
+					if(expr.isType("sum")) {//remove any trailing constants
 						for(int i = 0;i<expr.size();i++) {
 							if(!expr.get(i).containsVars()) {
 								expr.remove(i);

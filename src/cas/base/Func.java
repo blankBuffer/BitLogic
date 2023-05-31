@@ -120,29 +120,29 @@ public class Func extends Expr{
 	
 	//power specific functions
 	public void setBase(Expr base) {
-		if(!typeName().equals("power")) throw new RuntimeException(typeName()+": is not a power");
+		if(!isType("power")) throw new RuntimeException(typeName()+": is not a power");
 		set(0, base);
 	}
 	public void setExpo(Expr expo) {
-		if(!typeName().equals("power")) throw new RuntimeException(typeName()+": is not a power");
+		if(!isType("power")) throw new RuntimeException(typeName()+": is not a power");
 		set(1, expo);
 	}
 	
 	public Expr getBase() {
-		assert typeName().equals("power") : "expected a power";
+		assert isType("power") : "expected a power";
 		return get(0);
 	}
 	public Expr getExpo() {
-		assert typeName().equals("power") : "expected a power";
+		assert isType("power") : "expected a power";
 		return get(1);
 	}
 	
 	public Expr getNumer() {
-		assert typeName().equals("div") : "expected a div";
+		assert isType("div") : "expected a div";
 		return get();
 	}
 	public Expr getDenom() {
-		assert typeName().equals("div") : "expected a div";
+		assert isType("div") : "expected a div";
 		return get(1);
 	}
 	
@@ -156,11 +156,11 @@ public class Func extends Expr{
 	
 	@Override
 	public Var getVar(){
-		if(typeName().equals("diff") || typeName().equals("integrate") || typeName().equals("solve")){
+		if(isType("diff") || isType("integrate") || isType("solve")){
 			return (Var) get(1);
-		}else if(typeName().equals("integrateOver")){
+		}else if(isType("integrateOver")){
 			return (Var) get(3);
-		}else if(typeName().equals("limit")) {
+		}else if(isType("limit")) {
 			return Limit.getVar(this);
 		}
 		
@@ -168,7 +168,7 @@ public class Func extends Expr{
 	}
 	
 	public Expr getComparison(){
-		if(typeName().equals("solve")){
+		if(isType("solve")){
 			return get();
 		}
 		

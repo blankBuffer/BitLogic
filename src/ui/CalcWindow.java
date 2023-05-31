@@ -268,7 +268,7 @@ public class CalcWindow extends JFrame{
 								public void actionPerformed(ActionEvent e) {
 									Expr expr = currentStack.stackSequence.get(iObj);
 									
-									if(expr.typeName().equals("show") || expr.typeName().equals("hide")) {
+									if(expr.isType("show") || expr.isType("hide")) {
 										expr = expr.get();
 									}
 									

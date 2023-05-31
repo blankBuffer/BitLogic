@@ -33,7 +33,7 @@ public class Distr{
 					//get a copy of the parameter of distr, set value to what output should be
 					Expr expr = distr.get().copy();
 					
-					if(expr.typeName().equals("prod")) {//if given a product
+					if(expr.isType("prod")) {//if given a product
 						
 						/*
 						 * we search for a sum in the product
@@ -46,7 +46,7 @@ public class Distr{
 						Expr theSum = null;//sum which we search for
 						Func prod = null;//prod is the stuff outside not including the sum
 						for(int i = 0;i<expr.size();i++) {
-							if(expr.get(i).typeName().equals("sum")) {
+							if(expr.get(i).isType("sum")) {
 								theSum = expr.get(i).copy();
 								prod = (Func)expr.copy();
 								prod.remove(i);
@@ -56,9 +56,9 @@ public class Distr{
 							 * I also expand simple powers with exponent 2 with only two elements in the base
 							 * ,basically if its in this form (a+b)^2
 							 */
-							else if(expr.get(i).typeName().equals("power")) {
+							else if(expr.get(i).isType("power")) {
 								Func innerPow = (Func)expr.get(i);
-								if(innerPow.getExpo().equals(Num.TWO) && innerPow.getBase().typeName().equals("sum") && innerPow.getBase().size() == 2) {
+								if(innerPow.getExpo().equals(Num.TWO) && innerPow.getBase().isType("sum") && innerPow.getBase().size() == 2) {
 									Func baseSum = (Func)innerPow.getBase();
 									//the following line is just (a+b)^2 = a^2+2*a*b+b^2
 									theSum = sum( power(baseSum.get(0),num(2)) , prod(num(2),baseSum.get(0),baseSum.get(1)) , power(baseSum.get(1),num(2)) );
@@ -80,10 +80,10 @@ public class Distr{
 					 * it is the same thing as expanding products except we check if
 					 *  the numerator is a sum or simple power (a+b)^2
 					 */
-					else if(expr.typeName().equals("div")) {//if given a fraction (x+y)/3 -> x/3+y/3
+					else if(expr.isType("div")) {//if given a fraction (x+y)/3 -> x/3+y/3
 						Func casted = (Func)expr;
 						casted.setNumer(distr(casted.getNumer()).simplify(casInfo));//distribute the numerator
-						if(casted.getNumer().typeName().equals("sum")) {//Separate fraction into sum
+						if(casted.getNumer().isType("sum")) {//Separate fraction into sum
 							for (int i = 0;i < casted.getNumer().size();i++) {
 								casted.getNumer().set(i, div(casted.getNumer().get(i),casted.getDenom().copy()));
 							}
@@ -97,7 +97,7 @@ public class Distr{
 					 * for example
 					 * if the user prompts distr((a+b)^2+d) it would become a^2+2*a*b+b^2+d
 					 */
-					else if(expr.typeName().equals("sum")) {
+					else if(expr.isType("sum")) {
 						
 						for(int i = 0;i<expr.size();i++) {
 							expr.set(i, distr(expr.get(i)));
@@ -113,9 +113,9 @@ public class Distr{
 					 * distr((a+b)^2) -> a^2+2*a*b+b^2
 					 * 
 					 */
-					else if(expr.typeName().equals("power")) {
+					else if(expr.isType("power")) {
 						Func innerPow = (Func)expr;
-						if(innerPow.getExpo().equals(Num.TWO) && innerPow.getBase().typeName().equals("sum") && innerPow.getBase().size() == 2) {
+						if(innerPow.getExpo().equals(Num.TWO) && innerPow.getBase().isType("sum") && innerPow.getBase().size() == 2) {
 							Func baseSum = (Func)innerPow.getBase();
 							//the following line is just (a+b)^2 = a^2+2*a*b+b^2
 							expr = sum( power(baseSum.get(0),num(2)) , prod(num(2),baseSum.get(0),baseSum.get(1)) , power(baseSum.get(1),num(2)) );
@@ -179,11 +179,11 @@ public class Distr{
 					//get a copy of the parameter of distr, set value to what output should be
 					Expr expr = expand.get().copy();
 					
-					if(expr.typeName().equals("prod")){
+					if(expr.isType("prod")){
 						for(int i = 0;i<expr.size();i++){
-							if(expr.get(i).typeName().equals("power")){
+							if(expr.get(i).isType("power")){
 								Func castedPow = (Func)expr.get(i);
-								if( isPositiveRealNum(castedPow.getExpo()) && castedPow.getBase().typeName().equals("sum")){
+								if( isPositiveRealNum(castedPow.getExpo()) && castedPow.getBase().isType("sum")){
 									expr.set(i, multinomial(castedPow.getBase(),(Num)castedPow.getExpo(),casInfo));
 								}
 							}
@@ -195,7 +195,7 @@ public class Distr{
 					/*
 					 * expand every element in the sum
 					 */
-					else if(expr.typeName().equals("sum")){
+					else if(expr.isType("sum")){
 						Expr sum = sum();
 						
 						for(int i = 0;i<expr.size();i++){
@@ -206,14 +206,14 @@ public class Distr{
 					/*
 					 * use multinomial expansion algorithm. Located in cas.Cas
 					 */
-					else if(expr.typeName().equals("power")){
+					else if(expr.isType("power")){
 						Func castedPow = (Func)expr;
 						castedPow.setBase(expand(castedPow.getBase()).simplify(casInfo));
-						if( isPositiveRealNum(castedPow.getExpo()) && castedPow.getBase().typeName().equals("sum")){
+						if( isPositiveRealNum(castedPow.getExpo()) && castedPow.getBase().isType("sum")){
 							expr = multinomial(castedPow.getBase(),(Num)castedPow.getExpo(),casInfo);
 						}
 						
-					}else if(expr.typeName().equals("div")) {//expand only numerator of fraction
+					}else if(expr.isType("div")) {//expand only numerator of fraction
 						Func innerDiv = (Func)expr;
 						innerDiv.setNumer(expand(innerDiv.getNumer()).simplify(casInfo));
 						expr = distr(innerDiv);

@@ -28,11 +28,11 @@ public class Gamma{
 				public Expr applyRuleToExpr(Expr e,CasInfo casInfo) {
 					Func gamma = (Func)e;
 					
-					if(gamma.get().typeName().equals("div") && Div.isNumericalAndReal(((Func)gamma.get())) ) {
+					if(gamma.get().isType("div") && Div.isNumericalAndReal(((Func)gamma.get())) ) {
 						
 						Func casted = (Func)gamma.get();
 						Func sum = Div.mixedFraction(casted);
-						if(sum != null && sum.get(1).typeName().equals("div") && ((Func)sum.get(1)).getNumer().equals(Num.ONE)  && ((Func)sum.get(1)).getDenom().equals(Num.TWO)) {
+						if(sum != null && sum.get(1).isType("div") && ((Func)sum.get(1)).getNumer().equals(Num.ONE)  && ((Func)sum.get(1)).getDenom().equals(Num.TWO)) {
 							
 							BigInteger n = ((Num)sum.get(0)).getRealValue();
 							

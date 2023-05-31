@@ -35,7 +35,7 @@ public class Main extends Cas{
 	 * graphical mode is the default for now since simps will find that easy
 	 * TODO add a preference file for start mode
 	 */
-	static final int DEFAULT_START_MODE = GRAPHICAL_MODE;
+	static final int DEFAULT_START_MODE = TERMINAL_MODE;
 	
 	/*
 	 * Program flags are not case sensitive and minus '-' and '_' are ignored
@@ -49,7 +49,25 @@ public class Main extends Cas{
 		for(int i = 0;i<args.length;i++) {
 			String arg = (args[i]).toLowerCase().replaceAll("[-_]", "");
 			
-			if(arg.equals("gui")) startMode = GRAPHICAL_MODE;
+			if(arg.equals("h") || arg.equals("help")) {
+				System.out.println("## Startup help menu ##");
+				System.out.println();
+				System.out.println("-gui #start in graphical mode");
+				System.out.println("-no_gui #start in terminal mode");
+				System.out.println("-term #start in terminal mode");
+				System.out.println();
+				System.out.println("-test -t #start in test mode");
+				System.out.println();
+				System.out.println("-clear_term -ct #every input refreshes screen in terminal mode");
+				System.out.println();
+				System.out.println("-execute \"MATH_EXPRESSION\" #exectues single math command");
+				System.out.println("-e \"MATH_EXPRESSION\" #exectues single math command");
+				System.out.println("#Just a warning that -execute is very slow to run!");
+				System.out.println();
+				System.out.println("-help -h #show startup help menu");
+				return;
+			}
+			else if(arg.equals("gui")) startMode = GRAPHICAL_MODE;
 			else if(arg.equals("nogui") || arg.equals("term")) startMode = TERMINAL_MODE;
 			else if(arg.equals("t") || arg.equals("test")) startMode = TEST_MODE;
 			

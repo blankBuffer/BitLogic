@@ -80,7 +80,7 @@ public class Prod{
 							continue;
 						}
 						
-						if(e.typeName().equals("sum") || e.typeName().equals("prod")) paren = true;
+						if(e.isType("sum") || e.isType("prod")) paren = true;
 						
 						if(div) out+='/';
 						if(paren) out+='(';
@@ -119,13 +119,13 @@ public class Prod{
 	}
 	
 	static TermInfo getTermInfo(Expr e) {
-		if(e.typeName().equals("sin") || e.typeName().equals("tan") || e.typeName().equals("cos")) {
+		if(e.isType("sin") || e.isType("tan") || e.isType("cos")) {
 			return new TermInfo(e.get(),e.typeName(),Cas.num(1));
-		}else if(e.typeName().equals("power")) {
+		}else if(e.isType("power")) {
 			Func casted = (Func)e;
 			if(Cas.isRealNum(casted.getExpo())) {
 				e = casted.getBase();
-				if(e.typeName().equals("sin") || e.typeName().equals("tan") || e.typeName().equals("cos")) {
+				if(e.isType("sin") || e.isType("tan") || e.isType("cos")) {
 					return new TermInfo(e.get(),e.typeName(),(Num)casted.getExpo());
 				}
 			}
@@ -182,8 +182,8 @@ public class Prod{
 	public static boolean foundProdInTrigInProd(Func prod){
 		if(prod.containsType("sin")){
 			for(int i = 0;i < prod.size();i++){
-				if(prod.get(i).typeName().equals("sin") || prod.get(i).typeName().equals("cos") || prod.get(i).typeName().equals("tan")){
-					if(prod.get(i).get().typeName().equals("prod")){
+				if(prod.get(i).isType("sin") || prod.get(i).isType("cos") || prod.get(i).isType("tan")){
+					if(prod.get(i).get().isType("prod")){
 						return true;
 					}
 				}
@@ -194,8 +194,8 @@ public class Prod{
 	public static boolean foundNonProdInTrigInProd(Func prod){
 		if(prod.containsType("sin")){
 			for(int i = 0;i < prod.size();i++){
-				if(prod.get(i).typeName().equals("sin") || prod.get(i).typeName().equals("cos") || prod.get(i).typeName().equals("tan")){
-					if(!(prod.get(i).get().typeName().equals("prod"))){
+				if(prod.get(i).isType("sin") || prod.get(i).isType("cos") || prod.get(i).isType("tan")){
+					if(!(prod.get(i).get().isType("prod"))){
 						return true;
 					}
 				}
@@ -225,7 +225,7 @@ public class Prod{
 			
 			int indexOfDiv = -1;
 			for(int i = 0;i<prod.size();i++) {
-				if(prod.get(i).typeName().equals("div")) {
+				if(prod.get(i).isType("div")) {
 					indexOfDiv = i;
 					break;
 				}
@@ -240,7 +240,7 @@ public class Prod{
 				
 				for(int i = 0;i<prod.size();i++) {
 
-					if(prod.get(i).typeName().equals("div")) {
+					if(prod.get(i).isType("div")) {
 						Func castedDiv = (Func)prod.get(i);
 						
 						prodNumer.add(castedDiv.getNumer());
@@ -264,7 +264,7 @@ public class Prod{
 		@Override
 		public Expr applyRuleToExpr(Expr e,CasInfo casInfo){
 			Func prod = (Func)e;
-			for(int i = 0;i<prod.size();i++) if(prod.get(i).typeName().equals("sum")) prod.set(i,  factor(prod.get(i)).simplify(casInfo));
+			for(int i = 0;i<prod.size();i++) if(prod.get(i).isType("sum")) prod.set(i,  factor(prod.get(i)).simplify(casInfo));
 			return prod;
 		}
 	};
@@ -275,7 +275,7 @@ public class Prod{
 			Func prod = (Func)e;
 			for(int i = 0;i<prod.size();i++) {
 				Expr current = prod.get(i);
-				if(current.typeName().equals("power")) {
+				if(current.isType("power")) {
 					Func currentPower = (Func)current;
 					if(currentPower.getBase() instanceof Num) {
 						
@@ -296,7 +296,7 @@ public class Prod{
 			
 			for(int i = 0;i<prod.size();i++) {
 				Expr current = prod.get(i);
-				if(current.typeName().equals("prod")) {
+				if(current.isType("prod")) {
 					for(int j = 0;j<current.size();j++) prod.add(current.get(j));//add all the sub expressions into this product
 					prod.remove(i);//remove the sub product
 					i--;//shift back after deletion
@@ -314,9 +314,9 @@ public class Prod{
 			
 			for(int i = 0;i<prod.size();i++) {
 				Expr current = prod.get(i);
-				if(current.typeName().equals("power")) {
+				if(current.isType("power")) {
 					Func currentPower = (Func)current;
-					if(currentPower.getExpo().typeName().equals("prod") && currentPower.getBase() instanceof Num) {
+					if(currentPower.getExpo().isType("prod") && currentPower.getBase() instanceof Num) {
 						Func expoProd = (Func)currentPower.getExpo();
 						
 						for(int j = 0;j<expoProd.size();j++) {
@@ -351,7 +351,7 @@ public class Prod{
 			for(int i = 0;i<prod.size();i++) {
 				Expr current = prod.get(i);
 				
-				if(current.typeName().equals("power")) {
+				if(current.isType("power")) {
 					Func currentPower = (Func)current;
 					
 					if(currentPower.getBase() instanceof Num) {
@@ -360,7 +360,7 @@ public class Prod{
 						for(int j = i+1; j< prod.size(); j++) {
 							
 							Expr other = prod.get(j);
-							if(other.typeName().equals("power")) {
+							if(other.isType("power")) {
 								Func otherPower = (Func)other;
 								if(otherPower.getBase() instanceof Num && otherPower.getExpo().equals(currentPower.getExpo())) {
 									
@@ -392,7 +392,7 @@ public class Prod{
 			for(int i = 0;i<prod.size();i++) {
 				Expr current = prod.get(i);
 				
-				if(current.typeName().equals("power")) {
+				if(current.isType("power")) {
 					Func currentPower = (Func)current;
 					
 					if(isPositiveRealNum(currentPower.getBase()) && !(currentPower.getExpo() instanceof Num)) {
@@ -407,7 +407,7 @@ public class Prod{
 							if(((Num)factor.getExpo()).getRealValue().equals(BigInteger.ONE)) {
 								prod.add(power(factor.getBase(),currentPower.getExpo().copy()));
 							}else {
-								if(currentPower.getExpo().typeName().equals("prod")) {
+								if(currentPower.getExpo().isType("prod")) {
 									currentPower.getExpo().add(factor.getExpo());
 									prod.add(power(factor.getBase(),currentPower.getExpo().simplify(casInfo)));
 								}else {
@@ -630,7 +630,7 @@ public class Prod{
 			
 			for(int i = 0;i<prod.size();i++) {
 				Func currentCasted = Power.cast(prod.get(i));
-				if( currentCasted.getBase().typeName().equals("sum") && currentCasted.getBase().size() == 2 ) {
+				if( currentCasted.getBase().isType("sum") && currentCasted.getBase().size() == 2 ) {
 					Func currentSum = (Func)currentCasted.getBase();
 					Num num = null;
 					Expr other = null;
@@ -658,7 +658,7 @@ public class Prod{
 						if(out != null) {
 							prod.remove(j);
 							prod.remove(i);
-							if(out.typeName().equals("prod")) {
+							if(out.isType("prod")) {
 								for(int k = 0;k<out.size();k++) prod.add(out.get(k));
 							}else prod.add(out);
 							
@@ -683,7 +683,7 @@ public class Prod{
 				Func nonMatriciesProd = prod();
 				
 				for(int i = 0;i<prod.size();i++) {
-					if(prod.get(i).typeName().equals("mat")) {
+					if(prod.get(i).isType("mat")) {
 						matriciesProd.add(prod.get(i));
 					}else {
 						nonMatriciesProd.add(prod.get(i));
@@ -734,18 +734,18 @@ public class Prod{
 			Func prod = (Func)e;
 			
 			for(int i = 0;i<prod.size();i++) {
-				if(prod.get(i).typeName().equals("power") && ((Func)prod.get(i)).getExpo().typeName().equals("div") ) {
+				if(prod.get(i).isType("power") && ((Func)prod.get(i)).getExpo().isType("div") ) {
 					Func current = (Func) prod.get(i);
 					Func baseProd = Prod.cast(current.getBase());
 					boolean changed = false;
 					
 					for(int j = i+1;j<prod.size();j++) {
 						
-						if(prod.get(j).typeName().equals("power") && ((Func)prod.get(j)).getExpo().typeName().equals("div") ) {
+						if(prod.get(j).isType("power") && ((Func)prod.get(j)).getExpo().isType("div") ) {
 							Func other = (Func)prod.get(j);
 							if(other.getExpo().equals(current.getExpo())) {
 								
-								if(other.getBase().typeName().equals("prod")) {
+								if(other.getBase().isType("prod")) {
 									for(int k = 0;k<other.getBase().size();k++) baseProd.add(other.getBase().get(k));
 								}else {
 									baseProd.add(other.getBase());
@@ -773,7 +773,7 @@ public class Prod{
 	};
 	
 	public static Func cast(Expr e) {//converts it to a prod, returns prod
-		if(e.typeName().equals("prod")) {
+		if(e.isType("prod")) {
 			return (Func)e;
 		}
 		Func outProd = Cas.prod();
@@ -798,7 +798,7 @@ public class Prod{
 	}
 	
 	public static Expr unCast(Expr e) {//if it does not need to be a prod it will return back something else
-		if(e.typeName().equals("prod")) {
+		if(e.isType("prod")) {
 			if(e.size()==0) {
 				return Cas.num(1);
 			}else if(e.size() == 1) {

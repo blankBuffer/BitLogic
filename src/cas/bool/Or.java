@@ -22,7 +22,7 @@ public class Or{
 				public Expr applyRuleToExpr(Expr e,CasInfo casInfo){
 					Func or = (Func)e;
 					for(int i = 0;i<or.size();i++){
-						if(or.get(i).typeName().equals("or")){
+						if(or.get(i).isType("or")){
 							Func subOr = (Func)or.get(i);
 							or.remove(i);
 							i--;
@@ -72,7 +72,7 @@ public class Or{
 						Expr current = or.get(i);
 						Expr complement = not(current).simplify(casInfo);
 						
-						if(complement.typeName().equals("or")){//trickier case a&b|~a|~b=true
+						if(complement.isType("or")){//trickier case a&b|~a|~b=true
 							boolean hasAll = true;
 							for(int j = 0;j<complement.size();j++){
 								boolean found = false;
@@ -140,7 +140,7 @@ public class Or{
 						Func currentAnd = And.cast(or.get(i));
 						for(int j = 0;j<or.size();j++){
 							if(j == i) continue;
-							if(or.get(j).typeName().equals("and")){
+							if(or.get(j).isType("and")){
 								Func otherAnd = (Func)or.get(j);
 								
 								boolean hasAll = true;
@@ -197,14 +197,14 @@ public class Or{
 					if(or.size()>=3){
 						
 						outer:for(int i = 0;i<or.size();i++){
-							if(!(or.get(i).typeName().equals("and") && or.get(i).size()==2)) continue;
+							if(!(or.get(i).isType("and") && or.get(i).size()==2)) continue;
 							
 							Func currentAnd = (Func)or.get(i);
 							Expr a = currentAnd.get(0),b = currentAnd.get(1);
-							Expr notA = a.typeName().equals("not") ? a.get() : not(a),notB = b.typeName().equals("not") ? b.get() : not(b);
+							Expr notA = a.isType("not") ? a.get() : not(a),notB = b.isType("not") ? b.get() : not(b);
 							
 							for(int j = i+1;j < or.size();j++){
-								if(!(or.get(j).typeName().equals("and") && or.get(j).size()==2)) continue;
+								if(!(or.get(j).isType("and") && or.get(j).size()==2)) continue;
 								Func otherAnd = (Func)or.get(j);
 								int test = 1-fastContains(notA,otherAnd);
 								if(test != 2){
@@ -258,7 +258,7 @@ public class Or{
 				
 				Func negElems(Expr orTerm){//returns expr set
 					Func negatedElemsSet = exprSet();
-					if(orTerm.typeName().equals("and")){
+					if(orTerm.isType("and")){
 						for(int j = 0;j<orTerm.size();j++){
 							negatedElemsSet.add(not(orTerm.get(j)).simplify(CasInfo.normal));
 						}
@@ -353,9 +353,9 @@ public class Or{
 			 */
 			Rule factorGroupVar = new Rule("factor each variable"){
 				void extractVars(Expr e,Func outSet){
-					if(e.typeName().equals("var") && fastContains(e,outSet) == -1){
+					if(e.isType("var") && fastContains(e,outSet) == -1){
 						outSet.add(e);
-					}else if(e.typeName().equals("not") && e.get().typeName().equals("var") && fastContains(e,outSet) == -1){
+					}else if(e.isType("not") && e.get().isType("var") && fastContains(e,outSet) == -1){
 						outSet.add(e);
 					}else{
 						for(int i = 0;i < e.size();i++){
@@ -381,7 +381,7 @@ public class Or{
 						Cas.IndexSet toBeRemoved = new Cas.IndexSet();
 						for(int j = or.size()-1;j >= 0;j--){
 							Expr term = or.get(j);
-							if(term.typeName().equals("and")){
+							if(term.isType("and")){
 								int varIndex = fastContains(var,term);
 								if(varIndex != -1){
 									Expr termCopy = term.copy();
@@ -399,7 +399,7 @@ public class Or{
 							}
 							
 							recursiveOr = recursiveOr.simplify(casInfo);
-							if(recursiveOr.typeName().equals("or")){
+							if(recursiveOr.isType("or")){
 								for(int j = 0;j<recursiveOr.size();j++){
 									or.add(and(recursiveOr.get(j),var).simplify(casInfo));
 								}
@@ -440,7 +440,7 @@ public class Or{
 					String out = "";
 					if(owner.size() < 2) out+="alone or:";
 					for(int i = 0;i<owner.size();i++){
-						boolean paren = owner.get(i).typeName().equals("or");
+						boolean paren = owner.get(i).isType("or");
 						if(paren) out+="(";
 						out+=owner.get(i);
 						if(paren) out+=")";
@@ -475,14 +475,14 @@ public class Or{
 	}
 	
 	public static Func cast(Expr e){
-		if(e.typeName().equals("or")){
+		if(e.isType("or")){
 			return (Func)e;
 		}
 		return Cas.or(e);
 	}//returns or
 
 	public static Expr unCast(Expr e) {
-		if(e.typeName().equals("or") && e.size() == 1) {
+		if(e.isType("or") && e.size() == 1) {
 			return e.get();
 		}
 		return e;

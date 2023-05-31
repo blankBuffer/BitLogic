@@ -18,7 +18,7 @@ public class BoolCompress{
 			
 			Rule group = new Rule("group the factorable components") {
 				int termHasPart(Expr term,Expr part) {
-					if(term.typeName().equals("and")) {
+					if(term.isType("and")) {
 						for(int i = 0;i < term.size();i++) {
 							if(term.get(i).equals(part)) return i;
 						}
@@ -54,7 +54,7 @@ public class BoolCompress{
 					}
 					portion.flags.simple = true;
 					portion = boolCompress(portion).simplify(casInfo);
-					if(portion.typeName().equals("and")) portion.add(part);
+					if(portion.isType("and")) portion.add(part);
 					else portion = and(part,portion);
 					inOr.add(portion);
 				}
@@ -63,7 +63,7 @@ public class BoolCompress{
 				public Expr applyRuleToExpr(Expr e,CasInfo casInfo) {
 					Expr inner = e.get();
 					
-					if(inner.typeName().equals("or")) {
+					if(inner.isType("or")) {
 						ArrayList<VarCount> varcounts = new ArrayList<VarCount>();
 						inner.countVars(varcounts);
 						Func orInner = (Func)inner;
@@ -79,7 +79,7 @@ public class BoolCompress{
 						
 					}
 					
-					if(inner.typeName().equals("and")) {
+					if(inner.isType("and")) {
 						int notCount = 0;
 						for(int i = 0;i < inner.size();i++) {
 							Expr term = inner.get(i);

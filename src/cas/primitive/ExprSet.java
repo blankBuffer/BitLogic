@@ -43,7 +43,7 @@ public class ExprSet{
 					Func outSet = exprSet();
 					
 					for(int i = 0;i<set.size();i++) {
-						if(set.get(i).typeName().equals("set")) {
+						if(set.get(i).isType("set")) {
 							Func subSet = (Func)set.get(i);
 							for(int j = 0;j<subSet.size();j++) {
 								outSet.add(subSet.get(j));
@@ -91,8 +91,8 @@ public class ExprSet{
 	
 	public static Func cast(Expr e) {
 		if(e == null) return Cas.exprSet();
-		if(e.typeName().equals("set")) return (Func)e;
-		if(e instanceof Params || e.typeName().equals("sequence")) {
+		if(e.isType("set")) return (Func)e;
+		if(e instanceof Params || e.isType("sequence")) {
 			Func out = Cas.exprSet();
 			for(int i = 0;i<e.size();i++) {
 				out.add(e.get(i));

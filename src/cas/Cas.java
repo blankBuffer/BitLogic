@@ -92,11 +92,11 @@ public class Cas {
 	}
 	
 	public static boolean isSqrt(Expr e) {
-		if(!e.typeName().equals("power")) return false;
+		if(!e.isType("power")) return false;
 		
 		Func casted = (Func)e;
 			
-		if(!casted.getExpo().typeName().equals("div")) return false;
+		if(!casted.getExpo().isType("div")) return false;
 		
 		Func expo = (Func)casted.getExpo();
 		
@@ -106,11 +106,11 @@ public class Cas {
 	}
 	
 	public static boolean isCbrt(Expr e) {
-		if(!e.typeName().equals("power")) return false;
+		if(!e.isType("power")) return false;
 		
 		Func casted = (Func)e;
 			
-		if(!casted.getExpo().typeName().equals("div")) return false;
+		if(!casted.getExpo().isType("div")) return false;
 		
 		Func expo = (Func)casted.getExpo();
 		
@@ -438,7 +438,7 @@ public class Cas {
 		Func prodCast = (Func)e;
 		for(int i = 0;i<prodCast.size();i++){
 			Func current = Power.cast(prodCast.get(i));
-			if(!(isPositiveRealNum(current.getExpo()) && (current.getBase().typeName().equals("sum") || current.getBase() instanceof Var) && degree(current.getBase(),v) == BigInteger.ONE)){
+			if(!(isPositiveRealNum(current.getExpo()) && (current.getBase().isType("sum") || current.getBase() instanceof Var) && degree(current.getBase(),v) == BigInteger.ONE)){
 				return false;
 			}
 		}
@@ -455,7 +455,7 @@ public class Cas {
 	}
 	
 	public static Expr partialFrac(Expr expr,Var v,CasInfo casInfo) {
-		if(expr.typeName().equals("div")) {
+		if(expr.isType("div")) {
 			BigInteger negOne = BigInteger.valueOf(-1);
 			Func frac = (Func)expr;
 			BigInteger numerDegree = degree( frac.getNumer() ,v);
@@ -590,7 +590,7 @@ public class Cas {
 	}
 	
 	public static Expr polyDiv(Expr expr,Var v,CasInfo casInfo) {
-		if(expr.typeName().equals("div")) {
+		if(expr.isType("div")) {
 			Func frac = (Func)expr.copy();
 			Func numPolySequence = polyExtract(distr(frac.getNumer()).simplify(casInfo),v,casInfo);
 			Func denPolySequence = polyExtract(distr(frac.getDenom()).simplify(casInfo),v,casInfo);
@@ -645,7 +645,7 @@ public class Cas {
 			Expr term = exprSum.get(i);
 			Expr stripped = stripNonVarPartsFromProd(term,v);
 			if(stripped.equals(v)) maxDegree = maxDegree.max(BigInteger.ONE);
-			else if(stripped.typeName().equals("power")) {
+			else if(stripped.isType("power")) {
 				Func casted = (Func)stripped;
 				if(isPositiveRealNum(casted.getExpo())) {
 					if(casted.getBase().equals(v)) {
@@ -654,7 +654,7 @@ public class Cas {
 						maxDegree = maxDegree.max( degree(casted.getBase(),v).multiply(((Num)casted.getExpo()).getRealValue()) );
 					}else return negOne;
 				}else return negOne;
-			}else if(stripped.typeName().equals("prod")) {
+			}else if(stripped.isType("prod")) {
 				BigInteger subDegreeSum = BigInteger.ZERO;
 				for(int j = 0;j<stripped.size();j++) {
 					BigInteger childDegree = degree(stripped.get(j),v);
@@ -662,7 +662,7 @@ public class Cas {
 					subDegreeSum = subDegreeSum.add(childDegree);
 				}
 				maxDegree = maxDegree.max(subDegreeSum);
-			}else if(stripped.typeName().equals("sum")) {
+			}else if(stripped.isType("sum")) {
 				BigInteger childDegree = degree(stripped,v);
 				if(childDegree.equals(negOne)) return negOne;
 				maxDegree = maxDegree.max(childDegree);
@@ -674,15 +674,15 @@ public class Cas {
 	
 	public static boolean isPolynomialUnstrict(Expr expr,Var v){//is a polynomial in any form
 		if(!expr.contains(v) || expr.equals(v)) return true;
-		if(expr.typeName().equals("sum") || expr.typeName().equals("prod")){
+		if(expr.isType("sum") || expr.isType("prod")){
 			for(int i = 0;i<expr.size();i++){
 				if(!isPolynomialUnstrict(expr.get(i),v)) return false;
 			}
 			return true;
-		}else if(expr.typeName().equals("power")){
+		}else if(expr.isType("power")){
 			Func casted = (Func)expr;
 			return isPositiveRealNum(casted.getExpo()) && isPolynomialUnstrict(casted.getBase(),v);
-		}else if(expr.typeName().equals("div")){
+		}else if(expr.isType("div")){
 			Func castedDiv = (Func)expr;
 			return !castedDiv.getDenom().contains(v) && isPolynomialUnstrict(castedDiv.getNumer(),v);
 		}
@@ -695,7 +695,7 @@ public class Cas {
 			Expr term = exprSum.get(i);
 			Expr stripped = stripNonVarPartsFromProd(term,v);
 			if(stripped.equals(v)) continue;
-			else if(stripped.typeName().equals("power")) {
+			else if(stripped.isType("power")) {
 				Func casted = (Func)stripped;
 				if(casted.getBase().equals(v) && isPositiveRealNum(casted.getExpo())) continue;
 				return false;
@@ -708,19 +708,19 @@ public class Cas {
 		if(isPolynomialUnstrict(expr,v)){
 			if(!expr.contains(v)){
 				return expr;
-			}else if(expr.typeName().equals("div")){
+			}else if(expr.isType("div")){
 				Func castedDiv = (Func)expr;
 				return div(getLeadingCoef(castedDiv.getNumer(),v,casInfo),castedDiv.getDenom()).simplify(casInfo);
-			}else if(expr.typeName().equals("prod")){
+			}else if(expr.isType("prod")){
 				Func outProd = prod();
 				for(int i = 0;i<expr.size();i++){
 					outProd.add(getLeadingCoef(expr.get(i),v,casInfo));
 				}
 				return outProd.simplify(casInfo);
-			}else if(expr.typeName().equals("power")){
+			}else if(expr.isType("power")){
 				Func casted = (Func)expr;
 				return power(getLeadingCoef(casted.getBase(),v,casInfo),casted.getExpo()).simplify(casInfo);
-			}else if(expr.typeName().equals("sum")){
+			}else if(expr.isType("sum")){
 				BigInteger[] degrees = new BigInteger[expr.size()];
 				for(int i = 0;i<expr.size();i++){
 					degrees[i] = degree(expr.get(i),v);
@@ -775,7 +775,7 @@ public class Cas {
 				if(partsSequence.get(1).equals(v)) {
 					contents = partsSequence.get(0);
 					degree = BigInteger.ONE;
-				}else if(partsSequence.get(1).typeName().equals("power")) {
+				}else if(partsSequence.get(1).isType("power")) {
 					Func casted = (Func)partsSequence.get(1);
 					if(casted.getBase().equals(v) && isPositiveRealNum(casted.getExpo())) {
 						degree = ((Num)casted.getExpo()).getRealValue();
@@ -794,7 +794,7 @@ public class Cas {
 	
 	public static Expr stripNonVarPartsFromProd(Expr e,Expr v) {//a*x^2/c -> x^2, its like the opposite of getting the coefficient
 		if(e.contains(v)) {
-			if(e.typeName().equals("prod")) {
+			if(e.isType("prod")) {
 				Func eCastedProd = (Func)e.copy();
 				for(int i = 0;i<eCastedProd.size();i++) {
 					if(!eCastedProd.get(i).contains(v)) {
@@ -803,7 +803,7 @@ public class Cas {
 					}
 				}
 				return Prod.unCast(eCastedProd);
-			}else if(e.typeName().equals("div")) {
+			}else if(e.isType("div")) {
 				Func eCastedDiv = (Func)e;
 				Expr numer = stripNonVarPartsFromProd(eCastedDiv.getNumer(),v);
 				Expr denom = stripNonVarPartsFromProd(eCastedDiv.getDenom(),v);
@@ -819,7 +819,7 @@ public class Cas {
 		if(!e.contains(v)) {
 			outSequence.add(e.copy());
 			outSequence.add(num(1));
-		}else if(e.typeName().equals("prod")) {
+		}else if(e.isType("prod")) {
 			Expr outCopy = e.copy();
 			Expr coefProd = prod();
 			
@@ -834,7 +834,7 @@ public class Cas {
 			outSequence.add(Prod.unCast(coefProd));
 			outSequence.add(Prod.unCast(outCopy));
 			
-		}else if(e.typeName().equals("div")) {
+		}else if(e.isType("div")) {
 			Func castedDiv = (Func)e;
 			Func numerSequence = seperateByVar(castedDiv.getNumer(),v);
 			Func denomSequence = seperateByVar(castedDiv.getDenom(),v);
@@ -854,7 +854,7 @@ public class Cas {
 	
 	public static Func seperateCoef(Expr e) {//returns [coef,remain]
 		Func outSeq = sequence();
-		if(e.typeName().equals("prod")) {
+		if(e.isType("prod")) {
 			Func prodCopy = (Func)e.copy();
 			for(int i = 0;i<prodCopy.size();i++) {
 				if(prodCopy.get(i) instanceof Num) {
@@ -867,7 +867,7 @@ public class Cas {
 				outSeq.add(num(1));
 			}
 			outSeq.add(Prod.unCast(prodCopy));
-		}else if(e.typeName().equals("div")) {
+		}else if(e.isType("div")) {
 			Func castedDiv = (Func)e;
 			Func numerSeq = seperateCoef(castedDiv.getNumer());
 			Func denomSeq = seperateCoef(castedDiv.getDenom());
@@ -961,7 +961,7 @@ public class Cas {
 			return sequence(num(n.getRealValue()),num(n.getImagValue()));
 		}
 		
-		if(e.typeName().equals("prod")) {
+		if(e.isType("prod")) {
 			Func eCopyProd = (Func)e.copy();
 			for(int i = 0;i<e.size();i++) {
 				if(e.get(i) instanceof Num) {
@@ -988,7 +988,7 @@ public class Cas {
 			return sequence(eCopyProd,num(0));
 		}
 		
-		if(e.typeName().equals("sum")) {
+		if(e.isType("sum")) {
 			Func outSequence = sequence(sum(),sum());
 			for(int i = 0;i<e.size();i++) {
 				Func seperatedElSequence = basicRealAndImagComponents(e.get(i),casInfo);
@@ -1282,9 +1282,9 @@ public class Cas {
 		if(e.containsType("sin")){
 			Expr trigPart = null;
 			Func coefProd = prod();
-			if(e.typeName().equals("prod")){
+			if(e.isType("prod")){
 				for(int j = 0;j<e.size();j++){
-					if(e.get(j).typeName().equals("sin")){
+					if(e.get(j).isType("sin")){
 						if(trigPart == null){
 							trigPart = e.get(j);
 						}else{
@@ -1294,7 +1294,7 @@ public class Cas {
 						coefProd.add(e.get(j));
 					}
 				}
-			}else if(e.typeName().equals("sin")){
+			}else if(e.isType("sin")){
 				trigPart = e;
 			}
 			
@@ -1302,7 +1302,7 @@ public class Cas {
 				Expr innerPart = trigPart.get();
 				Expr halfInner = div(innerPart,num(2)).simplify(casInfo);
 				
-				if(!(halfInner.typeName().equals("div"))){
+				if(!(halfInner.isType("div"))){
 					coefProd.add(sin(halfInner));
 					coefProd.add(cos(halfInner));
 					coefProd.add(num(2));
@@ -1394,13 +1394,13 @@ public class Cas {
 	}
 	
 	public static Expr getLeftSideGeneric(Expr e) {
-		if(e.typeName().equals("equ")) {
+		if(e.isType("equ")) {
 			return Equ.getLeftSide((Func)e);
 		}
-		if(e.typeName().equals("less")) {
+		if(e.isType("less")) {
 			return Less.getLeftSide((Func)e);
 		}
-		if(e.typeName().equals("greater")) {
+		if(e.isType("greater")) {
 			return Greater.getLeftSide((Func)e);
 		}
 		
@@ -1408,13 +1408,13 @@ public class Cas {
 	}
 	
 	public static Expr getRightSideGeneric(Expr e) {
-		if(e.typeName().equals("equ")) {
+		if(e.isType("equ")) {
 			return Equ.getRightSide((Func)e);
 		}
-		if(e.typeName().equals("less")) {
+		if(e.isType("less")) {
 			return Less.getRightSide((Func)e);
 		}
-		if(e.typeName().equals("greater")) {
+		if(e.isType("greater")) {
 			return Greater.getRightSide((Func)e);
 		}
 		
@@ -1422,25 +1422,25 @@ public class Cas {
 	}
 	
 	public static void setLeftSideGeneric(Expr expr,Expr ls) {
-		if(expr.typeName().equals("equ")) {
+		if(expr.isType("equ")) {
 			Equ.setLeftSide(((Func)expr),ls);
 		}
-		if(expr.typeName().equals("less")) {
+		if(expr.isType("less")) {
 			Less.setLeftSide((Func)expr,ls);
 		}
-		if(expr.typeName().equals("greater")) {
+		if(expr.isType("greater")) {
 			Greater.setLeftSide((Func)expr,ls);
 		}
 	}
 	
 	public static void setRightSideGeneric(Expr expr,Expr rs) {
-		if(expr.typeName().equals("equ")) {
+		if(expr.isType("equ")) {
 			Equ.setRightSide(((Func)expr),rs);
 		}
-		if(expr.typeName().equals("less")) {
+		if(expr.isType("less")) {
 			Less.setRightSide(((Func)expr),rs);
 		}
-		if(expr.typeName().equals("greater")) {
+		if(expr.isType("greater")) {
 			Greater.setRightSide((Func)expr,rs);
 		}
 	}
@@ -1462,7 +1462,7 @@ public class Cas {
 			out+="\\pi ";
 		}else if(e instanceof Var || e instanceof Num || e.equals(Var.E)) {
 			out += e.toString();
-		}else if(e.typeName().equals("prod")) {
+		}else if(e.isType("prod")) {
 			e = (Func)e.copy();//need to bring num to front
 			
 			for(int i = 0;i<e.size();i++){
@@ -1480,13 +1480,13 @@ public class Cas {
 			}
 				
 			for(int i = 0;i<e.size();i++) {
-				boolean paren = e.get(i).typeName().equals("sum");
+				boolean paren = e.get(i).isType("sum");
 				if(paren) out+=leftParen;
 				out+=generateLatex(e.get(i));
 				if(paren) out+=rightParen;
 				if(i!=e.size()-1) out+=" \\cdot ";
 			}
-		}else if(e.typeName().equals("sum")) {
+		}else if(e.isType("sum")) {
 			for(int i = 0;i<e.size();i++) {
 				if(i!=0)out+=generateLatex(e.get(i).strangeAbs(CasInfo.normal));
 				else out+=generateLatex(e.get(i));
@@ -1495,13 +1495,13 @@ public class Cas {
 					else out+="+";
 				}
 			}
-		}else if(e.typeName().equals("div")) {
+		}else if(e.isType("div")) {
 			out+="\\frac{";
 			out+=generateLatex(((Func)e).getNumer());
 			out+="}{";
 			out+=generateLatex(((Func)e).getDenom());
 			out+="}";
-		}else if(e.typeName().equals("power")) {
+		}else if(e.isType("power")) {
 			Func casted = (Func)e;
 			
 			if(isSqrt(e)){
@@ -1511,24 +1511,24 @@ public class Cas {
 			}else{
 				out+="{";
 				boolean parenBase = false;
-				if(casted.getBase().typeName().equals("sum") || casted.getBase().typeName().equals("prod") || casted.getBase().typeName().equals("power") || (casted.getBase() instanceof Num && casted.getBase().negative())) parenBase = true;
+				if(casted.getBase().isType("sum") || casted.getBase().isType("prod") || casted.getBase().isType("power") || (casted.getBase() instanceof Num && casted.getBase().negative())) parenBase = true;
 				if(parenBase) out+=leftParen;
 				out+=generateLatex(casted.getBase());
 				if(parenBase) out+=rightParen;
 				out+="}^{";
 				boolean parenExpo= false;
-				if(casted.getExpo().typeName().equals("sum") || casted.getExpo().typeName().equals("prod") || casted.getExpo().typeName().equals("power")) parenExpo = true;
+				if(casted.getExpo().isType("sum") || casted.getExpo().isType("prod") || casted.getExpo().isType("power")) parenExpo = true;
 				if(parenExpo) out+=leftParen;
 				out+=generateLatex(casted.getExpo());
 				if(parenExpo) out+=rightParen;
 				out+="}";
 			}
-		}else if(e.typeName().equals("equ")) {
+		}else if(e.isType("equ")) {
 			Func castedEqu = (Func)e;
 			out+=generateLatex( Equ.getLeftSide(castedEqu) );
 			out+="=";
 			out+=generateLatex( Equ.getRightSide(castedEqu) );
-		}else if(e.typeName().equals("integrateOver")) {
+		}else if(e.isType("integrateOver")) {
 			Func castedDefInt = (Func)e;
 			out+="\\int_{";
 			out+=generateLatex(IntegrateOver.getMin(castedDefInt));
@@ -1538,14 +1538,14 @@ public class Cas {
 			out+=generateLatex(IntegrateOver.getExpr(castedDefInt));
 			out+=" d"+generateLatex(castedDefInt.getVar());
 			out+="}";
-		}else if(e.typeName().equals("diff")) {
+		}else if(e.isType("diff")) {
 			Func casted = (Func)e;
 			out+="\\frac{d}{d";
 			out+=casted.getVar().toString();
 			out+="}"+leftParen;
 			out+=generateLatex(casted.get());
 			out+=rightParen;
-		}else if(e.typeName().equals("abs")){
+		}else if(e.isType("abs")){
 			out+="\\left| ";
 			out+=generateLatex(e.get());
 			out+="\\right| ";

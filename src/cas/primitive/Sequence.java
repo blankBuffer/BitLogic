@@ -32,8 +32,8 @@ public class Sequence{
 	
 	public static Func cast(Expr e) {
 		if(e == null) return Cas.sequence();
-		if(e.typeName().equals("sequence")) return (Func)e;
-		if(e instanceof Params || e.typeName().equals("set")) {
+		if(e.isType("sequence")) return (Func)e;
+		if(e instanceof Params || e.isType("set")) {
 			Func out = Cas.sequence();
 			for(int i = 0;i<e.size();i++) {
 				out.add(e.get(i));

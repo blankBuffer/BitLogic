@@ -95,13 +95,13 @@ public class Interpreter extends Cas{
 						if(currentMode == ADD) {
 							sum.add(expr);
 						}else if(currentMode == SUB){
-							if(expr.typeName().equals("num")) sum.add(((Num)expr).negate());
-							else if(expr.typeName().equals("prod")) {
+							if(expr.isType("num")) sum.add(((Num)expr).negate());
+							else if(expr.isType("prod")) {
 								boolean finished = false;
 								for(int j = 0;j < expr.size();j++) {
 									Expr prodEl = expr.get(j);
 									
-									if(prodEl.typeName().equals("num")) {
+									if(prodEl.isType("num")) {
 										expr.set(j, ((Num)prodEl).negate() );
 										finished = true;
 										break;
@@ -164,7 +164,7 @@ public class Interpreter extends Cas{
 				if(innerExpr == null) throw new Exception("got a null expr when building neg");
 				
 				Expr negOut = null;
-				if(innerExpr.typeName().equals("num")) {
+				if(innerExpr.isType("num")) {
 					negOut = ((Num)innerExpr).negate();
 				}else {
 					negOut = neg(innerExpr);

@@ -80,7 +80,7 @@ public class Next{
 						Expr nextRatios = next(ratioSequence,getNum(next)).simplify(casInfo);
 						USED_GEO = false;
 						
-						if(nextRatios.typeName().equals("next")) return next;
+						if(nextRatios.isType("next")) return next;
 						
 						Func newSeq = sequence();
 						Expr last = seq.get(seq.size()-1);
@@ -172,7 +172,7 @@ public class Next{
 							USED_STEP = true;
 							contSequences[i] = next(subSequences[i],num(chunkSizes[i])).simplify(casInfo);
 							USED_STEP = false;
-							if(contSequences[i].typeName().equals("next")) continue outer;
+							if(contSequences[i].isType("next")) continue outer;
 						}
 						
 						remain = getNum(next).getRealValue().intValue();
@@ -225,7 +225,7 @@ public class Next{
 					Expr nextExprs = next(exprsSeq,getNum(next)).simplify(casInfo);
 					USED_COEF = false;
 					
-					if(nextCoefs.typeName().equals("next") || nextExprs.typeName().equals("next")) return next;
+					if(nextCoefs.isType("next") || nextExprs.isType("next")) return next;
 					
 					Func newSeq = sequence();
 					for(int i = 0;i<getNum(next).getRealValue().intValue();i++) {
@@ -241,7 +241,7 @@ public class Next{
 					Func next = (Func)e;
 					Func seq = getSequence(next);
 					
-					if(seq.get(0).typeName().equals("div") || seq.get(1).typeName().equals("div")) {
+					if(seq.get(0).isType("div") || seq.get(1).isType("div")) {
 						
 						Func numerSeq = sequence();
 						Func denomSeq = sequence();
@@ -256,7 +256,7 @@ public class Next{
 						Expr nextNumers = next(numerSeq,getNum(next)).simplify(casInfo);
 						Expr nextDenoms = next(denomSeq,getNum(next)).simplify(casInfo);
 						
-						if(nextNumers.typeName().equals("next") || nextDenoms.typeName().equals("next")) return next;
+						if(nextNumers.isType("next") || nextDenoms.isType("next")) return next;
 						
 						Func newSeq = sequence();
 						for(int i = 0;i<getNum(next).getRealValue().intValue();i++) {
@@ -279,7 +279,7 @@ public class Next{
 					Func next = (Func)e;
 					Func seq = getSequence(next);
 					
-					if(seq.get(0).typeName().equals("power") || seq.get(1).typeName().equals("power") || seq.get(seq.size()-1).typeName().equals("power") || seq.get(seq.size()-2).typeName().equals("power")) {
+					if(seq.get(0).isType("power") || seq.get(1).isType("power") || seq.get(seq.size()-1).isType("power") || seq.get(seq.size()-2).isType("power")) {
 						
 						Func baseSeq = sequence();
 						Func expoSeq = sequence();
@@ -294,7 +294,7 @@ public class Next{
 						Expr nextBases = next(baseSeq,getNum(next)).simplify(casInfo);
 						Expr nextExpos = next(expoSeq,getNum(next)).simplify(casInfo);
 						
-						if(nextBases.typeName().equals("next") || nextExpos.typeName().equals("next")) return next;
+						if(nextBases.isType("next") || nextExpos.isType("next")) return next;
 						
 						Func newSeq = sequence();
 						for(int i = 0;i<getNum(next).getRealValue().intValue();i++) {
@@ -393,13 +393,13 @@ public class Next{
 					
 					String firstTypeName = sequence.get(0).typeName();
 					if(FunctionsLoader.isFunc(firstTypeName) && sequence.get(0).size() == 1) {
-						for(int i = 1;i<sequence.size();i++) if(!(sequence.get(i).typeName().equals(firstTypeName)&& sequence.get(i).size() == 1)) return next;
+						for(int i = 1;i<sequence.size();i++) if(!(sequence.get(i).isType(firstTypeName)&& sequence.get(i).size() == 1)) return next;
 						Func subSequence = sequence();
 						for(int i = 0;i<sequence.size();i++) subSequence.add(sequence.get(i).get());
 						
 						Expr expectedInner = next(subSequence,getNum(next)).simplify(casInfo);
 						
-						if(expectedInner.typeName().equals("next")) return next;
+						if(expectedInner.isType("next")) return next;
 						
 						for(int i = 0;i<expectedInner.size();i++) {
 							try {

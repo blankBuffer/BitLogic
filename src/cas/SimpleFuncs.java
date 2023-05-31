@@ -282,7 +282,7 @@ public class SimpleFuncs extends Cas{
 				@Override
 				public Expr applyRuleToExpr(Expr e,CasInfo casInfo) {
 					Func f = (Func)e;
-					if(f.get(1).typeName().equals("set")) {
+					if(f.get(1).isType("set")) {
 						return f.get().replace((Func)f.get(1)).simplify(casInfo);
 					}
 					return f.get().replace((Func)f.get(1)).simplify(casInfo);
@@ -303,18 +303,18 @@ public class SimpleFuncs extends Cas{
 				public Expr applyRuleToExpr(Expr e,CasInfo casInfo) {
 					Func f = (Func)e;
 					
-					if(f.get().typeName().equals("equ")) {
+					if(f.get().isType("equ")) {
 						Func castedEqu = (Func)f.get();
 						
 						return bool(Equ.getLeftSide(castedEqu).exactlyEquals(Equ.getRightSide(castedEqu)));
-					}else if(f.get().typeName().equals("less")) {
+					}else if(f.get().isType("less")) {
 						Func castedLess = (Func)f.get();
 						
 						boolean equal = Less.getLeftSide(castedLess).exactlyEquals(Less.getRightSide(castedLess));
 						if(castedLess.containsVars()) return bool(!equal);
 						
 						return bool(!equal && Less.getLeftSide(castedLess).convertToFloat(exprSet()).real < Less.getRightSide(castedLess).convertToFloat(exprSet()).real );
-					}else if(f.get().typeName().equals("greater")) {
+					}else if(f.get().isType("greater")) {
 						Func castedGreater = (Func)f.get();
 						
 						boolean equal = Greater.getLeftSide(castedGreater).exactlyEquals(Greater.getRightSide(castedGreater));
@@ -410,7 +410,7 @@ public class SimpleFuncs extends Cas{
 				public Expr applyRuleToExpr(Expr e,CasInfo casInfo) {
 					Func f = (Func)e;
 					
-					return bool(f.get(0).typeName().equals(f.get(1).toString()));
+					return bool(f.get(0).isType(f.get(1).toString()));
 				}
 			};
 		}
@@ -733,7 +733,7 @@ public class SimpleFuncs extends Cas{
 					
 					Expr extended = next( (Func)e.get() , num(needed) ).simplify(casInfo);
 					
-					if(extended.typeName().equals("next")) {
+					if(extended.isType("next")) {
 						for(int i = 0;i<needed;i++) {
 							e.get().add( e.get(0).get(i%e.get(0).size()) );
 						}

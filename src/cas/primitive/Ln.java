@@ -52,13 +52,13 @@ public class Ln{
 		@Override
 		public Expr applyRuleToExpr(Expr e,CasInfo casInfo){
 			Func ln = null;
-			if(e.typeName().equals("ln")){
+			if(e.isType("ln")){
 				ln = (Func)e;
 			}else{
 				return e;
 			}
 			
-			if(ln.get().typeName().equals("sum")){
+			if(ln.get().isType("sum")){
 				Expr inner = ln.get();
 				short direction = Limit.getDirection(inner);
 				
@@ -84,7 +84,7 @@ public class Ln{
 				if(((Num)perfectPower.getExpo()).getRealValue().equals(BigInteger.ONE)) return log;
 				
 				log.set(0, perfectPower);
-			}else if(log.get().typeName().equals("prod")) {//ln(8*x) -> ln(2^3*x) , this will be reverted in later steps
+			}else if(log.get().isType("prod")) {//ln(8*x) -> ln(2^3*x) , this will be reverted in later steps
 				Func innerProd = (Func)log.get();
 				for(int i = 0;i<innerProd.size();i++) {
 					if(innerProd.get(i) instanceof Num) {
@@ -111,7 +111,7 @@ public class Ln{
 		public Expr applyRuleToExpr(Expr e,CasInfo casInfo) {
 			Func log = (Func)e;
 			
-			if((log.get().typeName().equals("prod") || log.get().typeName().equals("div")) && (casInfo.allowComplexNumbers() || !log.get().negative()) ) {
+			if((log.get().isType("prod") || log.get().isType("div")) && (casInfo.allowComplexNumbers() || !log.get().negative()) ) {
 
 				Func outSum = sum();
 				Func div = Div.cast(log.get());
@@ -121,7 +121,7 @@ public class Ln{
 				
 				for(int i = 0;i<prodNumer.size();i++) {
 					Expr current = prodNumer.get(i);
-					if(current.typeName().equals("sum") || current.typeName().equals("power") && ((Func)current).getBase().typeName().equals("sum") || current.typeName().equals("abs") && ((Func)current).get().typeName().equals("sum")) {
+					if(current.isType("sum") || current.isType("power") && ((Func)current).getBase().isType("sum") || current.isType("abs") && ((Func)current).get().isType("sum")) {
 						if(!current.containsVars() && !current.convertToFloat(exprSet()).positiveAndReal()) continue;
 						outSum.add(ln(current));
 						prodNumer.remove(i);
@@ -130,7 +130,7 @@ public class Ln{
 				}
 				for(int i = 0;i<prodDenom.size();i++) {
 					Expr current = prodDenom.get(i);
-					if(current.typeName().equals("sum") || current.typeName().equals("power") && ((Func)current).getBase().typeName().equals("sum") || current.typeName().equals("abs") && ((Func)current).get().typeName().equals("sum")) {
+					if(current.isType("sum") || current.isType("power") && ((Func)current).getBase().isType("sum") || current.isType("abs") && ((Func)current).get().isType("sum")) {
 						if(!current.containsVars() && !current.convertToFloat(exprSet()).positiveAndReal()) continue;
 						outSum.add(neg(ln(current)));
 						prodDenom.remove(i);
@@ -196,7 +196,7 @@ public class Ln{
 		@Override
 		public Expr applyRuleToExpr(Expr e,CasInfo casInfo) {
 			Func log = (Func)e;
-			if(log.get().typeName().equals("prod")) {
+			if(log.get().isType("prod")) {
 				Func innerProd = (Func)log.get();
 				for(int i = 0;i<innerProd.size();i++) {
 					boolean badForm = false;
@@ -205,7 +205,7 @@ public class Ln{
 						if(pp.getExpo().equals(Num.ONE)) badForm = true;	
 						else innerProd.set(i,pp);
 					}
-					badForm|=!(innerProd.get(i).typeName().equals("power"));
+					badForm|=!(innerProd.get(i).isType("power"));
 					
 					if(badForm) {
 						log.simplifyChildren(casInfo);

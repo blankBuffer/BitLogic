@@ -68,7 +68,7 @@ public class StandardRules extends Cas{
 		@Override
 		public Expr applyRuleToExpr(Expr e,CasInfo casInfo){
 			Expr expr = e.get();
-			if(expr.typeName().equals("sum")){
+			if(expr.isType("sum")){
 				Expr depletedExpr = e.copy();
 				depletedExpr.set(0, Num.ZERO);
 				

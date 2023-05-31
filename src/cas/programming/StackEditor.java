@@ -153,7 +153,7 @@ public class StackEditor extends Cas {
 	public void add() {
 		if (sLast() == null)
 			return;
-		if (sLast().typeName().equals("sum")) {
+		if (sLast().isType("sum")) {
 			sLast().add(last());
 			stackSequence.remove(size() - 1);
 		} else {
@@ -166,7 +166,7 @@ public class StackEditor extends Cas {
 	public void subtract() {
 		if (sLast() == null)
 			return;
-		if (sLast().typeName().equals("sum")) {
+		if (sLast().isType("sum")) {
 			sLast().add(neg(last()));
 			stackSequence.remove(size() - 1);
 		} else {
@@ -179,7 +179,7 @@ public class StackEditor extends Cas {
 	public void multiply() {
 		if (sLast() == null)
 			return;
-		if (sLast().typeName().equals("prod")) {
+		if (sLast().isType("prod")) {
 			sLast().add(last());
 			stackSequence.remove(size() - 1);
 		} else {
@@ -192,7 +192,7 @@ public class StackEditor extends Cas {
 	public void dot() {
 		if (sLast() == null)
 			return;
-		if (sLast().typeName().equals("dot")) {
+		if (sLast().isType("dot")) {
 			sLast().add(last());
 			stackSequence.remove(size() - 1);
 		} else {
@@ -205,7 +205,7 @@ public class StackEditor extends Cas {
 	public void and(){
 		if (sLast() == null)
 			return;
-		if (sLast().typeName().equals("and")) {
+		if (sLast().isType("and")) {
 			sLast().add(last());
 			stackSequence.remove(size() - 1);
 		} else {
@@ -217,7 +217,7 @@ public class StackEditor extends Cas {
 	public void or(){
 		if (sLast() == null)
 			return;
-		if (sLast().typeName().equals("or")) {
+		if (sLast().isType("or")) {
 			sLast().add(last());
 			stackSequence.remove(size() - 1);
 		} else {

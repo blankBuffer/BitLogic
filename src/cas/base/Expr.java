@@ -49,6 +49,10 @@ public abstract class Expr extends Cas{
 	public abstract ComplexFloat convertToFloat(Func varDefsSet);
 	public abstract String typeName();
 	
+	public boolean isType(String name) {
+		return typeName().equals(name);
+	}
+	
 	public void print() {
 		System.out.print(this);
 	}
@@ -126,7 +130,7 @@ public abstract class Expr extends Cas{
 			return toBeSimplified;
 		}
 		//System.out.println(toBeSimplified);
-		if(this instanceof Func && (((Func)this).behavior.simplifyChildren || get().typeName().equals("result"))) toBeSimplified.simplifyChildren(casInfo);//simplify sub expressions, result function can override this behavior
+		if(this instanceof Func && (((Func)this).behavior.simplifyChildren || get().isType("result"))) toBeSimplified.simplifyChildren(casInfo);//simplify sub expressions, result function can override this behavior
 		
 		
 		if(rule != null) toBeSimplified = rule.applyRuleToExpr(toBeSimplified, casInfo);
@@ -185,7 +189,7 @@ public abstract class Expr extends Cas{
 		if(other == null || !(other instanceof Expr)) return false;
 		if(other == this) return true;
 		Expr otherCasted = (Expr)other;
-		if(other instanceof Expr && ((Expr)other).typeName().equals(typeName())) {//make sure same type
+		if(other instanceof Expr && ((Expr)other).isType(typeName())) {//make sure same type
 			
 			if(otherCasted.size() == size()) {//make sure they are the same size
 				
@@ -239,7 +243,7 @@ public abstract class Expr extends Cas{
 	
 	public Expr removeCoefficients() {
 		if(this instanceof Num) return num(1);
-		else if(this.typeName().equals("prod")) {
+		else if(this.isType("prod")) {
 			Func prodCopy = (Func)copy();
 			for(int i = 0;i<prodCopy.size();i++) {
 				if(prodCopy.get(i) instanceof Num) {
@@ -248,7 +252,7 @@ public abstract class Expr extends Cas{
 				}
 			}
 			return Prod.unCast(prodCopy);
-		}else if(this.typeName().equals("div")) {
+		}else if(this.isType("div")) {
 			Func casted = (Func)this;
 			return Div.unCast( div(casted.getNumer().removeCoefficients(),casted.getDenom().removeCoefficients()));
 		}
@@ -257,16 +261,16 @@ public abstract class Expr extends Cas{
 	
 	public boolean negative() {//Assumes its already simplified
 		if(this instanceof Num) return ((Num)this).signum() == -1;
-		else if(this.typeName().equals("prod")) {
+		else if(this.isType("prod")) {
 			for(int i = 0;i<size();i++) {
 				if(get(i) instanceof Num) {
 					if(((Num)get(i)).signum() == -1) return true;
 				}
 			}
-		}else if(this.typeName().equals("div")) {
+		}else if(this.isType("div")) {
 			Func casted = (Func)this;
 			return casted.getNumer().negative() || casted.getDenom().negative();
-		}else if(this.typeName().equals("sum")) {
+		}else if(this.isType("sum")) {
 			Func castedSum = (Func)this;
 			
 			int highest  = Integer.MIN_VALUE;
@@ -302,7 +306,7 @@ public abstract class Expr extends Cas{
 	 */
 	public Expr strangeAbs(CasInfo casInfo) {//Assumes its already simplified
 		if(this instanceof Num) return ((Num)this).strangeAbs();
-		else if(this.typeName().equals("prod")) {
+		else if(this.isType("prod")) {
 			for(int i = 0;i<size();i++) {
 				if(get(i) instanceof Num) {
 					if(((Num)get(i)).signum() == -1) {
@@ -312,7 +316,7 @@ public abstract class Expr extends Cas{
 					}
 				}
 			}
-		}else if(this.typeName().equals("div")) {
+		}else if(this.isType("div")) {
 			Func casted = (Func)this;
 			return div(casted.getNumer().strangeAbs(casInfo), casted.getDenom().strangeAbs(casInfo)).simplify(casInfo);
 		}
@@ -321,12 +325,12 @@ public abstract class Expr extends Cas{
 	
 	
 	public Expr getCoefficient() {
-		if(this.typeName().equals("prod")) {
+		if(this.isType("prod")) {
 			for(int i = 0;i<size();i++) if(get(i) instanceof Num) return get(i).copy();
 		}else if(this instanceof Num) {
 			return copy();
 		}
-		else if(this.typeName().equals("div")) {
+		else if(this.isType("div")) {
 			Func casted = (Func)this;
 			Num numerCoef = (Num)casted.getNumer().getCoefficient();
 			Num denomCoef = (Num)casted.getDenom().getCoefficient();
@@ -388,7 +392,7 @@ public abstract class Expr extends Cas{
 	}
 	
 	public boolean containsType(String typeName) {//used for faster processing
-		if(typeName().equals(typeName)) {
+		if(isType(typeName)) {
 			return true;
 		}
 		for(int i = 0; i< size();i++) {
@@ -435,8 +439,8 @@ public abstract class Expr extends Cas{
 	private static int priorityNum(Expr e) {
 		int priority = 0;
 		
-		if(e.typeName().equals("var")) priority = 2;
-		else if(e.typeName().equals("num")) priority = 1;
+		if(e.isType("var")) priority = 2;
+		else if(e.isType("num")) priority = 1;
 		else priority = e.typeName().hashCode();
 		
 		return Math.abs(priority);
@@ -449,7 +453,7 @@ public abstract class Expr extends Cas{
 				varcounts = new ArrayList<VarCount>();
 				countVars(varcounts);
 			}
-			if(this.typeName().equals("sum") || this.typeName().equals("prod") || this.typeName().equals("set")) {
+			if(this.isType("sum") || this.isType("prod") || this.isType("set")) {
 				boolean wasSimple = flags.simple;
 				
 				final ArrayList<VarCount> varcountsConst = varcounts;
@@ -521,7 +525,7 @@ public abstract class Expr extends Cas{
 	
 	public Expr replace(Func in) {
 		
-		if(in.typeName().equals("set")) {
+		if(in.isType("set")) {
 			Func equsSet = in;
 			for(int i = 0;i<equsSet.size();i++) {
 				Func equ = (Func)equsSet.get(i);
@@ -534,7 +538,7 @@ public abstract class Expr extends Cas{
 				replacedChildren.set(i, get(i).replace(equsSet));
 			}
 			return replacedChildren;
-		}else if(in.typeName().equals("equ")){
+		}else if(in.isType("equ")){
 			Func equ = in;
 			Func l = exprSet();
 			l.add(equ);
@@ -601,12 +605,6 @@ public abstract class Expr extends Cas{
 		out+=(tabStr+ typeName() +" hash: "+hashCode());
 		if(this instanceof Num || this instanceof Var || this instanceof FloatExpr || this instanceof BoolState) out+=(" name: "+this);
 		out+="\n";
-		/* NEEDS A LITTLE MODIFICATION TODO
-		if(this instanceof Func) {
-			out+="rules: "+((Func)this).getRule();
-			out+="\n";
-		}
-		*/
 		for(int i = 0;i<size();i++) {
 			out+=get(i).toStringTree(tab+1);
 		}

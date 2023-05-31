@@ -105,7 +105,7 @@ public class Sum{
 									
 								}
 							}
-						}else if(current.typeName().equals("prod")) {
+						}else if(current.isType("prod")) {
 							int index = -1;
 							String type = null;
 							for(int j = 0;j < current.size();j++) {
@@ -126,7 +126,7 @@ public class Sum{
 								
 								for(int j = i+1;j < sum.size();j++) {
 									Expr other = sum.get(j);
-									if(other.typeName().equals("prod")) {
+									if(other.isType("prod")) {
 										index = -1;
 										for(int k = 0;k < other.size();k++) {
 											if(type == "cos" && fastSimilarExpr(sinsqr,other.get(k))) {
@@ -170,15 +170,15 @@ public class Sum{
 					IndexSet indexOfProdWithLog = new IndexSet();
 					
 					for(int i = 0;i < sum.size();i++) {
-						if(sum.get(i).typeName().equals("ln") && !(sum.get(i).get().typeName().equals("sum")) && !(sum.get(i).get().typeName().equals("abs") && sum.get(i).get().get().typeName().equals("sum"))  ) indexSet.ints.add(i);
-						else if(sum.get(i).typeName().equals("prod")) {
+						if(sum.get(i).isType("ln") && !(sum.get(i).get().isType("sum")) && !(sum.get(i).get().isType("abs") && sum.get(i).get().get().isType("sum"))  ) indexSet.ints.add(i);
+						else if(sum.get(i).isType("prod")) {
 							Func innerProd = (Func)sum.get(i);
 							int innerLogCount = 0;
 							boolean onlyConstantsOutside = true;
 							
 							for(int j = 0;j<innerProd.size();j++) {
-								if(innerProd.get(j).typeName().equals("ln")) {
-									if(!(innerProd.get(j).get().typeName().equals("sum")) && !(innerProd.get(j).get().typeName().equals("abs") && innerProd.get(j).get().get().typeName().equals("sum"))) {
+								if(innerProd.get(j).isType("ln")) {
+									if(!(innerProd.get(j).get().isType("sum")) && !(innerProd.get(j).get().isType("abs") && innerProd.get(j).get().get().isType("sum"))) {
 										innerLogCount++;
 									}
 								}else {
@@ -198,7 +198,7 @@ public class Sum{
 							Expr prod = sum.get(i);
 							Func nonLogProd = prod();
 							for(int j = 0;j < prod.size();j++) {
-								if(!(prod.get(j).typeName().equals("ln"))) {
+								if(!(prod.get(j).isType("ln"))) {
 									nonLogProd.add(prod.get(j));
 									prod.remove(j);
 									j--;
@@ -232,7 +232,7 @@ public class Sum{
 					Func sum = (Func)e;
 					
 					for(int i = 0;i<sum.size();i++) {
-						if(sum.get(i).typeName().equals("prod")) {
+						if(sum.get(i).isType("prod")) {
 							sum.set(i,  distr(sum.get(i)).simplify(casInfo));
 						}
 					}
@@ -247,7 +247,7 @@ public class Sum{
 					Func sum = (Func)e;
 					for(int i = 0;i<sum.size();i++) {
 						Expr current = sum.get(i);
-						if(current.typeName().equals("sum")) {
+						if(current.isType("sum")) {
 							for(int j = 0;j<current.size();j++) sum.add(current.get(j));
 							sum.remove(i);//delete from list to remove duplicates
 							i--;//shift back after deletion
@@ -268,7 +268,7 @@ public class Sum{
 						
 						Expr coef = num(1);//coefficient
 						
-						if(current.typeName().equals("prod") || current.typeName().equals("div")) {//if its a product
+						if(current.isType("prod") || current.isType("div")) {//if its a product
 							Func partsSequence = seperateCoef(current);
 							coef = partsSequence.get(0);
 							current = partsSequence.get(1);
@@ -282,7 +282,7 @@ public class Sum{
 							
 							Expr toCompCoef = num(1);
 							
-							if(toComp.typeName().equals("prod") || toComp.typeName().equals("div")) {
+							if(toComp.isType("prod") || toComp.isType("div")) {
 								Func partsSequence = seperateCoef(toComp);
 								toCompCoef = partsSequence.get(0);
 								toComp = partsSequence.get(1);
@@ -297,7 +297,7 @@ public class Sum{
 							
 						}
 						if(foundSame) {
-							if(current.typeName().equals("prod")) {//if its a product still just add the coefficient
+							if(current.isType("prod")) {//if its a product still just add the coefficient
 								current.add(coef);
 							}else {//if not just make a new product
 								current = prod(current,coef);
@@ -325,7 +325,7 @@ public class Sum{
 							total = total.addNum(temp);
 							sum.remove(i);
 							i--;
-						}else if(sum.get(i).typeName().equals("div") && Div.isNumerical((Func)sum.get(i))) {
+						}else if(sum.get(i).isType("div") && Div.isNumerical((Func)sum.get(i))) {
 							if(totalFrac == null) {
 								totalFrac = sum.get(i);
 							}else {
@@ -452,7 +452,7 @@ public class Sum{
 						Func nonMatriciesSum = sum();
 						
 						for(int i = 0;i<sum.size();i++) {
-							if(sum.get(i).typeName().equals("mat")) {
+							if(sum.get(i).isType("mat")) {
 								matriciesSum.add(sum.get(i));
 							}else {
 								nonMatriciesSum.add(sum.get(i));
@@ -517,7 +517,14 @@ public class Sum{
 				@Override
 				public String generateString(Func owner) {
 					String out = "";
-					if(owner.size() < 2) out+="alone sum:";
+					if(owner.size() < 2) {
+						out+="sum(";
+						for(int i = 0;i<owner.size();i++) out+=owner.get(i);
+						out+=")";
+						return out;
+					}
+					
+					
 					for(int i = 0;i < owner.size();i++) {
 						out+=owner.get(i).toString();
 						boolean useNothing = false;
@@ -527,7 +534,7 @@ public class Sum{
 							if(next instanceof Num) {
 								Num numCatsed  = (Num)next;
 								if(numCatsed.getRealValue().signum()==-1) useNothing = true;
-							}else if(next.typeName().equals("prod")){
+							}else if(next.isType("prod")){
 								Num numCasted = null;
 								for(int j = 0;j<next.size();j++) {
 									if(next.get(j) instanceof Num) {
@@ -561,7 +568,7 @@ public class Sum{
 	};
 	
 	public static Func cast(Expr e) {
-		if(e.typeName().equals("sum")) {
+		if(e.isType("sum")) {
 			return (Func)e;
 		}
 		Func out = Cas.sum();
@@ -570,7 +577,7 @@ public class Sum{
 	}
 	
 	public static Expr unCast(Expr e) {
-		if(e.typeName().equals("sum")) {
+		if(e.isType("sum")) {
 			Func castedSum = (Func)e;
 			if(castedSum.size() == 0) {
 				return Cas.num(0);

@@ -30,7 +30,7 @@ public class Gcd{
 					
 					subGcdProd.add(Div.unCast(div( num(((Num)fracCoefA.getNumer()).gcd().gcd(((Num)fracCoefB.getNumer()).gcd())) ,num(((Num)fracCoefA.getDenom()).gcd().gcd(((Num)fracCoefB.getDenom()).gcd())) )));
 					
-					if(a.typeName().equals("div") || b.typeName().equals("div")) {
+					if(a.isType("div") || b.isType("div")) {
 						Func aDiv = Div.cast(a);
 						Func bDiv = Div.cast(b);
 						
@@ -52,7 +52,7 @@ public class Gcd{
 									subGcdProd.add(Power.unCast(aPow));
 								}else if( isPositiveRealNum(aPow.getExpo()) && isPositiveRealNum(bPow.getExpo()) ){
 									subGcdProd.add(Power.unCast( power(aPow.getBase(), num(((Num)aPow.getExpo()).getRealValue().min(((Num)bPow.getExpo()).getRealValue()))) ));
-								}else if(aPow.getExpo().typeName().equals("div") || bPow.getExpo().typeName().equals("div")) {
+								}else if(aPow.getExpo().isType("div") || bPow.getExpo().isType("div")) {
 									Func aExpo = Div.cast(aPow.getExpo());
 									Func bExpo = Div.cast(bPow.getExpo());
 									
@@ -90,7 +90,7 @@ public class Gcd{
 					else if(gcd.size() == 1) return gcd.get();
 					
 					for(int i = 0;i<gcd.size();i++) {
-						if(gcd.get(i).typeName().equals("sum")) {
+						if(gcd.get(i).isType("sum")) {
 							Func subSum = (Func)gcd.get(i);
 							Func subGcd = gcd();
 							

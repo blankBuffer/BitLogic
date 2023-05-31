@@ -14,7 +14,7 @@ public class Transpose{
 			Rule transContainsTrans = new Rule("transpose contains transpose"){
 				@Override
 				public Expr applyRuleToExpr(Expr e,CasInfo casInfo) {
-					if(e.get().typeName().equals("transpose")) {
+					if(e.get().isType("transpose")) {
 						return e.get().get();
 					}
 					return e;
@@ -23,7 +23,7 @@ public class Transpose{
 			Rule transOfSum = new Rule("tranpose of sum"){
 				@Override
 				public Expr applyRuleToExpr(Expr e,CasInfo casInfo) {
-					if(e.get().typeName().equals("sum")) {
+					if(e.get().isType("sum")) {
 						Func innerSum = (Func)e.get();
 						for(int i = 0;i<innerSum.size();i++) {
 							innerSum.set(i, transpose(innerSum.get(i)) );
@@ -36,7 +36,7 @@ public class Transpose{
 			Rule transOfProd = new Rule("tranpose of product"){
 				@Override
 				public Expr applyRuleToExpr(Expr e,CasInfo casInfo) {
-					if(e.get().typeName().equals("prod")) {
+					if(e.get().isType("prod")) {
 						Func innerProd = (Func)e.get();
 						for(int i = 0;i<innerProd.size();i++) {
 							innerProd.set(i, transpose(innerProd.get(i)) );
@@ -49,7 +49,7 @@ public class Transpose{
 			Rule transOfDotMult = new Rule("tranpose of dot multiply"){
 				@Override
 				public Expr applyRuleToExpr(Expr e,CasInfo casInfo) {
-					if(e.get().typeName().equals("dot")) {
+					if(e.get().isType("dot")) {
 						Func innerDotMult = (Func)e.get();
 						Func outDot = dot();
 						for(int i = innerDotMult.size()-1;i>=0;i--) {
@@ -63,7 +63,7 @@ public class Transpose{
 			Rule transOfMatrix = new Rule("matrix transpose"){
 				@Override
 				public Expr applyRuleToExpr(Expr e,CasInfo casInfo) {
-					if(e.get().typeName().equals("mat")) {
+					if(e.get().isType("mat")) {
 						Func mat = (Func)e.get();
 						
 						Func newRowsSequence = sequence();

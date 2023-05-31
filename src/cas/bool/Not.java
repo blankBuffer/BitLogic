@@ -19,7 +19,7 @@ public class Not{
 				@Override
 				public Expr applyRuleToExpr(Expr e,CasInfo casInfo){
 					Func not = (Func)e;
-					Expr result = (not.get().typeName().equals("or") ? and() :(not.get().typeName().equals("and") ? or() :null));
+					Expr result = (not.get().isType("or") ? and() :(not.get().isType("and") ? or() :null));
 					if(result != null){
 						
 						for(int i = 0;i<not.get().size();i++){

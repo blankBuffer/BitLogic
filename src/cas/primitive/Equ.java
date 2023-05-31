@@ -32,11 +32,11 @@ public class Equ{
 	
 	
 	public static Expr getLeftSide(Func equ) {
-		assert equ.typeName().equals("equ") : "expected a equ";
+		assert equ.isType("equ") : "expected a equ";
 		return equ.get(0);
 	}
 	public static Expr getRightSide(Func equ) {
-		assert equ.typeName().equals("equ") : "expected a equ";
+		assert equ.isType("equ") : "expected a equ";
 		return equ.get(1);
 	}
 	

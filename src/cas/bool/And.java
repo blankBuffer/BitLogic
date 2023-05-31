@@ -18,7 +18,7 @@ public class And{
 				public Expr applyRuleToExpr(Expr e,CasInfo casInfo){
 					Func and = (Func)e;
 					for(int i = 0;i<and.size();i++){
-						if(and.get(i).typeName().equals("and")){
+						if(and.get(i).isType("and")){
 							Func subAnd = (Func)and.get(i);
 							and.remove(i);
 							i--;
@@ -66,7 +66,7 @@ public class And{
 					Func and = (Func)e;
 					for(int i = 0;i<and.size();i++){
 						Expr current = and.get(i);
-						Expr complement = current.typeName().equals("not") ? current.get() : not(current);
+						Expr complement = current.isType("not") ? current.get() : not(current);
 						
 						for(int j = i+1;j<and.size();j++){
 							Expr other = and.get(j);
@@ -108,7 +108,7 @@ public class And{
 				public Expr applyRuleToExpr(Expr e,CasInfo casInfo){
 					Func and = (Func)e;
 					for(int i = 0;i<and.size();i++){
-						if(and.get(i).typeName().equals("or")){
+						if(and.get(i).isType("or")){
 							Func subOr = (Func)and.get(i).copy();
 							Func remAnd = (Func)and.copy();
 							remAnd.remove(i);
@@ -116,7 +116,7 @@ public class And{
 							for(int j = 0;j<subOr.size();j++){
 								Expr subExpr = subOr.get(j);
 								
-								if(subExpr.typeName().equals("and")){
+								if(subExpr.isType("and")){
 									Func remCopyAnd = (Func)remAnd.copy();
 									for(int k = 0;k<subExpr.size();k++){
 										remCopyAnd.add(subExpr.get(k));
@@ -186,7 +186,7 @@ public class And{
 					String out = "";
 					if(owner.size() < 2) out+="alone and:";
 					for(int i = 0;i<owner.size();i++){
-						boolean paren = owner.get(i).typeName().equals("or") || owner.get(i).typeName().equals("and");
+						boolean paren = owner.get(i).isType("or") || owner.get(i).isType("and");
 						if(paren) out+="(";
 						out+=owner.get(i);
 						if(paren) out+=")";
@@ -199,14 +199,14 @@ public class And{
 	};
 	
 	public static Func cast(Expr e){
-		if(e.typeName().equals("and")){
+		if(e.isType("and")){
 			return (Func)e;
 		}
 		return Cas.and(e);
 	}
 
 	public static Expr unCast(Expr e) {
-		if(e.typeName().equals("and") && e.size() == 1) {
+		if(e.isType("and") && e.size() == 1) {
 			return e.get();
 		}
 		return e;

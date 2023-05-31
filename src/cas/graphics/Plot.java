@@ -160,8 +160,8 @@ public class Plot extends JPanel{
 		Expr rightSide = Cas.getRightSideGeneric(expr);
 		
 		int equType = EQU;
-		if(expr.typeName().equals("greater")) equType = GREATER;
-		if(expr.typeName().equals("less")) equType = LESS;
+		if(expr.isType("greater")) equType = GREATER;
+		if(expr.isType("less")) equType = LESS;
 		
 		for(int i = 0;i<windowSize.getWidth();i+=detail) {
 			for(int j = 0;j<windowSize.getHeight();j+=detail) {
@@ -205,16 +205,16 @@ public class Plot extends JPanel{
 		for(int i = 0;i<stackSequence.size();i++) {
 			Expr expr = stackSequence.get(i);
 			
-			if(expr.typeName().equals("hide")) continue;
-			if(expr.typeName().equals("show")) expr = expr.get();
+			if(expr.isType("hide")) continue;
+			if(expr.isType("show")) expr = expr.get();
 			
 			g.setColor(randomColor(expr.hashCode()));
 			
-			if(expr.typeName().equals("equ") || expr.typeName().equals("greater") || expr.typeName().equals("less")) {
+			if(expr.isType("equ") || expr.isType("greater") || expr.isType("less")) {
 				
 				int equType = EQU;
-				if(expr.typeName().equals("greater")) equType = GREATER;
-				if(expr.typeName().equals("less")) equType = LESS;
+				if(expr.isType("greater")) equType = GREATER;
+				if(expr.isType("less")) equType = LESS;
 				
 				if(Cas.getLeftSideGeneric(expr).equals(Y)) {
 					basicPlot2D(g,Cas.getRightSideGeneric(expr),plotWindowParams,windowSize,IN_TERMS_OF_X,equType);
@@ -223,10 +223,10 @@ public class Plot extends JPanel{
 				}else {
 					equPlot2D(g,expr,plotWindowParams,windowSize,detail);
 				}
-			}else if(expr.typeName().equals("set") || expr.typeName().equals("sequence")){
+			}else if(expr.isType("set") || expr.isType("sequence")){
 				Func subSequence = Sequence.cast(expr);
 				renderPlots2D(g,subSequence,plotWindowParams,windowSize,detail);
-			}else if(expr.typeName().equals("point")) {
+			}else if(expr.isType("point")) {
 				double x = expr.get(0).convertToFloat(Cas.exprSet()).real;
 				double y = expr.get(1).convertToFloat(Cas.exprSet()).real;
 				int extX = convertToExternalPositionX(x,plotWindowParams,windowSize );
