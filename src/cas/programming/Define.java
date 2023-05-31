@@ -1,83 +1,58 @@
 package cas.programming;
 
 import cas.base.CasInfo;
-import cas.base.ComplexFloat;
 import cas.base.Expr;
 import cas.base.Func;
 import cas.base.Rule;
 import cas.primitive.*;
 
-public class Define extends Expr{
-	public Define() {
-		//simplifyChildren = false;
-	}//
+public class Define{
 	
-	public Define(Expr toBeAssigned,Expr assignment) {
-		add(toBeAssigned);
-		add(assignment);
-		//simplifyChildren = false; TODO
-	}
-	
-	public Expr getLeftSide() {
-		return get(0);
-	}
-	
-	public Expr getRightSide() {
-		return get(1);
-	}
-	
-	static Rule addDefinition = new Rule("add definition") {
+	public static Func.FuncLoader defineLoader = new Func.FuncLoader() {
+		
 		@Override
-		public Expr applyRuleToExpr(Expr e,CasInfo casInfo) {
-			Define def = (Define)e;
-			if(def.getLeftSide() instanceof Var) {
-				casInfo.definitions.defineVar(equ(def.getLeftSide(),def.getRightSide().simplify(casInfo)));
-			}else if(def.getLeftSide() instanceof Func) {
-				casInfo.definitions.addFuncRule(becomes(def.getLeftSide(),def.getRightSide()));
-			}
-			return Var.SUCCESS;
+		public void load(Func owner) {
+			
+			Rule addDefinition = new Rule("add definition") {
+				@Override
+				public Expr applyRuleToExpr(Expr e,CasInfo casInfo) {
+					Func define = (Func)e;
+					if(Define.getLeftSide(define) instanceof Var) {
+						casInfo.definitions.defineVar(equ(Define.getLeftSide(define),Define.getRightSide(define).simplify(casInfo)));
+					}else if(Define.getLeftSide(define) instanceof Func) {
+						casInfo.definitions.addFuncRule(becomes(Define.getLeftSide(define),Define.getRightSide(define)));
+					}
+					return Var.SUCCESS;
+				}
+				
+			};
+			
+			owner.behavior.rule = new Rule(new Rule[] {
+					addDefinition
+			},"main sequence");
+			
+			owner.behavior.simplifyChildren = false;
+			
+			owner.behavior.toStringMethod = new Func.ToString() {
+				
+				@Override
+				public String generateString(Func owner) {
+					String out = "";
+					out+=Define.getLeftSide(owner);
+					out+=":=";
+					out+=Define.getRightSide(owner);
+					return out;
+				}
+			};
 		}
 		
 	};
 	
-	static Rule mainSequenceRule = null;
-	
-	public static void loadRules(){
-		mainSequenceRule = new Rule(new Rule[]{
-				addDefinition
-		},"main sequence");
-		mainSequenceRule.init();
+	public static Expr getLeftSide(Func define) {
+		return define.get(0);
 	}
 	
-	@Override
-	public Rule getRule() {
-		return mainSequenceRule;
-	}
-
-	@Override
-	public ComplexFloat convertToFloat(Func varDefs) {
-		return new ComplexFloat(0,0);
-	}
-	
-	@Override
-	public String toString() {
-		String out = "";
-		out+=getLeftSide();
-		out+=":=";
-		out+=getRightSide();
-		return out;
-	}
-	
-	@Override
-	public String typeName() {
-		return "define";
-	}
-
-	@Override
-	public String help() {
-		return ":= operator\n"
-				+ "examples\n"
-				+ "x:=2\n"
-				+ "f(x):=x^2";
+	public static Expr getRightSide(Func define) {
+		return define.get(1);
 	}
 }

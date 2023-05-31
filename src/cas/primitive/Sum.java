@@ -452,7 +452,7 @@ public class Sum{
 						Func nonMatriciesSum = sum();
 						
 						for(int i = 0;i<sum.size();i++) {
-							if(sum.get(i) instanceof Mat) {
+							if(sum.get(i).typeName().equals("mat")) {
 								matriciesSum.add(sum.get(i));
 							}else {
 								nonMatriciesSum.add(sum.get(i));
@@ -460,36 +460,36 @@ public class Sum{
 						}
 						
 						if(matriciesSum.size()>0) {
-							Mat total = (Mat)matriciesSum.get(0);
+							Func totalMat = (Func)matriciesSum.get(0);
 							for(int i = 1;i<matriciesSum.size();i++) {
-								Mat other = (Mat)matriciesSum.get(i);
+								Func otherMat = (Func)matriciesSum.get(i);
 								
-								for(int row = 0;row<total.rows();row++) {
-									for(int col = 0;col<total.cols();col++) {
+								for(int row = 0;row<Mat.rows(totalMat);row++) {
+									for(int col = 0;col<Mat.cols(totalMat);col++) {
 										
-										Func elsum = Sum.cast(total.getElement(row, col));
-										elsum.add(other.getElement(row, col));
+										Func elsum = Sum.cast(Mat.getElement(totalMat,row, col));
+										elsum.add(Mat.getElement(otherMat,row, col));
 										
-										total.setElement(row, col, elsum  );
+										Mat.setElement(totalMat,row, col, elsum  );
 										
 									}
 									
 								}
 							}
 							
-							for(int row = 0;row<total.rows();row++) {
-								for(int col = 0;col<total.cols();col++) {
+							for(int row = 0;row<Mat.rows(totalMat);row++) {
+								for(int col = 0;col<Mat.cols(totalMat);col++) {
 									
-									Func elsum = Sum.cast(total.getElement(row, col));
+									Func elsum = Sum.cast(Mat.getElement(totalMat,row, col));
 									elsum.add(nonMatriciesSum);
 									
-									total.setElement(row, col, elsum  );
+									Mat.setElement(totalMat,row, col, elsum  );
 									
 								}
 								
 							}
 							
-							return total.simplify(casInfo);
+							return totalMat.simplify(casInfo);
 						}
 					}
 					return sum;

@@ -1,114 +1,101 @@
 package cas.matrix;
 
 import cas.base.CasInfo;
-import cas.base.ComplexFloat;
 import cas.base.Expr;
 import cas.base.Func;
 import cas.base.Rule;
-import cas.primitive.Var;
 
-public class Dot extends Expr{
-	public Dot(){}//
+public class Dot{
 	
-	static Rule matrixMult = new Rule("matrix multiplication") {
+	public static Func.FuncLoader dotLoader = new Func.FuncLoader() {
+		
 		@Override
-		public Expr applyRuleToExpr(Expr e,CasInfo casInfo) {
-			Dot dot = (Dot)e;
+		public void load(Func owner) {
 			
-			if(dot.get(0) instanceof Mat) {
-				Mat total = (Mat)dot.get(0);
-				
-				for(int i = 1;i < dot.size();i++) {
-					Mat other = (Mat)dot.get(i);
+			Rule matrixMult = new Rule("matrix multiplication") {
+				@Override
+				public Expr applyRuleToExpr(Expr e,CasInfo casInfo) {
+					Func dot = (Func)e;
 					
-					Mat newMat = mat(total.rows(),other.cols());
-					
-					for(int row = 0; row < newMat.rows();row++) {
-						for(int col = 0; col < newMat.cols();col++) {
-							Func totalRowSequence = total.getRow(row);
-							Func otherColSequence = other.getCol(col);
+					if(dot.get(0).typeName().equals("mat")) {
+						Func totalMat = (Func)dot.get(0);
+						
+						for(int i = 1;i < dot.size();i++) {
+							Func otherMat = (Func)dot.get(i);
 							
-							Func sum = sum();
-							for(int j = 0;j<totalRowSequence.size();j++) {
-								sum.add( prod(totalRowSequence.get(j),otherColSequence.get(j)) );
+							Func newMat = Mat.generateMat(Mat.rows(totalMat),Mat.cols(otherMat));
+							
+							for(int row = 0; row < Mat.rows(newMat);row++) {
+								for(int col = 0; col < Mat.cols(newMat);col++) {
+									Func totalRowSequence = Mat.getRow(totalMat,row);
+									Func otherColSequence = Mat.getCol(otherMat,col);
+									
+									Func sum = sum();
+									for(int j = 0;j<totalRowSequence.size();j++) {
+										sum.add( prod(totalRowSequence.get(j),otherColSequence.get(j)) );
+									}
+									Mat.setElement(newMat,row, col, sum);
+									
+								}
 							}
-							newMat.setElement(row, col, sum);
 							
+							totalMat = newMat;
+						}
+						return totalMat.simplify(casInfo);
+					}
+					
+					return dot;
+				}
+			};
+			
+			Rule dotContainsDot = new Rule("dot contains dot") {
+				@Override
+				public Expr applyRuleToExpr(Expr e,CasInfo casInfo) {
+					Func dot = (Func)e;
+					
+					for(int i = 0;i<dot.size();i++) {
+						if(dot.get(i).typeName().equals("dot")) {
+							Func subDot = (Func)dot.get(i);
+							dot.remove(i);
+							for(int j = 0;j<subDot.size();j++) dot.add(i+j, subDot.get(j));
+							
+							i+=subDot.size()-1;
 						}
 					}
 					
-					total = newMat;
+					return dot;
 				}
-				return total.simplify(casInfo);
-			}
+				
+			};
 			
-			return dot;
+			owner.behavior.rule = new Rule(new Rule[] {
+					dotContainsDot,
+					matrixMult
+			},"main sequence");
+			
+			owner.behavior.toStringMethod = new Func.ToString() {
+				
+				@Override
+				public String generateString(Func owner) {
+					String out = "";
+					for(int i = 0;i<owner.size();i++) {
+						Expr currentExpr = owner.get(i);
+						
+						String currentExprType = currentExpr.typeName();
+						boolean paren = !(
+									currentExprType.equals("var") ||
+									currentExprType.equals("mat") ||
+									currentExpr instanceof Func && ((Func)currentExpr).behavior.toStringMethod == null
+								);
+						
+						if(paren) out+="(";
+						out+=currentExpr;
+						if(paren) out+=")";
+						if(i != owner.size()-1) out += ".";
+					}
+					return out;
+				}
+			};
 		}
 	};
-	
-	static Rule dotContainsDot = new Rule("dot contains dot") {
-		@Override
-		public Expr applyRuleToExpr(Expr e,CasInfo casInfo) {
-			Dot dot = (Dot)e;
-			
-			for(int i = 0;i<dot.size();i++) {
-				if(dot.get(i) instanceof Dot) {
-					Dot subDot = (Dot)dot.get(i);
-					dot.remove(i);
-					for(int j = 0;j<subDot.size();j++) dot.add(i+j, subDot.get(j));
-					
-					i+=subDot.size()-1;
-				}
-			}
-			
-			return dot;
-		}
-		
-	};
-	
-	static Rule mainSequenceRule = null;
-
-	public static void loadRules(){
-		mainSequenceRule = new Rule(new Rule[]{
-				dotContainsDot,
-				matrixMult
-		},"main sequence");
-		mainSequenceRule.init();
-	}
-	
-	@Override
-	public Rule getRule() {
-		return mainSequenceRule;
-	}
-	
-	@Override
-	public String toString() {
-		String out = "";
-		for(int i = 0;i<size();i++) {
-			boolean paren = !(get(i) instanceof Var) && (get(i) instanceof Mat) && !(get(i).typeName().equals("prod")) && !(get(i) instanceof Func);
-			if(paren) out+="(";
-			out+=get(i);
-			if(paren) out+=")";
-			if(i != size()-1) out += ".";
-		}
-		return out;
-	}
-
-	@Override
-	public ComplexFloat convertToFloat(Func varDefs) {
-		return new ComplexFloat(0,0);
-	}
-	
-	@Override
-	public String typeName() {
-		return "dot";
-	}
-
-	@Override
-	public String help() {
-		return ". opertator\n"
-				+ "examples\n"
-				+ "(mat({{1,3},{5,8}})).(mat({{8,2},{1,5}}))->mat({{11,17},{48,50}})\n"
-				+ "transpose(x.y)->transpose(y).transpose(x)";
-	}
 }

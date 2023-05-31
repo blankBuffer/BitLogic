@@ -3,8 +3,8 @@ package cas.lang;
 import java.math.BigInteger;
 
 import cas.Cas;
-import cas.SimpleFuncs;
 import cas.base.Expr;
+import cas.base.FunctionsLoader;
 import cas.lang.ParseMachine.ObjectBuilder;
 import cas.lang.ParseMachine.ParseAction;
 import cas.lang.ParseMachine.ParseNode;
@@ -203,7 +203,7 @@ public class Interpreter extends Cas{
 				Expr func = null;
 				
 				if(paren.size() == 0) {
-					func = SimpleFuncs.getFuncByName(funcName);
+					func = FunctionsLoader.getFuncByName(funcName);
 				}else {
 					Expr[] paramsArray = null;
 					ParseNode parenContents = paren.getNode(0);
@@ -223,9 +223,24 @@ public class Interpreter extends Cas{
 						
 						paramsArray[0] = (Expr)parenContents.getNode(0).getOutput();
 					}
-					func = SimpleFuncs.getFuncByName(funcName,paramsArray);
+					func = FunctionsLoader.getFuncByName(funcName,paramsArray);
 				}
 				return func;
+			}
+			
+		});
+		
+		exprBuilder.addBuildInstruction("define", new ParseAction() {
+
+			@Override
+			Object doAction(ParseNode parseNode) throws Exception {
+				Expr leftSide = (Expr)parseNode.getNode(0).getNode(0).getOutput();
+				Expr rightSide = (Expr)parseNode.getNode(1).getNode(0).getOutput();
+				
+				if(leftSide == null) throw new Exception("got a null leftSide expr while building define");
+				if(rightSide == null) throw new Exception("got a null rightSide expr while building define");
+				
+				return define(leftSide,rightSide);
 			}
 			
 		});
@@ -362,16 +377,22 @@ public class Interpreter extends Cas{
 
 			@Override
 			Object doAction(ParseNode parseNode) throws Exception {
-				ParseNode infoList = parseNode.getNode(0).getNode(0);
-				Expr exprSet = exprSet();
-				
-				for(int i = 0;i<infoList.size();i++) {
-					Expr currentExpr = (Expr)infoList.getNode(i).getNode(0).getOutput();
-					if(currentExpr == null) throw new Exception("got a null expr in list of set expr");
-					exprSet.add(currentExpr);
+				if(parseNode.size() == 0 ) {
+					return exprSet();
+				}else if(parseNode.getNode(0).getNode(0).getType().equals("info_list")) {
+					ParseNode infoList = parseNode.getNode(0).getNode(0);
+					Expr exprSet = exprSet();
+					
+					for(int i = 0;i<infoList.size();i++) {
+						Expr currentExpr = (Expr)infoList.getNode(i).getNode(0).getOutput();
+						if(currentExpr == null) throw new Exception("got a null expr in list of set expr");
+						exprSet.add(currentExpr);
+					}
+					
+					return exprSet;
+				}else {
+					return exprSet((Expr)parseNode.getNode(0).getNode(0).getOutput());
 				}
-				
-				return exprSet;
 			}
 			
 		});
@@ -380,16 +401,22 @@ public class Interpreter extends Cas{
 
 			@Override
 			Object doAction(ParseNode parseNode) throws Exception {
-				ParseNode infoList = parseNode.getNode(0).getNode(0);
-				Expr exprSequence = sequence();
-				
-				for(int i = 0;i<infoList.size();i++) {
-					Expr currentExpr = (Expr)infoList.getNode(i).getNode(0).getOutput();
-					if(currentExpr == null) throw new Exception("got a null expr in list of sequence expr");
-					exprSequence.add(currentExpr);
+				if(parseNode.size() == 0 ) {
+					return sequence();
+				}else if(parseNode.getNode(0).getNode(0).getType().equals("info_list")) {
+					ParseNode infoList = parseNode.getNode(0).getNode(0);
+					Expr exprSequence = sequence();
+					
+					for(int i = 0;i<infoList.size();i++) {
+						Expr currentExpr = (Expr)infoList.getNode(i).getNode(0).getOutput();
+						if(currentExpr == null) throw new Exception("got a null expr in list of sequence expr");
+						exprSequence.add(currentExpr);
+					}
+					
+					return exprSequence;
+				}else {
+					return sequence((Expr)parseNode.getNode(0).getNode(0).getOutput());
 				}
-				
-				return exprSequence;
 			}
 			
 		});

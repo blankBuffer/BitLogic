@@ -552,41 +552,41 @@ public class Div{
 		public Expr applyRuleToExpr(Expr e,CasInfo casInfo){
 			Func div = (Func)e;
 			
-			boolean numerIsMat = div.getNumer() instanceof Mat;
-			boolean denomIsMat = div.getDenom() instanceof Mat;
+			boolean numerIsMat = div.getNumer().typeName().equals("mat");
+			boolean denomIsMat = div.getDenom().typeName().equals("mat");
 			
 			if(numerIsMat && denomIsMat) {
-				Mat nMat = (Mat)div.getNumer();
-				Mat dMat = (Mat)div.getDenom();
+				Func nMat = (Func)div.getNumer();
+				Func dMat = (Func)div.getDenom();
 				
-				for(int row = 0;row < nMat.rows();row++) {
-					for(int col = 0;col < nMat.cols();col++) {
+				for(int row = 0;row < Mat.rows(nMat);row++) {
+					for(int col = 0;col < Mat.cols(nMat);col++) {
 						
-						nMat.setElement(row, col, div( nMat.getElement(row, col), dMat.getElement(row, col) ) );
+						Mat.setElement(nMat,row, col, div( Mat.getElement(nMat,row, col), Mat.getElement(dMat,row, col) ) );
 						
 					}
 				}
 				
 				return nMat.simplify(casInfo);
 			}else if(numerIsMat) {
-				Mat nMat = (Mat)div.getNumer();
+				Func nMat = (Func)div.getNumer();
 				
-				for(int row = 0;row < nMat.rows();row++) {
-					for(int col = 0;col < nMat.cols();col++) {
+				for(int row = 0;row < Mat.rows(nMat);row++) {
+					for(int col = 0;col < Mat.cols(nMat);col++) {
 						
-						nMat.setElement(row, col, div( nMat.getElement(row, col), div.getDenom() ) );
+						Mat.setElement(nMat,row, col, div( Mat.getElement(nMat,row, col), div.getDenom() ) );
 						
 					}
 				}
 				
 				return nMat.simplify(casInfo);
 			}else if(denomIsMat) {
-				Mat dMat = (Mat)div.getDenom();
+				Func dMat = (Func)div.getDenom();
 				
-				for(int row = 0;row < dMat.rows();row++) {
-					for(int col = 0;col < dMat.cols();col++) {
+				for(int row = 0;row < Mat.rows(dMat);row++) {
+					for(int col = 0;col < Mat.cols(dMat);col++) {
 						
-						dMat.setElement(row, col, div(div.getNumer() , dMat.getElement(row, col)) );
+						Mat.setElement(dMat,row, col, div(div.getNumer() , Mat.getElement(dMat,row, col)) );
 						
 					}
 				}

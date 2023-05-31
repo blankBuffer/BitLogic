@@ -49,7 +49,7 @@ public class AppChooser extends JFrame{
 		startMainCalculator.addActionListener(new ActionListener() {
 			@Override
 			public void actionPerformed(ActionEvent e) {
-				new CalcWindow();
+				CalcWindow.loadCasWindow();
 			}
 		});
 		appChoicePanel.add(startDrawingBoard);

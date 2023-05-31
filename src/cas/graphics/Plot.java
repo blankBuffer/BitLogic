@@ -160,8 +160,8 @@ public class Plot extends JPanel{
 		Expr rightSide = Cas.getRightSideGeneric(expr);
 		
 		int equType = EQU;
-		if(expr instanceof Greater) equType = GREATER;
-		if(expr instanceof Less) equType = LESS;
+		if(expr.typeName().equals("greater")) equType = GREATER;
+		if(expr.typeName().equals("less")) equType = LESS;
 		
 		for(int i = 0;i<windowSize.getWidth();i+=detail) {
 			for(int j = 0;j<windowSize.getHeight();j+=detail) {
@@ -210,11 +210,11 @@ public class Plot extends JPanel{
 			
 			g.setColor(randomColor(expr.hashCode()));
 			
-			if(expr.typeName().equals("equ") || expr instanceof Greater || expr instanceof Less) {
+			if(expr.typeName().equals("equ") || expr.typeName().equals("greater") || expr.typeName().equals("less")) {
 				
 				int equType = EQU;
-				if(expr instanceof Greater) equType = GREATER;
-				if(expr instanceof Less) equType = LESS;
+				if(expr.typeName().equals("greater")) equType = GREATER;
+				if(expr.typeName().equals("less")) equType = LESS;
 				
 				if(Cas.getLeftSideGeneric(expr).equals(Y)) {
 					basicPlot2D(g,Cas.getRightSideGeneric(expr),plotWindowParams,windowSize,IN_TERMS_OF_X,equType);

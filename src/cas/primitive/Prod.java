@@ -40,8 +40,21 @@ public class Prod{
 				@Override
 				public String generateString(Func owner) {
 					String out = "";
+					
+					if(owner.size() < 2) {
+						
+						out+="prod(";
+						
+						for(int i = 0;i<owner.size();i++) {
+							out+=owner.get(i);
+						}
+						
+						out+=")";
+						return out;
+					}
+					
 					Expr prodCopy = owner.copy();
-					if(prodCopy.size() < 2) out+="alone product:";
+					
 					int indexOfSwap = 0;
 					if(prodCopy.size()>1) {
 						if(!(prodCopy.get() instanceof Num)) {//bring number to front
@@ -670,7 +683,7 @@ public class Prod{
 				Func nonMatriciesProd = prod();
 				
 				for(int i = 0;i<prod.size();i++) {
-					if(prod.get(i) instanceof Mat) {
+					if(prod.get(i).typeName().equals("mat")) {
 						matriciesProd.add(prod.get(i));
 					}else {
 						nonMatriciesProd.add(prod.get(i));
@@ -678,36 +691,36 @@ public class Prod{
 				}
 				
 				if(matriciesProd.size()>0) {
-					Mat total = (Mat)matriciesProd.get(0);
+					Func totalMat = (Func)matriciesProd.get(0);
 					for(int i = 1;i<matriciesProd.size();i++) {
-						Mat other = (Mat)matriciesProd.get(i);
+						Func otherMat = (Func)matriciesProd.get(i);
 						
-						for(int row = 0;row<total.rows();row++) {
-							for(int col = 0;col<total.cols();col++) {
+						for(int row = 0;row<Mat.rows(totalMat);row++) {
+							for(int col = 0;col<Mat.cols(totalMat);col++) {
 								
-								Func elprod = Prod.cast(total.getElement(row, col));
-								elprod.add(other.getElement(row, col));
+								Func elprod = Prod.cast(Mat.getElement(totalMat,row, col));
+								elprod.add(Mat.getElement(otherMat,row, col));
 								
-								total.setElement(row, col, elprod  );
+								Mat.setElement(totalMat,row, col, elprod  );
 								
 							}
 							
 						}
 					}
 					
-					for(int row = 0;row<total.rows();row++) {
-						for(int col = 0;col<total.cols();col++) {
+					for(int row = 0;row<Mat.rows(totalMat);row++) {
+						for(int col = 0;col<Mat.cols(totalMat);col++) {
 							
-							Func elprod = Prod.cast(total.getElement(row, col));
+							Func elprod = Prod.cast(Mat.getElement(totalMat,row, col));
 							elprod.add(nonMatriciesProd);
 							
-							total.setElement(row, col, elprod  );
+							Mat.setElement(totalMat,row, col, elprod  );
 							
 						}
 						
 					}
 					
-					return total.simplify(casInfo);
+					return totalMat.simplify(casInfo);
 				}
 			}
 			return prod;

@@ -1,12 +1,11 @@
 package cas.programming;
 
 import cas.Cas;
-import cas.SimpleFuncs;
 import cas.base.CasInfo;
 import cas.base.Expr;
 import cas.base.Func;
+import cas.base.FunctionsLoader;
 import cas.lang.Ask;
-import cas.matrix.Dot;
 
 /*
  * the stack editor is a basic calculator interface based on rpn with an algebraic and word based extension
@@ -193,7 +192,7 @@ public class StackEditor extends Cas {
 	public void dot() {
 		if (sLast() == null)
 			return;
-		if (sLast() instanceof Dot) {
+		if (sLast().typeName().equals("dot")) {
 			sLast().add(last());
 			stackSequence.remove(size() - 1);
 		} else {
@@ -491,8 +490,8 @@ public class StackEditor extends Cas {
 				}else {
 					System.out.println("unknown stack commans: "+command);
 				}
-			}else if(SimpleFuncs.isFunc(command)) {
-				int numberOfParams = SimpleFuncs.getExpectectedParams(command);
+			}else if(FunctionsLoader.isFunc(command)) {
+				int numberOfParams = FunctionsLoader.getExpectedParams(command);
 				if(stackSequence.size() >= numberOfParams) {
 					Expr[] paramsList = new Expr[numberOfParams];
 					int startPoint = stackSequence.size()-numberOfParams;
@@ -500,7 +499,7 @@ public class StackEditor extends Cas {
 						paramsList[i-startPoint] = stackSequence.get(i);
 					}
 					
-					Expr newStackItem = SimpleFuncs.getFuncByName(command, paramsList);
+					Expr newStackItem = FunctionsLoader.getFuncByName(command, paramsList);
 					
 					for(int i = stackSequence.size()-1;i>=startPoint;i--) {
 						stackSequence.remove(i);

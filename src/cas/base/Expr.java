@@ -112,8 +112,6 @@ public abstract class Expr extends Cas{
 	
 	public Expr simplify(CasInfo casInfo){//all expressions will have a simplify call, this is the most important function 
 		
-		if(!Rule.rulesLoaded()) throw new RuntimeException("you are simplifying before all rules are loaded");
-		
 		if(Thread.currentThread().isInterrupted()) return null;
 		Expr toBeSimplified = copy();
 		if(flags.simple) return toBeSimplified;
@@ -603,10 +601,12 @@ public abstract class Expr extends Cas{
 		out+=(tabStr+ typeName() +" hash: "+hashCode());
 		if(this instanceof Num || this instanceof Var || this instanceof FloatExpr || this instanceof BoolState) out+=(" name: "+this);
 		out+="\n";
+		/* NEEDS A LITTLE MODIFICATION TODO
 		if(this instanceof Func) {
 			out+="rules: "+((Func)this).getRule();
 			out+="\n";
 		}
+		*/
 		for(int i = 0;i<size();i++) {
 			out+=get(i).toStringTree(tab+1);
 		}

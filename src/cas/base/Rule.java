@@ -1,16 +1,9 @@
 package cas.base;
 
 import java.util.ArrayList;
-import java.util.Random;
 
-import cas.SimpleFuncs;
 import cas.bool.*;
-import cas.calculus.*;
-import cas.lang.Ask;
-import cas.matrix.*;
 import cas.primitive.*;
-import cas.programming.*;
-import cas.special.*;
 
 
 /*
@@ -29,8 +22,6 @@ import cas.special.*;
  */
 
 public class Rule extends Expr{
-	
-	private static int ruleCount = 0;
 	
 	public String name = null;//name or description of the rule
 	private String patternStr = null;//pattern as a string before initialization
@@ -70,37 +61,26 @@ public class Rule extends Expr{
 	 */
 	private ArrayList<IndexSet> matchingSetsForPattern = null;
 	
-	/*
-	 * list of all pattern based rules in the CAS
-	 * we store it so that we can simplify the patterns before being used
-	 */
-	private static ArrayList<Rule> allPatternBasedRules = null;
-	
 	public Rule(String pattern,String name){
 		patternStr = pattern;
 		this.name = name;
-		ruleCount++;
 	}
 	public Rule(String pattern,String condition,String name){
 		patternStr = pattern;
 		conditionStr = condition;
 		this.name = name;
-		ruleCount++;
 	}
 	public Rule(Func patternBecomes,String name){
 		this.pattern = patternBecomes;
 		Becomes.getLeftSide(this.pattern).sort();
 		this.name = name;
-		ruleCount++;
 	}
 	public Rule(Rule[] cases,String name) {
 		this.name = name;
 		this.cases = cases;
-		ruleCount++;
 	}
 	public Rule(String name){
 		this.name = name;
-		ruleCount++;
 	}
 	
 	
@@ -122,8 +102,6 @@ public class Rule extends Expr{
 			
 			patternPartsSequence = generateTemplateParts(Becomes.getLeftSide(pattern));
 			matchingSetsForPattern = generateTemplateMatchingSets(patternPartsSequence);
-			
-			allPatternBasedRules.add(this);
 		}
 		
 		if(conditionStr != null) condition = createExpr(conditionStr);
@@ -370,118 +348,6 @@ public class Rule extends Expr{
 			}
 		}
 		return expr;
-	}
-	
-	
-	
-	private static boolean ALL_LOADED = false;
-	private static boolean RULES_LOADED = false;
-	public static boolean isAllLoaded() {
-		return ALL_LOADED;
-	}
-	public static boolean rulesLoaded() {
-		return RULES_LOADED;
-	}
-	
-	
-	
-	private static volatile float loadingPercent = 0;
-	public static float getLoadingPercent() {
-		return loadingPercent;
-	}
-	
-	private static void loadTypeRules() {
-		System.out.println("loading rules into memory...");
-		SimpleFuncs.loadRules();
-		StandardRules.loadRules();
-		
-		Define.loadRules();
-		
-		Dot.loadRules();
-		
-		Mat.loadRules();
-		
-		Next.loadRules();
-		Range.loadRules();
-		
-		Transpose.loadRules();
-		
-		loadingPercent = 70;
-		
-		System.out.println("rules loaded into memory");
-		RULES_LOADED = true;
-	}
-	
-	static ArrayList<String> bannedPreSimplifyFunctions = new ArrayList<String>();
-	private static void loadBannedPreSimplifyFunctions() {
-		bannedPreSimplifyFunctions.add("allowAbs");
-		bannedPreSimplifyFunctions.add("allowComplexNumbers");
-		bannedPreSimplifyFunctions.add("singleSolutionMode");
-		bannedPreSimplifyFunctions.add("factorIrrationalRoots");
-		
-		bannedPreSimplifyFunctions.add("size");
-		bannedPreSimplifyFunctions.add("get");
-		bannedPreSimplifyFunctions.add("degree");
-		bannedPreSimplifyFunctions.add("comparison");
-		bannedPreSimplifyFunctions.add("expand");
-		bannedPreSimplifyFunctions.add("distr");
-		bannedPreSimplifyFunctions.add("factor");
-		bannedPreSimplifyFunctions.add("isType");
-		bannedPreSimplifyFunctions.add("contains");
-		bannedPreSimplifyFunctions.add("result");
-		bannedPreSimplifyFunctions.add("similar");
-		bannedPreSimplifyFunctions.add("fastEquals");
-		
-	}
-	
-	public static void loadCompileSimplifyRules(){//loads and simpoifies everything, faster runtime, ,much slower runtime
-		if(ALL_LOADED) return;
-		
-		allPatternBasedRules = new ArrayList<Rule>();
-		
-		loadTypeRules();
-		
-		long startTime = System.nanoTime();
-		
-		random = new Random(761234897);
-		
-		float incr = 20.0f/allPatternBasedRules.size();
-		
-		loadBannedPreSimplifyFunctions();
-		System.out.println("simplifying rules...");
-		for(int i = 0;i<allPatternBasedRules.size();i++) {//simplify
-			Rule r = (Rule)allPatternBasedRules.get(i);
-			boolean doNotSimplify = false;
-			
-			for(String bannedType:bannedPreSimplifyFunctions) {
-				if(Becomes.getRightSide(r.pattern).containsType(bannedType)) {
-					doNotSimplify = true;
-					break;
-				}
-			}
-			
-			if(!doNotSimplify) {
-				if(!Becomes.getRightSide(r.pattern).containsType(Becomes.getLeftSide(r.pattern).typeName())) {//avoid recursion
-					Becomes.setRightSide(r.pattern,Becomes.getRightSide(r.pattern).simplify(CasInfo.normal));
-				}else {
-					Becomes.getRightSide(r.pattern).simplifyChildren(CasInfo.normal, Becomes.getLeftSide(r.pattern).typeName());
-				}
-			}
-			loadingPercent+=incr;
-		}
-		
-		
-		loadingPercent = 90;
-		
-		SimpleFuncs.FUNCTION_UNLOCKED = true;
-		
-		long endTime = System.nanoTime();
-		System.out.println("done simplifying "+ruleCount+" Rules! took "+((endTime-startTime)/1000000.0)+" ms");
-		
-		Ask.loadBasicQuestions();
-		
-		loadingPercent = 100;
-		ALL_LOADED = true;
 	}
 	
 	@Override

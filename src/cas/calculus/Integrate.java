@@ -508,7 +508,7 @@ public class Integrate{
 				@Override
 				public Expr applyRuleToExpr(Expr e,CasInfo casInfo){
 					Func integ = (Func)e;
-					if(Rule.fastSimilarExpr(sqrtObj, integ.get())) {
+					if(Cas.isSqrt(integ.get()) ) {
 						//System.out.println(e);
 						Func coefsSequence = polyExtract(e.get().get(),integ.getVar(),casInfo);
 						if(coefsSequence == null) return integ;

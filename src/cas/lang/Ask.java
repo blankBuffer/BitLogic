@@ -20,6 +20,7 @@ import java.util.regex.Pattern;
 import cas.*;
 import cas.base.Expr;
 import cas.base.Func;
+import cas.base.FunctionsLoader;
 import cas.graphics.Plot;
 import cas.primitive.*;
 import ui.UI;
@@ -78,7 +79,7 @@ public class Ask extends Cas{
 		if(loaded) return;
 		try {
 			Scanner scanner = new Scanner(new File("resources/QnA.txt"));
-			System.out.println("loading questions...");
+			System.out.println("- Loading questions...");
 			int questionsLoadedCount = 0;
 			while(scanner.hasNextLine()) {
 				String line = scanner.nextLine();
@@ -117,7 +118,7 @@ public class Ask extends Cas{
 			}
 			scanner.close();
 			loaded = true;
-			System.out.println("done loading "+questionsLoadedCount+" questions");
+			System.out.println("- Done loading "+questionsLoadedCount+" questions!");
 		} catch (FileNotFoundException e) {
 			System.err.println("unable to load questions file");
 		}
@@ -408,7 +409,7 @@ public class Ask extends Cas{
 	}
 	
 	static boolean oneParameterFunction(String funcName) {
-		return SimpleFuncs.isFunc(funcName) && SimpleFuncs.getExpectectedParams(funcName) == 1;
+		return FunctionsLoader.isFunc(funcName) && FunctionsLoader.getExpectedParams(funcName) == 1;
 	}
 	
 	static Pattern isOperatorPattern = Pattern.compile("[+\\-*^/,=><!;:\\~\\&\\|\\[\\]\\{\\}\\(\\)\\.\\?]");
@@ -433,7 +434,7 @@ public class Ask extends Cas{
 			char rightStartChar = tokens.get(i+1).charAt(0);
 			boolean rightHasOperator = isOperator(String.valueOf(rightStartChar)) && !isLeftBracket(rightStartChar) && rightStartChar != '~';
 			
-			boolean eitherIsFunctionName = SimpleFuncs.isFunc(s) || SimpleFuncs.isFunc(tokens.get(i+1));
+			boolean eitherIsFunctionName = FunctionsLoader.isFunc(s) || FunctionsLoader.isFunc(tokens.get(i+1));
 			
 			if( (leftHasOperator || rightHasOperator) && !eitherIsFunctionName ) {
 				//System.out.println(tokens.get(i)+" , "+tokens.get(i+1));

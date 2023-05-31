@@ -8,6 +8,7 @@ Do not modify this file unless you know what you are doing
 	//becomes token either one works
 	token("->",becomes_char),
 	token("=>",becomes_char),
+	token(":=",assign_char),
 	
 	[//numbers
 		[char("0123456789") -> num],
@@ -43,6 +44,11 @@ Do not modify this file unless you know what you are doing
 	//information list
 	[
 		type("NODE_SEQUENCE"),char(","),type("NODE_SEQUENCE") -> info_list
+		:REMOVE_OPERATOR
+	],
+	//assignment
+	[
+		type("NODE_SEQUENCE"),type("assign_char"),type("NODE_SEQUENCE") -> define
 		:REMOVE_OPERATOR
 	],
 	//becomes

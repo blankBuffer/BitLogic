@@ -27,9 +27,8 @@ import javax.swing.text.SimpleAttributeSet;
 import javax.swing.text.StyleConstants;
 
 import cas.Cas;
-import cas.SimpleFuncs;
 import cas.base.Expr;
-import cas.base.Rule;
+import cas.base.FunctionsLoader;
 import cas.graphics.ExprRender;
 import cas.graphics.Plot;
 import cas.lang.Interpreter;
@@ -275,7 +274,7 @@ public class CalcWindow extends JFrame{
 									
 									if(!showCheckBox.isSelected()) {
 										try {
-											expr = SimpleFuncs.getFuncByName("hide", expr);
+											expr = FunctionsLoader.getFuncByName("hide", expr);
 										} catch (Exception e1) {}
 									}
 									currentStack.stackSequence.set(iObj,expr);
@@ -722,51 +721,62 @@ public class CalcWindow extends JFrame{
 		}
 	}
 	
-	public static void loadRulesWindow() {
-		JProgressBar progressBar = new JProgressBar(0,100);
-		JFrame progressBarWindow = new JFrame("loading rules");
-		JPanel panel = new JPanel();
-		panel.setLayout(new BoxLayout(panel,BoxLayout.Y_AXIS));
-		try {
-			panel.add(new JLabel(new ImageIcon(ImageIO.read(new File("resources/BitLogicLogo_tiny.jpg")))));
-		} catch (Exception e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		}
-		panel.add(progressBar);
-		progressBarWindow.add(panel);
-		progressBarWindow.pack();
-		progressBarWindow.setResizable(false);
-		progressBarWindow.setLocationRelativeTo(null);
-		progressBarWindow.setVisible(true);
-		progressBarWindow.setAlwaysOnTop(true);
+	public static void loadCasWindow() {
+		Thread casLoadThread = new Thread() {
+			@Override
+			public void run() {
+				Cas.load();	
+			}
+		};
+		casLoadThread.start();
+		
+		
 		Thread progressBarThread = new Thread() {
 			@Override
 			public void run() {
-				boolean loading = true;
-				while(loading) {
-					
-					try {
-						progressBar.setValue((int)Rule.getLoadingPercent());
-						if(Rule.getLoadingPercent() == 100) loading = false;
-						Thread.sleep(15);
-					} catch (InterruptedException e) {e.printStackTrace();}
+				
+				JProgressBar progressBar = new JProgressBar();
+				progressBar.setIndeterminate(true);
+				JFrame progressBarWindow = new JFrame("loading rules");
+				JPanel panel = new JPanel();
+				panel.setLayout(new BoxLayout(panel,BoxLayout.Y_AXIS));
+				try {
+					panel.add(new JLabel(new ImageIcon(ImageIO.read(new File("resources/BitLogicLogo_tiny.jpg")))));
+				} catch (Exception e) {
+					e.printStackTrace();
 				}
-				progressBarWindow.dispose();
+				panel.add(progressBar);
+				progressBarWindow.add(panel);
+				progressBarWindow.pack();
+				progressBarWindow.setResizable(false);
+				progressBarWindow.setLocationRelativeTo(null);
+				progressBarWindow.setAlwaysOnTop(true);
+				progressBarWindow.setVisible(true);
+				
+				boolean loading = true;
+				try {
+					
+					while(loading) {
+						if(Cas.isAllLoaded()) {
+							loading = false;
+							progressBarWindow.dispose();
+							
+							new CalcWindow();//start main window
+						}
+						
+						Thread.sleep(15);
+					}
+					
+				} catch (InterruptedException e) {e.printStackTrace();}
 			}
 		};
 		progressBarThread.start();
-		Thread rulesLoader = new Thread() {
-			@Override
-			public void run() {
-				Rule.loadCompileSimplifyRules();
-			}
-		};
-		rulesLoader.start();
+		
 	}
 
 	public CalcWindow(){
 		super("BitLogic "+UI.VERSION);
+		
 		currentStack = new StackEditor();
 		plot = new Plot(currentStack);
 		mainViewPanel = new JPanel();
@@ -800,8 +810,6 @@ public class CalcWindow extends JFrame{
 		});
 		
 		setVisible(true);
-		
-		loadRulesWindow();
 	}
 
 }

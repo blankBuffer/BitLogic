@@ -7,153 +7,125 @@ import cas.base.Func;
 import cas.base.Rule;
 import cas.primitive.*;
 
-public class Range extends Expr{
-	public Range() {}//
+public class Range{
 	
-	public Range(Expr domainMin,Expr domainMax,Expr e,Var v) {
-		add(domainMin);
-		add(domainMax);
-		add(e);
-		add(v);
-	}
-	
-	public Expr getMin() {
-		return get(0);
-	}
-	
-	public Expr getMax() {
-		return get(1);
-	}
-	
-	@Override
-	public Var getVar() {
-		return (Var)get(3);
-	}
-	
-	public Expr getExpr() {
-		return get(2);
-	}
+	public static Func.FuncLoader rangeLoader = new Func.FuncLoader() {
 
-	static Rule calculateRange = new Rule("calculate the range from critical points") {
-		Func getCriticalPoints(Expr e,Var v,CasInfo casInfo) {//returns set
-			Expr derivative = diff(e,v).simplify(casInfo);
-			Func derivativeSolutionsSet = ExprSet.cast(solve(equ(derivative,num(0)),v).simplify(casInfo));
-			Func solutionsSet = ExprSet.cast(solve(equ(e,num(0)),v).simplify(casInfo));
-			
-			Func criticalPointsSet = exprSet();
-			
-			for(int i = 0;i<solutionsSet.size();i++) {
-				if(!solutionsSet.get(i).containsType("solve")) criticalPointsSet.add(solutionsSet.get(i));
-			}
-			for(int i = 0;i<derivativeSolutionsSet.size();i++) {
-				if(!derivativeSolutionsSet.get(i).containsType("solve")) criticalPointsSet.add(derivativeSolutionsSet.get(i));
-			}
-			
-			return ExprSet.cast(criticalPointsSet.simplify(casInfo));
-		}
-		
-		Expr maximum(Expr e,Func criticalPointsSet,CasInfo casInfo) {
-			Expr currentMax = e.replace( (Func)criticalPointsSet.get(0) ).simplify(casInfo);
-			ComplexFloat floatMax = currentMax.convertToFloat(exprSet());
-			
-			for(int i = 1;i<criticalPointsSet.size();i++) {
-				Expr current = e.replace( (Func)criticalPointsSet.get(i)).simplify(casInfo);
-				ComplexFloat currentApprox = current.convertToFloat(exprSet());
-				
-				if(currentApprox.real > floatMax.real && currentApprox.real()) {
-					floatMax = currentApprox;
-					currentMax = current;
-				}
-			}
-			return currentMax;
-		}
-		Expr minimum(Expr e,Func criticalPointsSet,CasInfo casInfo) {
-			Expr currentMax = e.replace( (Func)criticalPointsSet.get(0) ).simplify(casInfo);
-			ComplexFloat floatMax = currentMax.convertToFloat(exprSet());
-			
-			for(int i = 1;i<criticalPointsSet.size();i++) {
-				Expr current = e.replace( (Func)criticalPointsSet.get(i)).simplify(casInfo);
-				ComplexFloat currentApprox = current.convertToFloat(exprSet());
-				
-				if(currentApprox.real < floatMax.real && currentApprox.real()) {
-					floatMax = currentApprox;
-					currentMax = current;
-				}
-			}
-			return currentMax;
-		}
-		
 		@Override
-		public Expr applyRuleToExpr(Expr e,CasInfo casInfo) {
-			Range range = (Range)e;
-			
-			
-			Func criticalPointsSet = getCriticalPoints(range.getExpr(),range.getVar(),casInfo);
-			criticalPointsSet.println();
-			
-			{//remove criticalPoints outside domain
-				ComplexFloat minApprox = range.getMin().convertToFloat(exprSet());
-				ComplexFloat maxApprox = range.getMax().convertToFloat(exprSet());
-				
-				for(int i = 0;i<criticalPointsSet.size();i++) {
-					if(criticalPointsSet.get(i).typeName().equals("solve")) {//Unsolved state
-						criticalPointsSet.remove(i);
-						i--;
-						continue;
+		public void load(Func owner) {
+			Rule calculateRange = new Rule("calculate the range from critical points") {
+				Func getCriticalPoints(Expr e,Var v,CasInfo casInfo) {//returns set
+					Expr derivative = diff(e,v).simplify(casInfo);
+					Func derivativeSolutionsSet = ExprSet.cast(solve(equ(derivative,num(0)),v).simplify(casInfo));
+					Func solutionsSet = ExprSet.cast(solve(equ(e,num(0)),v).simplify(casInfo));
+					
+					Func criticalPointsSet = exprSet();
+					
+					for(int i = 0;i<solutionsSet.size();i++) {
+						if(!solutionsSet.get(i).containsType("solve")) criticalPointsSet.add(solutionsSet.get(i));
+					}
+					for(int i = 0;i<derivativeSolutionsSet.size();i++) {
+						if(!derivativeSolutionsSet.get(i).containsType("solve")) criticalPointsSet.add(derivativeSolutionsSet.get(i));
 					}
 					
-					Expr critVal = Equ.getRightSide((Func)criticalPointsSet.get(i));
-					ComplexFloat approx = critVal.convertToFloat(exprSet());
-					
-					if(approx.real > maxApprox.real || approx.real < minApprox.real) {//out of bounds of domain
-						criticalPointsSet.remove(i);
-						i--;
-					}
-					
+					return ExprSet.cast(criticalPointsSet.simplify(casInfo));
 				}
-			}
+				
+				Expr maximum(Expr e,Func criticalPointsSet,CasInfo casInfo) {
+					Expr currentMax = e.replace( (Func)criticalPointsSet.get(0) ).simplify(casInfo);
+					ComplexFloat floatMax = currentMax.convertToFloat(exprSet());
+					
+					for(int i = 1;i<criticalPointsSet.size();i++) {
+						Expr current = e.replace( (Func)criticalPointsSet.get(i)).simplify(casInfo);
+						ComplexFloat currentApprox = current.convertToFloat(exprSet());
+						
+						if(currentApprox.real > floatMax.real && currentApprox.real()) {
+							floatMax = currentApprox;
+							currentMax = current;
+						}
+					}
+					return currentMax;
+				}
+				Expr minimum(Expr e,Func criticalPointsSet,CasInfo casInfo) {
+					Expr currentMax = e.replace( (Func)criticalPointsSet.get(0) ).simplify(casInfo);
+					ComplexFloat floatMax = currentMax.convertToFloat(exprSet());
+					
+					for(int i = 1;i<criticalPointsSet.size();i++) {
+						Expr current = e.replace( (Func)criticalPointsSet.get(i)).simplify(casInfo);
+						ComplexFloat currentApprox = current.convertToFloat(exprSet());
+						
+						if(currentApprox.real < floatMax.real && currentApprox.real()) {
+							floatMax = currentApprox;
+							currentMax = current;
+						}
+					}
+					return currentMax;
+				}
+				
+				@Override
+				public Expr applyRuleToExpr(Expr e,CasInfo casInfo) {
+					Func range = (Func)e;
+					
+					
+					Func criticalPointsSet = getCriticalPoints(Range.getExpr(range),Range.getVar(range),casInfo);
+					//criticalPointsSet.println();
+					
+					{//remove criticalPoints outside domain
+						ComplexFloat minApprox = Range.getMin(range).convertToFloat(exprSet());
+						ComplexFloat maxApprox = Range.getMax(range).convertToFloat(exprSet());
+						
+						for(int i = 0;i<criticalPointsSet.size();i++) {
+							if(criticalPointsSet.get(i).typeName().equals("solve")) {//Unsolved state
+								criticalPointsSet.remove(i);
+								i--;
+								continue;
+							}
+							
+							Expr critVal = Equ.getRightSide((Func)criticalPointsSet.get(i));
+							ComplexFloat approx = critVal.convertToFloat(exprSet());
+							
+							if(approx.real > maxApprox.real || approx.real < minApprox.real) {//out of bounds of domain
+								criticalPointsSet.remove(i);
+								i--;
+							}
+							
+						}
+					}
+					
+					//add domain points to critical points list
+					criticalPointsSet.add(equ(Range.getVar(range),Range.getMin(range)));
+					criticalPointsSet.add(equ(Range.getVar(range),Range.getMax(range)));
+					
+					Expr min = minimum(Range.getExpr(range), criticalPointsSet,casInfo);
+					Expr max = maximum(Range.getExpr(range), criticalPointsSet,casInfo);
+					
+					return sequence(min,max);
+				}
+			};
 			
-			//add domain points to critical points list
-			criticalPointsSet.add(equ(range.getVar(),range.getMin()));
-			criticalPointsSet.add(equ(range.getVar(),range.getMax()));
+			owner.behavior.rule = new Rule(new Rule[] {
+					calculateRange
+			},"main sequence");
 			
-			Expr min = minimum(range.getExpr(), criticalPointsSet,casInfo);
-			Expr max = maximum(range.getExpr(), criticalPointsSet,casInfo);
 			
-			return sequence(min,max);
 		}
+		
 	};
 	
-	static Rule mainSequenceRule = null;
-	
-	public static void loadRules(){
-		mainSequenceRule = new Rule(new Rule[]{
-				calculateRange
-		},"main sequence");
-		mainSequenceRule.init();
+	public static Expr getMin(Func range) {
+		return range.get(0);
 	}
 	
-	@Override
-	public Rule getRule() {
-		return mainSequenceRule;
+	public static Expr getMax(Func range) {
+		return range.get(1);
 	}
-
-	@Override
-	public ComplexFloat convertToFloat(Func varDefs) {
-		return ComplexFloat.ZERO;
+	
+	public static Var getVar(Func range) {
+		return (Var)range.get(3);
 	}
-
-	@Override
-	public String typeName() {
-		return "range";
-	}
-
-	@Override
-	public String help() {
-		return "range(min,max,expression,variable) function calculates the range of the expression under a domain\n"
-				+ "examples\n"
-				+ "range(-inf,inf,sin(x),x)->{-1,1}\n"
-				+ "range(-1,1,x*sin(x)+x,x)";
+	
+	public static Expr getExpr(Func range) {
+		return range.get(2);
 	}
 	
 }

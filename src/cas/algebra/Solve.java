@@ -16,8 +16,6 @@ import cas.primitive.Prod;
 import cas.primitive.Sequence;
 import cas.primitive.Sum;
 import cas.primitive.Var;
-import cas.primitive.Greater;
-import cas.primitive.Less;
 import cas.primitive.FloatExpr;
 
 public class Solve{
@@ -69,7 +67,7 @@ public class Solve{
 						
 						@Override
 						public Expr applyRuleToExpr(Expr e,CasInfo casInfo){
-							return goThroughEquCases(e,casInfo,cases);
+							return goThroughEquCases((Func)e,casInfo,cases);
 						}
 					};
 					
@@ -90,7 +88,7 @@ public class Solve{
 						
 						@Override
 						public Expr applyRuleToExpr(Expr e,CasInfo casInfo){
-							return goThroughEquCases(e,casInfo,cases);
+							return goThroughEquCases((Func)e,casInfo,cases);
 						}
 						
 					};
@@ -109,7 +107,7 @@ public class Solve{
 						
 						@Override
 						public Expr applyRuleToExpr(Expr e,CasInfo casInfo){
-							return goThroughEquCases(e,casInfo,cases);
+							return goThroughEquCases((Func)e,casInfo,cases);
 						}
 					};
 					
@@ -130,7 +128,7 @@ public class Solve{
 						
 						@Override
 						public Expr applyRuleToExpr(Expr e,CasInfo casInfo){
-							return goThroughEquCases(e,casInfo,cases);
+							return goThroughEquCases((Func)e,casInfo,cases);
 						}
 					};
 					
@@ -246,7 +244,7 @@ public class Solve{
 						}
 						@Override
 						public Expr applyRuleToExpr(Expr e,CasInfo casInfo){
-							return goThroughEquCases(e,casInfo,cases);
+							return goThroughEquCases((Func)e,casInfo,cases);
 						}
 					};
 					
@@ -409,9 +407,9 @@ public class Solve{
 	
 	static void flipComparison(Func solve){
 		Expr comp = solve.getComparison();
-		if(comp instanceof Less){
+		if(comp.typeName().equals("less")){
 			setComparison(solve,Cas.equGreater( Cas.getLeftSideGeneric(comp) , Cas.getRightSideGeneric(comp) ));
-		}else if(comp instanceof Greater){
+		}else if(comp.typeName().equals("greater")){
 			setComparison(solve,Cas.equLess( Cas.getLeftSideGeneric(comp) , Cas.getRightSideGeneric(comp) ));
 		}
 	}
@@ -442,22 +440,17 @@ public class Solve{
 	
 	public static boolean comparisonEq(Func solve){
 		Expr in = solve.get();
-		return in instanceof Greater || in instanceof Less;
+		return in.typeName().equals("greater") || in.typeName().equals("less");
 	}
 	
 	static Sequence ruleSequence;
 	
-	public static Expr goThroughEquCases(Expr e,CasInfo casInfo,Rule[] cases) {
-		Func solve = (Func)e;
+	public static Expr goThroughEquCases(Func solve,CasInfo casInfo,Rule[] cases) {
 		Var v = solve.getVar();
 		for(Rule rule:cases) {
 			Expr result = rule.applyRuleToExpr(solve.get(), casInfo);
 			if(result.typeName().equals("set")) {
-				for(int i = 0;i<result.size();i++){
-					if(result.typeName().equals("equ")) result.set(i, Cas.solve((Func)result.get(i),v));
-					if(result instanceof Less) result.set(i, Cas.solve((Less)result.get(i),v)  );
-					if(result instanceof Greater) result.set(i, Cas.solve((Greater)result.get(i),v)  );
-				}
+				for(int i = 0;i<result.size();i++) result.set(i, Cas.solve((Func)result.get(i),v));
 				return result.simplify(casInfo);
 			}else{
 				solve.set(0, result );
@@ -533,7 +526,7 @@ public class Solve{
 				}
 				@Override
 				public Expr applyRuleToExpr(Expr e,CasInfo casInfo){
-					return goThroughEquCases(e,casInfo,cases);
+					return goThroughEquCases((Func)e,casInfo,cases);
 				}
 			};
 			
@@ -661,7 +654,7 @@ public class Solve{
 				Func rightSideProd = Prod.cast(getRightSideGeneric(solve.getComparison()));
 				
 				boolean flip = false;
-				boolean isComp = solve.getComparison() instanceof Less || solve.getComparison() instanceof Greater;
+				boolean isComp = solve.getComparison().typeName().equals("less") || solve.getComparison().typeName().equals("greater");
 				
 				for(int i = 0;i < leftSideProd.size();i++){
 					Expr current = leftSideProd.get(i);

@@ -3,55 +3,46 @@ package cas.primitive;
 import cas.base.ComplexFloat;
 import cas.base.Expr;
 import cas.base.Func;
-import cas.base.Rule;
 
-public class Less extends Expr{
-	public Less(){}//
-	public Less(Expr leftSide,Expr rightSide){
-		add(leftSide);
-		add(rightSide);
+public class Less{
+	
+	public static Func.FuncLoader lessLoader = new Func.FuncLoader() {
+		
+		@Override
+		public void load(Func owner) {
+			owner.behavior.toStringMethod = new Func.ToString() {
+				
+				@Override
+				public String generateString(Func owner) {
+					String out = "";
+					out+=getLeftSide(owner).toString();
+					out+='<';
+					out+=getRightSide(owner).toString();
+					return out;
+				}
+			};
+			
+			owner.behavior.toFloat = new Func.FloatFunc() {
+				
+				@Override
+				public ComplexFloat convertToFloat(Func varDefs, Func owner) {
+					return getRightSide(owner).convertToFloat(varDefs);//usually the solution is on the right side of the equation
+				}
+			};
+		}
+	};
+	
+	public static Expr getLeftSide(Func less) {
+		return less.get(0);
 	}
-	public Expr getLeftSide() {
-		return get(0);
-	}
-	public Expr getRightSide() {
-		return get(1);
+	public static Expr getRightSide(Func less) {
+		return less.get(1);
 	}
 	
-	public void setLeftSide(Expr expr) {
-		set(0,expr);
+	public static void setLeftSide(Func less,Expr expr) {
+		less.set(0,expr);
 	}
-	public void setRightSide(Expr expr) {
-		set(1,expr);
-	}
-
-	@Override
-	public String toString() {
-		String out = "";
-		out+=getLeftSide().toString();
-		out+='<';
-		out+=getRightSide().toString();
-		return out;
-	}
-	
-	@Override
-	public ComplexFloat convertToFloat(Func varDefs) {
-		return getRightSide().convertToFloat(varDefs);//usually the solution is on the right side of the equation
-	}
-	@Override
-	public Rule getRule() {
-		return null;
-	}
-	
-	@Override
-	public String typeName() {
-		return "less";
-	}
-	@Override
-	public String help() {
-		return "< operator\n"
-				+ "examples\n"
-				+ "eval(2<3)->true\n"
-				+ "eval(2*x<2*x)->false";
+	public static void setRightSide(Func less,Expr expr) {
+		less.set(1,expr);
 	}
 }

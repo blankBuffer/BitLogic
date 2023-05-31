@@ -664,11 +664,11 @@ public class Power{
 				public String generateString(Func owner) {
 					String out = "";
 					
-					if(Rule.fastSimilarExpr(Cas.sqrtObj,owner)) {//fancy and having set to true makes it faster
+					if(Cas.isSqrt(owner)) {//fancy and having set to true makes it faster
 						out+="sqrt(";
 						out+=owner.getBase().toString();
 						out+=')';
-					}else if(Rule.fastSimilarExpr(Cas.cbrtObj,owner)) {
+					}else if(Cas.isCbrt(owner)) {
 						out+="cbrt(";
 						out+=owner.getBase().toString();
 						out+=')';

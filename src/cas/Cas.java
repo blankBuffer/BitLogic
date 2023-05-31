@@ -3,22 +3,45 @@ import java.math.BigInteger;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.Random;
 
 import cas.base.CasInfo;
 import cas.base.ComplexFloat;
 import cas.base.Expr;
 import cas.base.Func;
-import cas.base.Rule;
+import cas.base.FunctionsLoader;
+import cas.base.StandardRules;
 import cas.bool.*;
-import cas.special.*;
 import cas.primitive.*;
 import cas.calculus.*;
 import cas.lang.*;
-import cas.matrix.*;
-import cas.programming.*;
-
 
 public class Cas {
+	
+	private volatile static boolean ALL_LOADED = false;
+	public static boolean isAllLoaded() {
+		return ALL_LOADED;
+	}
+	
+	public static void load(){
+		if(ALL_LOADED) return;
+		System.out.println("Loading BitLogic CAS...");
+		MetaLang.init();//load the meta language
+		Interpreter.init();//load bit logic standard syntax
+		
+		FunctionsLoader.load();//load functions into memory
+		StandardRules.loadRules();//load additional shared rules
+		
+		FunctionsLoader.FUNCTION_UNLOCKED = true;//on the fly function generation now permitted since everything is loaded
+		
+		Expr.random = new Random(761234897);//initialize random variable
+		
+		Ask.loadBasicQuestions();//load Q and A file
+		
+		ALL_LOADED = true;
+		System.out.println("Done loading CAS");
+	}
+	
 	/*
 	 * this file is for shortcuts and general algorithms used everywhere
 	 */
@@ -27,14 +50,6 @@ public class Cas {
 	
 	public static Expr createExpr(String expr) {
 		return Interpreter.createExpr(expr);
-	}
-	
-	public static void load(){
-		System.out.println("Loading BitLogic CAS...");
-		MetaLang.init();
-		Interpreter.init();
-		Rule.loadCompileSimplifyRules();
-		System.out.println("Done loading CAS");
 	}
 	
 	public static class IndexSet{
@@ -76,13 +91,32 @@ public class Cas {
 		}
 	}
 	
-	//
-	public static Expr sqrtObj = null;//used for comparing to
-	public static Expr cbrtObj = null;//used for comparing to
+	public static boolean isSqrt(Expr e) {
+		if(!e.typeName().equals("power")) return false;
+		
+		Func casted = (Func)e;
+			
+		if(!casted.getExpo().typeName().equals("div")) return false;
+		
+		Func expo = (Func)casted.getExpo();
+		
+		if(!(expo.getDenom().equals(Num.TWO) && expo.getNumer().equals(Num.ONE))) return false;
+		
+		return true;
+	}
 	
-	public static void initExprTemp(){
-		sqrtObj = sqrt(var("x"));
-		cbrtObj = cbrt(var("x"));
+	public static boolean isCbrt(Expr e) {
+		if(!e.typeName().equals("power")) return false;
+		
+		Func casted = (Func)e;
+			
+		if(!casted.getExpo().typeName().equals("div")) return false;
+		
+		Func expo = (Func)casted.getExpo();
+		
+		if(!(expo.getDenom().equals(num(3)) && expo.getNumer().equals(Num.ONE))) return false;
+		
+		return true;
 	}
 	
 	public static Var e() {
@@ -104,57 +138,57 @@ public class Cas {
 	
 	//
 	public static Func power(Expr a,Expr b) {
-		Func out = (Func) SimpleFuncs.power.copy();
+		Func out = (Func) FunctionsLoader.power.copy();
 		out.add(a);
 		out.add(b);
 		return out;
 	}
 	public static Func sum(Expr... exprs) {
-		Func out = (Func) SimpleFuncs.sum.copy();
+		Func out = (Func) FunctionsLoader.sum.copy();
 		for(Expr expr:exprs) out.add(expr);
 		return out;
 	}
 	public static Func prod(Expr... exprs) {
-		Func out = (Func) SimpleFuncs.prod.copy();
+		Func out = (Func) FunctionsLoader.prod.copy();
 		for(Expr expr:exprs) out.add(expr);
 		return out;
 	}
-	public static Dot dot(Expr... exprs) {
-		Dot out = new Dot();
+	public static Func dot(Expr... exprs) {
+		Func out = (Func) FunctionsLoader.dot.copy();
 		for(Expr e:exprs){
 			out.add(e);
 		}
 		return out;
 	}
 	public static Func and(Expr... exprs) {
-		Func out = (Func) SimpleFuncs.and.copy();
+		Func out = (Func) FunctionsLoader.and.copy();
 		for(Expr expr:exprs) out.add(expr);
 		return out;
 	}
 	public static Func or(Expr... exprs) {
-		Func out = (Func) SimpleFuncs.or.copy();
+		Func out = (Func) FunctionsLoader.or.copy();
 		for(Expr expr:exprs) out.add(expr);
 		return out;
 	}
 	public static Func exprSet(Expr... exprs) {
-		Func out = (Func) SimpleFuncs.exprSet.copy();
+		Func out = (Func) FunctionsLoader.exprSet.copy();
 		for(Expr expr:exprs) out.add(expr);
 		return out;
 	}
 	public static Func gcd(Expr... exprs) {
-		Func out = (Func) SimpleFuncs.gcd.copy();
+		Func out = (Func) FunctionsLoader.gcd.copy();
 		for(Expr expr:exprs) out.add(expr);
 		return out;
 	}
 	
 	public static Func limit(Expr e,Func becomes){
-		Func out = (Func) SimpleFuncs.limit.copy();
+		Func out = (Func) FunctionsLoader.limit.copy();
 		out.add(e);
 		out.add(becomes);
 		return out;
 	}
 	public static Func not(Expr expr) {
-		Func out = (Func) SimpleFuncs.not.copy();
+		Func out = (Func) FunctionsLoader.not.copy();
 		out.add(expr);
 		return out;
 	}
@@ -186,22 +220,28 @@ public class Cas {
 		return new FloatExpr(s);
 	}
 	public static Func equ(Expr a,Expr b) {
-		Func out = (Func) SimpleFuncs.equ.copy();
+		Func out = (Func) FunctionsLoader.equ.copy();
 		out.add(a);
 		out.add(b);
 		return out;
 	}
-	public static Greater equGreater(Expr a,Expr b) {
-		return new Greater(a,b);
+	public static Func equGreater(Expr a,Expr b) {
+		Func out = (Func) FunctionsLoader.greater.copy();
+		out.add(a);
+		out.add(b);
+		return out;
 	}
-	public static Less equLess(Expr a,Expr b) {
-		return new Less(a,b);
+	public static Func equLess(Expr a,Expr b) {
+		Func out = (Func) FunctionsLoader.less.copy();
+		out.add(a);
+		out.add(b);
+		return out;
 	}
 	public static BoolState bool(boolean b) {
 		return new BoolState(b);
 	}
 	public static Func ln(Expr expr) {
-		Func out = (Func) SimpleFuncs.ln.copy();
+		Func out = (Func) FunctionsLoader.ln.copy();
 		out.add(expr);
 		return out;
 	}
@@ -221,26 +261,26 @@ public class Cas {
 		return prod(num(-1),a);
 	}
 	public static Func div(Expr a,Expr b) {
-		Func out = (Func) SimpleFuncs.div.copy();
+		Func out = (Func) FunctionsLoader.div.copy();
 		out.add(a);
 		out.add(b);
 		return out;
 	}
 	
 	public static Func diff(Expr e,Var v) {
-		Func out = (Func) SimpleFuncs.diff.copy();
+		Func out = (Func) FunctionsLoader.diff.copy();
 		out.add(e);
 		out.add(v);
 		return out;
 	}
 	public static Func integrate(Expr e,Var v) {
-		Func out = (Func) SimpleFuncs.integrate.copy();
+		Func out = (Func) FunctionsLoader.integrate.copy();
 		out.add(e);
 		out.add(v);
 		return out;
 	}
 	public static Func integrateOver(Expr min,Expr max,Expr e,Var v) {
-		Func out = (Func) SimpleFuncs.integrateOver.copy();
+		Func out = (Func) FunctionsLoader.integrateOver.copy();
 		out.add(min);
 		out.add(max);
 		out.add(e);
@@ -248,7 +288,7 @@ public class Cas {
 		return out;
 	}
 	public static Func solve(Expr e,Expr v) {
-		Func out = (Func) SimpleFuncs.solve.copy();
+		Func out = (Func) FunctionsLoader.solve.copy();
 		out.add(e);
 		out.add(v);
 		return out;
@@ -258,124 +298,137 @@ public class Cas {
 		return power(e(),expr);
 	}
 	public static Func sin(Expr expr) {
-		Func out = (Func) SimpleFuncs.sin.copy();
+		Func out = (Func) FunctionsLoader.sin.copy();
 		out.add(expr);
 		return out;
 	}
 	public static Func cos(Expr expr) {
-		Func out = (Func) SimpleFuncs.cos.copy();
+		Func out = (Func) FunctionsLoader.cos.copy();
 		out.add(expr);
 		return out;
 	}
 	public static Func tan(Expr expr) {
-		Func out = (Func) SimpleFuncs.tan.copy();
+		Func out = (Func) FunctionsLoader.tan.copy();
 		out.add(expr);
 		return out;
 	}
 	public static Func atan(Expr expr) {
-		Func out = (Func) SimpleFuncs.atan.copy();
+		Func out = (Func) FunctionsLoader.atan.copy();
 		out.add(expr);
 		return out;
 	}
 	public static Func asin(Expr expr) {
-		Func out = (Func) SimpleFuncs.asin.copy();
+		Func out = (Func) FunctionsLoader.asin.copy();
 		out.add(expr);
 		return out;
 	}
 	public static Func acos(Expr expr) {
-		Func out = (Func) SimpleFuncs.acos.copy();
+		Func out = (Func) FunctionsLoader.acos.copy();
 		out.add(expr);
 		return out;
 	}
 	public static Func approx(Expr expr,Func defsSet) {
-		Func out = (Func) SimpleFuncs.approx.copy();
+		Func out = (Func) FunctionsLoader.approx.copy();
 		out.add(expr);
 		out.add(defsSet);
 		return out;
 	}
 	public static Func factor(Expr expr) {
-		Func out = (Func) SimpleFuncs.factor.copy();
+		Func out = (Func) FunctionsLoader.factor.copy();
 		out.add(expr);
 		return out;
 	}
 	public static Func distr(Expr expr) {
-		Func out = (Func) SimpleFuncs.distr.copy();
+		Func out = (Func) FunctionsLoader.distr.copy();
 		out.add(expr);
 		return out;
 	}
 	public static Func gamma(Expr expr) {
-		Func out = (Func) SimpleFuncs.gamma.copy();
+		Func out = (Func) FunctionsLoader.gamma.copy();
 		out.add(expr);
 		return out;
 	}
 	public static Func lambertW(Expr expr){
-		Func out = (Func)SimpleFuncs.lambertW.copy();
+		Func out = (Func)FunctionsLoader.lambertW.copy();
 		out.add(expr);
 		return out;
 	}
 	public static Func abs(Expr expr) {
-		Func out = (Func) SimpleFuncs.abs.copy();
+		Func out = (Func) FunctionsLoader.abs.copy();
 		out.add(expr);
 		return out;
 	}
-	public static Mat mat(Func exprSequence) {
-		return new Mat(exprSequence);
-	}
-	public static Mat mat(int rows,int cols) {
-		return new Mat(rows,cols);
+	public static Func mat(Expr... exprs) {
+		Func out = (Func) FunctionsLoader.mat.copy();
+		for(Expr e:exprs) out.add(e);
+		return out;
 	}
 	public static Func func(String name,Func vEqu,Expr expr) {
 		return new Func(name,vEqu,expr);
 	}
+	
+	
 	public static Func becomes(Expr left,Expr right) {
-		Func out = (Func)SimpleFuncs.becomes.copy();
+		Func out = (Func)FunctionsLoader.becomes.copy();
 		out.add(left);
 		out.add(right);
 		return out;
 	}
-	public static Transpose transpose(Expr e) {
-		return new Transpose(e);
+	public static Func transpose(Expr e) {
+		Func out = (Func)FunctionsLoader.transpose.copy();
+		out.add(e);
+		return out;
 	}
-	public static Next next(Func sequence,Num num) {
-		return new Next(sequence,num);
+	public static Func next(Func sequence,Num num) {
+		Func out = (Func)FunctionsLoader.next.copy();
+		out.add(sequence);
+		out.add(num);
+		return out;
 	}
-	public static Define define(Expr left,Expr right) {
-		return new Define(left,right);
+	public static Func define(Expr left,Expr right) {
+		Func out = (Func) FunctionsLoader.define.copy();
+		out.add(left);
+		out.add(right);
+		return out;
 	}
 	public static Func ternary(Expr toBeEvaled,Expr ifTrue,Expr ifFalse) {
-		Func out = (Func)SimpleFuncs.ternary.copy();
+		Func out = (Func)FunctionsLoader.ternary.copy();
 		out.add(toBeEvaled);
 		out.add(ifTrue);
 		out.add(ifFalse);
 		return out;
 	}
-	public static Range range(Expr min,Expr max,Expr e,Var v) {
-		return new Range(min,max,e,v);
+	public static Func range(Expr min,Expr max,Expr e,Var v) {
+		Func out = (Func)FunctionsLoader.range.copy();
+		out.add(min);
+		out.add(max);
+		out.add(e);
+		out.add(v);
+		return out;
 	}
 	public static Func boolCompress(Expr expr) {
-		Func out = (Func) SimpleFuncs.boolCompress.copy();
+		Func out = (Func) FunctionsLoader.boolCompress.copy();
 		out.add(expr);
 		return out;
 	}
 	public static Func boolTableToExpr(Func tableSet,Func varsSet) {
-		Func out = (Func) SimpleFuncs.boolTableToExpr.copy();
+		Func out = (Func) FunctionsLoader.boolTableToExpr.copy();
 		out.add(tableSet);
 		out.add(varsSet);
 		return out;
 	}
 	public static Func sequence(Expr... exprs) {
-		Func out = (Func) SimpleFuncs.sequence.copy();
+		Func out = (Func) FunctionsLoader.sequence.copy();
 		for(Expr expr:exprs) out.add(expr);
 		return out;
 	}
-	public static Func comparison(Expr equ) {
-		try {
-			return (Func)SimpleFuncs.getFuncByName("comparison", equ);
-		}catch(Exception e) {}
-		return null;
+	public static Func comparison(Func equ) {
+		Func out = (Func) FunctionsLoader.comparison.copy();
+		out.add(equ);
+		return out;
 	}
 	public static Func expand(Expr e) {
-		Func out = (Func) SimpleFuncs.expand.copy();
+		Func out = (Func) FunctionsLoader.expand.copy();
 		out.add(e);
 		return out;
 	}
@@ -1344,11 +1397,11 @@ public class Cas {
 		if(e.typeName().equals("equ")) {
 			return Equ.getLeftSide((Func)e);
 		}
-		if(e instanceof Less) {
-			return ((Less)e).getLeftSide();
+		if(e.typeName().equals("less")) {
+			return Less.getLeftSide((Func)e);
 		}
-		if(e instanceof Greater) {
-			return ((Greater)e).getLeftSide();
+		if(e.typeName().equals("greater")) {
+			return Greater.getLeftSide((Func)e);
 		}
 		
 		return null;
@@ -1358,11 +1411,11 @@ public class Cas {
 		if(e.typeName().equals("equ")) {
 			return Equ.getRightSide((Func)e);
 		}
-		if(e instanceof Less) {
-			return ((Less)e).getRightSide();
+		if(e.typeName().equals("less")) {
+			return Less.getRightSide((Func)e);
 		}
-		if(e instanceof Greater) {
-			return ((Greater)e).getRightSide();
+		if(e.typeName().equals("greater")) {
+			return Greater.getRightSide((Func)e);
 		}
 		
 		return null;
@@ -1372,11 +1425,11 @@ public class Cas {
 		if(expr.typeName().equals("equ")) {
 			Equ.setLeftSide(((Func)expr),ls);
 		}
-		if(expr instanceof Less) {
-			((Less)expr).setLeftSide(ls);
+		if(expr.typeName().equals("less")) {
+			Less.setLeftSide((Func)expr,ls);
 		}
-		if(expr instanceof Greater) {
-			((Greater)expr).setLeftSide(ls);
+		if(expr.typeName().equals("greater")) {
+			Greater.setLeftSide((Func)expr,ls);
 		}
 	}
 	
@@ -1384,11 +1437,11 @@ public class Cas {
 		if(expr.typeName().equals("equ")) {
 			Equ.setRightSide(((Func)expr),rs);
 		}
-		if(expr instanceof Less) {
-			((Less)expr).setRightSide(rs);
+		if(expr.typeName().equals("less")) {
+			Less.setRightSide(((Func)expr),rs);
 		}
-		if(expr instanceof Greater) {
-			((Greater)expr).setRightSide(rs);
+		if(expr.typeName().equals("greater")) {
+			Greater.setRightSide((Func)expr,rs);
 		}
 	}
 	
@@ -1451,7 +1504,7 @@ public class Cas {
 		}else if(e.typeName().equals("power")) {
 			Func casted = (Func)e;
 			
-			if(Rule.fastSimilarExpr(sqrtObj,e)){
+			if(isSqrt(e)){
 				out += "\\sqrt{";
 				out+= generateLatex(casted.getBase());
 				out += "}";

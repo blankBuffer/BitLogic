@@ -14,7 +14,6 @@ import java.util.HashMap;
 import cas.*;
 import cas.base.Expr;
 import cas.base.Func;
-import cas.base.Rule;
 import cas.primitive.*;
 import cas.bool.*;
 import cas.calculus.*;
@@ -187,7 +186,7 @@ public class ExprRender extends Cas{//sort of a wrap of the image type but keeps
 				
 				ExprImg baseImg = newExprImg();
 				
-				if(Rule.fastSimilarExpr(sqrtObj,e)) {
+				if(isSqrt(e)) {
 					baseImg.makeExpr(pow.getBase());
 					
 					
@@ -249,12 +248,12 @@ public class ExprRender extends Cas{//sort of a wrap of the image type but keeps
 				drawImage(numerImg,getWidth()/2-numerImg.getWidth()/2,0,numerImg.getWidth(),numerImg.getHeight());
 				graphics.fillRect(getWidth()/2-fractionSpacerWidth/2, numerImg.getHeight(), fractionSpacerWidth, fractionSpacerHeight);
 				drawImage(denomImg,getWidth()/2-denomImg.getWidth()/2,getHeight()-denomImg.getHeight(),denomImg.getWidth(),denomImg.getHeight());
-			}else if(e.typeName().equals("equ") || e instanceof Greater || e instanceof Less) {
+			}else if(e.typeName().equals("equ") || e.typeName().equals("greater") || e.typeName().equals("less")) {
 				Expr leftSide = getLeftSideGeneric(e);
 				Expr rightSide = getRightSideGeneric(e);
 				
 				ExprImg equImg = newExprImg();
-				equImg.makeString( (e.typeName().equals("equ")) ? "=" : ((e instanceof Greater) ? ">" : "<") );
+				equImg.makeString( (e.typeName().equals("equ")) ? "=" : ((e.typeName().equals("greater")) ? ">" : "<") );
 				
 				ExprImg leftImg = newExprImg();
 				leftImg.makeExpr(leftSide);
@@ -589,8 +588,8 @@ public class ExprRender extends Cas{//sort of a wrap of the image type but keeps
 				currentX+=eImg.getWidth();
 				drawImage(rightBracket,currentX,0,getFontWidth(),getHeight());
 				
-			}else if(e instanceof Mat && ((Mat)e).correctFormat() ) {
-				Mat mat = (Mat)e;
+			}else if(e.typeName().equals("mat") && Mat.correctFormat((Func)e) ) {
+				Func mat = (Func)e;
 				
 				int spacerSize = fontSize()/2;
 				
@@ -599,27 +598,27 @@ public class ExprRender extends Cas{//sort of a wrap of the image type but keeps
 				ExprImg rightBracket = newExprImg();
 				rightBracket.makeString("]");
 				
-				ExprImg[][] imgs = new ExprImg[mat.rows()][mat.cols()];
-				int[] maxWidth = new int[mat.cols()];
-				int[] maxHeight = new int[mat.rows()];
+				ExprImg[][] imgs = new ExprImg[Mat.rows(mat)][Mat.cols(mat)];
+				int[] maxWidth = new int[Mat.cols(mat)];
+				int[] maxHeight = new int[Mat.rows(mat)];
 				
-				for(int row = 0;row<mat.rows();row++) {
-					for(int col = 0;col<mat.cols();col++) {
+				for(int row = 0;row<Mat.rows(mat);row++) {
+					for(int col = 0;col<Mat.cols(mat);col++) {
 						
 						imgs[row][col] = newExprImg();
-						imgs[row][col].makeExpr(mat.getElement(row, col));
+						imgs[row][col].makeExpr(Mat.getElement(mat,row, col));
 						maxWidth[col] = Math.max(maxWidth[col], imgs[row][col].getWidth());
 						maxHeight[row] = Math.max(maxHeight[row], imgs[row][col].getHeight());
 						
 					}
 				}
 				
-				int widthOfGrid = Math.max(spacerSize*(mat.cols()-1),0);
-				for(int i = 0;i<mat.cols();i++) widthOfGrid+=maxWidth[i];
+				int widthOfGrid = Math.max(spacerSize*(Mat.cols(mat)-1),0);
+				for(int i = 0;i<Mat.cols(mat);i++) widthOfGrid+=maxWidth[i];
 				setWidth(leftBracket.getWidth()+widthOfGrid+rightBracket.getWidth());
 				
-				int HeightOfGrid = spacerSize*(mat.rows()-1);
-				for(int i = 0;i<mat.rows();i++) HeightOfGrid+=maxHeight[i];
+				int HeightOfGrid = spacerSize*(Mat.rows(mat)-1);
+				for(int i = 0;i<Mat.rows(mat);i++) HeightOfGrid+=maxHeight[i];
 				setHeight(Math.max(HeightOfGrid,leftBracket.getHeight()));
 				
 				setFractionBar(getHeight()/2+spacerSize);
@@ -629,9 +628,9 @@ public class ExprRender extends Cas{//sort of a wrap of the image type but keeps
 				drawImage(leftBracket,0,0,leftBracket.getWidth(),getHeight());
 				
 				int y = 0;
-				for(int row = 0;row<mat.rows();row++) {
+				for(int row = 0;row<Mat.rows(mat);row++) {
 					int x = leftBracket.getWidth();
-					for(int col = 0;col<mat.cols();col++) {
+					for(int col = 0;col<Mat.cols(mat);col++) {
 						ExprImg i = imgs[row][col];
 						drawImage(i,x+maxWidth[col]/2-i.getWidth()/2 ,y+maxHeight[row]/2-i.getHeight()/2 ,i.getWidth(),i.getHeight());
 						x+=maxWidth[col]+spacerSize;
@@ -641,7 +640,7 @@ public class ExprRender extends Cas{//sort of a wrap of the image type but keeps
 				
 				drawImage(rightBracket,getWidth()-rightBracket.getWidth(),0,rightBracket.getWidth(),getHeight());
 				
-			}else if(e instanceof Dot) {
+			}else if(e.typeName().equals("dot")) {
 				ExprImg multImg = newExprImg();
 				multImg.makeString("×");
 				

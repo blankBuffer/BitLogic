@@ -5,7 +5,7 @@ import java.util.Scanner;
 import cas.*;
 import cas.base.CasInfo;
 import cas.base.Expr;
-import cas.base.Rule;
+import cas.base.FunctionsLoader;
 import cas.lang.Ask;
 import cas.lang.MetaLang;
 import cas.lang.RpnInterpreter;
@@ -26,7 +26,8 @@ public class Tester {
 	 * In verbose mode it shows every before and after computation
 	 */
 	public static void runScript(String fileName,boolean verbose) {
-		Rule.loadCompileSimplifyRules();
+		Cas.load();
+		
 		long oldTime = System.nanoTime();
 		Scanner sc = null;
 		int currentLine = 0;
@@ -239,7 +240,7 @@ public class Tester {
 		boolean passes = true;
 		if(verbose) System.out.println("running all tests");
 		
-		SimpleFuncs.functionsConstructor();
+		FunctionsLoader.specializedLoaders();
 		
 		MetaLang.init();
 		RpnInterpreter.test();
