@@ -981,7 +981,8 @@ public class SimpleFuncs extends Cas{
 			};
 		}
 	};
-	public static Func.FuncLoader deleteLoader = new Func.FuncLoader() {
+	
+	public static Func.FuncLoader deleteVarLoader = new Func.FuncLoader() {
 		
 		@Override
 		public void load(Func owner) {
@@ -992,14 +993,31 @@ public class SimpleFuncs extends Cas{
 				@Override
 				public Expr applyRuleToExpr(Expr e,CasInfo casInfo) {
 					Expr inner = e.get();
-					
-					if(inner instanceof Var)casInfo.definitions.removeVar(inner.toString());
-					else if(inner instanceof Func) casInfo.definitions.removeFunc(inner.typeName());
+					casInfo.definitions.removeVar(inner.toString());
 					return Var.SUCCESS;
 				}
 			};
 		}
 	};
+	
+public static Func.FuncLoader deleteFuncLoader = new Func.FuncLoader() {
+		
+		@Override
+		public void load(Func owner) {
+			owner.behavior.simplifyChildren = false;
+			owner.behavior.rule = new Rule("delete variable or function") {
+				
+				
+				@Override
+				public Expr applyRuleToExpr(Expr e,CasInfo casInfo) {
+					Expr inner = e.get();
+					casInfo.definitions.removeFunc(inner.toString());
+					return Var.SUCCESS;
+				}
+			};
+		}
+	};
+	
 	public static Func.FuncLoader helpLoader = new Func.FuncLoader() {
 		
 		@Override
@@ -1009,8 +1027,14 @@ public class SimpleFuncs extends Cas{
 				
 				@Override
 				public Expr applyRuleToExpr(Expr e,CasInfo casInfo) {
+					String toSearch = e.get().toString();
+					Func function = FunctionsLoader.funcs.getOrDefault(toSearch, null);
+					String message = function != null ? function.help() : "function not found!";
 					
-					return var(e.get().help());
+					String functionName = "Function Name: "+function.behavior.name;
+					String nParamsLine = "Number of parameters: "+( function.behavior.numOfParams == FunctionsLoader.N_PARAMETERS ? "unlimited" : function.behavior.numOfParams );
+					
+					return var(functionName+"\n"+nParamsLine+"\n"+message);
 				}
 			};
 		}

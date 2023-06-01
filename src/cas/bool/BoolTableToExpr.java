@@ -13,6 +13,10 @@ public class BoolTableToExpr{
 	public static Func.FuncLoader boolTableToExprLoader = new Func.FuncLoader() {
 		@Override
 		public void load(Func owner) {
+			owner.behavior.helpMessage = "Generates a boolean expression that follows the table according to the variables.\n"
+					+ "The firsst parameter is the set of transformations and the second is the variables to generate with.\n"
+					+ "For example, boolTableToExpr({[false,false]->true,[false,true]->false,[true,false]->true,[true,true]->true},{x,y}) returns x|~y";
+			
 			Rule generate = new Rule("generate the function") {
 				Expr generateTerm(Func inOutBecomes,Func vars) {
 					if(Becomes.getRightSide(inOutBecomes).equals(BoolState.TRUE)) {

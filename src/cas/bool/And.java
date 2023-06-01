@@ -13,6 +13,10 @@ public class And{
 		@Override
 		public void load(Func owner) {
 			
+			owner.behavior.helpMessage = "Boolean algebraic and.\n"
+					+ "Example x&x&y returns x&y\n"
+					+ "Example x&~x returns false";
+			
 			Rule andContainsAnd = new Rule("and contains and"){
 				@Override
 				public Expr applyRuleToExpr(Expr e,CasInfo casInfo){

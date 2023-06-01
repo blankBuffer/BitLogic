@@ -17,6 +17,10 @@ public class Factor{
 	public static Func.FuncLoader factorLoader = new Func.FuncLoader() {
 		@Override
 		public void load(Func owner) {
+			owner.behavior.helpMessage = "Factors expressions using different methods.\n"
+					+ "For example factor(x^2+2*x+1) returns (x+1)^2\n"
+					+ "It also compresses fractions back into one fraction like factor(x/3+y/4) returns (4*x+3*y)/12";
+			
 			owner.behavior.rule = new Rule(new Rule[]{
 					fastEscape,
 					sumOfCubes,

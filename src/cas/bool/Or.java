@@ -16,6 +16,9 @@ public class Or{
 	public static Func.FuncLoader orLoader = new Func.FuncLoader() {
 		@Override
 		public void load(Func owner) {
+			owner.behavior.helpMessage = "Boolean algebraic or.\n"
+					+ "Example x|x&y returns x\n"
+					+ "Example ~a&c|~b&c|a&b|d returns a&b|c|d";
 			
 			Rule orContainsOr = new Rule("or contains or"){
 				@Override

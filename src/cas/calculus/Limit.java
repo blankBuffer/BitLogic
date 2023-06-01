@@ -27,6 +27,11 @@ public class Limit{
 		@Override
 		public void load(Func owner) {
 			
+			owner.behavior.helpMessage = "Take the limit of an expression.\n"
+					+ "Example, limit(sin(x)/x,x->0) returns 1\n"
+					+ "If you want the limit from a particular direction use the epsilon variable.\n"
+					+ "Example limit(abs(x)/x,x->-epsilon) returns -1";
+			
 			/*
 			 * puts the value directly, last resort
 			 */
@@ -452,6 +457,11 @@ public class Limit{
 				}
 			};
 			
+			Rule absCases = new Rule(new Rule[] {
+					new Rule("limit(abs(x)/x,x->epsilon)->1","simple abs case"),
+					new Rule("limit(abs(x)/x,x->-epsilon)->-1","simple abs case")
+			}, "abs cases");
+			
 			owner.behavior.rule = new Rule(new Rule[] {
 					StandardRules.pullOutConstants,
 					commonExpoDiv,
@@ -462,6 +472,7 @@ public class Limit{
 					polyCase,
 					rootRewrite,
 					sterlingTransformation,
+					absCases,
 					lhopitalsRuleDiv,
 					directSubst
 			},"main sequence");

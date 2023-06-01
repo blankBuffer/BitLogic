@@ -14,6 +14,10 @@ public class Gcd{
 	public static Func.FuncLoader gcdLoader = new Func.FuncLoader() {
 		@Override
 		public void load(Func owner) {
+			owner.behavior.helpMessage = "Get the greatest common diviser amongst a set of expressions.\n"
+					+ "For example, gcd(9,6) returns 3\n"
+					+ "It can do more than numbers like, gcd(8*x^2,6*x^3) returns 2*x^2\n";
+			
 			owner.behavior.commutative = true;
 			
 			Rule gcdRule = new Rule("get the greatest common divisor") {

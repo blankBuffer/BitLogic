@@ -17,6 +17,10 @@ public class Diff{
 		@Override
 		public void load(Func owner) {
 			
+			owner.behavior.helpMessage = "The derivative of an expression with respect to a variable.\n"
+					+ "For example, diff(x*sin(x),x) returns cos(x)*x+sin(x)\n"
+					+ "Example, diff(2^x/y,y) returns (-2^x)/y^2";
+			
 			Rule baseCase = new Rule("diff(x,x)->1","derivative of x");
 			Rule logCase = new Rule("diff(ln(a),x)->diff(a,x)/a","derivative of log");
 			Rule rootCase = new Rule("diff(a^(k/n),x)->(diff(a,x)*k)/(a^((-k+n)/n)*n)","~contains({k,n},x)","derivative of root");

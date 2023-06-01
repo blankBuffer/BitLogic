@@ -41,6 +41,10 @@ public class Integrate{
 		@Override
 		public void load(Func owner) {
 			
+			owner.behavior.helpMessage = "Integrate an expression with resepect to a variable.\n"
+					+ "For example, integrate(x*sin(x),x) returns -x*cos(x)+sin(x)\n"
+					+ "Example, integrate(1/(x^2-1),x) returns ln(abs(x-1))/2+ln(abs(x+1))/-2";
+			
 			uSubVar = Cas.var("𝓾");//u substitution internal variable name
 			
 			Rule polynomial = new Rule(new Rule[] {

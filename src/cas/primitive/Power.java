@@ -35,6 +35,7 @@ public class Power{
 			Rule sqrtOnePlusSin = new Rule("sqrt(1+sin(x))->sqrt(2)*cos(pi/4-x/2)","sqrt of 1 plus sin");
 			Rule sqrtOnePlusCos = new Rule("sqrt(1+cos(x))->sqrt(2)*cos(x/2)","sqrt of 1 plus cos");
 			Rule baseOfPowerIsAbsExpoEven = new Rule("abs(a)^b->a^b","~isType(result(b/2),div)&~allowComplexNumbers()","base of power is absolute value and exponent is divisible by 2");
+			Rule baseOfPowerIsAbsExpoOdd = new Rule("abs(a)^b->abs(a)*a^(b-1)","~isType(result(b/2),num)&~allowComplexNumbers()","base of power is absolute value and exponent is not divisible by 2");
 			
 			Rule fracInBase = new Rule("base is a fraction") {
 				@Override
@@ -601,6 +602,7 @@ public class Power{
 				eulersIdentity,
 				
 				baseOfPowerIsAbsExpoEven,
+				baseOfPowerIsAbsExpoOdd,
 				
 				negativeExpoToInv,
 				

@@ -16,6 +16,9 @@ public class BoolCompress{
 		@Override
 		public void load(Func owner) {
 			
+			owner.behavior.helpMessage = "Tries to make a boolean expression more compact.\n"
+					+ "For example boolCompress(x&y|x&z|q) returns q|x&(z|y)";
+			
 			Rule group = new Rule("group the factorable components") {
 				int termHasPart(Expr term,Expr part) {
 					if(term.isType("and")) {

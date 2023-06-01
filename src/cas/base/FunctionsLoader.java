@@ -244,7 +244,7 @@ public static Expr getFuncByName(String funcName,Expr... params) throws Exceptio
 	public static Func repDiff;
 	public static Func similar,fastSimilar;
 	public static Func sortExpr;
-	public static Func delete;
+	public static Func deleteVar,deleteFunc;
 	public static Func help;
 	public static Func fSolve;
 	public static Func fastEquals;
@@ -342,8 +342,10 @@ public static Expr getFuncByName(String funcName,Expr... params) throws Exceptio
 		addFunc(fastSimilar);
 		sortExpr = new Func("sortExpr",1,SimpleFuncs.sortExprLoader);
 		addFunc(sortExpr);
-		delete = new Func("delete",1,SimpleFuncs.deleteLoader);
-		addFunc(delete);
+		deleteVar = new Func("deleteVar",1,SimpleFuncs.deleteVarLoader);
+		addFunc(deleteVar);
+		deleteFunc = new Func("deleteFunc",1,SimpleFuncs.deleteFuncLoader);
+		addFunc(deleteFunc);
 		help = new Func("help",1,SimpleFuncs.helpLoader);
 		addFunc(help);
 		fSolve = new Func("fSolve",2,SimpleFuncs.fSolveLoader);

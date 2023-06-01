@@ -33,7 +33,7 @@ public class Rule extends Expr{
 	 * the transformation description with a before and after state
 	 * beforeState->afterState
 	 */
-	private Func pattern = null;
+	public Func pattern = null;
 	private Expr condition = null;//conditions that apply to the rule
 	
 	

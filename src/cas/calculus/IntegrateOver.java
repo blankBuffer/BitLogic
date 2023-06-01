@@ -17,6 +17,11 @@ public class IntegrateOver{
 		@Override
 		public void load(Func owner) {
 			
+			owner.behavior.helpMessage = "Integration over a domain.\n"
+					+ "The frist two parameters are the min and max domain the third parameter is the expression and the last is the variable.\n"
+					+ "Example, integrateOver(1,2,x^2,x) returns 7/3\n"
+					+ "Example, integrateOver(0,1,x*sqrt(1+x),x) returns (4*sqrt(2))/15+4/15";
+			
 			Rule definiteIntegral = new Rule("integral with bounds"){
 				@Override
 				public Expr applyRuleToExpr(Expr e,CasInfo casInfo){

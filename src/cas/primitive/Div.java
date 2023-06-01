@@ -23,9 +23,9 @@ public class Div{
 					trigExpandElements,
 					reduceTrigFraction,
 					divContainsDiv,
-					absInDenom,
 					expandRoots,
 					cancelOutTerms,
+					absInDenom,
 					transferNegative,
 					reSimpNumerAndDenom,//to reverse expandRoots process
 					rationalize,
@@ -35,7 +35,7 @@ public class Div{
 					divWithMatrix,
 					zeroInNum
 			},"main sequence");
-			owner.behavior.rule.init();
+			
 			owner.behavior.toFloat = new Func.FloatFunc() {
 				@Override
 				public ComplexFloat convertToFloat(Func varDefs, Func owner) {

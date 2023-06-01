@@ -25,10 +25,11 @@ public class Func extends Expr{
 		public Rule doneRule = null;
 		public FloatFunc toFloat = null;
 		public ToString toStringMethod = null;
-		public String name;
-		public int numOfParams;
-		public boolean commutative;
+		public String name = null;
+		public int numOfParams = 0;
+		public boolean commutative = false;//a+b = b+a
 		public boolean simplifyChildren = true;
+		public String helpMessage = null;
 	}
 	
 	void init(){
@@ -182,7 +183,11 @@ public class Func extends Expr{
 
 	@Override
 	public String help() {
-		return "no help message";
+		if(behavior.helpMessage == null) {
+			return "no help message";
+		}else {
+			return behavior.helpMessage;
+		}
 	}
 	
 }

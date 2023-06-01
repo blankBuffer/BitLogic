@@ -27,6 +27,11 @@ public class Solve{
 		@Override
 		public void load(Func owner) {
 			
+			owner.behavior.helpMessage = "Solves an algebraic equation or set of equations in terms of the requested variable or variables.\n"
+					+ "For example solve(x^2-7*x-13=0,x) returns {x=(sqrt(101)+7)/2,x=(sqrt(101)-7)/-2}\n"
+					+ "Solving a system of equations, solve({x+y=2,x-y=3},{x,y}) returns {y=1/-2,x=5/2}\n"
+					+ "It can also solve comprisons, solve(x^2>3,x) returns {x>sqrt(3),x<-sqrt(3)}";
+			
 			Rule solveSingleEqCase = new Rule("solved equation") {
 				Func loopedSequence;
 				

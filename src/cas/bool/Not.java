@@ -12,6 +12,10 @@ public class Not{
 	public static Func.FuncLoader notLoader = new Func.FuncLoader() {
 		@Override
 		public void load(Func owner) {
+			owner.behavior.helpMessage = "Boolean algebraic not operator. It uses the ~ symbol in front.\n"
+					+ "For example ~(x|y) return ~x&~y\n"
+					+ "~(~x) returns x";
+			
 			Rule isTrue = new Rule("~true->false","true case");
 			Rule isFalse = new Rule("~false->true","false case");
 			Rule containsNot = new Rule("~~x->x","contains not");

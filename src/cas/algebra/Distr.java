@@ -23,6 +23,11 @@ public class Distr{
 		
 		@Override
 		public void load(Func owner) {
+			owner.behavior.helpMessage = "distributes things out like FOIL.\n"
+					+ "For example distr(2*(x+y)) returns 2*x+2*y\n"
+					+ "It also seperates fractions, for example distr((x+y)/3) returns x/3+y/3\n"
+					+ "It will also expand basic binomials like distr((a+b)^2) returns a^2+2*b*a+b^2";
+			
 			
 			Rule generalDistr = new Rule("general distribution"){
 				@Override
@@ -164,6 +169,10 @@ public class Distr{
 		
 		@Override
 		public void load(Func owner) {
+			owner.behavior.helpMessage = "A bit like the distr function but applies to more cases.\n"
+					+ "It expands multinomials for example, expand((x+y+z)^3) returns \n"
+					+ "z^3+3*z^2*y+3*z*y^2+y^3+3*z^2*x+6*y*z*x+3*y^2*x+3*z*x^2+3*y*x^2+x^3";
+			
 			owner.behavior.simplifyChildren = false;
 			
 			Rule expandRule = new Rule("full expand"){
