@@ -57,6 +57,11 @@ public class Var extends Expr{
 	public static final Var ERROR = error();
 	public static final Expr SUCCESS = var("SUCCESS");
 	
+	public static void init() {
+		NEG_INF.setMutableFullTree(false);
+		NEG_EPSILON.setMutableFullTree(false);
+	}
+	
 	/*
 	 * for non generic variables this is the defined value for the constant
 	 */
@@ -82,14 +87,14 @@ public class Var extends Expr{
 		this.name = name;
 		this.assumptions = assumptions;
 		
-		flags.sorted = true;
+		setSortedSingleNode(true);
 	}
 	public Var(String name) {
 		specialVars(name);
 		this.name = name;
 		this.assumptions = new Assumptions();
 		
-		flags.sorted = true;
+		setSortedSingleNode(true);
 	}
 
 	

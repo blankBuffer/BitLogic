@@ -37,7 +37,7 @@ public abstract class Expr extends Cas{
 	
 	public static Random random;
 	public Flags flags = new Flags();
-	private ArrayList<Expr> subExpr = new ArrayList<Expr>();//many expression types have sub expressions like sums
+	private ArrayList<Expr> subExprs = new ArrayList<Expr>();//many expression types have sub expressions like sums
 	
 	public abstract Rule getRule();
 	public abstract String help();
@@ -60,14 +60,6 @@ public abstract class Expr extends Cas{
 		System.out.println(this);
 	}
 	
-	public boolean isMutable(){
-		return flags.mutable;
-	}
-	
-	public void setMutable(boolean choice){
-		flags.mutable = choice;
-	}
-	
 	/*
 	 * flags attempt to reduce the amount of work needed during simplification
 	 * if an expression finishes a simplify call it is made simple such that it will not simplify again unless
@@ -82,13 +74,14 @@ public abstract class Expr extends Cas{
 	public static class Flags implements Serializable{
 		private static final long serialVersionUID = -2823404902493132716L;
 		
-		public boolean simple = false;
-		public boolean sorted = false;
-		public boolean mutable = true;
+		private boolean simple = false;
+		private boolean sorted = false;
+		private boolean mutable = true;
 		
 		public void set(Flags other) {
 			simple = other.simple;
 			sorted = other.sorted;
+			//we ignore the mutable flag as this function is used for copying
 		}
 		
 		public void reset() {
@@ -96,16 +89,62 @@ public abstract class Expr extends Cas{
 			sorted = false;
 			mutable = true;
 		}
+		
 		@Override
 		public String toString(){
-			return "sorted: "+sorted+", simple: "+simple;
+			return "sorted: "+sorted+", simple: "+simple+", mutable: "+mutable;
+		}
+	}
+	
+	public boolean isMutable(){
+		return flags.mutable;
+	}
+	
+	public void setMutableSingleNode(boolean choice){
+		flags.mutable = choice;
+	}
+	
+	public void setMutableFullTree(boolean choice) {
+		setMutableSingleNode(choice);
+		for(int i = 0;i < subExprs.size();i++){
+			subExprs.get(i).setMutableFullTree(choice);
+		}
+	}
+	
+	public boolean isSorted() {
+		return flags.sorted;
+	}
+	
+	public void setSortedSingleNode(boolean choice){
+		flags.sorted = choice;
+	}
+	
+	public void setSortedFullTree(boolean choice) {
+		setSortedSingleNode(choice);
+		for(int i = 0;i < subExprs.size();i++){
+			subExprs.get(i).setSortedFullTree(choice);
+		}
+	}
+	
+	public boolean isSimple() {
+		return flags.simple;
+	}
+	
+	public void setSimpleSingleNode(boolean choice){
+		flags.simple = choice;
+	}
+	
+	public void setSimpleFullTree(boolean choice) {
+		setSimpleSingleNode(choice);
+		for(int i = 0;i < subExprs.size();i++){
+			subExprs.get(i).setSimpleFullTree(choice);
 		}
 	}
 	
 	public void fullFlagReset() {
 		this.flags.reset();
-		for(int i = 0;i < subExpr.size();i++){
-			Expr current = subExpr.get(i);
+		for(int i = 0;i < subExprs.size();i++){
+			Expr current = subExprs.get(i);
 			current.fullFlagReset();
 		}
 	}
@@ -342,8 +381,8 @@ public abstract class Expr extends Cas{
 	//returns if the expression is in this, not full proof for products and sums
 	public boolean contains(Expr expr) {
 		if(this.equals(expr)) return true;
-		for(int i = 0;i<subExpr.size();i++){
-			Expr e = subExpr.get(i);
+		for(int i = 0;i<subExprs.size();i++){
+			Expr e = subExprs.get(i);
 			if(e.contains(expr)) return true;
 		}
 		return false;
@@ -352,8 +391,8 @@ public abstract class Expr extends Cas{
 	//returns if the expression contains any variables
 	public boolean containsVars() {
 		if(this instanceof Var && ((Var)this).isGeneric()) return true;
-		for(int i = 0;i<subExpr.size();i++){
-			Expr e = subExpr.get(i);
+		for(int i = 0;i<subExprs.size();i++){
+			Expr e = subExprs.get(i);
 			if(e.containsVars()) return true;
 		}
 		return false;
@@ -371,8 +410,8 @@ public abstract class Expr extends Cas{
 			varcounts.add(new VarCount((Var)copy(),1));
 		}
 		else{
-			for(int i = 0;i<subExpr.size();i++){
-				Expr e = subExpr.get(i);
+			for(int i = 0;i<subExprs.size();i++){
+				Expr e = subExprs.get(i);
 				e.countVars(varcounts);
 			}
 		}
@@ -384,8 +423,8 @@ public abstract class Expr extends Cas{
 	 */
 	public int complexity() {
 		int sum = 1;
-		for(int i = 0;i<subExpr.size();i++) {
-			Expr e = subExpr.get(i);
+		for(int i = 0;i<subExprs.size();i++) {
+			Expr e = subExprs.get(i);
 			sum+= e.complexity();
 		}
 		return sum;
@@ -401,39 +440,59 @@ public abstract class Expr extends Cas{
 		return false;
 	}
 	
+	/* DEBUG code to prevent tree loops
+	private boolean containsExactObject(Expr e) {//for debug
+		if(this == e) return true;
+		for(int i = 0; i< size();i++) {
+			if(get(i).containsExactObject(e)) return true;
+		}
+		return false;
+	}
+	
+	private void verifyIfSafe(Expr e) {
+		if((e instanceof Func) && this.containsExactObject(e)) {
+			throw new RuntimeException("double object detected! this: "+this+" obj: "+e);
+		}
+	}
+	*/
+	
 	public void add(Expr e) {
-		if(flags.mutable == false) throw new RuntimeException("expression is not mutable!");
+		if(!isMutable()) throw new RuntimeException("expression is not mutable!");
+		
 		flags.reset();
-		subExpr.add(e);
+		subExprs.add(e);
 	}
 	public void add(int i,Expr e) {
-		if(flags.mutable == false) throw new RuntimeException("expression is not mutable!");
+		if(!isMutable()) throw new RuntimeException("expression is not mutable!");
+		
 		flags.reset();
-		subExpr.add(i,e);
+		subExprs.add(i,e);
 	}
 	public void remove(int index) {
-		if(flags.mutable == false) throw new RuntimeException("expression is not mutable!");
+		if(!isMutable()) throw new RuntimeException("expression is not mutable!");
 		flags.reset();
-		subExpr.remove(index);
+		subExprs.remove(index);
 	}
 	public void set(int index,Expr e) {
-		if(flags.mutable == false) throw new RuntimeException("expression is not mutable!");
+		if(!isMutable()) throw new RuntimeException("expression is not mutable!");
+		
 		flags.reset();
-		subExpr.set(index, e);
+		subExprs.set(index, e);
 	}
 	public Expr get(int index) {
-		return subExpr.get(index);
+		Expr subExpr = subExprs.get(index);
+		return subExpr;
 	}
 	public Expr get() {
-		return subExpr.get(0);
+		return subExprs.get(0);
 	}
 	public int size() {
-		return subExpr.size();
+		return subExprs.size();
 	}
 	public void clear() {
-		if(flags.mutable == false) throw new RuntimeException("expression is not mutable!");
+		if(!isMutable()) throw new RuntimeException("expression is not mutable!");
 		flags.reset();
-		subExpr.clear();
+		subExprs.clear();
 	}
 	
 	private static int priorityNum(Expr e) {
@@ -448,6 +507,8 @@ public abstract class Expr extends Cas{
 	
 	public void sort(ArrayList<VarCount> varcounts) {
 		
+		if(!isMutable()) throw new RuntimeException("expression is not mutable!");
+		
 		if(!flags.sorted) {
 			if (varcounts == null) {
 				varcounts = new ArrayList<VarCount>();
@@ -457,7 +518,7 @@ public abstract class Expr extends Cas{
 				boolean wasSimple = flags.simple;
 				
 				final ArrayList<VarCount> varcountsConst = varcounts;
-				subExpr.sort(new Comparator<Expr>() {//sort based on variable frequency then type priority then by complexity then by priority of child comparison
+				subExprs.sort(new Comparator<Expr>() {//sort based on variable frequency then type priority then by complexity then by priority of child comparison
 					@Override
 					public int compare(Expr first, Expr second) {
 						
@@ -524,6 +585,7 @@ public abstract class Expr extends Cas{
 	}
 	
 	public Expr replace(Func in) {
+		if(!isMutable()) throw new RuntimeException("expression is not mutable!");
 		
 		if(in.isType("set")) {
 			Func equsSet = in;
@@ -549,24 +611,28 @@ public abstract class Expr extends Cas{
 	}
 	
 	public void simplifyChildren(CasInfo casInfo) {
-		for(int i = 0;i<subExpr.size();i++) {
-			Expr temp = subExpr.get(i);
+		if(!isMutable()) throw new RuntimeException("expression is not mutable!");
+		
+		for(int i = 0;i<subExprs.size();i++) {
+			Expr temp = subExprs.get(i);
 			if(!temp.flags.simple) {
 				temp = temp.simplify(casInfo);
-				subExpr.set(i, temp);
+				subExprs.set(i, temp);
 			}
 		}
 	}
 	
 	public void simplifyChildren(CasInfo casInfo,String ignoredType) {
-		for(int i = 0;i<subExpr.size();i++) {
-			Expr temp = subExpr.get(i);
+		if(!isMutable()) throw new RuntimeException("expression is not mutable!");
+		
+		for(int i = 0;i<subExprs.size();i++) {
+			Expr temp = subExprs.get(i);
 			if(!temp.flags.simple) {
 				if(temp.containsType(ignoredType)) {
 					temp.simplifyChildren(casInfo, ignoredType);
 				}else {
 					temp = temp.simplify(casInfo);
-					subExpr.set(i, temp);
+					subExprs.set(i, temp);
 				}
 			}
 		}

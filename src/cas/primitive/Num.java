@@ -14,8 +14,8 @@ public class Num extends Expr{
 	public static final Num ZERO = new Num(0,false),ONE = new Num(1,false),TWO = new Num(2,false),I = new Num(0,1,false), NEG_ONE = new Num(-1,0,false), NEG_I = new Num(0,-1,false);
 	
 	private void setFlags() {
-		flags.simple = true;
-		flags.sorted = true;
+		setSimpleSingleNode(true);
+		setSortedSingleNode(true);
 	}
 	
 	public Num(long num) {
@@ -55,52 +55,54 @@ public class Num extends Expr{
 	public Num(long num,boolean mutable) {
 		realValue = BigInteger.valueOf(num);
 		imagValue = BigInteger.ZERO;
-		flags.mutable = mutable;
+		setMutableSingleNode(mutable);
 		setFlags();
 	}
 	public Num(long real,long imag,boolean mutable) {
 		realValue = BigInteger.valueOf(real);
 		imagValue = BigInteger.valueOf(imag);
-		flags.mutable = mutable;
+		setMutableSingleNode(mutable);
 		setFlags();
 	}
 	public Num(String num,boolean mutable) {
 		realValue = new BigInteger(num);
 		imagValue = BigInteger.ZERO;
-		flags.mutable = mutable;
+		setMutableSingleNode(mutable);
 		setFlags();
 	}
 	public Num(String real,String imag,boolean mutable) {
 		realValue = new BigInteger(real);
 		imagValue = new BigInteger(imag);
-		flags.mutable = mutable;
+		setMutableSingleNode(mutable);
 		setFlags();
 	}
 	public Num(BigInteger num,boolean mutable) {
 		realValue = num;
 		imagValue = BigInteger.ZERO;
-		flags.mutable = mutable;
+		setMutableSingleNode(mutable);
 		setFlags();
 	}
 	public Num(BigInteger real,BigInteger imag,boolean mutable) {
 		realValue = real;
 		imagValue = imag;
-		flags.mutable = mutable;
+		setMutableSingleNode(mutable);
 		setFlags();
 	}
 	
 	public void setValue(Num other) {
+		if(!isMutable()) throw new RuntimeException("expression is not mutable!");
+		
 		realValue = other.realValue;
 		imagValue = other.imagValue;
 	}
 	
 	public void setRealValue(BigInteger realValue){
-		if(flags.mutable == false) throw new RuntimeException("expression is not mutable!");
+		if(!isMutable()) throw new RuntimeException("expression is not mutable!");
 		this.realValue = realValue;
 	}
 	
 	public void setImagValue(BigInteger imagValue){
-		if(flags.mutable == false) throw new RuntimeException("expression is not mutable!");
+		if(!isMutable()) throw new RuntimeException("expression is not mutable!");
 		this.imagValue = imagValue;
 	}
 	

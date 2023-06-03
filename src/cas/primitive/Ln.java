@@ -228,7 +228,7 @@ public class Ln{
 					Func current = (Func)innerProd.get(i);
 					current.setExpo(div(current.getExpo(),gcd));
 				}
-				innerProd.flags.simple = false;
+				innerProd.setSimpleSingleNode(false);
 				return prod(gcd,ln(innerProd)).simplify(casInfo);
 				
 			}

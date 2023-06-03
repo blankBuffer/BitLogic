@@ -35,12 +35,10 @@ public class Becomes{
 	
 	public static void setLeftSide(Func becomes,Expr expr) {
 		assert becomes.isType("becomes") : "expected a becomes";
-		becomes.flags.simple = false;
 		becomes.set(0,expr);
 	}
 	public static void setRightSide(Func becomes,Expr expr) {
 		assert becomes.isType("becomes") : "expected a becomes";
-		becomes.flags.simple = false;
 		becomes.set(1,expr);
 	}
 }

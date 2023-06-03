@@ -13,6 +13,10 @@ public class Range{
 
 		@Override
 		public void load(Func owner) {
+			owner.behavior.helpMessage = "Range function calculated the range of a function along a domain.\n"
+					+ "For example, range(-1,1,x^2-1,x) returns [-1,0]\n"
+					+ "Another example, range(0,pi,sin(x),x) returns [0,1]";
+			
 			Rule calculateRange = new Rule("calculate the range from critical points") {
 				Func getCriticalPoints(Expr e,Var v,CasInfo casInfo) {//returns set
 					Expr derivative = diff(e,v).simplify(casInfo);

@@ -13,8 +13,8 @@ public class BoolState extends Expr{
 	
 	public BoolState(boolean state){
 		this.state = state;
-		flags.simple = true;
-		flags.sorted = true;
+		setSimpleSingleNode(true);
+		setSortedSingleNode(true);
 	}
 	
 	@Override

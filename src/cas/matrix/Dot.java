@@ -12,6 +12,11 @@ public class Dot{
 		@Override
 		public void load(Func owner) {
 			
+			owner.behavior.helpMessage = "Dot multiplication.\n"
+					+ "Used to do dot procucts on vectors and to multiply matricies.\n"
+					+ "Example of multiplying matricies, mat([[1,2],[3,4]]).mat([[5,6],[7,8]]) returns mat([[19,22],[43,50]])\n"
+					+ "Example, transpose(A.B) returns transpose(B).transpose(A)";
+			
 			Rule matrixMult = new Rule("matrix multiplication") {
 				@Override
 				public Expr applyRuleToExpr(Expr e,CasInfo casInfo) {

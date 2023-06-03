@@ -9,6 +9,10 @@ import cas.primitive.FloatExpr;
 
 public class Unit extends Cas{
 	
+	public static void init() {
+		initializeIdentifierSets();
+	}
+	
 	public static ArrayList<String> unitNames = new ArrayList<String>();
 	public static final double EARTH_GRAVITY = 9.80665;
 	
@@ -64,6 +68,8 @@ public class Unit extends Cas{
 		unitNames.add("ce");
 		unitNames.add("celsius");
 		unitNames.add("celsiu");
+		unitNames.add("kelvin");
+		unitNames.add("K");
 		//weight/force
 		unitNames.add("kilogram");
 		unitNames.add("kilograms");
@@ -97,46 +103,50 @@ public class Unit extends Cas{
 		return div(prod(sub(f,floatExpr(32.0)),floatExpr(5.0)),floatExpr(9.0));
 	}
 	
-	public enum Type{
+	public enum UnitType{
 		m,ft,cm,mm,km,in,yd,mi,smoot,//meters,feet,centimeter,millimeter,kilometer,inches,yards,miles,smoots
 		mps,kmps,kmphr,ftps,miphr,//meters per second,kilometers per second,kilometers per hour,feet per second,miles per hour
-		fh,ce,//fahrenheit , celsius
+		fh,ce,ke,//fahrenheit , celsius
 		kg,lb,N,gs,g,mg,t//kilograms, pounds, newtons, newtons/(earth gravity),grams,milligrams,tons
 	}
-	public static HashMap<Type,Double> unitTable = new HashMap<Type,Double>();
+	public static HashMap<UnitType,Double> unitTable = new HashMap<UnitType,Double>();
 	static{
 		//distance
-		unitTable.put(Type.m, 1.0);
-		unitTable.put(Type.cm, 100.0);
-		unitTable.put(Type.mm, 1000.0);
-		unitTable.put(Type.mm, 1000.0);
-		unitTable.put(Type.km, .001);
-		unitTable.put(Type.ft, 3.280839895);
-		unitTable.put(Type.in, 39.37007874);
-		unitTable.put(Type.yd, 1.0936132983);
-		unitTable.put(Type.mi,0.00062137119224);
-		unitTable.put(Type.smoot, 0.587613);
+		unitTable.put(UnitType.m, 1.0);
+		unitTable.put(UnitType.cm, 100.0);
+		unitTable.put(UnitType.mm, 1000.0);
+		unitTable.put(UnitType.mm, 1000.0);
+		unitTable.put(UnitType.km, .001);
+		unitTable.put(UnitType.ft, 3.280839895);
+		unitTable.put(UnitType.in, 39.37007874);
+		unitTable.put(UnitType.yd, 1.0936132983);
+		unitTable.put(UnitType.mi,0.00062137119224);
+		unitTable.put(UnitType.smoot, 0.587613);
 		//speed
-		unitTable.put(Type.mps, 1.0);
-		unitTable.put(Type.kmps, .001);
-		unitTable.put(Type.kmphr, 3.6);
-		unitTable.put(Type.ftps, 3.280839895);
-		unitTable.put(Type.miphr, 2.236936292);
+		unitTable.put(UnitType.mps, 1.0);
+		unitTable.put(UnitType.kmps, .001);
+		unitTable.put(UnitType.kmphr, 3.6);
+		unitTable.put(UnitType.ftps, 3.280839895);
+		unitTable.put(UnitType.miphr, 2.236936292);
 		//weight/force
-		unitTable.put(Type.kg, 1.0);
-		unitTable.put(Type.lb, 2.2046226218);
-		unitTable.put(Type.N, EARTH_GRAVITY);
-		unitTable.put(Type.gs, 1.0);
-		unitTable.put(Type.g, 1000.0);
-		unitTable.put(Type.mg, 1000000.0);
-		unitTable.put(Type.t, .001);
+		unitTable.put(UnitType.kg, 1.0);
+		unitTable.put(UnitType.lb, 2.2046226218);
+		unitTable.put(UnitType.N, EARTH_GRAVITY);
+		unitTable.put(UnitType.gs, 1.0);
+		unitTable.put(UnitType.g, 1000.0);
+		unitTable.put(UnitType.mg, 1000000.0);
+		unitTable.put(UnitType.t, .001);
 		
 	}
 	private static final double PREC = 10000000000.0;
-	public static Expr conv(Expr from,Type fromUnit, Type toUnit){
-		if(fromUnit == Type.ce){
+	public static Expr conv(Expr from,UnitType fromUnit, UnitType toUnit){
+		if(fromUnit == toUnit) {
+			return from;
+		}else if(toUnit == UnitType.ke) {
+			return sum(conv(from,fromUnit,UnitType.ce),floatExpr(273.15));
+		}else if(fromUnit == UnitType.ce && toUnit == UnitType.fh){
 			return celsiusToFahrenheit(from);
-		}else if(fromUnit == Type.fh){
+		}else if(fromUnit == UnitType.fh && toUnit == UnitType.ce){
 			return fahrenheitToCelsius(from);
 		}else{
 			double multiplier = unitTable.get(toUnit)/unitTable.get(fromUnit);
@@ -146,64 +156,104 @@ public class Unit extends Cas{
 			return prod(multiplierExpr,from);
 		}
 	}
-	public static Type getUnit(String s) throws Exception{
-		s = s.toLowerCase();
-		if(!s.contains("/") && s.charAt(s.length()-1) == 's'){//strip unneeded s
-			s = s.substring(0,s.length()-1);
+	
+	//keeps a list of possible names that refers to a particular unit
+	static class UnitIdentifierSet{
+		private String[] possibleNames = null;
+		private UnitType outType = null;
+		
+		public UnitIdentifierSet(UnitType outType,String ...names) {
+			possibleNames = names;
+			this.outType = outType;
 		}
-		//distance
-		if(s.equals("m") || s.equals("meter")){
-			return Type.m;
-		}else if(s.equals("ft") || s.equals("feet") || s.equals("foot")){
-			return Type.ft;
-		}else if(s.equals("centimeter") || s.equals("cm")){
-			return Type.cm;
-		}else if(s.equals("millimeter") || s.equals("mm")){
-			return Type.mm;
-		}else if(s.equals("kilometer") || s.equals("km")){
-			return Type.km;
-		}else if(s.equals("in") || s.equals("inche") || s.equals("inch")){//not spelling err btw
-			return Type.in;
-		}else if(s.equals("yard") || s.equals("yd")){
-			return Type.yd;
-		}else if(s.equals("mile") || s.equals("mi")){
-			return Type.mi;
-		}else if(s.equals("smoot")){
-			return Type.smoot;
+		public boolean hasName(String name) {
+			for(String n:possibleNames) if(name.equals(n)) return true;
+			return false;
 		}
-		//speed
-		else if(s.equals("m/s") || s.equals("meters/second") || s.equals("meter/second")){
-			return Type.mps;
-		}else if(s.equals("km/s") || s.equals("kilometers/second") || s.equals("kilometer/second")){
-			return Type.kmps;
-		}else if(s.equals("km/hr") || s.equals("kilometers/hour") || s.equals("kilometer/hour")){
-			return Type.kmphr;
-		}else if(s.equals("ft/s") || s.equals("feet/second") || s.equals("foot/second")){
-			return Type.ftps;
-		}else if(s.equals("mi/hr") || s.equals("miles/hour") || s.equals("mile/hour")){
-			return Type.miphr;
-		}else if(s.equals("f") || s.equals("fahrenheit")){
-			return Type.fh;
-		}else if(s.equals("c") || s.equals("celsiu") || s.equals("ce")){
-			return Type.ce;
+		public UnitType getUnitType() {
+			return outType;
 		}
-		//weight/force
-		else if(s.equals("kg") || s.equals("kilogram") || s.equals("kilo")){
-			return Type.kg;
-		}else if(s.equals("lb") || s.equals("pound")){
-			return Type.lb;
-		}else if(s.equals("newton") || s.equals("N")){
-			return Type.N;
-		}else if(s.equals("g'")){
-			return Type.gs;
-		}else if(s.equals("gram") || s.equals("g")){
-			return Type.g;
-		}else if(s.equals("milligram") || s.equals("mg")){
-			return Type.mg;
-		}else if(s.equals("ton") || s.equals("t")){
-			return Type.t;
+	}
+	
+	//keeps track of all the names associated with different units
+	static class UnitNamesCollection{
+		private ArrayList<UnitIdentifierSet> allUnitIdentifiers = null;
+		
+		public UnitNamesCollection() {
+			allUnitIdentifiers = new ArrayList<UnitIdentifierSet>();
 		}
-		throw new Exception("no known unit of distance named: "+s);
+		
+		private String prepareString(String name) {
+			name = name.toLowerCase();
+			
+			if(!name.contains("/") && name.charAt(name.length()-1) == 's'){//strip unneeded s
+				name = name.substring(0,name.length()-1);
+			}
+			
+			return name;
+		}
+		
+		//get the unit associated with a name if it exists
+		public UnitType getUnit(String name) throws Exception{
+			name = prepareString(name);
+			
+			for(UnitIdentifierSet ui:allUnitIdentifiers) {
+				if(ui.hasName(name)) return ui.getUnitType();
+			}
+			throw new Exception("no known unit of distance named: "+name);
+		}
+		
+		public void addUnitIdentifierSet(UnitType outType,String ...names) {
+			allUnitIdentifiers.add(new UnitIdentifierSet(outType,names));
+		}
+	}
+	
+	private static UnitNamesCollection unitNamesCollection;
+	
+	private static void initializeIdentifierSets() {
+		unitNamesCollection = new UnitNamesCollection();
+		
+		UnitNamesCollection unc = unitNamesCollection;//shortcut name
+		
+		{//distances
+			unc.addUnitIdentifierSet(UnitType.m, "m","meter");
+			unc.addUnitIdentifierSet(UnitType.ft,"ft","feet","foot");
+			unc.addUnitIdentifierSet(UnitType.cm,"centimeter","cm");
+			unc.addUnitIdentifierSet(UnitType.mm,"millimeter","mm");
+			unc.addUnitIdentifierSet(UnitType.km,"kilometer","km");
+			unc.addUnitIdentifierSet(UnitType.in,"in","inch","inche");//inche is not a spelling mistake
+			unc.addUnitIdentifierSet(UnitType.yd,"yd","yard");
+			unc.addUnitIdentifierSet(UnitType.mi,"mi","mile");
+			unc.addUnitIdentifierSet(UnitType.smoot,"smoot");
+		}
+		
+		{//speed
+			unc.addUnitIdentifierSet(UnitType.mps, "m/s","meters/second","meter/second");
+			unc.addUnitIdentifierSet(UnitType.kmps, "km/s","kilometers/second","kilometer/second");
+			unc.addUnitIdentifierSet(UnitType.kmphr, "km/hr","kilometers/hour","kilometer/hour");
+			unc.addUnitIdentifierSet(UnitType.ftps, "ft/s","feet/second","foot/second");
+			unc.addUnitIdentifierSet(UnitType.miphr, "mi/hr","miles/hour","mile/hour");
+		}
+		
+		{//temperature
+			unc.addUnitIdentifierSet(UnitType.fh,"f", "fahrenheit");
+			unc.addUnitIdentifierSet(UnitType.ce,"c", "ce","celsiu");//again not a misspelled word
+			unc.addUnitIdentifierSet(UnitType.ke, "k","kelvin");
+		}
+		
+		{//weight or force
+			unc.addUnitIdentifierSet(UnitType.kg, "kg","kilogram","kilo");
+			unc.addUnitIdentifierSet(UnitType.lb, "lb","pound");
+			unc.addUnitIdentifierSet(UnitType.N, "n","newton");
+			unc.addUnitIdentifierSet(UnitType.gs, "g'");
+			unc.addUnitIdentifierSet(UnitType.g, "gram","g");
+			unc.addUnitIdentifierSet(UnitType.mg, "milligram","mg");
+			unc.addUnitIdentifierSet(UnitType.t, "t","ton");
+		}
+	}
+	
+	public static UnitType getUnit(String s) throws Exception{//shortcut
+		return unitNamesCollection.getUnit(s);
 	}
 	
 }

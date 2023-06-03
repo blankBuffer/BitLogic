@@ -383,7 +383,7 @@ public class Factor{
 				for(int i = 0;i<expr.size();i++) {
 					if(expr.get(i).isType("sum")) {
 						Expr subSum = expr.get(i);
-						subSum.flags.simple = false;
+						subSum.setSimpleSingleNode(false);
 						expr.set(i, subSum.simplify(casInfo));
 					}
 				}

@@ -65,7 +65,7 @@ public class Limit{
 							
 							if(gcd.equals(Num.ONE)) return lim;
 							
-							innerDiv.flags.simple = false;
+							innerDiv.setSimpleSingleNode(false);
 							
 							if(gcd.contains(lim.getVar())) {
 								numerPower.setExpo(div(numerPower.getExpo(),gcd).simplify(casInfo));
@@ -545,7 +545,7 @@ public class Limit{
 	}
 	
 	public static Expr applyDirection(Expr e,short direction){//modifies input
-		Expr epsilonAdder = direction == LEFT ? Cas.neg(Cas.epsilon()) : (  direction == RIGHT ? Cas.epsilon() : null);
+		Expr epsilonAdder = direction == LEFT ? Var.NEG_EPSILON.copy() : (  direction == RIGHT ? Cas.epsilon() : null);
 		
 		if(epsilonAdder != null){
 			if(e.isType("sum")){

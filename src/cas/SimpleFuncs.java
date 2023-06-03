@@ -975,7 +975,7 @@ public class SimpleFuncs extends Cas{
 				@Override
 				public Expr applyRuleToExpr(Expr e,CasInfo casInfo) {
 					e.get().sort();
-					System.out.println(e.get().flags.sorted);
+					System.out.println(e.get().isSorted());
 					return e.get();
 				}
 			};

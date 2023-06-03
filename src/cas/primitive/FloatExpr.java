@@ -11,8 +11,8 @@ public class FloatExpr extends Expr{
 	public ComplexFloat value = new ComplexFloat(0,0);
 	
 	private void setFlags() {
-		flags.simple = true;
-		flags.sorted = true;
+		setSimpleSingleNode(true);
+		setSortedSingleNode(true);
 	}
 	
 	public FloatExpr(double value) {

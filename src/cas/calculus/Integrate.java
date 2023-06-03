@@ -221,8 +221,14 @@ public class Integrate{
 					if(!integ.get().containsType("integrate") && !isPolynomialUnstrict(integ.get(),integ.getVar())) {
 						Func innerDiv = Div.cast(integ.get().copy());
 						Func innerProd = Prod.cast(innerDiv.getNumer());
+						
 						innerDiv.setNumer(innerProd);
-						boolean denomIsFunc = innerDiv.getDenom().contains(integ.getVar());
+						
+						boolean denominatorIsExponential = innerDiv.getDenom().isType("power") && ((Func)innerDiv.getDenom()).getBase().contains(integ.getVar());
+						//if there is an exponential in the denominator a/e^x it's the same as a*e^(-x), therefore technically there is no denominator
+						boolean denomIsFunc = innerDiv.getDenom().contains(integ.getVar()) && !denominatorIsExponential;
+						
+						
 						int bestIndex = -1;
 						int confidence = -1;
 						
@@ -237,7 +243,7 @@ public class Integrate{
 								currentConfidence = BEST;
 							}else if(isTypeExtended(current,"atan") || isTypeExtended(current,"asin") || isTypeExtended(current,"acos")){
 								currentConfidence = GREAT;
-							}else if(!denomIsFunc){//polynomial
+							}else if(!denomIsFunc){//polynomial case.
 								Func pow = Power.cast(current);
 								if(isPlainPolynomial(pow.getBase(),integ.getVar()) && pow.getBase().contains(integ.getVar())) {
 									if(isPositiveRealNum(pow.getExpo())){
@@ -282,6 +288,7 @@ public class Integrate{
 			};
 			
 			Rule integrationByPartsSpecial = new Rule("special integration by parts"){
+				
 				@Override
 				public Expr applyRuleToExpr(Expr e,CasInfo casInfo){
 					Func integ = (Func)e;
@@ -290,11 +297,27 @@ public class Integrate{
 						if(innerDiv.getDenom().isType("power")) {
 							Func denomPower = (Func)innerDiv.getDenom();
 							Func expo = Div.cast(denomPower.getExpo());
+							
 							if(Div.isNumericalAndReal(expo) && isPlainPolynomial(denomPower.getBase(),integ.getVar()) && degree(denomPower.getBase(),integ.getVar()).equals(BigInteger.ONE) ) {
+								
 								if( ((Num)expo.getNumer()).getRealValue().compareTo( ((Num)expo.getDenom()).getRealValue() )  == 1) {//make sure the fraction is greater than 1
+									
 									Expr integralOfDenom = integrate(inv(denomPower),integ.getVar()).simplify(casInfo);
 									Expr derivativeOfNumer = diff(innerDiv.getNumer(),integ.getVar()).simplify(casInfo);
-									if(!(derivativeOfNumer.isType("div") && ((Func)derivativeOfNumer).getDenom().contains(integ.getVar())  )) {
+									
+									//if the derivative is a fraction, make sure that both the numerator and denominator don't contain the variable
+									//this is to prevent cases like sin(ln(x))/x^2 causing infinite loop
+									boolean simpleDerivative = true;
+									if(derivativeOfNumer.isType("div")) {
+										Expr numer = ((Func)derivativeOfNumer).getNumer();
+										Expr denom = ((Func)derivativeOfNumer).getDenom();
+										
+										if(denom.contains(integ.getVar()) && numer.contains(integ.getVar())) { 
+											simpleDerivative = false;
+										}
+									}
+									
+									if(simpleDerivative) {
 										Expr out = sub(prod(innerDiv.getNumer(),integralOfDenom),integrate( prod(derivativeOfNumer,integralOfDenom.copy()) ,integ.getVar()));
 										return out.simplify(casInfo);
 									}

@@ -1,34 +1,46 @@
 html{
-	background-color:rgb(100,200,150);
+	background: rgb(100,200,150);
+    background: linear-gradient(135deg, rgba(100,200,150,1) 0%, rgba(50,150,200,1) 100%);
 }
+
 body{
-	background-color:rgb(200,255,240);
 	width: 90vw;
 	max-width: 1024px;
 	margin: auto;
 	padding: 20px;
+    background: rgb(200,255,240);
+    background: linear-gradient(135deg, rgba(200,255,240,1) 0%, rgba(150,250,240,1) 100%);
 }
-h1{
-	color:rgb(255,255,255);
-	background-color:rgb(75,150,120);
+
+h1, h2, h3, h4{
+	color: white;
 	padding: 10px;
+    background: rgb(90,170,150);
+    background: linear-gradient(135deg, rgba(90,170,150,1) 0%, rgba(40,120,130,1) 100%);
+    border-radius: 5px;
 }
-h2{
-	color:rgb(255,255,255);
-	background-color:rgb(90,170,150);
-	padding: 10px;
-}
-h3{
-	color:rgb(255,255,255);
-	background-color:rgb(90,170,150);
-	padding: 5px;
-}
-h4{
-	color:rgb(255,255,255);
-	background-color:rgb(90,170,150);
-}
+
 p{
-	background-color:rgb(170,240,220);
 	color:rgb(0,0,255);
 	padding: 10px;
+    background: rgb(170,240,220);
+    background: linear-gradient(135deg, rgba(170,240,220,1) 0%, rgba(130,210,200,1) 100%);
+    border-radius: 5px;
+}
+
+a {
+    display: inline-block;
+    color: white;
+    background: rgb(100,200,150);
+    background: linear-gradient(135deg, rgba(100,200,150,1) 0%, rgba(50,150,200,1) 100%);
+    padding: 10px;
+    margin: 5px;
+    text-decoration: none;
+    border-radius: 5px;
+    transition: background 0.3s;
+}
+
+a:hover {
+    background: rgb(50,150,200);
+    background: linear-gradient(135deg, rgba(50,150,200,1) 0%, rgba(25,100,150,1) 100%);
 }

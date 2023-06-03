@@ -221,6 +221,7 @@ public class Ask extends Cas{
 		phraseReplacement.put("cube root", "cbrt");
 		phraseReplacement.put("absolute value", "abs");
 		phraseReplacement.put("in terms", "terms");
+		phraseReplacement.put("divided by", "/");
 		
 		questions.add(new Question(new String[] {"earth","acceleration"},Double.toString(Unit.EARTH_GRAVITY),8));
 		questions.add(new Question(new String[] {"acceleration","earth"},Double.toString(Unit.EARTH_GRAVITY),8));
@@ -477,19 +478,21 @@ public class Ask extends Cas{
 			bannedNumberNounPairs.add("with");
 			bannedNumberNounPairs.add("with");
 			bannedNumberNounPairs.add("respect");
-			//never add in because in short hand for inches
+			//never add 'in' because in short hand for inches
 		}
 		
 		for(int i = 0;i<tokens.size()-1;i++) {
-			if(tokens.get(i).matches("([0-9]+)|(neg\\([0-9]+\\))")) {
-				if(!containsOperators(tokens.get(i+1)) && !bannedNumberNounPairs.contains(tokens.get(i+1))) {
-					String stripped = tokens.get(i+1);
-					if(!isProbablyExpr(tokens.get(i+1)) && stripped.length() > 1 && stripped.charAt(stripped.length()-1) == 's') {
-						stripped = stripped.substring(0, stripped.length()-1);//strips the 's' apples -> apple
-					}
-					tokens.set(i, tokens.get(i)+"*"+stripped);
-					tokens.remove(i+1);
+			if(tokens.get(i).matches("([0-9]+)|(neg\\([0-9]+\\))")) {//number
+				
+				String possibleNoun = tokens.get(i+1);
+				
+				if(!(possibleNoun.replace('/', 'a').matches("[a-zA-Z]+") && !bannedNumberNounPairs.contains(possibleNoun) && !FunctionsLoader.funcs.containsKey(possibleNoun))) continue;
+				
+				if(possibleNoun.length() > 1 && Character.toLowerCase(possibleNoun.charAt(possibleNoun.length()-1)) == 's') {
+					possibleNoun = possibleNoun.substring(0, possibleNoun.length()-1);//strips the 's' apples -> apple
 				}
+				tokens.set(i, tokens.get(i)+"*"+possibleNoun);
+				tokens.remove(i+1);
 			}
 		}
 	}
@@ -580,12 +583,13 @@ public class Ask extends Cas{
 	}
 	
 	static void unitReading(ArrayList<String> tokens){
+		if(!(tokens.size() >= 3)) return;
 		for(int i = 0;i<tokens.size();i++){
 			String token = tokens.get(i);
 			if(token.contains("*")){
 				String[] parts = token.split("\\*");
 				if(parts.length == 2 && (Unit.unitNames.contains(parts[1]) || token.contains("degree"))){
-					if(containsOperators(parts[0]) || containsOperators(parts[1])) return;
+					if(containsOperators(parts[0])) return;
 					try {
 						String fromUnit = parts[1];
 						if(fromUnit.equals("degree")){
@@ -820,7 +824,6 @@ public class Ask extends Cas{
 			System.out.println(tokens);
 		}
 		recursiveReading(tokens);
-		
 		removeWhatIs(tokens);
 		constructNumbers(tokens);
 		applyWordReplacement(tokens);
@@ -834,7 +837,6 @@ public class Ask extends Cas{
 		combineTrailingOperatorTokens(tokens);
 		specialFunctions(tokens);
 		combineTrailingOperatorTokens(tokens);
-		
 		unitReading(tokens);
 		
 		if(DEBUG){

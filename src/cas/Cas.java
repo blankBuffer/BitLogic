@@ -30,7 +30,12 @@ public class Cas {
 		Interpreter.init();//load bit logic standard syntax
 		
 		FunctionsLoader.load();//load functions into memory
+		
+		Var.init();//initialize var specific stuff
+		
 		StandardRules.loadRules();//load additional shared rules
+		
+		Unit.init();//initialize unit conversion information
 		
 		FunctionsLoader.FUNCTION_UNLOCKED = true;//on the fly function generation now permitted since everything is loaded
 		
@@ -972,14 +977,15 @@ public class Cas {
 					}else if(num.getRealValue().equals(BigInteger.ZERO)) {
 						num.setRealValue(num.getImagValue());
 						num.setImagValue(BigInteger.ZERO);
-						eCopyProd.flags.simple = false;
+						//it might not be simple because i*x becomes 1*x which can simplify to just x
+						eCopyProd.setSimpleSingleNode(false);
 						return (Func) sequence(num(0),eCopyProd).simplify(casInfo);
 					}else {
 						
 						Func imagCopyProd = (Func)e.copy();
 						imagCopyProd.set(i, num(num.getImagValue()));
 						num.setImagValue(BigInteger.ZERO);
-						eCopyProd.flags.simple = false;
+						eCopyProd.setSimpleSingleNode(false);
 						return sequence(eCopyProd.simplify(casInfo),imagCopyProd.simplify(casInfo));
 					}
 					

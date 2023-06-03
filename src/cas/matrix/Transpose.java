@@ -11,6 +11,9 @@ public class Transpose{
 		
 		@Override
 		public void load(Func owner) {
+			owner.behavior.helpMessage = "Transpose a matrix, swaps rows and columns.\n"
+					+ "Example, transpose(mat([[1,2],[3,4]])) returns mat([[1,3],[2,4]])";
+			
 			Rule transContainsTrans = new Rule("transpose contains transpose"){
 				@Override
 				public Expr applyRuleToExpr(Expr e,CasInfo casInfo) {
@@ -20,7 +23,7 @@ public class Transpose{
 					return e;
 				}
 			};
-			Rule transOfSum = new Rule("tranpose of sum"){
+			Rule transOfSum = new Rule("transpose of a sum"){
 				@Override
 				public Expr applyRuleToExpr(Expr e,CasInfo casInfo) {
 					if(e.get().isType("sum")) {
@@ -33,7 +36,7 @@ public class Transpose{
 					return e;
 				}
 			};
-			Rule transOfProd = new Rule("tranpose of product"){
+			Rule transOfProd = new Rule("transpose of a product"){
 				@Override
 				public Expr applyRuleToExpr(Expr e,CasInfo casInfo) {
 					if(e.get().isType("prod")) {
@@ -46,7 +49,7 @@ public class Transpose{
 					return e;
 				}
 			};
-			Rule transOfDotMult = new Rule("tranpose of dot multiply"){
+			Rule transOfDotMult = new Rule("transpose of dot multiply"){
 				@Override
 				public Expr applyRuleToExpr(Expr e,CasInfo casInfo) {
 					if(e.get().isType("dot")) {

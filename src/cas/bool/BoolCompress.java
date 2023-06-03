@@ -55,7 +55,7 @@ public class BoolCompress{
 							i--;
 						}
 					}
-					portion.flags.simple = true;
+					portion.setSimpleSingleNode(true);
 					portion = boolCompress(portion).simplify(casInfo);
 					if(portion.isType("and")) portion.add(part);
 					else portion = and(part,portion);

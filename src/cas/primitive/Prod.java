@@ -151,7 +151,7 @@ public class Prod{
 			if(hasEpsilon && !hasInf){
 				if(prod.negative()){
 					prod.clear();
-					prod.add(Var.NEG_EPSILON);
+					prod.add(Var.NEG_EPSILON.copy());
 				}else{
 					prod.clear();
 					prod.add(Var.EPSILON);
@@ -159,7 +159,7 @@ public class Prod{
 			}else if(!hasEpsilon && hasInf){
 				if(prod.negative()){
 					prod.clear();
-					prod.add(Var.NEG_INF);
+					prod.add(Var.NEG_INF.copy());
 				}else{
 					prod.clear();
 					prod.add(Var.INF);
@@ -297,9 +297,10 @@ public class Prod{
 			for(int i = 0;i<prod.size();i++) {
 				Expr current = prod.get(i);
 				if(current.isType("prod")) {
-					for(int j = 0;j<current.size();j++) prod.add(current.get(j));//add all the sub expressions into this product
 					prod.remove(i);//remove the sub product
 					i--;//shift back after deletion
+					
+					for(int j = 0;j<current.size();j++) prod.add(current.get(j));//add all the sub expressions into this product
 				}
 			}
 			

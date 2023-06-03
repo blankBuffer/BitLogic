@@ -13,6 +13,10 @@ public class Mat{
 		
 		@Override
 		public void load(Func owner) {
+			owner.behavior.helpMessage = "Matrix data identifier.\n"
+					+ "The mat function tells the CAS that the data is representing a matrix.\n"
+					+ "For example mat([[1,2,3],[4,5,6]]) represents a matrix with 2 rows and 3 columns.";
+			
 			Rule make2d = new Rule("force it to be 2d") {
 				@Override
 				public Expr applyRuleToExpr(Expr e,CasInfo casInfo) {
@@ -80,8 +84,6 @@ public class Mat{
 	}
 	
 	public static void setElement(Func mat,int row,int col,Expr e) {
-		mat.get().flags.simple = false;
-		mat.flags.simple = false;
 		mat.get().get(row).set(col, e);
 	}
 	

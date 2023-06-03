@@ -22,8 +22,8 @@ public class Plot extends JPanel{
 
 	public PlotWindowParams plotParams = new PlotWindowParams();
 	
-	int mouseX,mouseY,pMouseX,pMouseY;
-	boolean mousePressed;
+	int mouseX,mouseY,pMouseX,pMouseY,startMouseX,startMouseY;
+	private boolean mousePressed = false;
 	private Color backgroundColor = Color.WHITE,foregroundColor = Color.DARK_GRAY;
 	StackEditor stackEditor;
 	public static final int MODE_2D = 0,MODE_3D = 1,MODE_COMPLEX = 2;
@@ -240,6 +240,38 @@ public class Plot extends JPanel{
 		}
 	}
 	
+	public static void drawCoordinateLines(Graphics2D g2,PlotWindowParams plotWindowParams,Dimension windowSize,Color foregroundColor) {
+		g2.setStroke(new BasicStroke(4));
+		
+		DecimalFormat numberFormat = new DecimalFormat("#.000");
+		
+		g2.setColor(foregroundColor);
+		//draw coordinate lines
+		for(int k = 0;k<2;k++) {
+			
+			double scale = Math.pow( 5.0 , Math.floor(Math.log(plotWindowParams.xMax-plotWindowParams.xMin)/Math.log( 5.0) )-k);
+			if(k == 0) g2.setStroke(new BasicStroke(2));
+			if(k == 1) g2.setStroke(new BasicStroke(1));
+			for(double i =  Math.floor(plotWindowParams.xMin/scale)*scale;i<=plotWindowParams.xMax;i+=scale) {
+				int xLine = convertToExternalPositionX(i,plotWindowParams,windowSize);
+				g2.drawLine(xLine, 0, xLine, (int)windowSize.getHeight());
+				if(k==0) g2.drawString(""+numberFormat.format(i), xLine+10,20);
+			}
+			for(double i = Math.floor(plotWindowParams.yMin/scale)*scale;i<=plotWindowParams.yMax;i+=scale) {
+				int yLine = convertToExternalPositionY(i,plotWindowParams,windowSize);
+				g2.drawLine(0,yLine, (int)windowSize.getWidth(), yLine);
+				if(k==0) g2.drawString(""+numberFormat.format(i),10,yLine-10);
+			}
+		}
+		
+		g2.setStroke(new BasicStroke(4));
+		//draw x and y axis
+		int xAxisLocation = convertToExternalPositionX(0,plotWindowParams,windowSize);
+		int yAxisLocation = convertToExternalPositionY(0,plotWindowParams,windowSize);
+		g2.drawLine(xAxisLocation, 0, xAxisLocation, (int)windowSize.getHeight());
+		g2.drawLine(0,yAxisLocation, (int)windowSize.getWidth(), yAxisLocation);
+	}
+	
 	public static BufferedImage renderGraph2D(Func stackSequence,PlotWindowParams plotWindowParams,Dimension windowSize,Color backgroundColor,Color foregroundColor,int detail) {
 		BufferedImage out = new BufferedImage((int)windowSize.getWidth(),(int)windowSize.getHeight(),BufferedImage.TYPE_INT_RGB);
 		
@@ -253,33 +285,8 @@ public class Plot extends JPanel{
 		
 		
 		renderPlots2D(g,stackSequence,plotWindowParams,windowSize,detail);
-		DecimalFormat numberFormat = new DecimalFormat("#.000");
 		
-		g.setColor(foregroundColor);
-		//draw coordinate lines 1
-		for(int k = 0;k<2;k++) {
-			
-			double scale = Math.pow( 5.0 , Math.floor(Math.log(plotWindowParams.xMax-plotWindowParams.xMin)/Math.log( 5.0) )-k);
-			if(k == 0) g2.setStroke(new BasicStroke(2));
-			if(k == 1) g2.setStroke(new BasicStroke(1));
-			for(double i =  Math.floor(plotWindowParams.xMin/scale)*scale;i<=plotWindowParams.xMax;i+=scale) {
-				int xLine = convertToExternalPositionX(i,plotWindowParams,windowSize);
-				g.drawLine(xLine, 0, xLine, (int)windowSize.getHeight());
-				if(k==0) g.drawString(""+numberFormat.format(i), xLine+10,20);
-			}
-			for(double i = Math.floor(plotWindowParams.yMin/scale)*scale;i<=plotWindowParams.yMax;i+=scale) {
-				int yLine = convertToExternalPositionY(i,plotWindowParams,windowSize);
-				g.drawLine(0,yLine, (int)windowSize.getWidth(), yLine);
-				if(k==0) g.drawString(""+numberFormat.format(i),10,yLine-10);
-			}
-		}
-		
-		g2.setStroke(new BasicStroke(4));
-		//draw x and y axis
-		int xAxisLocation = convertToExternalPositionX(0,plotWindowParams,windowSize);
-		int yAxisLocation = convertToExternalPositionY(0,plotWindowParams,windowSize);
-		g.drawLine(xAxisLocation, 0, xAxisLocation, (int)windowSize.getHeight());
-		g.drawLine(0,yAxisLocation, (int)windowSize.getWidth(), yAxisLocation);
+		drawCoordinateLines(g2,plotWindowParams,windowSize,foregroundColor);
 		
 		g.dispose();
 		
@@ -473,12 +480,14 @@ public class Plot extends JPanel{
 		//create hash
 		int stackHash = stackSequence.hashCode();
 		
+		/*
 		stackHash+=Double.hashCode(plotParams.xMin)*908305804;
 		stackHash+=Double.hashCode(plotParams.xMax)*879128337;
 		stackHash+=Double.hashCode(plotParams.yMin)*281830831;
 		stackHash+=Double.hashCode(plotParams.yMax)*897672383;
 		stackHash+=Double.hashCode(plotParams.zMin)*563629913;
 		stackHash+=Double.hashCode(plotParams.zMax)*729783957;
+		*/
 		stackHash+=getWidth();
 		stackHash+=getHeight();
 		
@@ -490,8 +499,22 @@ public class Plot extends JPanel{
 		int defaultResolution = 48;
 		if(mode == MODE_2D) {
 			if(graphImage == null) graphImage = renderGraph2D(stackSequence,plotParams,getSize(),backgroundColor,foregroundColor,defaultDetail);
-		
-			graphics.drawImage(graphImage,0,0,null);
+			
+			int fastPanX = 0,fastPanY = 0;
+			if(mousePressed) {
+				fastPanX = mouseX-startMouseX;
+				fastPanY = mouseY-startMouseY;
+				
+				BufferedImage backgroundImage = new BufferedImage(getWidth(),getHeight(),BufferedImage.TYPE_INT_RGB);
+				Graphics2D g2 = (Graphics2D)backgroundImage.createGraphics();
+				g2.setColor(backgroundColor);
+				g2.fillRect(0, 0,getWidth() ,getHeight() );
+				drawCoordinateLines(g2,plotParams,getSize(),foregroundColor);
+				g2.dispose();
+				graphics.drawImage(backgroundImage,0, 0,null);
+			}
+			
+			graphics.drawImage(graphImage,fastPanX,fastPanY,null);
 			graphics.setColor(foregroundColor);
 			graphics.drawString("x: "+(float)convertToInternalPositionX(mouseX,plotParams,getSize()), mouseX+40, mouseY);
 			graphics.drawString("y: "+(float)convertToInternalPositionY(mouseY,plotParams,getSize()), mouseX+40, mouseY+20);
@@ -524,12 +547,16 @@ public class Plot extends JPanel{
 
 			@Override
 			public void mousePressed(MouseEvent e) {
+				startMouseX = mouseX;
+				startMouseY = mouseY;
 				mousePressed = true;
 			}
 
 			@Override
 			public void mouseReleased(MouseEvent e) {
 				mousePressed = false;
+				graphImage = null;
+				repaint();
 			}
 
 			@Override
@@ -548,6 +575,7 @@ public class Plot extends JPanel{
 				mouseX = e.getX();
 				mouseY = e.getY();
 				
+				
 				if(mousePressed) {
 					if(mode == MODE_2D || mode == MODE_COMPLEX) {
 						double panX = (pMouseX-mouseX)/(double)getWidth()*(plotParams.xMax-plotParams.xMin);
@@ -560,7 +588,6 @@ public class Plot extends JPanel{
 						plotParams.zRot-=((double)pMouseX-mouseX)/100.0;
 						plotParams.xRot+=((double)pMouseY-mouseY)/100.0;
 					}
-					graphImage = null;
 				}
 				
 				repaint();

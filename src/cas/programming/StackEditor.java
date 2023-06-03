@@ -36,7 +36,7 @@ public class StackEditor extends Cas {
 		if (last() == null)
 			return;
 		expr = stackSequence.get(index);
-		expr.flags.simple = false;
+		expr.setSimpleFullTree(false);
 		Thread compute = new Thread("compute") {
 			@Override
 			public void run() {
