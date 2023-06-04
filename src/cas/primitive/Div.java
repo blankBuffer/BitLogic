@@ -17,6 +17,10 @@ public class Div{
 		
 		@Override
 		public void load(Func owner) {
+			owner.behavior.helpMessage = "Division operator.\n"
+					+ "Examples a/b, 1/3+1/5\n"
+					+ "Special syntax, inv(3) gets parsed as 1/3";
+			
 			owner.behavior.rule = new Rule(new Rule[]{
 					divWithEpsilon,
 					factorChildren,

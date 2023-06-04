@@ -9,6 +9,10 @@ public class Equ{
 		
 		@Override
 		public void load(Func owner) {
+			owner.behavior.helpMessage = "Equation equals operator.\n"
+					+ "Example, y=a*x^2\n"
+					+ "Example of it in an equation, solve(x+2*y=z,y)";
+			
 			owner.behavior.toStringMethod = new Func.ToString() {
 				
 				@Override

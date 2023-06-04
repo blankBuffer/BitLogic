@@ -14,6 +14,11 @@ public class Becomes{
 		
 		@Override
 		public void load(Func owner) {
+			owner.behavior.helpMessage = "Becomes operator.\n"
+					+ "Can be used to represent a transformation or aproaching a value like with limits.\n"
+					+ "Example of aproaching syntax, limit(sin(x)/x,x->0) returns 1\n"
+					+ "Example of transformation, diff(atan(a),x)->diff(a,x)/(a^2+1)";
+			
 			owner.behavior.toStringMethod = new Func.ToString() {
 				
 				@Override

@@ -11,12 +11,16 @@ public class Unit extends Cas{
 	
 	public static void init() {
 		initializeIdentifierSets();
+		initUnitNames();
+		initUnitTable();
 	}
 	
 	public static ArrayList<String> unitNames = new ArrayList<String>();
+	
 	public static final double EARTH_GRAVITY = 9.80665;
 	
-	static{
+	
+	private static void initUnitNames(){
 		//distance
 		unitNames.add("m");
 		unitNames.add("meter");
@@ -69,7 +73,7 @@ public class Unit extends Cas{
 		unitNames.add("celsius");
 		unitNames.add("celsiu");
 		unitNames.add("kelvin");
-		unitNames.add("K");
+		unitNames.add("k");
 		//weight/force
 		unitNames.add("kilogram");
 		unitNames.add("kilograms");
@@ -82,7 +86,7 @@ public class Unit extends Cas{
 		unitNames.add("lbs");
 		unitNames.add("newton");
 		unitNames.add("newtons");
-		unitNames.add("N");
+		unitNames.add("n");
 		unitNames.add("g's");
 		unitNames.add("g'");
 		unitNames.add("grams");
@@ -95,6 +99,7 @@ public class Unit extends Cas{
 		unitNames.add("tons");
 		unitNames.add("t");
 	}
+	
 	
 	public static Expr celsiusToFahrenheit(Expr c){
 		return sum(div(prod(c,floatExpr(9.0)),floatExpr(5.0)),floatExpr(32.0));
@@ -109,8 +114,8 @@ public class Unit extends Cas{
 		fh,ce,ke,//fahrenheit , celsius
 		kg,lb,N,gs,g,mg,t//kilograms, pounds, newtons, newtons/(earth gravity),grams,milligrams,tons
 	}
-	public static HashMap<UnitType,Double> unitTable = new HashMap<UnitType,Double>();
-	static{
+	private static HashMap<UnitType,Double> unitTable = new HashMap<UnitType,Double>();
+	private static void initUnitTable(){
 		//distance
 		unitTable.put(UnitType.m, 1.0);
 		unitTable.put(UnitType.cm, 100.0);
@@ -138,16 +143,22 @@ public class Unit extends Cas{
 		unitTable.put(UnitType.t, .001);
 		
 	}
+	
 	private static final double PREC = 10000000000.0;
+	
+	private static final double KELVIN_SHIFT = 273.15;
+	
 	public static Expr conv(Expr from,UnitType fromUnit, UnitType toUnit){
 		if(fromUnit == toUnit) {
 			return from;
 		}else if(toUnit == UnitType.ke) {
-			return sum(conv(from,fromUnit,UnitType.ce),floatExpr(273.15));
+			return sum(conv(from,fromUnit,UnitType.ce),floatExpr(KELVIN_SHIFT));
 		}else if(fromUnit == UnitType.ce && toUnit == UnitType.fh){
 			return celsiusToFahrenheit(from);
 		}else if(fromUnit == UnitType.fh && toUnit == UnitType.ce){
 			return fahrenheitToCelsius(from);
+		}else if(fromUnit == UnitType.ke) {
+			return sum(conv(from,UnitType.ce,toUnit),floatExpr(-KELVIN_SHIFT));
 		}else{
 			double multiplier = unitTable.get(toUnit)/unitTable.get(fromUnit);
 			double dig = Math.pow(10,Math.floor(Math.log10(multiplier)));

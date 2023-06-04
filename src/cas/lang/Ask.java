@@ -588,7 +588,7 @@ public class Ask extends Cas{
 			String token = tokens.get(i);
 			if(token.contains("*")){
 				String[] parts = token.split("\\*");
-				if(parts.length == 2 && (Unit.unitNames.contains(parts[1]) || token.contains("degree"))){
+				if(parts.length == 2 && (Unit.unitNames.contains(parts[1].toLowerCase()) || token.contains("degree"))){
 					if(containsOperators(parts[0])) return;
 					try {
 						String fromUnit = parts[1];
@@ -598,7 +598,7 @@ public class Ask extends Cas{
 						String toUnit = "";
 						
 						for(int j = i+2;j<tokens.size();j++){
-							if(Unit.unitNames.contains(tokens.get(j))){
+							if(Unit.unitNames.contains(tokens.get(j).toLowerCase())){
 								toUnit = tokens.get(j);
 							}
 						}

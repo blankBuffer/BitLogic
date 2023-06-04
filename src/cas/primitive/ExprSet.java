@@ -17,6 +17,11 @@ public class ExprSet{
 		
 		@Override
 		public void load(Func owner) {
+			
+			owner.behavior.helpMessage = "Expression set syntax.\n"
+					+ "Keeps a set of objects where every item is unique.\n"
+					+ "Example, {2,3,x,y}";
+			
 			Rule removeRepeats = new Rule("remove repeats"){
 				@Override
 				public Expr applyRuleToExpr(Expr e,CasInfo casInfo) {

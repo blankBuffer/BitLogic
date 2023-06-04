@@ -18,6 +18,10 @@ public class Abs{
 
 		@Override
 		public void load(Func owner) {
+			owner.behavior.helpMessage = "Absolute value function.\n"
+					+ "Example, abs(-5) returns 5\n"
+					+ "Example, abs(x^2*y) returns abs(y)*x^2";
+			
 			Rule absOfPower = new Rule("abs(a^b)->abs(a)^b","abs of a power");
 			Rule absOfAbs = new Rule("abs(abs(x))->abs(x)","absolute value of absolute value");
 			Rule absOfEpsilon = new Rule("abs(epsilon)->epsilon","absolute value of epsilon becomes epsilon");

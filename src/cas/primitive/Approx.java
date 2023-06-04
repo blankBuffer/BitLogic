@@ -11,6 +11,10 @@ public class Approx{
 	public static Func.FuncLoader approxLoader = new Func.FuncLoader() {
 		@Override
 		public void load(Func owner) {
+			owner.behavior.helpMessage = "Approximates a function with variables defined.\n"
+					+ "Example, approx(sin(2),{}) returns 0.9092974268256817\n"
+					+ "Example, approx(sqrt(x+1),{x=2}) returns 1.7320508075688774";
+			
 			Rule getFloatExpr = new Rule("get float approximation"){
 				@Override
 				public Expr applyRuleToExpr(Expr e,CasInfo casInfo){
