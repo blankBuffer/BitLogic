@@ -1,5 +1,0 @@
-#!/bin/bash
-
-./compile
-
-jar -cfe BitLogic.jar Main -C bin .

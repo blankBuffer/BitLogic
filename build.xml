@@ -1,0 +1,32 @@
+<project name = "BitLogic" basedir=".">
+
+	<property name = "src" location="src"/>
+	<property name = "bin" location="bin"/>
+	<property name = "jar" location="jar"/>
+	<property name = "resources" location = "resources"/>
+
+	<target name="clean">
+        	<delete dir="${bin}" />
+		<delete dir="${jar}" />
+    	</target>
+
+	<target name="compile">
+		<mkdir dir="${bin}" />
+		<javac srcdir="${src}" destdir="${bin}" />
+	</target>
+
+	<target name="jar" depends="compile">
+		<mkdir dir="${jar}" />
+		<jar destfile="${jar}/BitLogic.jar" basedir="bin">
+			<manifest>
+				<attribute name="Main-Class" 
+				value="Main" />
+			</manifest>
+		</jar>
+		<mkdir dir="${jar}/resources"/>
+		<copy todir="${jar}/resources">
+			<fileset dir="${resources}"/>
+		</copy>
+
+	</target>
+</project>

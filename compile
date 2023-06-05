@@ -1,5 +1,0 @@
-#!/bin/bash
-
-mkdir saves
-
-javac $(find ./src -name *.java) -d bin
