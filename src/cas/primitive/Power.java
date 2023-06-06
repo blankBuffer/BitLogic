@@ -1,7 +1,7 @@
 package cas.primitive;
 import java.math.BigInteger;
 
-import cas.*;
+import cas.Algorithms;
 import cas.base.CasInfo;
 import cas.base.ComplexFloat;
 import cas.base.Expr;
@@ -9,6 +9,8 @@ import cas.base.Func;
 import cas.base.Rule;
 import cas.bool.BoolState;
 import cas.calculus.Limit;
+
+import static cas.Cas.*;
 
 public class Power{
 	
@@ -235,7 +237,7 @@ public class Power{
 				@Override
 				public Expr applyRuleToExpr(Expr e,CasInfo casInfo){
 					Func pow = (Func)e;
-					if(isPositiveRealNum(pow.getBase())&& !(pow.getExpo() instanceof Num)) {
+					if(Algorithms.isPositiveRealNum(pow.getBase())&& !(pow.getExpo() instanceof Num)) {
 						
 						pow.setExpo(distr(pow.getExpo()).simplify(casInfo));//distribute exponent
 						
@@ -282,7 +284,7 @@ public class Power{
 					Func power = (Func)e;
 					
 					if(power.getBase() instanceof Num && !(power.getExpo() instanceof Num)) {
-						Func pp = perfectPower((Num)power.getBase());
+						Func pp = Algorithms.perfectPower((Num)power.getBase());
 						
 						if( pp.getExpo().equals(Num.ONE) ) return power;
 						
@@ -430,27 +432,27 @@ public class Power{
 					if(pow.getExpo().isType("div")) {
 						Func expoDiv = (Func)pow.getExpo();
 						
-						if(isPositiveRealNum(expoDiv.getDenom()) && pow.getBase() instanceof Num && (isRealNum(pow.getBase()) || casInfo.allowComplexNumbers()) ) {
+						if(Algorithms.isPositiveRealNum(expoDiv.getDenom()) && pow.getBase() instanceof Num && (Algorithms.isRealNum(pow.getBase()) || casInfo.allowComplexNumbers()) ) {
 							Num denomNum = (Num)expoDiv.getDenom();
 							
 							Num baseNum = (Num)pow.getBase();
 						
 							//if the base is negative and the denominator is even
 							
-							if(isPositiveRealNum(baseNum)) {
+							if(Algorithms.isPositiveRealNum(baseNum)) {
 								
 								//this portion works similar to the root expand rule
 								BigInteger root = denomNum.getRealValue();
 								BigInteger num = baseNum.getRealValue();
 								
 								
-								BigInteger ans = bigRoot( num , root );
+								BigInteger ans = Algorithms.bigRoot( num , root );
 								if(ans.pow(root.intValue()).equals(num)) {
 									return power(num(ans),expoDiv.getNumer()).simplify(casInfo);
 								}
-								BigInteger factor = divisibleRoot(num, root);
+								BigInteger factor = Algorithms.divisibleRoot(num, root);
 								if(!factor.equals(BigInteger.ONE)) {
-									BigInteger outerNum = bigRoot( factor , root );
+									BigInteger outerNum = Algorithms.bigRoot( factor , root );
 									return prod( power(num(outerNum),expoDiv.getNumer()).simplify(casInfo), power(num(num.divide(factor)),expoDiv) );
 									
 								}
@@ -507,7 +509,7 @@ public class Power{
 									}
 								}
 								
-							}else if(isPositiveRealNum(expoDiv.getDenom()) && isRealNum(baseProd.get(i)) ) {
+							}else if(Algorithms.isPositiveRealNum(expoDiv.getDenom()) && Algorithms.isRealNum(baseProd.get(i)) ) {
 								
 								Expr computed = rootNumSimp.applyRuleToExpr(power(baseProd.get(i),pow.getExpo()), casInfo);
 								if(computed instanceof Num) {
@@ -666,11 +668,11 @@ public class Power{
 				public String generateString(Func owner) {
 					String out = "";
 					
-					if(Cas.isSqrt(owner)) {//fancy and having set to true makes it faster
+					if(Algorithms.isSqrt(owner)) {//fancy and having set to true makes it faster
 						out+="sqrt(";
 						out+=owner.getBase().toString();
 						out+=')';
-					}else if(Cas.isCbrt(owner)) {
+					}else if(Algorithms.isCbrt(owner)) {
 						out+="cbrt(";
 						out+=owner.getBase().toString();
 						out+=')';
@@ -707,7 +709,7 @@ public class Power{
 		if(e.isType("power")) {
 			return (Func)e;
 		}
-		return Cas.power(e,Cas.num(1));
+		return power(e,num(1));
 	}
 	
 	public static Expr unCast(Expr e) {

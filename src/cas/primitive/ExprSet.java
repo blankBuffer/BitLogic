@@ -5,7 +5,8 @@ import cas.base.ComplexFloat;
 import cas.base.Expr;
 import cas.base.Func;
 import cas.base.Rule;
-import cas.Cas;
+
+import static cas.Cas.*;
 
 /*
  * this is a list where the order does not matter and will remove repeats of elements when simplified
@@ -95,16 +96,16 @@ public class ExprSet{
 	};
 	
 	public static Func cast(Expr e) {
-		if(e == null) return Cas.exprSet();
+		if(e == null) return exprSet();
 		if(e.isType("set")) return (Func)e;
 		if(e instanceof Params || e.isType("sequence")) {
-			Func out = Cas.exprSet();
+			Func out = exprSet();
 			for(int i = 0;i<e.size();i++) {
 				out.add(e.get(i));
 			}
 			return out;
 		}
-		return Cas.exprSet(e);
+		return exprSet(e);
 	}
 
 }

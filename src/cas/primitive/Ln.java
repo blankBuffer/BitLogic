@@ -1,6 +1,7 @@
 package cas.primitive;
 import java.math.BigInteger;
 
+import cas.Algorithms;
 import cas.base.CasInfo;
 import cas.base.ComplexFloat;
 import cas.base.Expr;
@@ -8,6 +9,7 @@ import cas.base.Func;
 import cas.base.Rule;
 import cas.calculus.Limit;
 
+import static cas.Cas.*;
 
 public class Ln{
 	
@@ -80,7 +82,7 @@ public class Ln{
 			
 			if(log.get() instanceof Num) {// example log(25) -> 2*ln(5)
 				Num casted = (Num)log.get();
-				Func perfectPower = perfectPower(casted);
+				Func perfectPower = Algorithms.perfectPower(casted);
 				if(((Num)perfectPower.getExpo()).getRealValue().equals(BigInteger.ONE)) return log;
 				
 				log.set(0, perfectPower);
@@ -90,7 +92,7 @@ public class Ln{
 					if(innerProd.get(i) instanceof Num) {
 						Num casted = (Num)innerProd.get(i);
 						
-						Func perfectPower = perfectPower(casted);
+						Func perfectPower = Algorithms.perfectPower(casted);
 						if(((Num)perfectPower.getExpo()).getRealValue().equals(BigInteger.ONE)) continue;
 						innerProd.set(i, perfectPower);
 						
@@ -159,7 +161,7 @@ public class Ln{
 			Func log = (Func)e;
 			
 			if(casInfo.allowComplexNumbers()) {
-				Func sepSequence = basicRealAndImagComponents(e.get(),casInfo);
+				Func sepSequence = Algorithms.basicRealAndImagComponents(e.get(),casInfo);
 				if(!sepSequence.get(0).equals(Num.ZERO) && !sepSequence.get(1).equals(Num.ZERO)) {
 					//ln(a+b*i) -> ln(sqrt(a^2+b^2)*e^(i*atan(b/a))) -> ln(a^2+b^2)/2+i*atan(b/a)
 					
@@ -201,9 +203,9 @@ public class Ln{
 				for(int i = 0;i<innerProd.size();i++) {
 					boolean badForm = false;
 					if(innerProd.get(i) instanceof Num) {
-						Func pp = perfectPower((Num)innerProd.get(i));
-						if(pp.getExpo().equals(Num.ONE)) badForm = true;	
-						else innerProd.set(i,pp);
+						Func ppower = Algorithms.perfectPower((Num)innerProd.get(i));
+						if(ppower.getExpo().equals(Num.ONE)) badForm = true;	
+						else innerProd.set(i,ppower);
 					}
 					badForm|=!(innerProd.get(i).isType("power"));
 					

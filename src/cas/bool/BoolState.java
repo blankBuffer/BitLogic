@@ -6,6 +6,8 @@ import cas.base.Expr;
 import cas.base.Func;
 import cas.base.Rule;
 
+import static cas.Cas.*;
+
 public class BoolState extends Expr{
 
 	public static final Expr FALSE = bool(false),TRUE = bool(true);

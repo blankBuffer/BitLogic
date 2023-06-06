@@ -3,7 +3,6 @@ package cas.base;
 import java.util.ArrayList;
 import java.util.HashMap;
 
-import cas.Cas;
 import cas.SimpleFuncs;
 import cas.Trig;
 import cas.algebra.Distr;
@@ -42,6 +41,8 @@ import cas.special.Gamma;
 import cas.special.LambertW;
 import cas.special.Next;
 
+import static cas.Cas.*;
+
 public class FunctionsLoader {//this class simply loads all the functions into memory
 	//CONSTANTS
 	public static final int N_PARAMETERS = -1;//arbitrary number of parameters
@@ -78,12 +79,12 @@ public static Expr getFuncByName(String funcName,Expr... params) throws Exceptio
 			return func;
 		}
 		
-		if(funcName.equals("sqrt")) return Cas.sqrt(params[0]);
-		if(funcName.equals("cbrt")) return Cas.cbrt(params[0]);
-		if(funcName.equals("inv")) return Cas.inv(params[0]);
-		if(funcName.equals("exp")) return Cas.exp(params[0]);
-		if(funcName.equals("inv")) return Cas.inv(params[0]);
-		if(funcName.equals("neg")) return Cas.neg(params[0]);
+		if(funcName.equals("sqrt")) return sqrt(params[0]);
+		if(funcName.equals("cbrt")) return cbrt(params[0]);
+		if(funcName.equals("inv")) return inv(params[0]);
+		if(funcName.equals("exp")) return exp(params[0]);
+		if(funcName.equals("inv")) return inv(params[0]);
+		if(funcName.equals("neg")) return neg(params[0]);
 		
 		if(!FUNCTION_UNLOCKED) throw new Exception("no function by the name: "+funcName);//allow making new functions on the fly
 		

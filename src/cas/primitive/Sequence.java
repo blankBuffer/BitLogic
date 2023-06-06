@@ -1,6 +1,6 @@
 package cas.primitive;
 
-import cas.Cas;
+import static cas.Cas.*;
 import cas.base.Expr;
 import cas.base.Func;
 
@@ -31,15 +31,15 @@ public class Sequence{
 	};
 	
 	public static Func cast(Expr e) {
-		if(e == null) return Cas.sequence();
+		if(e == null) return sequence();
 		if(e.isType("sequence")) return (Func)e;
 		if(e instanceof Params || e.isType("set")) {
-			Func out = Cas.sequence();
+			Func out = sequence();
 			for(int i = 0;i<e.size();i++) {
 				out.add(e.get(i));
 			}
 			return out;
 		}
-		return Cas.sequence(e);
+		return sequence(e);
 	}
 }

@@ -3,6 +3,7 @@ package cas.primitive;
 import java.math.BigInteger;
 import java.util.ArrayList;
 
+import cas.Algorithms;
 import cas.algebra.Solve;
 import cas.base.CasInfo;
 import cas.base.ComplexFloat;
@@ -11,6 +12,8 @@ import cas.base.Func;
 import cas.base.Rule;
 import cas.base.StandardRules;
 import cas.bool.*;
+
+import static cas.Cas.*;
 
 public class Abs{
 	
@@ -84,7 +87,7 @@ public class Abs{
 						if(!(e instanceof Func)) return e;
 					}
 					
-					ArrayList<VarCount> varcounts = new ArrayList<VarCount>();
+					ArrayList<Algorithms.VarCount> varcounts = new ArrayList<Algorithms.VarCount>();
 					abs.get().countVars(varcounts);
 					if(varcounts.size() != 1) return abs;
 					
@@ -101,7 +104,7 @@ public class Abs{
 						if(!current.contains(v)) {
 							theoryMin.add(current);
 							theoryMax.add(current);
-						}else if(isPlainPolynomial(current,v)){
+						}else if(Algorithms.isPlainPolynomial(current,v)){
 							polynomialSum.add(current);
 						}else if(current.isType("acos")) {
 							theoryMax.add(pi());
@@ -150,16 +153,16 @@ public class Abs{
 						return computeResult(abs,theoryMin,theoryMax,casInfo);
 					}
 					
-					BigInteger degree = degree(polynomialSum,v);
+					BigInteger degree = Algorithms.degree(polynomialSum,v);
 					
 					if(degree.mod(BigInteger.TWO).equals(BigInteger.ONE)) return abs;
 
-					Func polySequence = polyExtract(polynomialSum,v,casInfo);
+					Func polySequence = Algorithms.polyExtract(polynomialSum,v,casInfo);
 					boolean positive = polySequence.get(polySequence.size()-1).convertToFloat(exprSet()).real>0;
 					if(positive) theoryMax = inf();
 					else theoryMin = neg(inf());
 					
-					ArrayList<Double> derivPolySols = Solve.polySolve( polyExtract(diff(polynomialSum,v).simplify(casInfo),v,casInfo) );
+					ArrayList<Double> derivPolySols = Solve.polySolve( Algorithms.polyExtract(diff(polynomialSum,v).simplify(casInfo),v,casInfo) );
 					double polyMin = 0.0;
 					double polyMax = 0.0;
 					for(double solution:derivPolySols) {
@@ -231,7 +234,7 @@ public class Abs{
 				public Expr applyRuleToExpr(Expr e,CasInfo casInfo) {
 					Func abs = (Func)e;
 					
-					Func sepSequence = basicRealAndImagComponents(abs.get(),casInfo);
+					Func sepSequence = Algorithms.basicRealAndImagComponents(abs.get(),casInfo);
 					
 					if(!sepSequence.get(1).equals(Num.ZERO)) {
 						return sqrt( sum(power(sepSequence.get(0),num(2)) , power(sepSequence.get(1),num(2))) ).simplify(casInfo);

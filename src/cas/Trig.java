@@ -10,6 +10,8 @@ import cas.base.Rule;
 import cas.base.StandardRules;
 import cas.primitive.*;
 
+import static cas.Cas.*;
+
 public class Trig {
 	public static Func.FuncLoader sinLoader = new Func.FuncLoader(){
 		@Override
@@ -34,9 +36,9 @@ public class Trig {
 					}else if(innerExpr.equals(Var.PI)) {
 						return num(0);
 					}else if(innerExpr.isType("prod") && innerExpr.size() == 2) {
-						if(innerExpr.get(1).equals(Var.PI) && isRealNum(innerExpr.get(0))) {
+						if(innerExpr.get(1).equals(Var.PI) && Algorithms.isRealNum(innerExpr.get(0))) {
 							return num(0);
-						}else if(innerExpr.get(0).equals(Var.PI) && isRealNum(innerExpr.get(1))) {
+						}else if(innerExpr.get(0).equals(Var.PI) && Algorithms.isRealNum(innerExpr.get(1))) {
 							return num(0);
 						}
 					}
@@ -155,9 +157,9 @@ public class Trig {
 					}else if(innerExpr.equals(Var.PI)) {
 						out = num(-1);
 					}else if(innerExpr.isType("prod") && innerExpr.size() == 2) {
-						if(innerExpr.get(1).equals(Var.PI) && isRealNum(innerExpr.get(0)) ) {
+						if(innerExpr.get(1).equals(Var.PI) && Algorithms.isRealNum(innerExpr.get(0)) ) {
 							return ((Num)innerExpr.get(0)).getRealValue().mod(BigInteger.TWO).equals(BigInteger.ZERO) ? num(1) : num(-1);
-						}else if(innerExpr.get(0).equals(Var.PI) && isRealNum(innerExpr.get(1))) {
+						}else if(innerExpr.get(0).equals(Var.PI) && Algorithms.isRealNum(innerExpr.get(1))) {
 							return ((Num)innerExpr.get(1)).getRealValue().mod(BigInteger.TWO).equals(BigInteger.ZERO) ? num(1) : num(-1);
 						}
 					}if(innerExpr.isType("div") && innerExpr.contains(Var.PI)){
@@ -252,9 +254,9 @@ public class Trig {
 					if(innerExpr.equals(num(BigInteger.ZERO)) || innerExpr.equals(Var.PI)) {
 						return num(0);
 					}else if(innerExpr.isType("prod") && innerExpr.size() == 2) {
-						if(innerExpr.get(1).equals(Var.PI) && isRealNum(innerExpr.get(0))) {
+						if(innerExpr.get(1).equals(Var.PI) && Algorithms.isRealNum(innerExpr.get(0))) {
 							return num(0);
-						}else if(innerExpr.get(0).equals(Var.PI) && isRealNum(innerExpr.get(1))) {
+						}else if(innerExpr.get(0).equals(Var.PI) && Algorithms.isRealNum(innerExpr.get(1))) {
 							return num(0);
 						}
 					}if(innerExpr.isType("div") && innerExpr.contains(Var.PI)){

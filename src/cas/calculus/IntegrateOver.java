@@ -5,10 +5,11 @@ import cas.base.ComplexFloat;
 import cas.base.Expr;
 import cas.base.Func;
 import cas.base.Rule;
-import cas.Cas;
 import cas.primitive.Equ;
 import cas.primitive.FloatExpr;
 import cas.primitive.Var;
+
+import static cas.Cas.*;
 
 public class IntegrateOver{
 	
@@ -49,7 +50,7 @@ public class IntegrateOver{
 					ComplexFloat min = getMin(owner).convertToFloat(varDefs),max = getMax(owner).convertToFloat(varDefs);
 					ComplexFloat step = ComplexFloat.div( ComplexFloat.sub(max, min),new ComplexFloat(n,0));
 					
-					Func vDefEqu = Cas.equ(owner.getVar(),Cas.floatExpr(min));
+					Func vDefEqu = equ(owner.getVar(),floatExpr(min));
 					Func varDefs2 = (Func) varDefs.copy();
 					
 					for(int i = 0;i < varDefs2.size();i++) {

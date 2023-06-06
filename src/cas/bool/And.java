@@ -5,7 +5,8 @@ import cas.base.ComplexFloat;
 import cas.base.Expr;
 import cas.base.Func;
 import cas.base.Rule;
-import cas.Cas;
+
+import static cas.Cas.*;
 
 public class And{
 	
@@ -206,7 +207,7 @@ public class And{
 		if(e.isType("and")){
 			return (Func)e;
 		}
-		return Cas.and(e);
+		return and(e);
 	}
 
 	public static Expr unCast(Expr e) {

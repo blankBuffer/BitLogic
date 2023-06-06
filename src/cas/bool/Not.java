@@ -7,6 +7,8 @@ import cas.base.Func;
 import cas.base.Rule;
 import cas.primitive.Var;
 
+import static cas.Cas.*;
+
 public class Not{
 	
 	public static Func.FuncLoader notLoader = new Func.FuncLoader() {

@@ -7,7 +7,7 @@ import ui.UI;
 /*
  * The main entry class for the bitlogic program
  */
-public class Main extends Cas{
+public class Main{
 	
 	//program start modes
 	

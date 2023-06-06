@@ -2,9 +2,11 @@ package cas.base;
 
 import java.util.ArrayList;
 
+import cas.Algorithms;
 import cas.bool.*;
 import cas.primitive.*;
 
+import static cas.Cas.*;
 
 /*
  * rules are used to describe any expression transformation
@@ -59,7 +61,7 @@ public class Rule extends Expr{
 	 * {{1,3},{2,4}}
 	 * indicating the indexes of the matching variables in the parts list
 	 */
-	private ArrayList<IndexSet> matchingSetsForPattern = null;
+	private ArrayList<Algorithms.IndexSet> matchingSetsForPattern = null;
 	
 	public Rule(String pattern,String name){
 		patternStr = pattern;
@@ -149,14 +151,14 @@ public class Rule extends Expr{
 	 * creates the matching array sequences to describe where variable names are re-used
 	 * this is described above where sin(c*b)*a^b+a maps to {{1,3},{2,4}}
 	 */
-	private static ArrayList<IndexSet> generateTemplateMatchingSets(Func templatePartsSequence){
+	private static ArrayList<Algorithms.IndexSet> generateTemplateMatchingSets(Func templatePartsSequence){
 		Func usedVarsSet = exprSet();
-		ArrayList<IndexSet> matcherIndexSets = new ArrayList<IndexSet>();
+		ArrayList<Algorithms.IndexSet> matcherIndexSets = new ArrayList<Algorithms.IndexSet>();
 		for(int i = 0;i<templatePartsSequence.size();i++) {
 			
 			if(usedVarsSet.contains(templatePartsSequence.get(i))) continue;
 			
-			IndexSet matchSet = new IndexSet();
+			Algorithms.IndexSet matchSet = new Algorithms.IndexSet();
 			matchSet.ints.add(i);
 			
 			for(int j = i+1;j<templatePartsSequence.size();j++) {
@@ -211,7 +213,7 @@ public class Rule extends Expr{
 				Func otherPartsSequence = sequence();
 				
 				Func templatePartsSequence = generateTemplateParts(template);
-				ArrayList<IndexSet> matchingSets = generateTemplateMatchingSets(templatePartsSequence);
+				ArrayList<Algorithms.IndexSet> matchingSets = generateTemplateMatchingSets(templatePartsSequence);
 				
 				boolean partsMatch = checkForMatches(matchingSets,otherPartsSequence,template,other);
 				if(condition == null) return partsMatch;
@@ -260,7 +262,7 @@ public class Rule extends Expr{
 			Func exprPartsSequence = sequence();
 			
 			Func templatePartsSequence = generateTemplateParts(template);
-			ArrayList<IndexSet> matchingSets = generateTemplateMatchingSets(templatePartsSequence);
+			ArrayList<Algorithms.IndexSet> matchingSets = generateTemplateMatchingSets(templatePartsSequence);
 			
 			boolean match = checkForMatches(matchingSets,exprPartsSequence,template,expr);
 			if(!match) {
@@ -280,14 +282,14 @@ public class Rule extends Expr{
 		return getEqusFromTemplate(template,null,expr);
 	}
 	
-	private static boolean checkForMatches(ArrayList<IndexSet> matchingSets,Func exprsPartsSequence,Expr template,Expr expr) {
+	private static boolean checkForMatches(ArrayList<Algorithms.IndexSet> matchingSets,Func exprsPartsSequence,Expr template,Expr expr) {
 		
 		template.sort();
 		expr.sort();
 		
 		if(!getPartsBasedOnTemplate(exprsPartsSequence,template,expr)) return false;
 		
-		for(IndexSet set:matchingSets) {
+		for(Algorithms.IndexSet set:matchingSets) {
 			Expr e = exprsPartsSequence.get(set.ints.get(0));
 			for(int i = 1;i<set.ints.size();i++) {
 				

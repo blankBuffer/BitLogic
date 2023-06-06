@@ -1,10 +1,12 @@
 package cas.base;
 
-import cas.Cas;
+import cas.Algorithms;
 import cas.primitive.Num;
 import cas.primitive.Var;
 
-public class StandardRules extends Cas{
+import static cas.Cas.*;
+
+public class StandardRules{
 	public static Rule oddFunction = new Rule("function is odd"){
 		@Override
 		public Expr applyRuleToExpr(Expr e,CasInfo casInfo){
@@ -91,7 +93,7 @@ public class StandardRules extends Cas{
 			Expr expr = e.get();
 			Var v = e.getVar();
 			
-			Func resSequence = seperateByVar(expr,v);
+			Func resSequence = Algorithms.seperateByVar(expr,v);
 			if(!resSequence.get(0).equals(Num.ONE)) {
 				e.set(0, resSequence.get(1));
 				return prod(resSequence.get(0),e).simplify(casInfo);

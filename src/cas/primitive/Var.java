@@ -7,6 +7,8 @@ import cas.base.Expr;
 import cas.base.Func;
 import cas.base.Rule;
 
+import static cas.Cas.*;
+
 public class Var extends Expr{
 	
 	public static class Assumptions implements Serializable{

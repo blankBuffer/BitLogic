@@ -12,7 +12,7 @@ import cas.lang.Ask;
  * it takes commands as strings and stores an internal state which can be accessed
  */
 
-public class StackEditor extends Cas {
+public class StackEditor{
 
 	public static final int QUIT = -1;
 	public static final int INPUT_ERROR = -2;
@@ -76,7 +76,7 @@ public class StackEditor extends Cas {
 		if(expr != null) stackSequence.set(index, expr);
 	}
 
-	public Func stackSequence = sequence(),stackOld = sequence();
+	public Func stackSequence = Cas.sequence(),stackOld = Cas.sequence();
 
 	public int size() {
 		return stackSequence.size();
@@ -110,7 +110,7 @@ public class StackEditor extends Cas {
 		String out = "";
 		out+="STACK\n";
 		String[] lines = new String[size()];
-		for (int i = 0; i < size(); i++) lines[i] = (i + 1) + ": "+stackSequence.get(i)+"  --->  "+stackSequence.get(i).convertToFloat(exprSet()).toString(8);
+		for (int i = 0; i < size(); i++) lines[i] = (i + 1) + ": "+stackSequence.get(i)+"  --->  "+stackSequence.get(i).convertToFloat(Cas.exprSet()).toString(8);
 		int longestLine = 0;
 		for (int i = 0; i < size(); i++) longestLine = Math.max(longestLine, lines[i].length());
 		String upperBar = "",lowerBar = "";
@@ -147,7 +147,7 @@ public class StackEditor extends Cas {
 	public void negate() {
 		if (last() == null)
 			return;
-		stackSequence.set(size() - 1, neg(last()));
+		stackSequence.set(size() - 1, Cas.neg(last()));
 	}
 
 	public void add() {
@@ -157,7 +157,7 @@ public class StackEditor extends Cas {
 			sLast().add(last());
 			stackSequence.remove(size() - 1);
 		} else {
-			Expr sum = sum(sLast(), last());
+			Expr sum = Cas.sum(sLast(), last());
 			stackSequence.remove(size() - 1);
 			stackSequence.set(size() - 1, sum);
 		}
@@ -167,10 +167,10 @@ public class StackEditor extends Cas {
 		if (sLast() == null)
 			return;
 		if (sLast().isType("sum")) {
-			sLast().add(neg(last()));
+			sLast().add(Cas.neg(last()));
 			stackSequence.remove(size() - 1);
 		} else {
-			Expr sub = sub(sLast(), last());
+			Expr sub = Cas.sub(sLast(), last());
 			stackSequence.remove(size() - 1);
 			stackSequence.set(size() - 1, sub);
 		}
@@ -183,7 +183,7 @@ public class StackEditor extends Cas {
 			sLast().add(last());
 			stackSequence.remove(size() - 1);
 		} else {
-			Expr prod = prod(sLast(), last());
+			Expr prod = Cas.prod(sLast(), last());
 			stackSequence.remove(size() - 1);
 			stackSequence.set(size() - 1, prod);
 		}
@@ -196,7 +196,7 @@ public class StackEditor extends Cas {
 			sLast().add(last());
 			stackSequence.remove(size() - 1);
 		} else {
-			Expr dot = dot(sLast(), last());
+			Expr dot = Cas.dot(sLast(), last());
 			stackSequence.remove(size() - 1);
 			stackSequence.set(size() - 1, dot);
 		}
@@ -209,7 +209,7 @@ public class StackEditor extends Cas {
 			sLast().add(last());
 			stackSequence.remove(size() - 1);
 		} else {
-			Expr and = and(sLast(), last());
+			Expr and = Cas.and(sLast(), last());
 			stackSequence.remove(size() - 1);
 			stackSequence.set(size() - 1, and);
 		}
@@ -221,7 +221,7 @@ public class StackEditor extends Cas {
 			sLast().add(last());
 			stackSequence.remove(size() - 1);
 		} else {
-			Expr or = or(sLast(), last());
+			Expr or = Cas.or(sLast(), last());
 			stackSequence.remove(size() - 1);
 			stackSequence.set(size() - 1, or);
 		}
@@ -229,13 +229,13 @@ public class StackEditor extends Cas {
 	public void not(){
 		if (last() == null)
 			return;
-		stackSequence.set(size() - 1, not(last()));
+		stackSequence.set(size() - 1, Cas.not(last()));
 	}
 
 	public void exponent() {
 		if (sLast() == null)
 			return;
-		Expr pow = power(sLast(), last());
+		Expr pow = Cas.power(sLast(), last());
 		stackSequence.remove(size() - 1);
 		stackSequence.set(size() - 1, pow);
 	}
@@ -250,7 +250,7 @@ public class StackEditor extends Cas {
 		if (sLast() == null)
 			return;
 
-		stackSequence.set(size() - 2, div(sLast(), stackSequence.get(size() - 1)));
+		stackSequence.set(size() - 2, Cas.div(sLast(), stackSequence.get(size() - 1)));
 		stackSequence.remove(size() - 1);
 	}
 	
@@ -258,7 +258,7 @@ public class StackEditor extends Cas {
 		if (sLast() == null)
 			return;
 
-		stackSequence.set(size() - 2, becomes(sLast(), stackSequence.get(size() - 1)));
+		stackSequence.set(size() - 2, Cas.becomes(sLast(), stackSequence.get(size() - 1)));
 		stackSequence.remove(size() - 1);
 	}
 	
@@ -273,24 +273,24 @@ public class StackEditor extends Cas {
 	public void equ() {
 		if (sLast() == null)
 			return;
-		stackSequence.set(size() - 2, equ(sLast(), last()));
+		stackSequence.set(size() - 2, Cas.equ(sLast(), last()));
 		stackSequence.remove(size() - 1);
 	}
 	public void equGreater() {
 		if (sLast() == null)
 			return;
-		stackSequence.set(size() - 2, equGreater(sLast(), last()));
+		stackSequence.set(size() - 2, Cas.equGreater(sLast(), last()));
 		stackSequence.remove(size() - 1);
 	}
 	public void equLess() {
 		if (sLast() == null)
 			return;
-		stackSequence.set(size() - 2, equLess(sLast(), last()));
+		stackSequence.set(size() - 2, Cas.equLess(sLast(), last()));
 		stackSequence.remove(size() - 1);
 	}
 
 	public void createSet() {
-		stackSequence.add(exprSet());
+		stackSequence.add(Cas.exprSet());
 	}
 
 	public void addToSet() {
@@ -301,7 +301,7 @@ public class StackEditor extends Cas {
 	}
 	
 	public void createSequence() {
-		stackSequence.add(sequence());
+		stackSequence.add(Cas.sequence());
 	}
 
 	public void addToSequence() {
@@ -337,7 +337,7 @@ public class StackEditor extends Cas {
 	}
 	
 	public void addAll() {
-		Func sum = sum();
+		Func sum = Cas.sum();
 		
 		for(int i = 0;i<size();i++) {
 			sum.add(stackSequence.get(i));
@@ -347,7 +347,7 @@ public class StackEditor extends Cas {
 	}
 	
 	public void multAll() {
-		Func prod = prod();
+		Func prod = Cas.prod();
 		
 		for(int i = 0;i<size();i++) {
 			prod.add(stackSequence.get(i));
@@ -366,7 +366,7 @@ public class StackEditor extends Cas {
 		if (sLast() == null)
 			return;
 
-		stackSequence.set(size() - 2, define(sLast(), stackSequence.get(size() - 1)));
+		stackSequence.set(size() - 2, Cas.define(sLast(), stackSequence.get(size() - 1)));
 		stackSequence.remove(size() - 1);
 	}
 

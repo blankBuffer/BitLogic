@@ -2,6 +2,7 @@ package cas;
 
 import java.math.BigInteger;
 import java.util.ArrayList;
+import java.util.HashMap;
 
 import cas.lang.*;
 import cas.primitive.*;
@@ -14,8 +15,11 @@ import cas.base.FunctionsLoader;
 import cas.base.Rule;
 import cas.base.StandardRules;
 import cas.bool.*;
+import cas.calculus.IntegrateOver;
 
-public class SimpleFuncs extends Cas{
+import static cas.Cas.*;
+
+public class SimpleFuncs{
 	
 	public static Func.FuncLoader treeLoader = new Func.FuncLoader() {
 		
@@ -103,8 +107,8 @@ public class SimpleFuncs extends Cas{
 					Expr n = f.get(0);
 					Expr k = f.get(1);
 					
-					if(isPositiveRealNum(n) && isPositiveRealNum(k)){
-						return num(choose( ((Num)n).getRealValue() , ((Num)k).getRealValue()));
+					if(Algorithms.isPositiveRealNum(n) && Algorithms.isPositiveRealNum(k)){
+						return num(Algorithms.choose( ((Num)n).getRealValue() , ((Num)k).getRealValue()));
 					}
 					return e;
 				}
@@ -116,7 +120,7 @@ public class SimpleFuncs extends Cas{
 				public ComplexFloat convertToFloat(Func varDefs, Func owner) {
 					double n = owner.get(0).convertToFloat(varDefs).real;
 					double k = owner.get(1).convertToFloat(varDefs).real;
-					return new ComplexFloat( factorial(n)/(factorial(k)*factorial(n-k)) ,0);
+					return new ComplexFloat( Algorithms.factorial(n)/(Algorithms.factorial(k)*Algorithms.factorial(n-k)) ,0);
 				}
 			};
 		}
@@ -131,7 +135,7 @@ public class SimpleFuncs extends Cas{
 				@Override
 				public Expr applyRuleToExpr(Expr e,CasInfo casInfo){
 					Func f = (Func)e;
-					return primeFactor((Num)f.get());
+					return Algorithms.primeFactor((Num)f.get());
 				}
 			};
 		}
@@ -148,7 +152,7 @@ public class SimpleFuncs extends Cas{
 					Func f = (Func)e;
 					Expr inner = f.get(0);
 					Var var = (Var)f.get(1);
-					return partialFrac(inner,var,casInfo);
+					return Algorithms.partialFrac(inner,var,casInfo);
 				}
 			};
 		}
@@ -164,7 +168,7 @@ public class SimpleFuncs extends Cas{
 				public Expr applyRuleToExpr(Expr e,CasInfo casInfo){
 					Func f = (Func)e;
 					Var v = (Var)f.get(1);
-					return polyDiv(f.get(), v, casInfo);
+					return Algorithms.polyDiv(f.get(), v, casInfo);
 				}
 			};
 		}
@@ -182,7 +186,7 @@ public class SimpleFuncs extends Cas{
 					Func f = (Func)e;
 					Expr inner = f.get(0);
 					Var var = (Var)f.get(1);
-					Expr ans = polyExtract(inner,var,casInfo);
+					Expr ans = Algorithms.polyExtract(inner,var,casInfo);
 					if(ans == null) return error();
 					return ans;
 				}
@@ -202,7 +206,7 @@ public class SimpleFuncs extends Cas{
 					Func f = (Func)e;
 					Expr inner = f.get(0);
 					Var var = (Var)f.get(1);
-					Expr ans = num(degree(inner,var));
+					Expr ans = num(Algorithms.degree(inner,var));
 					if(ans.equals(Num.NEG_ONE)) return error();
 					return ans;
 				}
@@ -222,7 +226,7 @@ public class SimpleFuncs extends Cas{
 					Func f = (Func)e;
 					Expr inner = f.get(0);
 					Var var = (Var)f.get(1);
-					Expr ans = getLeadingCoef(inner,var,casInfo);
+					Expr ans = Algorithms.getLeadingCoef(inner,var,casInfo);
 					if(ans == null) return error();
 					return ans;
 				}
@@ -256,6 +260,117 @@ public class SimpleFuncs extends Cas{
 	
 	public static Func.FuncLoader latexLoader = new Func.FuncLoader() {
 		
+		static HashMap<String,String> BLToLatexFunctionNameMap = null;
+		
+		public static String generateLatex(Expr e) {
+			String out = "";
+			String leftParen = "\\left( ";
+			String rightParen = "\\right) ";
+			if(e.equals(Var.PI)) {
+				out+="\\pi ";
+			}else if(e instanceof Var || e instanceof Num || e.equals(Var.E)) {
+				out += e.toString();
+			}else if(e.isType("prod")) {
+				e = (Func)e.copy();//need to bring num to front
+				
+				for(int i = 0;i<e.size();i++){
+					if(e.get(i) instanceof Num){
+						Expr temp = e.get(0);
+						e.set(0,e.get(i));
+						e.set(i, temp);
+						break;
+					}
+				}
+				
+				if(e.get(0).equals(Num.NEG_ONE)){
+					e.remove(0);
+					out+="-";
+				}
+					
+				for(int i = 0;i<e.size();i++) {
+					boolean paren = e.get(i).isType("sum");
+					if(paren) out+=leftParen;
+					out+=generateLatex(e.get(i));
+					if(paren) out+=rightParen;
+					if(i!=e.size()-1) out+=" \\cdot ";
+				}
+			}else if(e.isType("sum")) {
+				for(int i = 0;i<e.size();i++) {
+					if(i!=0)out+=generateLatex(e.get(i).strangeAbs(CasInfo.normal));
+					else out+=generateLatex(e.get(i));
+					if(i!=e.size()-1) {
+						if(e.get(i+1).negative()) out+="-";
+						else out+="+";
+					}
+				}
+			}else if(e.isType("div")) {
+				out+="\\frac{";
+				out+=generateLatex(((Func)e).getNumer());
+				out+="}{";
+				out+=generateLatex(((Func)e).getDenom());
+				out+="}";
+			}else if(e.isType("power")) {
+				Func casted = (Func)e;
+				
+				if(Algorithms.isSqrt(e)){
+					out += "\\sqrt{";
+					out+= generateLatex(casted.getBase());
+					out += "}";
+				}else{
+					out+="{";
+					boolean parenBase = false;
+					if(casted.getBase().isType("sum") || casted.getBase().isType("prod") || casted.getBase().isType("power") || (casted.getBase() instanceof Num && casted.getBase().negative())) parenBase = true;
+					if(parenBase) out+=leftParen;
+					out+=generateLatex(casted.getBase());
+					if(parenBase) out+=rightParen;
+					out+="}^{";
+					boolean parenExpo= false;
+					if(casted.getExpo().isType("sum") || casted.getExpo().isType("prod") || casted.getExpo().isType("power")) parenExpo = true;
+					if(parenExpo) out+=leftParen;
+					out+=generateLatex(casted.getExpo());
+					if(parenExpo) out+=rightParen;
+					out+="}";
+				}
+			}else if(e.isType("equ")) {
+				Func castedEqu = (Func)e;
+				out+=generateLatex( Equ.getLeftSide(castedEqu) );
+				out+="=";
+				out+=generateLatex( Equ.getRightSide(castedEqu) );
+			}else if(e.isType("integrateOver")) {
+				Func castedDefInt = (Func)e;
+				out+="\\int_{";
+				out+=generateLatex(IntegrateOver.getMin(castedDefInt));
+				out+="}^{";
+				out+=generateLatex(IntegrateOver.getMax(castedDefInt));
+				out+="}{";
+				out+=generateLatex(IntegrateOver.getExpr(castedDefInt));
+				out+=" d"+generateLatex(castedDefInt.getVar());
+				out+="}";
+			}else if(e.isType("diff")) {
+				Func casted = (Func)e;
+				out+="\\frac{d}{d";
+				out+=casted.getVar().toString();
+				out+="}"+leftParen;
+				out+=generateLatex(casted.get());
+				out+=rightParen;
+			}else if(e.isType("abs")){
+				out+="\\left| ";
+				out+=generateLatex(e.get());
+				out+="\\right| ";
+			}else{
+				String BLfunctionName = e.getClass().getSimpleName().toLowerCase();
+				String repl = BLToLatexFunctionNameMap.get(BLfunctionName);
+				if(repl == null) repl = BLfunctionName;
+				
+				out+="\\"+repl+leftParen;
+				out+=generateLatex(e.get());
+				out+=rightParen;
+			}
+			
+			return out;
+		}
+		
+		
 		@Override
 		public void load(Func owner) {
 			owner.behavior.simplifyChildren = false;
@@ -269,6 +384,11 @@ public class SimpleFuncs extends Cas{
 					return var(generateLatex(f.get()));
 				}
 			};
+			BLToLatexFunctionNameMap = new HashMap<String,String>();
+			//based on class names
+			BLToLatexFunctionNameMap.put("asin","arcsin");
+			BLToLatexFunctionNameMap.put("acos","arccos");
+			BLToLatexFunctionNameMap.put("atan","arctan");
 		}
 	};
 	
@@ -353,7 +473,7 @@ public class SimpleFuncs extends Cas{
 					
 					for(int i = 0;i<n.getRealValue().intValue();i++) {
 						
-						outSum.add( div(prod(expr.replace(equ),power(sub(v,Equ.getRightSide(equ)),num(i))),num(factorial(BigInteger.valueOf(i)))));
+						outSum.add( div(prod(expr.replace(equ),power(sub(v,Equ.getRightSide(equ)),num(i))),num(Algorithms.factorial(BigInteger.valueOf(i)))));
 						
 						expr = diff(expr,v).simplify(casInfo);
 					}
@@ -1048,7 +1168,7 @@ public static Func.FuncLoader deleteFuncLoader = new Func.FuncLoader() {
 				
 				@Override
 				public Expr applyRuleToExpr(Expr e,CasInfo casInfo) {
-					Func polySequence = polyExtract(e.get(0), (Var)e.get(1) ,casInfo);
+					Func polySequence = Algorithms.polyExtract(e.get(0), (Var)e.get(1) ,casInfo);
 					Func solutionsSet = exprSet();
 					
 					if(polySequence!=null) {

@@ -12,6 +12,8 @@ import cas.base.StandardRules;
 import cas.primitive.*;
 import cas.bool.*;
 
+import static cas.Cas.*;
+
 public class Integrate{
 	
 	static Var uSubVar;
@@ -189,10 +191,10 @@ public class Integrate{
 					if( !Rule.fastSimilarExpr(invPow,integ.get() )) return integ;
 					Func denomPow = (Func)(((Func)integ.get()).getDenom());
 					
-					if(!isPositiveRealNum(denomPow.getExpo())) return integ;
+					if(!Algorithms.isPositiveRealNum(denomPow.getExpo())) return integ;
 					Num n = (Num)denomPow.getExpo();
 					
-					Func coefSequence = polyExtract(denomPow.getBase() ,integ.getVar(),casInfo);
+					Func coefSequence = Algorithms.polyExtract(denomPow.getBase() ,integ.getVar(),casInfo);
 					if(coefSequence == null || coefSequence.size() != 3) return integ;
 					Func equsSet = exprSet(  equ(var("a"),coefSequence.get(2)) , equ(var("b"),coefSequence.get(1)) , equ(var("c"),coefSequence.get(0)) , equ(var("n"),n) , equ(var("x"),integ.getVar()) );
 					
@@ -218,7 +220,7 @@ public class Integrate{
 				@Override
 				public Expr applyRuleToExpr(Expr e,CasInfo casInfo){
 					Func integ = (Func)e;
-					if(!integ.get().containsType("integrate") && !isPolynomialUnstrict(integ.get(),integ.getVar())) {
+					if(!integ.get().containsType("integrate") && !Algorithms.isPolynomialUnstrict(integ.get(),integ.getVar())) {
 						Func innerDiv = Div.cast(integ.get().copy());
 						Func innerProd = Prod.cast(innerDiv.getNumer());
 						
@@ -245,14 +247,14 @@ public class Integrate{
 								currentConfidence = GREAT;
 							}else if(!denomIsFunc){//polynomial case.
 								Func pow = Power.cast(current);
-								if(isPlainPolynomial(pow.getBase(),integ.getVar()) && pow.getBase().contains(integ.getVar())) {
-									if(isPositiveRealNum(pow.getExpo())){
+								if(Algorithms.isPlainPolynomial(pow.getBase(),integ.getVar()) && pow.getBase().contains(integ.getVar())) {
+									if(Algorithms.isPositiveRealNum(pow.getExpo())){
 										currentConfidence = GOOD;
 									}else{//root
 										//System.out.println(pow);
 										Func frac = Div.cast(pow.getExpo());
 										if(frac!=null && Div.isNumericalAndReal(frac)) {
-											if(!degree(pow.getBase(),integ.getVar()).equals(BigInteger.ONE)) return integ;//dangerous because square root does not have linear term, derivative of a square root with non linear base only increase the complexity
+											if(!Algorithms.degree(pow.getBase(),integ.getVar()).equals(BigInteger.ONE)) return integ;//dangerous because square root does not have linear term, derivative of a square root with non linear base only increase the complexity
 											if(((Num)frac.getNumer()).getRealValue().signum() == 1) {
 												fractionalPowerCount++;
 												confidence = OKAY;
@@ -298,7 +300,7 @@ public class Integrate{
 							Func denomPower = (Func)innerDiv.getDenom();
 							Func expo = Div.cast(denomPower.getExpo());
 							
-							if(Div.isNumericalAndReal(expo) && isPlainPolynomial(denomPower.getBase(),integ.getVar()) && degree(denomPower.getBase(),integ.getVar()).equals(BigInteger.ONE) ) {
+							if(Div.isNumericalAndReal(expo) && Algorithms.isPlainPolynomial(denomPower.getBase(),integ.getVar()) && Algorithms.degree(denomPower.getBase(),integ.getVar()).equals(BigInteger.ONE) ) {
 								
 								if( ((Num)expo.getNumer()).getRealValue().compareTo( ((Num)expo.getDenom()).getRealValue() )  == 1) {//make sure the fraction is greater than 1
 									
@@ -382,7 +384,7 @@ public class Integrate{
 				public Expr applyRuleToExpr(Expr e,CasInfo casInfo){
 					Func integ = (Func)e;
 					
-					if(integ.contains(uSubVar) || integ.get().containsType("integrate") || isPolynomialUnstrict(integ.get(),integ.getVar())) return integ;
+					if(integ.contains(uSubVar) || integ.get().containsType("integrate") || Algorithms.isPolynomialUnstrict(integ.get(),integ.getVar())) return integ;
 					Expr u = null;
 					if(integ.get().isType("prod")) {
 						Func innerProd = (Func)integ.get();
@@ -467,7 +469,7 @@ public class Integrate{
 				public Expr applyRuleToExpr(Expr e,CasInfo casInfo){
 					Func integ = (Func)e;
 					
-					integ.set(0, partialFrac(integ.get(), integ.getVar(), casInfo) );
+					integ.set(0, Algorithms.partialFrac(integ.get(), integ.getVar(), casInfo) );
 					if(integ.get().isType("sum")){
 						Expr out = StandardRules.linearOperator.applyRuleToExpr(integ, casInfo);
 						return out;
@@ -483,7 +485,7 @@ public class Integrate{
 				public Expr applyRuleToExpr(Expr e,CasInfo casInfo){
 					Func integ = (Func)e;
 					
-					integ.set(0, polyDiv(integ.get(), integ.getVar(), casInfo) );
+					integ.set(0, Algorithms.polyDiv(integ.get(), integ.getVar(), casInfo) );
 					if(integ.get().isType("sum")){
 						return StandardRules.linearOperator.applyRuleToExpr(integ, casInfo);
 					}
@@ -535,9 +537,9 @@ public class Integrate{
 				@Override
 				public Expr applyRuleToExpr(Expr e,CasInfo casInfo){
 					Func integ = (Func)e;
-					if(Cas.isSqrt(integ.get()) ) {
+					if(Algorithms.isSqrt(integ.get()) ) {
 						//System.out.println(e);
-						Func coefsSequence = polyExtract(e.get().get(),integ.getVar(),casInfo);
+						Func coefsSequence = Algorithms.polyExtract(e.get().get(),integ.getVar(),casInfo);
 						if(coefsSequence == null) return integ;
 						if(coefsSequence.size() == 3) {
 							Func equsSet = exprSet( equ(var("c"),coefsSequence.get(0)) , equ(var("b"),coefsSequence.get(1)) , equ(var("a"),coefsSequence.get(2)) , equ(var("x"),integ.getVar()) );
@@ -600,7 +602,7 @@ public class Integrate{
 					Expr newInner = div(prod(integ.get().replace(subsSet),addedDeriv),diff(innerTrig,integ.getVar()));
 					newInner = newInner.simplify(casInfo);
 					
-					if(newInner.contains(integ.getVar()) || containsTrig(newInner)) return integ;
+					if(newInner.contains(integ.getVar()) || Algorithms.containsTrig(newInner)) return integ;
 					
 					Expr integRes = integrate(newInner,var("0t")).simplify(casInfo);
 					if(!integRes.containsType("integrate")) {
@@ -620,7 +622,7 @@ public class Integrate{
 					if(integ.get().isType("power")) {
 						Func inner = (Func)integ.get();
 						
-						if(inner.getExpo() instanceof Num && inner.getBase().isType("sum") && containsTrig(inner.getBase()) ) {
+						if(inner.getExpo() instanceof Num && inner.getBase().isType("sum") && Algorithms.containsTrig(inner.getBase()) ) {
 							integ.set(0, expand(integ.get()) );
 						}
 					}
@@ -648,9 +650,9 @@ public class Integrate{
 					if(!(integ.get().isType("div"))) return e;
 					
 					Func innerDiv = (Func)integ.get();
-					if( innerDiv.getNumer().equals(v) && degree(innerDiv.getDenom(),v).equals(BigInteger.TWO) ) {//simple form can proceed
+					if( innerDiv.getNumer().equals(v) && Algorithms.degree(innerDiv.getDenom(),v).equals(BigInteger.TWO) ) {//simple form can proceed
 						
-						Func polySequence = polyExtract(innerDiv.getDenom(),v,casInfo);
+						Func polySequence = Algorithms.polyExtract(innerDiv.getDenom(),v,casInfo);
 						if(polySequence == null) return e;
 						Expr c = polySequence.get(0),b = polySequence.get(1),a = polySequence.get(2);
 						Func subTableSet = exprSet(equ(var("0a"),a),equ(var("0b"),b),equ(var("0c"),c),equ(var("x"),v));
@@ -664,7 +666,7 @@ public class Integrate{
 						}
 						return this.kNegCase.replace(subTableSet).simplify(casInfo);
 						
-					}else if( innerDiv.getNumer().isType("sum") && degree(innerDiv.getNumer(),v).equals(BigInteger.ONE) ){//need to spit numerator
+					}else if( innerDiv.getNumer().isType("sum") && Algorithms.degree(innerDiv.getNumer(),v).equals(BigInteger.ONE) ){//need to spit numerator
 						integ.set(0,distr(integ.get()).simplify(casInfo));
 						return StandardRules.linearOperator.applyRuleToExpr(integ, casInfo);
 					}else {
@@ -695,7 +697,7 @@ public class Integrate{
 					
 					if(integ.get().isType("div") && !((Func)integ.get()).getNumer().contains(integ.getVar())) {
 						Expr denom = ((Func)integ.get()).getDenom();
-						Func polySequence = polyExtract(denom, integ.getVar(), casInfo);
+						Func polySequence = Algorithms.polyExtract(denom, integ.getVar(), casInfo);
 						if(polySequence != null && polySequence.size() == 3) {
 							Expr c = polySequence.get(0),b = polySequence.get(1),a = polySequence.get(2);
 							Func subTableSet = exprSet(equ(var("0a"),a),equ(var("0b"),b),equ(var("0c"),c),equ(var("x"),integ.getVar()));

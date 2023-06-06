@@ -2,7 +2,6 @@ package cas.lang;
 
 import java.math.BigInteger;
 
-import cas.Cas;
 import cas.base.Expr;
 import cas.base.FunctionsLoader;
 import cas.lang.ParseMachine.ObjectBuilder;
@@ -11,7 +10,9 @@ import cas.lang.ParseMachine.ParseNode;
 import cas.primitive.Num;
 import cas.primitive.Sum;
 
-public class Interpreter extends Cas{
+import static cas.Cas.*;
+
+public class Interpreter{
 	private static boolean loaded = false;
 	
 	static ObjectBuilder exprBuilder = null;
@@ -426,7 +427,7 @@ public class Interpreter extends Cas{
 			@Override
 			Object doAction(ParseNode parseNode) throws Exception {
 				parseNode.generateFloat64ToOutput();
-				Expr floatExpr = Cas.floatExpr((Double)parseNode.getOutput());
+				Expr floatExpr = floatExpr((Double)parseNode.getOutput());
 				return floatExpr;
 			}
 			

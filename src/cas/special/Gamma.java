@@ -10,6 +10,8 @@ import cas.base.Func;
 import cas.base.Rule;
 import cas.primitive.*;
 
+import static cas.Cas.*;
+
 public class Gamma{
 	
 	public static Func.FuncLoader gammaLoader = new Func.FuncLoader() {
@@ -38,8 +40,8 @@ public class Gamma{
 							
 							if(n.signum() == -1) return gamma;
 							
-							BigInteger numer = factorial(n.shiftLeft(1));
-							BigInteger denom = BigInteger.valueOf(4).pow(n.intValue()).multiply(factorial(n));
+							BigInteger numer = Algorithms.factorial(n.shiftLeft(1));
+							BigInteger denom = BigInteger.valueOf(4).pow(n.intValue()).multiply(Algorithms.factorial(n));
 							
 							BigInteger gcd = numer.gcd(denom);
 							
@@ -60,7 +62,7 @@ public class Gamma{
 				public Expr applyRuleToExpr(Expr e,CasInfo casInfo) {
 					Func gamma = (Func)e;
 					if(gamma.get() instanceof Num && !((Num)gamma.get()).isComplex() && ((Num)gamma.get()).getRealValue().compareTo(BigInteger.ZERO) == 1) {
-						return num(factorial(((Num)gamma.get()).getRealValue().subtract(BigInteger.ONE)));
+						return num(Algorithms.factorial(((Num)gamma.get()).getRealValue().subtract(BigInteger.ONE)));
 					}
 					return gamma;
 				}
@@ -78,7 +80,7 @@ public class Gamma{
 				public ComplexFloat convertToFloat(Func varDefs, Func owner) {
 					ComplexFloat inner = ComplexFloat.sub(owner.get().convertToFloat(varDefs),new ComplexFloat(1.0,0));
 					
-					return new ComplexFloat(Cas.factorial(inner.real),0);
+					return new ComplexFloat(Algorithms.factorial(inner.real),0);
 				}
 			};
 		}

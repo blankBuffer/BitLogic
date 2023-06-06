@@ -1,6 +1,5 @@
 package cas.primitive;
 
-import cas.*;
 import cas.base.CasInfo;
 import cas.base.ComplexFloat;
 import cas.base.Expr;
@@ -8,6 +7,10 @@ import cas.base.Func;
 import cas.base.Rule;
 import cas.calculus.Limit;
 import cas.matrix.Mat;
+
+import static cas.Cas.*;
+
+import cas.Algorithms;
 
 public class Sum{
 	
@@ -59,7 +62,7 @@ public class Sum{
 					Func sum = (Func)e;
 					if(sum.containsType("sin")){
 						for(int i = 0;i < sum.size();i++){
-							sum.set(i, trigExpand(sum.get(i),casInfo));
+							sum.set(i, Algorithms.trigExpand(sum.get(i),casInfo));
 						}
 					}
 					return sum;
@@ -166,8 +169,8 @@ public class Sum{
 				public Expr applyRuleToExpr(Expr e,CasInfo casInfo){
 					Func sum = (Func)e;
 					
-					IndexSet indexSet = new IndexSet();
-					IndexSet indexOfProdWithLog = new IndexSet();
+					Algorithms.IndexSet indexSet = new Algorithms.IndexSet();
+					Algorithms.IndexSet indexOfProdWithLog = new Algorithms.IndexSet();
 					
 					for(int i = 0;i < sum.size();i++) {
 						if(sum.get(i).isType("ln") && !(sum.get(i).get().isType("sum")) && !(sum.get(i).get().isType("abs") && sum.get(i).get().get().isType("sum"))  ) indexSet.ints.add(i);
@@ -269,7 +272,7 @@ public class Sum{
 						Expr coef = num(1);//coefficient
 						
 						if(current.isType("prod") || current.isType("div")) {//if its a product
-							Func partsSequence = seperateCoef(current);
+							Func partsSequence = Algorithms.seperateCoef(current);
 							coef = partsSequence.get(0);
 							current = partsSequence.get(1);
 						}
@@ -283,7 +286,7 @@ public class Sum{
 							Expr toCompCoef = num(1);
 							
 							if(toComp.isType("prod") || toComp.isType("div")) {
-								Func partsSequence = seperateCoef(toComp);
+								Func partsSequence = Algorithms.seperateCoef(toComp);
 								toCompCoef = partsSequence.get(0);
 								toComp = partsSequence.get(1);
 							}
@@ -337,7 +340,7 @@ public class Sum{
 					}
 					
 					if(totalFrac != null) {
-						totalFrac = Div.addFracs((Func)totalFrac, Cas.div(total,num(1)));
+						totalFrac = Div.addFracs((Func)totalFrac, div(total,num(1)));
 						totalFrac = totalFrac.simplify(CasInfo.normal);
 						sum.add(totalFrac);
 					}else {
@@ -571,7 +574,7 @@ public class Sum{
 		if(e.isType("sum")) {
 			return (Func)e;
 		}
-		Func out = Cas.sum();
+		Func out = sum();
 		out.add(e);
 		return out;
 	}
@@ -580,7 +583,7 @@ public class Sum{
 		if(e.isType("sum")) {
 			Func castedSum = (Func)e;
 			if(castedSum.size() == 0) {
-				return Cas.num(0);
+				return num(0);
 			}else if(castedSum.size() == 1) {
 				return castedSum.get();
 			}else {
@@ -591,7 +594,7 @@ public class Sum{
 	}
 	
 	public static Func combineSums(Func sumA,Func sumB) {//creates new sum object
-		Func outSum = Cas.sum();
+		Func outSum = sum();
 		for(int i = 0;i<sumA.size();i++) {
 			outSum.add(sumA.get(i).copy());
 		}

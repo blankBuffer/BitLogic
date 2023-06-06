@@ -2,10 +2,9 @@ package cas.base;
 
 import java.io.Serializable;
 
-import cas.Cas;
 import cas.Defs;
 
-public class CasInfo extends Cas implements Serializable{
+public class CasInfo implements Serializable{
 	
 	private static final long serialVersionUID = -423836233586167621L;
 	private boolean allowComplexNumbers = false;//simplify sqrt(-1) -> i

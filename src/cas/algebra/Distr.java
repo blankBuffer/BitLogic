@@ -1,5 +1,6 @@
 package cas.algebra;
 
+import cas.Algorithms;
 import cas.base.CasInfo;
 import cas.base.ComplexFloat;
 import cas.base.Expr;
@@ -8,6 +9,8 @@ import cas.base.Rule;
 import cas.base.StandardRules;
 import cas.primitive.Num;
 import cas.primitive.Prod;
+
+import static cas.Cas.*;
 
 public class Distr{
 	
@@ -192,8 +195,8 @@ public class Distr{
 						for(int i = 0;i<expr.size();i++){
 							if(expr.get(i).isType("power")){
 								Func castedPow = (Func)expr.get(i);
-								if( isPositiveRealNum(castedPow.getExpo()) && castedPow.getBase().isType("sum")){
-									expr.set(i, multinomial(castedPow.getBase(),(Num)castedPow.getExpo(),casInfo));
+								if( Algorithms.isPositiveRealNum(castedPow.getExpo()) && castedPow.getBase().isType("sum")){
+									expr.set(i,Algorithms.multinomial(castedPow.getBase(),(Num)castedPow.getExpo(),casInfo));
 								}
 							}
 						}
@@ -218,8 +221,8 @@ public class Distr{
 					else if(expr.isType("power")){
 						Func castedPow = (Func)expr;
 						castedPow.setBase(expand(castedPow.getBase()).simplify(casInfo));
-						if( isPositiveRealNum(castedPow.getExpo()) && castedPow.getBase().isType("sum")){
-							expr = multinomial(castedPow.getBase(),(Num)castedPow.getExpo(),casInfo);
+						if( Algorithms.isPositiveRealNum(castedPow.getExpo()) && castedPow.getBase().isType("sum")){
+							expr = Algorithms.multinomial(castedPow.getBase(),(Num)castedPow.getExpo(),casInfo);
 						}
 						
 					}else if(expr.isType("div")) {//expand only numerator of fraction

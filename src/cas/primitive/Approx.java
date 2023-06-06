@@ -6,6 +6,8 @@ import cas.base.Expr;
 import cas.base.Func;
 import cas.base.Rule;
 
+import static cas.Cas.*;
+
 public class Approx{
 	
 	public static Func.FuncLoader approxLoader = new Func.FuncLoader() {

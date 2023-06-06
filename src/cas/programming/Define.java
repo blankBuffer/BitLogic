@@ -1,11 +1,12 @@
 package cas.programming;
 
-import cas.Cas;
 import cas.base.CasInfo;
 import cas.base.Expr;
 import cas.base.Func;
 import cas.base.Rule;
 import cas.primitive.*;
+
+import static cas.Cas.*;
 
 public class Define{
 	
@@ -21,7 +22,7 @@ public class Define{
 					if(Define.getLeftSide(define) instanceof Var) {
 						casInfo.definitions.defineVar(equ(Define.getLeftSide(define),Define.getRightSide(define).simplify(casInfo)));
 					}else if(Define.getLeftSide(define) instanceof Func) {
-						Rule rule = new Rule(Cas.becomes(Define.getLeftSide(define),Define.getRightSide(define)),"function rule");
+						Rule rule = new Rule(becomes(Define.getLeftSide(define),Define.getRightSide(define)),"function rule");
 						rule.init();
 						
 						String name = Define.getLeftSide(define).typeName();

@@ -5,6 +5,7 @@
 
 
 package cas.base;
+
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
@@ -16,9 +17,11 @@ import java.util.Collections;
 import java.util.Comparator;
 import java.util.Random;
 
-import cas.Cas;
+import cas.Algorithms;
 import cas.bool.BoolState;
 import cas.primitive.*;
+
+import static cas.Cas.*;
 
 /*
  * The Expr class is a description of what an expression is
@@ -33,7 +36,7 @@ import cas.primitive.*;
  * 
  */
 
-public abstract class Expr extends Cas{
+public abstract class Expr{
 	
 	public static Random random;
 	public Flags flags = new Flags();
@@ -399,7 +402,7 @@ public abstract class Expr extends Cas{
 	}
 	
 	//counts the variables in an expression into the provided arrayList and sorts them by frequency
-	public void countVars(ArrayList<VarCount> varcounts) {
+	public void countVars(ArrayList<Algorithms.VarCount> varcounts) {
 		if(this instanceof Var && ((Var)this).isGeneric()) {
 			for(int i = 0;i<varcounts.size();i++) {//search
 				if(varcounts.get(i).v.equals(this)) {
@@ -407,7 +410,7 @@ public abstract class Expr extends Cas{
 					return;
 				}
 			}
-			varcounts.add(new VarCount((Var)copy(),1));
+			varcounts.add(new Algorithms.VarCount((Var)copy(),1));
 		}
 		else{
 			for(int i = 0;i<subExprs.size();i++){
@@ -505,19 +508,19 @@ public abstract class Expr extends Cas{
 		return Math.abs(priority);
 	}
 	
-	public void sort(ArrayList<VarCount> varcounts) {
+	public void sort(ArrayList<Algorithms.VarCount> varcounts) {
 		
 		if(!isMutable()) throw new RuntimeException("expression is not mutable!");
 		
 		if(!flags.sorted) {
 			if (varcounts == null) {
-				varcounts = new ArrayList<VarCount>();
+				varcounts = new ArrayList<Algorithms.VarCount>();
 				countVars(varcounts);
 			}
 			if(this.isType("sum") || this.isType("prod") || this.isType("set")) {
 				boolean wasSimple = flags.simple;
 				
-				final ArrayList<VarCount> varcountsConst = varcounts;
+				final ArrayList<Algorithms.VarCount> varcountsConst = varcounts;
 				subExprs.sort(new Comparator<Expr>() {//sort based on variable frequency then type priority then by complexity then by priority of child comparison
 					@Override
 					public int compare(Expr first, Expr second) {
@@ -526,7 +529,7 @@ public abstract class Expr extends Cas{
 						
 						if(first instanceof Var && second instanceof Var) {//sort for frequency
 							for(int i = 0;i<varcountsConst.size();i++) {
-								VarCount vc = varcountsConst.get(i);
+								Algorithms.VarCount vc = varcountsConst.get(i);
 								
 								boolean firstSame = first.equals(vc.v);
 								boolean secondSame = second.equals(vc.v);

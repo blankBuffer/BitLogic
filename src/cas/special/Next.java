@@ -1,11 +1,14 @@
 package cas.special;
 
+import cas.Algorithms;
 import cas.base.CasInfo;
 import cas.base.Expr;
 import cas.base.Func;
 import cas.base.FunctionsLoader;
 import cas.base.Rule;
 import cas.primitive.*;
+
+import static cas.Cas.*;
 
 /*
  * tries to predict the next elements in a sequence based on the pattern provided
@@ -215,7 +218,7 @@ public class Next{
 					Func exprsSeq = sequence();
 					
 					for(int i = 0;i<seq.size();i++) {
-						Func partsSeq = seperateCoef(seq.get(i));
+						Func partsSeq = Algorithms.seperateCoef(seq.get(i));
 						
 						coefsSeq.add(partsSeq.get(0));
 						exprsSeq.add(partsSeq.get(1));

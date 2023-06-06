@@ -2,7 +2,7 @@ package cas.calculus;
 
 import java.math.BigInteger;
 
-import cas.Cas;
+import cas.Algorithms;
 import cas.base.CasInfo;
 import cas.base.ComplexFloat;
 import cas.base.Expr;
@@ -11,6 +11,8 @@ import cas.base.Rule;
 import cas.base.StandardRules;
 import cas.bool.BoolState;
 import cas.primitive.*;
+
+import static cas.Cas.*;
 
 public class Limit{
 	public static final short RIGHT = 1,LEFT = -1,NONE = 0;
@@ -91,16 +93,16 @@ public class Limit{
 			 */
 			Rule biggerFuncCalc = new Rule("function growth comparison"){
 				boolean posLinFunc(Expr e,Var v,CasInfo casInfo){
-					return degree(e,v).equals(BigInteger.ONE) &&
-							comparison(equGreater(getLeadingCoef(e,v,casInfo),num(0))).simplify(casInfo).equals(BoolState.TRUE);
+					return Algorithms.degree(e,v).equals(BigInteger.ONE) &&
+							comparison(equGreater(Algorithms.getLeadingCoef(e,v,casInfo),num(0))).simplify(casInfo).equals(BoolState.TRUE);
 				}
 				
 				int UNKNOWN = -1,CONST = 0,POLY = 1,EXP = 2,SUPER = 3;//different classes of size
 				
 				int getSizeRank(Expr e,Var v,CasInfo casInfo){
-					e = stripNonVarPartsFromProd(e,v);
+					e = Algorithms.stripNonVarPartsFromProd(e,v);
 					if(!e.contains(v)) return CONST;
-					if(isPolynomialUnstrict(e, v)) return POLY;
+					if(Algorithms.isPolynomialUnstrict(e, v)) return POLY;
 					if(e.isType("power") && !e.get(0).contains(v) && posLinFunc(e.get(1), v,casInfo) ) return EXP;
 					if(e.isType("power") && posLinFunc(e.get(0),v,casInfo) && posLinFunc(e.get(1),v,casInfo)) return SUPER;
 					return UNKNOWN;//cannot compare too complicated
@@ -204,7 +206,7 @@ public class Limit{
 							rootExpr = ((Func)((Func)innerDiv.getNumer()).getExpo()).getDenom();
 							
 							Expr denomAtInf = limit(innerDiv.getDenom(),Limit.getApproaches(lim)).simplify(casInfo);
-							if(isRealNum(rootExpr) && ((Num)rootExpr).getRealValue().mod(BigInteger.TWO).equals(BigInteger.ZERO) && comparison(equLess(denomAtInf,num(0))).simplify(casInfo).equals(BoolState.TRUE) ) {
+							if(Algorithms.isRealNum(rootExpr) && ((Num)rootExpr).getRealValue().mod(BigInteger.TWO).equals(BigInteger.ZERO) && comparison(equLess(denomAtInf,num(0))).simplify(casInfo).equals(BoolState.TRUE) ) {
 								sign = -1;
 							}
 							
@@ -212,7 +214,7 @@ public class Limit{
 							rootExpr = ((Func)((Func)innerDiv.getDenom()).getExpo()).getDenom();
 							
 							Expr numerAtInf = limit(innerDiv.getNumer(),Limit.getApproaches(lim)).simplify(casInfo);
-							if(isRealNum(rootExpr) && ((Num)rootExpr).getRealValue().mod(BigInteger.TWO).equals(BigInteger.ZERO) && comparison(equLess(numerAtInf,num(0))).simplify(casInfo).equals(BoolState.TRUE) ) {
+							if(Algorithms.isRealNum(rootExpr) && ((Num)rootExpr).getRealValue().mod(BigInteger.TWO).equals(BigInteger.ZERO) && comparison(equLess(numerAtInf,num(0))).simplify(casInfo).equals(BoolState.TRUE) ) {
 								sign = -1;
 							}
 							
@@ -220,8 +222,8 @@ public class Limit{
 							Expr numerRoot = ((Func)((Func)innerDiv.getNumer()).getExpo()).getDenom();
 							Expr denomRoot = ((Func)((Func)innerDiv.getDenom()).getExpo()).getDenom();
 							
-							if(isRealNum(numerRoot) && isRealNum(denomRoot)) {
-								rootExpr = num(gcm( ((Num)numerRoot).getRealValue() , ((Num)denomRoot).getRealValue() ));
+							if(Algorithms.isRealNum(numerRoot) && Algorithms.isRealNum(denomRoot)) {
+								rootExpr = num(Algorithms.gcm( ((Num)numerRoot).getRealValue() , ((Num)denomRoot).getRealValue() ));
 							}else {
 								rootExpr = prod(numerRoot,denomRoot);
 							}
@@ -248,9 +250,9 @@ public class Limit{
 					if(lim.get().isType("div") && isInf(Limit.getValue(lim))) {
 						Func innerDiv = (Func)lim.get();
 						
-						BigInteger numerDegree = degree(innerDiv.getNumer(),v);
+						BigInteger numerDegree = Algorithms.degree(innerDiv.getNumer(),v);
 						if(numerDegree.signum() != 1) return lim;
-						BigInteger denomDegree = degree(innerDiv.getDenom(),v);
+						BigInteger denomDegree = Algorithms.degree(innerDiv.getDenom(),v);
 						if(denomDegree.signum() != 1) return lim;
 						
 						int comparison = numerDegree.compareTo(denomDegree);
@@ -261,7 +263,7 @@ public class Limit{
 						}else if(comparison == -1) {
 							out = inv(limit(innerDiv.getDenom(),Limit.getApproaches(lim)));
 						}else  if(comparison == 0){
-							out = div(getLeadingCoef(innerDiv.getNumer(),v,casInfo),getLeadingCoef(innerDiv.getDenom(),v,casInfo));
+							out = div(Algorithms.getLeadingCoef(innerDiv.getNumer(),v,casInfo),Algorithms.getLeadingCoef(innerDiv.getDenom(),v,casInfo));
 						}
 						return out.simplify(casInfo);
 					}
@@ -276,11 +278,11 @@ public class Limit{
 				public Expr applyRuleToExpr(Expr e,CasInfo casInfo){
 					Func lim = (Func)e;
 					
-					if(isPolynomialUnstrict(lim.get(), lim.getVar()) && isInf(Limit.getValue(lim))) {
+					if(Algorithms.isPolynomialUnstrict(lim.get(), lim.getVar()) && isInf(Limit.getValue(lim))) {
 						
 						Var v = lim.getVar();
-						Num degree = num(degree(lim.get(),v));
-						Expr coeff = getLeadingCoef(lim.get(),v,casInfo);
+						Num degree = num(Algorithms.degree(lim.get(),v));
+						Expr coeff = Algorithms.getLeadingCoef(lim.get(),v,casInfo);
 						
 						return prod(coeff,power(v,degree)).replace(equ(v,Limit.getValue(lim))).simplify(casInfo);
 						
@@ -327,13 +329,13 @@ public class Limit{
 						Func innerSum = (Func)lim.get();
 						
 						for(int i = 0;i<innerSum.size();i++) {
-							Func partsSequence = seperateByVar(innerSum.get(i),lim.getVar());
+							Func partsSequence = Algorithms.seperateByVar(innerSum.get(i),lim.getVar());
 							if(Rule.similarWithCondition(rootForm, partsSequence.get(1), condition)) {
 								Func innerPow = (Func)partsSequence.get(1);
-								Func innerPolySequence = polyExtract(innerPow.getBase(),lim.getVar(),casInfo);
+								Func innerPolySequence = Algorithms.polyExtract(innerPow.getBase(),lim.getVar(),casInfo);
 								if(innerPolySequence == null) return lim;
 								Num n = (Num) ((Func)innerPow.getExpo()).getDenom();
-								if(!isPositiveRealNum(n)) return lim;
+								if(!Algorithms.isPositiveRealNum(n)) return lim;
 								if(innerPolySequence.size()-1 == n.getRealValue().intValue()) {
 									Expr a = innerPolySequence.get(innerPolySequence.size()-1);
 									Expr b = innerPolySequence.get(innerPolySequence.size()-2);
@@ -537,22 +539,22 @@ public class Limit{
 				}
 			}
 		}else if(e.equals(Var.EPSILON)){
-			return Cas.num(0);
+			return num(0);
 		}else if(e.equals(Var.NEG_EPSILON)){
-			return Cas.num(0);
+			return num(0);
 		}
 		return e.copy();
 	}
 	
 	public static Expr applyDirection(Expr e,short direction){//modifies input
-		Expr epsilonAdder = direction == LEFT ? Var.NEG_EPSILON.copy() : (  direction == RIGHT ? Cas.epsilon() : null);
+		Expr epsilonAdder = direction == LEFT ? Var.NEG_EPSILON.copy() : (  direction == RIGHT ? epsilon() : null);
 		
 		if(epsilonAdder != null){
 			if(e.isType("sum")){
 				e.add(epsilonAdder);
 				return e;
 			}
-			return Cas.sum(epsilonAdder,e);
+			return sum(epsilonAdder,e);
 		}
 		return e;
 	}

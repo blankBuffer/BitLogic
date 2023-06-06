@@ -18,6 +18,8 @@ import cas.primitive.Sum;
 import cas.primitive.Var;
 import cas.primitive.FloatExpr;
 
+import static cas.Cas.*;
+
 public class Solve{
 	
 	public static Func.FuncLoader solveLoader = new Func.FuncLoader() {
@@ -413,9 +415,9 @@ public class Solve{
 	static void flipComparison(Func solve){
 		Expr comp = solve.getComparison();
 		if(comp.isType("less")){
-			setComparison(solve,Cas.equGreater( Cas.getLeftSideGeneric(comp) , Cas.getRightSideGeneric(comp) ));
+			setComparison(solve,Cas.equGreater( Algorithms.getLeftSideGeneric(comp) , Algorithms.getRightSideGeneric(comp) ));
 		}else if(comp.isType("greater")){
-			setComparison(solve,Cas.equLess( Cas.getLeftSideGeneric(comp) , Cas.getRightSideGeneric(comp) ));
+			setComparison(solve,Cas.equLess( Algorithms.getLeftSideGeneric(comp) , Algorithms.getRightSideGeneric(comp) ));
 		}
 	}
 	
@@ -552,15 +554,15 @@ public class Solve{
 					Func solve = (Func)e;
 					
 					Var v = solve.getVar();
-					if(getLeftSideGeneric(solve.getComparison()).isType("power")){
-						Func leftSide = (Func)getLeftSideGeneric(solve.getComparison());
+					if(Algorithms.getLeftSideGeneric(solve.getComparison()).isType("power")){
+						Func leftSide = (Func)Algorithms.getLeftSideGeneric(solve.getComparison());
 						
 						boolean baseHasVar = leftSide.getBase().contains(v), expoHasVar = leftSide.getExpo().contains(v);
 						
 						if(baseHasVar && !expoHasVar){
 							
-							setLeftSideGeneric(solve.getComparison(),leftSide.getBase());
-							setRightSideGeneric(solve.getComparison(), power(getRightSideGeneric(solve.getComparison()),inv(leftSide.getExpo())).simplify(casInfo) );
+							Algorithms.setLeftSideGeneric(solve.getComparison(),leftSide.getBase());
+							Algorithms.setRightSideGeneric(solve.getComparison(), power(Algorithms.getRightSideGeneric(solve.getComparison()),inv(leftSide.getExpo())).simplify(casInfo) );
 							
 							if( !leftSide.getExpo().containsVars() && comparison(equLess(leftSide.getExpo(),num(0))).simplify(casInfo).equals(BoolState.TRUE) ){
 								flipComparison(solve);
@@ -572,7 +574,7 @@ public class Solve{
 							if(twoParts){
 								Func negSolve = (Func)solve.copy();
 								flipComparison(negSolve);
-								setRightSideGeneric(negSolve.getComparison(),neg(getRightSideGeneric(negSolve.getComparison())).simplify(casInfo));
+								Algorithms.setRightSideGeneric(negSolve.getComparison(),neg(Algorithms.getRightSideGeneric(negSolve.getComparison())).simplify(casInfo));
 								Expr out = exprSet(solve,negSolve);
 								return out.simplify(casInfo);
 							}
@@ -609,7 +611,7 @@ public class Solve{
 					e = ((Rule)loopedSequence.get(i)).applyRuleToExpr(solve, casInfo);
 					if(!(e.isType("solve"))) break outer;
 					solve = (Func)e;
-					if(getLeftSideGeneric(solve.getComparison()).equals(solve.getVar()) && !getRightSideGeneric(solve.getComparison()).contains(solve.getVar())) {
+					if(Algorithms.getLeftSideGeneric(solve.getComparison()).equals(solve.getVar()) && !Algorithms.getRightSideGeneric(solve.getComparison()).contains(solve.getVar())) {
 						return solve.getComparison();
 					}
 				}
@@ -626,9 +628,9 @@ public class Solve{
 			Func solve = (Func)e;
 			Var v = solve.getVar();
 			
-			if(getLeftSideGeneric(solve.getComparison()).isType("sum")){
-				Func leftSideSum = (Func)getLeftSideGeneric(solve.getComparison());
-				Func rightSideSum = Sum.cast(getRightSideGeneric(solve.getComparison()));
+			if(Algorithms.getLeftSideGeneric(solve.getComparison()).isType("sum")){
+				Func leftSideSum = (Func)Algorithms.getLeftSideGeneric(solve.getComparison());
+				Func rightSideSum = Sum.cast(Algorithms.getRightSideGeneric(solve.getComparison()));
 				
 				for(int i = 0;i < leftSideSum.size();i++){
 					Expr current = leftSideSum.get(i);
@@ -640,8 +642,8 @@ public class Solve{
 					}
 				}
 				
-				setLeftSideGeneric(solve.getComparison(),Sum.unCast(leftSideSum));
-				setRightSideGeneric(solve.getComparison(),rightSideSum.simplify(casInfo));
+				Algorithms.setLeftSideGeneric(solve.getComparison(),Sum.unCast(leftSideSum));
+				Algorithms.setRightSideGeneric(solve.getComparison(),rightSideSum.simplify(casInfo));
 			}
 			
 			return solve;
@@ -654,9 +656,9 @@ public class Solve{
 			Func solve = (Func)e;
 			Var v = solve.getVar();
 			
-			if(getLeftSideGeneric(solve.getComparison()).isType("prod")){
-				Func leftSideProd = (Func)getLeftSideGeneric(solve.getComparison());
-				Func rightSideProd = Prod.cast(getRightSideGeneric(solve.getComparison()));
+			if(Algorithms.getLeftSideGeneric(solve.getComparison()).isType("prod")){
+				Func leftSideProd = (Func)Algorithms.getLeftSideGeneric(solve.getComparison());
+				Func rightSideProd = Prod.cast(Algorithms.getRightSideGeneric(solve.getComparison()));
 				
 				boolean flip = false;
 				boolean isComp = solve.getComparison().isType("less") || solve.getComparison().isType("greater");
@@ -675,8 +677,8 @@ public class Solve{
 					}
 				}
 				
-				setLeftSideGeneric(solve.getComparison(),Sum.unCast(leftSideProd));
-				setRightSideGeneric(solve.getComparison(),rightSideProd.simplify(casInfo));
+				Algorithms.setLeftSideGeneric(solve.getComparison(),Sum.unCast(leftSideProd));
+				Algorithms.setRightSideGeneric(solve.getComparison(),rightSideProd.simplify(casInfo));
 				if(flip) flipComparison(solve);
 				
 			}
@@ -689,8 +691,8 @@ public class Solve{
 		@Override
 		public Expr applyRuleToExpr(Expr e,CasInfo casInfo){
 			Func solve = (Func)e;
-			if(getLeftSideGeneric(solve.getComparison()).isType("sum")) {
-				setLeftSideGeneric(solve.getComparison(), factor(getLeftSideGeneric(solve.getComparison())).simplify(casInfo));
+			if(Algorithms.getLeftSideGeneric(solve.getComparison()).isType("sum")) {
+				Algorithms.setLeftSideGeneric(solve.getComparison(), factor(Algorithms.getLeftSideGeneric(solve.getComparison())).simplify(casInfo));
 			}
 			return solve;
 		}
@@ -699,8 +701,8 @@ public class Solve{
 		@Override
 		public Expr applyRuleToExpr(Expr e,CasInfo casInfo){
 			Func solve = (Func)e;
-			if(getLeftSideGeneric(solve.getComparison()).isType("sum")) {
-				setLeftSideGeneric(solve.getComparison(), distr(getLeftSideGeneric(solve.getComparison())).simplify(casInfo));
+			if(Algorithms.getLeftSideGeneric(solve.getComparison()).isType("sum")) {
+				Algorithms.setLeftSideGeneric(solve.getComparison(), distr(Algorithms.getLeftSideGeneric(solve.getComparison())).simplify(casInfo));
 			}
 			return solve;
 		}

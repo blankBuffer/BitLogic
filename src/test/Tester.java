@@ -2,7 +2,6 @@ package test;
 import java.io.File;
 import java.util.Scanner;
 
-import cas.*;
 import cas.base.CasInfo;
 import cas.base.Expr;
 import cas.base.FunctionsLoader;
@@ -10,6 +9,7 @@ import cas.lang.Ask;
 import cas.lang.MetaLang;
 import cas.lang.RpnInterpreter;
 
+import static cas.Cas.*;
 
 /*
  * The giant tester file
@@ -26,7 +26,7 @@ public class Tester {
 	 * In verbose mode it shows every before and after computation
 	 */
 	public static void runScript(String fileName,boolean verbose) {
-		Cas.load();
+		load();
 		
 		long oldTime = System.nanoTime();
 		Scanner sc = null;
@@ -85,71 +85,71 @@ public class Tester {
 		{//powers
 			//2^3 -> 8
 			passes = passes & 
-					testCase(Cas.power(Cas.num(2),Cas.num(3)),Cas.num(8),casInfo);
+					testCase(power(num(2),num(3)),num(8),casInfo);
 			//2^-3 -> 1/8
 			passes = passes & 
-					testCase(Cas.power(Cas.num(2),Cas.num(-3)),Cas.inv(Cas.num(8)),casInfo);
+					testCase(power(num(2),num(-3)),inv(num(8)),casInfo);
 			//(-2)^3 -> -8
 			passes = passes & 
-					testCase(Cas.power(Cas.num(-2),Cas.num(3)),Cas.num(-8),casInfo);
+					testCase(power(num(-2),num(3)),num(-8),casInfo);
 			//(-2)^4 -> 16
 			passes = passes & 
-					testCase(Cas.power(Cas.num(-2),Cas.num(4)),Cas.num(16),casInfo);
+					testCase(power(num(-2),num(4)),num(16),casInfo);
 		}
 		{//sums
 			//3+4 -> 7
 			passes = passes & 
-					testCase(Cas.sum(Cas.num(3),Cas.num(4)),Cas.num(7),casInfo);
+					testCase(sum(num(3),num(4)),num(7),casInfo);
 			//3-4 -> -1
 			passes = passes & 
-					testCase(Cas.sum(Cas.num(3),Cas.num(-4)),Cas.num(-1),casInfo);
+					testCase(sum(num(3),num(-4)),num(-1),casInfo);
 			//3+4+(7+9) -> 23
 			passes = passes & 
-					testCase(Cas.sum(Cas.num(3),Cas.num(4),Cas.sum(Cas.num(7),Cas.num(9))),Cas.num(23),casInfo);
+					testCase(sum(num(3),num(4),sum(num(7),num(9))),num(23),casInfo);
 		}
 		{//products
 			//6*3 -> 18
 			passes = passes &
-					testCase(Cas.prod(Cas.num(6),Cas.num(3)),Cas.num(18),casInfo);
+					testCase(prod(num(6),num(3)),num(18),casInfo);
 			//-6*3 -> -18
 			passes = passes &
-					testCase(Cas.prod(Cas.num(-6),Cas.num(3)),Cas.num(-18),casInfo);
+					testCase(prod(num(-6),num(3)),num(-18),casInfo);
 			//(-6)*(-3) -> 18
 			passes = passes &
-					testCase(Cas.prod(Cas.num(-6),Cas.num(-3)),Cas.num(18),casInfo);
+					testCase(prod(num(-6),num(-3)),num(18),casInfo);
 			//3*4*(7*9) -> 756
 			passes = passes & 
-					testCase(Cas.prod(Cas.num(3),Cas.num(4),Cas.prod(Cas.num(7),Cas.num(9))),Cas.num(756),casInfo);
+					testCase(prod(num(3),num(4),prod(num(7),num(9))),num(756),casInfo);
 		}
 		
 		{//ratios
 			//6/3 -> 2
 			passes = passes &
-					testCase(Cas.div(Cas.num(6), Cas.num(3)),Cas.num(2),casInfo);
+					testCase(div(num(6), num(3)),num(2),casInfo);
 			//6/-3 -> -2
 			passes = passes &
-					testCase(Cas.div(Cas.num(6), Cas.num(-3)),Cas.num(-2),casInfo);
+					testCase(div(num(6), num(-3)),num(-2),casInfo);
 			//-6/3 -> -2
 			passes = passes &
-					testCase(Cas.div(Cas.num(-6), Cas.num(3)),Cas.num(-2),casInfo);
+					testCase(div(num(-6), num(3)),num(-2),casInfo);
 			//3/6 -> 1/2
 			passes = passes &
-					testCase(Cas.div(Cas.num(3), Cas.num(6)),Cas.inv(Cas.num(2)),casInfo);
+					testCase(div(num(3), num(6)),inv(num(2)),casInfo);
 			
 			//here the denominator must hold the negative to avoid negative ones
 			
 			//3/(-6) -> 1/-2
 			passes = passes &
-					testCase(Cas.div(Cas.num(3), Cas.num(-6)),Cas.inv(Cas.num(-2)),casInfo);
+					testCase(div(num(3), num(-6)),inv(num(-2)),casInfo);
 			//(-3)/6 -> 1/-2
 			passes = passes &
-					testCase(Cas.div(Cas.num(-3), Cas.num(6)),Cas.inv(Cas.num(-2)),casInfo);
+					testCase(div(num(-3), num(6)),inv(num(-2)),casInfo);
 			//2/-3 -> -2/3     here numerator negative takes priority
 			passes = passes &
-					testCase(Cas.div(Cas.num(2), Cas.num(-3)),Cas.div(Cas.num(-2), Cas.num(3)),casInfo);
+					testCase(div(num(2), num(-3)),div(num(-2), num(3)),casInfo);
 			//-2/3 -> -2/3     verifying
 			passes = passes &
-					testCase(Cas.div(Cas.num(-2), Cas.num(3)),Cas.div(Cas.num(-2), Cas.num(3)),casInfo);
+					testCase(div(num(-2), num(3)),div(num(-2), num(3)),casInfo);
 			
 		}
 		
@@ -163,31 +163,31 @@ public class Tester {
 		{//powers
 			//x^0 -> 1
 			passes = passes &
-					testCase(Cas.power(Cas.var("x"), Cas.num(0)),Cas.num(1),casInfo);
+					testCase(power(var("x"), num(0)),num(1),casInfo);
 			//x^1 -> x
 			passes = passes &
-					testCase(Cas.power(Cas.var("x"), Cas.num(1)),Cas.var("x"),casInfo);
+					testCase(power(var("x"), num(1)),var("x"),casInfo);
 			//(2^y)^z -> 2^(y*z)
 			passes = passes &
-					testCase(Cas.power(Cas.power(Cas.num(2), Cas.var("y")), Cas.var("z")),Cas.power(Cas.num(2), Cas.prod(Cas.var("y"),Cas.var("z"))),casInfo);
+					testCase(power(power(num(2), var("y")), var("z")),power(num(2), prod(var("y"),var("z"))),casInfo);
 			//sqrt(x^2) -> abs(x)
 			passes = passes &
-					testCase(Cas.sqrt(Cas.power(Cas.var("x"), Cas.num(2))),Cas.abs(Cas.var("x")),casInfo);
+					testCase(sqrt(power(var("x"), num(2))),abs(var("x")),casInfo);
 			
 		}
 		{//sums
 			//x+x -> 2*x
 			passes = passes &
-					testCase(Cas.sum(Cas.var("x"),Cas.var("x")),Cas.prod(Cas.num(2),Cas.var("x")),casInfo);
+					testCase(sum(var("x"),var("x")),prod(num(2),var("x")),casInfo);
 			//2*x+x -> 3*x
 			passes = passes &
-					testCase(Cas.sum(Cas.prod(Cas.num(2),Cas.var("x")),Cas.var("x")),Cas.prod(Cas.num(3),Cas.var("x")),casInfo);
+					testCase(sum(prod(num(2),var("x")),var("x")),prod(num(3),var("x")),casInfo);
 			//x+2*x -> 3*x
 			passes = passes &
-					testCase(Cas.sum(Cas.var("x"),Cas.prod(Cas.num(2),Cas.var("x"))),Cas.prod(Cas.num(3),Cas.var("x")),casInfo);
+					testCase(sum(var("x"),prod(num(2),var("x"))),prod(num(3),var("x")),casInfo);
 			//3*x+2*x -> 5*x
 			passes = passes &
-					testCase(Cas.sum(Cas.prod(Cas.num(3),Cas.var("x")),Cas.prod(Cas.num(2),Cas.var("x"))),Cas.prod(Cas.num(5),Cas.var("x")),casInfo);
+					testCase(sum(prod(num(3),var("x")),prod(num(2),var("x"))),prod(num(5),var("x")),casInfo);
 			
 		}
 		
@@ -196,7 +196,7 @@ public class Tester {
 	}
 	
 	private boolean testParse(String toParse,Expr expected) {
-		boolean passed = Cas.createExpr(toParse).equals(expected);
+		boolean passed = createExpr(toParse).equals(expected);
 		if(verbose) System.out.println("parsed "+toParse+" : "+passed);
 		if(!passed) System.out.println("failed to parse '"+toParse+"' correctly");
 		return passed;
@@ -206,30 +206,30 @@ public class Tester {
 		boolean passes = true;
 		
 		{//arithmetic
-			passes = passes & testParse("16",Cas.num(16));
-			passes = passes & testParse("-71",Cas.num(-71));
-			passes = passes & testParse("x",Cas.var("x"));
-			passes = passes & testParse("2+3",Cas.sum(Cas.num(2),Cas.num(3)));
-			passes = passes & testParse("-2+3",Cas.sum(Cas.num(-2),Cas.num(3)));
-			passes = passes & testParse("2-3",Cas.sum(Cas.num(2), Cas.num(-3)));
-			passes = passes & testParse("-2-3",Cas.sum(Cas.num(-2), Cas.num(-3)));
-			passes = passes & testParse("-2+3",Cas.sum(Cas.num(-2), Cas.num(3)));
-			passes = passes & testParse("2*3",Cas.prod(Cas.num(2),Cas.num(3)));
-			passes = passes & testParse("2*-3",Cas.prod(Cas.num(2),Cas.num(-3)));
-			passes = passes & testParse("-2*3",Cas.prod(Cas.num(-2),Cas.num(3)));
-			passes = passes & testParse("-2*-3",Cas.prod(Cas.num(-2),Cas.num(-3)));
-			passes = passes & testParse("2^3",Cas.power(Cas.num(2), Cas.num(3)));
-			passes = passes & testParse("(-2)^3",Cas.power(Cas.num(-2), Cas.num(3)));
-			passes = passes & testParse("-2^3",Cas.neg(Cas.power(Cas.num(2), Cas.num(3))));
-			passes = passes & testParse("2^-3",Cas.power(Cas.num(2), Cas.num(-3)));
-			passes = passes & testParse("2/3",Cas.div(Cas.num(2), Cas.num(3)));
-			passes = passes & testParse("-2/3",Cas.div(Cas.num(-2), Cas.num(3)));
-			passes = passes & testParse("2/-3",Cas.div(Cas.num(2), Cas.num(-3)));
+			passes = passes & testParse("16",num(16));
+			passes = passes & testParse("-71",num(-71));
+			passes = passes & testParse("x",var("x"));
+			passes = passes & testParse("2+3",sum(num(2),num(3)));
+			passes = passes & testParse("-2+3",sum(num(-2),num(3)));
+			passes = passes & testParse("2-3",sum(num(2), num(-3)));
+			passes = passes & testParse("-2-3",sum(num(-2), num(-3)));
+			passes = passes & testParse("-2+3",sum(num(-2), num(3)));
+			passes = passes & testParse("2*3",prod(num(2),num(3)));
+			passes = passes & testParse("2*-3",prod(num(2),num(-3)));
+			passes = passes & testParse("-2*3",prod(num(-2),num(3)));
+			passes = passes & testParse("-2*-3",prod(num(-2),num(-3)));
+			passes = passes & testParse("2^3",power(num(2), num(3)));
+			passes = passes & testParse("(-2)^3",power(num(-2), num(3)));
+			passes = passes & testParse("-2^3",neg(power(num(2), num(3))));
+			passes = passes & testParse("2^-3",power(num(2), num(-3)));
+			passes = passes & testParse("2/3",div(num(2), num(3)));
+			passes = passes & testParse("-2/3",div(num(-2), num(3)));
+			passes = passes & testParse("2/-3",div(num(2), num(-3)));
 		}
 		
 		{//functions
-			passes = passes & testParse("sin(x)",Cas.sin(Cas.var("x")));
-			passes = passes & testParse("integrate(sin(3*x),x)",Cas.integrate(Cas.sin(Cas.prod(Cas.num(3),Cas.var("x"))), Cas.var("x")));
+			passes = passes & testParse("sin(x)",sin(var("x")));
+			passes = passes & testParse("integrate(sin(3*x),x)",integrate(sin(prod(num(3),var("x"))), var("x")));
 		}
 		
 		if(verbose) System.out.println("passed parsing test: "+passes);
@@ -249,7 +249,7 @@ public class Tester {
 		
 		passes = passes & parseTest();
 		
-		Cas.load();
+		load();
 		CasInfo casInfo = new CasInfo();
 		passes = passes & arithmeticTest(casInfo);
 		passes = passes & basicAlgebraTest(casInfo);

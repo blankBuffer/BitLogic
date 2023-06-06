@@ -10,6 +10,8 @@ import cas.primitive.Equ;
 import cas.primitive.FloatExpr;
 import cas.primitive.Var;
 
+import static cas.Cas.*;
+
 public class Diff{
 	
 	public static Func.FuncLoader diffLoader = new Func.FuncLoader() {

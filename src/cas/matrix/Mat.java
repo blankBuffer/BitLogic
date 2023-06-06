@@ -1,11 +1,11 @@
 package cas.matrix;
 
-import cas.Cas;
 import cas.base.CasInfo;
 import cas.base.Expr;
 import cas.base.Func;
 import cas.base.Rule;
 import cas.primitive.Sequence;
+import static cas.Cas.*;
 
 public class Mat{
 	
@@ -45,11 +45,11 @@ public class Mat{
 	};
 	
 	public static Func generateMat(int rows, int cols) {
-		Func mat = Cas.mat();
-		Func allRows = Cas.sequence();
+		Func mat = mat();
+		Func allRows = sequence();
 		for(int i = 0;i<rows;i++) {
-			Func row = Cas.sequence();
-			for(int j = 0;j<cols;j++) row.add(Cas.num(0));
+			Func row = sequence();
+			for(int j = 0;j<cols;j++) row.add(num(0));
 			
 			allRows.add(row);
 		}
@@ -70,7 +70,7 @@ public class Mat{
 	}
 	
 	public static Func getCol(Func mat,int col) {//returns sequence
-		Func out = Cas.sequence();
+		Func out = sequence();
 		
 		for(int i = 0;i<rows(mat);i++) {
 			out.add( getRow(mat,i).get(col) );

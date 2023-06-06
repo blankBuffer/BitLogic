@@ -10,6 +10,8 @@ import cas.base.Expr;
 import cas.base.Func;
 import cas.base.Rule;
 
+import static cas.Cas.*;
+
 
 public class Or{
 	
@@ -381,7 +383,7 @@ public class Or{
 						Expr var = varsSet.get(i);
 						
 						Expr recursiveOr = or();
-						Cas.IndexSet toBeRemoved = new Cas.IndexSet();
+						Algorithms.IndexSet toBeRemoved = new Algorithms.IndexSet();
 						for(int j = or.size()-1;j >= 0;j--){
 							Expr term = or.get(j);
 							if(term.isType("and")){

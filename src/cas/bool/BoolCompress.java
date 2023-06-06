@@ -2,12 +2,15 @@ package cas.bool;
 
 import java.util.ArrayList;
 
+import cas.Algorithms;
 import cas.base.CasInfo;
 import cas.base.ComplexFloat;
 import cas.base.Expr;
 import cas.base.Func;
 import cas.base.Rule;
 import cas.base.StandardRules;
+
+import static cas.Cas.*;
 
 public class BoolCompress{
 	
@@ -67,7 +70,7 @@ public class BoolCompress{
 					Expr inner = e.get();
 					
 					if(inner.isType("or")) {
-						ArrayList<VarCount> varcounts = new ArrayList<VarCount>();
+						ArrayList<Algorithms.VarCount> varcounts = new ArrayList<Algorithms.VarCount>();
 						inner.countVars(varcounts);
 						Func orInner = (Func)inner;
 						

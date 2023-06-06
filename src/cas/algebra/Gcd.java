@@ -1,4 +1,5 @@
 package cas.algebra;
+import cas.Algorithms;
 import cas.base.CasInfo;
 import cas.base.ComplexFloat;
 import cas.base.Expr;
@@ -8,6 +9,8 @@ import cas.primitive.Div;
 import cas.primitive.Num;
 import cas.primitive.Power;
 import cas.primitive.Prod;
+
+import static cas.Cas.*;
 
 public class Gcd{
 	
@@ -24,9 +27,9 @@ public class Gcd{
 				Expr smallGcd(Expr a,Expr b) {//gcd of just two elements
 					Func subGcdProd = prod();
 					
-					Func aSepSequence = seperateCoef(a);
+					Func aSepSequence = Algorithms.seperateCoef(a);
 					a =	aSepSequence.get(1);
-					Func bSepSequence = seperateCoef(b);
+					Func bSepSequence = Algorithms.seperateCoef(b);
 					b =	bSepSequence.get(1);
 					
 					Func fracCoefA = Div.cast(aSepSequence.get());
@@ -54,7 +57,7 @@ public class Gcd{
 								
 								if(aPow.getExpo().equals(bPow.getExpo())) {
 									subGcdProd.add(Power.unCast(aPow));
-								}else if( isPositiveRealNum(aPow.getExpo()) && isPositiveRealNum(bPow.getExpo()) ){
+								}else if( Algorithms.isPositiveRealNum(aPow.getExpo()) && Algorithms.isPositiveRealNum(bPow.getExpo()) ){
 									subGcdProd.add(Power.unCast( power(aPow.getBase(), num(((Num)aPow.getExpo()).getRealValue().min(((Num)bPow.getExpo()).getRealValue()))) ));
 								}else if(aPow.getExpo().isType("div") || bPow.getExpo().isType("div")) {
 									Func aExpo = Div.cast(aPow.getExpo());

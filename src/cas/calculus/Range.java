@@ -7,6 +7,8 @@ import cas.base.Func;
 import cas.base.Rule;
 import cas.primitive.*;
 
+import static cas.Cas.*;
+
 public class Range{
 	
 	public static Func.FuncLoader rangeLoader = new Func.FuncLoader() {

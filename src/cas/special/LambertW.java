@@ -6,6 +6,8 @@ import cas.base.Expr;
 import cas.base.Func;
 import cas.base.Rule;
 
+import static cas.Cas.*;
+
 /*
  * the Lambert W function which is the inverse of x*e^x
  */

@@ -11,7 +11,9 @@ import cas.base.Rule;
 import cas.primitive.Becomes;
 import cas.primitive.Equ;
 
-public class Defs extends Cas implements Serializable{
+import static cas.Cas.*;
+
+public class Defs implements Serializable{
 	private static final long serialVersionUID = 4654953050013809971L;
 	
 	HashMap<String,Expr> varDefs = new HashMap<String,Expr>();

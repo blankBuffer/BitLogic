@@ -1,13 +1,15 @@
 package cas.primitive;
 import java.math.BigInteger;
 
-import cas.Cas;
+import cas.Algorithms;
 import cas.base.CasInfo;
 import cas.base.ComplexFloat;
 import cas.base.Expr;
 import cas.base.Func;
 import cas.base.Rule;
 import cas.matrix.Mat;
+
+import static cas.Cas.*;
 
 public class Prod{
 	
@@ -120,10 +122,10 @@ public class Prod{
 	
 	static TermInfo getTermInfo(Expr e) {
 		if(e.isType("sin") || e.isType("tan") || e.isType("cos")) {
-			return new TermInfo(e.get(),e.typeName(),Cas.num(1));
+			return new TermInfo(e.get(),e.typeName(),num(1));
 		}else if(e.isType("power")) {
 			Func casted = (Func)e;
-			if(Cas.isRealNum(casted.getExpo())) {
+			if(Algorithms.isRealNum(casted.getExpo())) {
 				e = casted.getBase();
 				if(e.isType("sin") || e.isType("tan") || e.isType("cos")) {
 					return new TermInfo(e.get(),e.typeName(),(Num)casted.getExpo());
@@ -211,7 +213,7 @@ public class Prod{
 			if(foundProdInTrigInProd(prod) && foundNonProdInTrigInProd(prod)){
 				
 				for(int i = 0;i < prod.size();i++){
-					prod.set(i, trigExpand(prod.get(i),casInfo));
+					prod.set(i, Algorithms.trigExpand(prod.get(i),casInfo));
 				}
 			}
 			return prod;
@@ -396,12 +398,12 @@ public class Prod{
 				if(current.isType("power")) {
 					Func currentPower = (Func)current;
 					
-					if(isPositiveRealNum(currentPower.getBase()) && !(currentPower.getExpo() instanceof Num)) {
+					if(Algorithms.isPositiveRealNum(currentPower.getBase()) && !(currentPower.getExpo() instanceof Num)) {
 						Num numBase = (Num)currentPower.getBase();
 						
 						if(numBase.getRealValue().isProbablePrime(128) || numBase.getRealValue().equals(BigInteger.valueOf(-1))) continue;//skip primes
 						
-						Func primeFactorsProd = primeFactor(numBase);
+						Func primeFactorsProd = Algorithms.primeFactor(numBase);
 						
 						for(int j = 0;j<primeFactorsProd.size();j++) {
 							Func factor = (Func)primeFactorsProd.get(j);
@@ -777,13 +779,13 @@ public class Prod{
 		if(e.isType("prod")) {
 			return (Func)e;
 		}
-		Func outProd = Cas.prod();
+		Func outProd = prod();
 		outProd.add(e);
 		return outProd;
 	}
 	
 	public static Func combineProds(Func aProd,Func bProd) {//creates a new object with a combine product, returns product
-		Func outProd = Cas.prod();
+		Func outProd = prod();
 		for(int i = 0;i<aProd.size();i++) {
 			outProd.add(aProd.get(i).copy());
 		}
@@ -801,7 +803,7 @@ public class Prod{
 	public static Expr unCast(Expr e) {//if it does not need to be a prod it will return back something else
 		if(e.isType("prod")) {
 			if(e.size()==0) {
-				return Cas.num(1);
+				return num(1);
 			}else if(e.size() == 1) {
 				return e.get();
 			}else {

@@ -3,11 +3,12 @@ package cas.lang;
 import java.util.ArrayList;
 import java.util.HashMap;
 
-import cas.Cas;
 import cas.base.Expr;
 import cas.primitive.FloatExpr;
 
-public class Unit extends Cas{
+import static cas.Cas.*;
+
+public class Unit{
 	
 	public static void init() {
 		initializeIdentifierSets();

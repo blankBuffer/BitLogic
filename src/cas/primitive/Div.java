@@ -7,9 +7,11 @@ import cas.base.ComplexFloat;
 import cas.base.Expr;
 import cas.base.Func;
 import cas.base.Rule;
-import cas.Cas;
+import cas.Algorithms;
 import cas.calculus.Limit;
 import cas.matrix.Mat;
+
+import static cas.Cas.*;
 
 public class Div{
 	
@@ -145,8 +147,8 @@ public class Div{
 			
 			if(prodInTrig && nonProdInTrig){
 				
-				div.setNumer(trigExpand(div.getNumer(),casInfo));
-				div.setDenom(trigExpand(div.getDenom(),casInfo));
+				div.setNumer(Algorithms.trigExpand(div.getNumer(),casInfo));
+				div.setDenom(Algorithms.trigExpand(div.getDenom(),casInfo));
 			}
 			
 			return div;
@@ -196,7 +198,7 @@ public class Div{
 						j--;
 						continue inner;
 						
-					}else if(numerPower.getExpo().equals(denomPower.getExpo()) && isPositiveRealNum(numerPower.getBase()) && isPositiveRealNum(denomPower.getBase())){//both denoms are the same
+					}else if(numerPower.getExpo().equals(denomPower.getExpo()) && Algorithms.isPositiveRealNum(numerPower.getBase()) && Algorithms.isPositiveRealNum(denomPower.getBase())){//both denoms are the same
 						Expr resTest = div(numerPower.getBase(),denomPower.getBase()).simplify(casInfo);
 						if(resTest instanceof Num) {//10^x/2^x -> 5^x
 							numerProd.set(i, power(resTest,numerPower.getExpo()));
@@ -699,7 +701,7 @@ public class Div{
 					
 					for(int j = 0;j<denomProd.size();j++) {
 						Expr compare = denomProd.get(j);
-						if(compare.isType("power") && ((Func)compare).getExpo().equals(numerRoot.getExpo()) && (((Func)compare).getBase().containsVars() || isNegativeRealNum(((Func)compare).getBase()) ) ) {
+						if(compare.isType("power") && ((Func)compare).getExpo().equals(numerRoot.getExpo()) && (((Func)compare).getBase().containsVars() || Algorithms.isNegativeRealNum(((Func)compare).getBase()) ) ) {
 							Func denomPow = (Func)denomProd.get(j);
 							denomPow.setBase(neg(denomPow.getBase()));
 							numerRoot.setBase( numerRoot.getBase().strangeAbs(casInfo) );
@@ -716,7 +718,7 @@ public class Div{
 					
 					for(int j = 0;j<numerProd.size();j++) {
 						Expr compare = numerProd.get(j);
-						if(compare.isType("power") && ((Func)compare).getExpo().equals(denomRoot.getExpo()) && (((Func)compare).getBase().containsVars() || isNegativeRealNum(((Func)compare).getBase()) ) ) {
+						if(compare.isType("power") && ((Func)compare).getExpo().equals(denomRoot.getExpo()) && (((Func)compare).getBase().containsVars() || Algorithms.isNegativeRealNum(((Func)compare).getBase()) ) ) {
 							Func numerPow = (Func)numerProd.get(j);
 							numerPow.setBase(neg(numerPow.getBase()));
 							denomRoot.setBase( denomRoot.getBase().strangeAbs(casInfo) );
@@ -753,10 +755,10 @@ public class Div{
 					}
 				}
 				if(numerProdCopy.size() == 1 && numerProdCopy.get() instanceof Num && !((Num)numerProdCopy.get()).isComplex()) {
-					return Cas.div(numerProdCopy.get(),frac.getDenom().copy());
+					return div(numerProdCopy.get(),frac.getDenom().copy());
 				}
 			}else if(frac.getNumer().equals(Var.PI)) {
-				return Cas.div(Cas.num(1),frac.getDenom().copy());
+				return div(num(1),frac.getDenom().copy());
 			}
 		}
 		return null;
@@ -774,13 +776,13 @@ public class Div{
 		}
 		
 		if(a.getDenom().equals(b.getDenom())) {//if they have the same denominator
-			return Cas.div(Sum.combine(a.getNumer(), b.getNumer()),a.getDenom().copy());
+			return div(Sum.combine(a.getNumer(), b.getNumer()),a.getDenom().copy());
 		}
 		//a/b + c/d = (a*d+c*b)/(b*d)
 		Expr newDenom = Prod.combine(a.getDenom(), b.getDenom());
-		Expr newNumer = Cas.sum( Cas.prod(a.getNumer().copy(),b.getDenom().copy()) , Cas.prod(b.getNumer().copy(),a.getDenom().copy()) );
+		Expr newNumer = sum( prod(a.getNumer().copy(),b.getDenom().copy()) , prod(b.getNumer().copy(),a.getDenom().copy()) );
 		
-		return Cas.div(newNumer,newDenom);
+		return div(newNumer,newDenom);
 	}
 	
 	public static Func mixedFraction(Func frac) {//the fractional part of the sum will always be positive
@@ -794,13 +796,13 @@ public class Div{
 				b = b.negate();
 			}
 			
-			Num newNumer = Cas.num(a.getRealValue().mod(b.getRealValue()));
+			Num newNumer = num(a.getRealValue().mod(b.getRealValue()));
 			Num outer = a.divideNum(b.getRealValue());
 			if(a.negative()) outer = outer.addNum(Num.NEG_ONE);
 			
 			if(outer.equals(Num.ZERO)) return null;
 			
-			return Cas.sum(outer,Cas.div(newNumer,b));
+			return sum(outer,div(newNumer,b));
 			
 			
 		}
@@ -811,7 +813,7 @@ public class Div{
 		if(e.isType("div")) {
 			return (Func)e;
 		}
-		return Cas.div(e,Cas.num(1));
+		return div(e,num(1));
 	}
 	
 	public static Expr unCast(Expr e) {

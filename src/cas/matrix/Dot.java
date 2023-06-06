@@ -5,6 +5,8 @@ import cas.base.Expr;
 import cas.base.Func;
 import cas.base.Rule;
 
+import static cas.Cas.*;
+
 public class Dot{
 	
 	public static Func.FuncLoader dotLoader = new Func.FuncLoader() {

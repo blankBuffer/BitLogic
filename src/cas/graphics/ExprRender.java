@@ -22,7 +22,7 @@ import cas.matrix.*;
 /*
  * renders expressions into images in pretty way ,built using unicode characters
  */
-public class ExprRender extends Cas{//sort of a wrap of the image type but keeps track of fraction bar heights
+public class ExprRender{//sort of a wrap of the image type but keeps track of fraction bar heights
 	
 	static class ExprImg{
 		private int width,height,fractionBar;
@@ -186,7 +186,7 @@ public class ExprRender extends Cas{//sort of a wrap of the image type but keeps
 				
 				ExprImg baseImg = newExprImg();
 				
-				if(isSqrt(e)) {
+				if(Algorithms.isSqrt(e)) {
 					baseImg.makeExpr(pow.getBase());
 					
 					
@@ -249,8 +249,8 @@ public class ExprRender extends Cas{//sort of a wrap of the image type but keeps
 				graphics.fillRect(getWidth()/2-fractionSpacerWidth/2, numerImg.getHeight(), fractionSpacerWidth, fractionSpacerHeight);
 				drawImage(denomImg,getWidth()/2-denomImg.getWidth()/2,getHeight()-denomImg.getHeight(),denomImg.getWidth(),denomImg.getHeight());
 			}else if(e.isType("equ") || e.isType("greater") || e.isType("less")) {
-				Expr leftSide = getLeftSideGeneric(e);
-				Expr rightSide = getRightSideGeneric(e);
+				Expr leftSide = Algorithms.getLeftSideGeneric(e);
+				Expr rightSide = Algorithms.getRightSideGeneric(e);
 				
 				ExprImg equImg = newExprImg();
 				equImg.makeString( (e.isType("equ")) ? "=" : ((e.isType("greater")) ? ">" : "<") );
@@ -558,7 +558,7 @@ public class ExprRender extends Cas{//sort of a wrap of the image type but keeps
 			}else if(e.isType("diff")) {
 				
 				ExprImg diffImg = newExprImg();
-				diffImg.makeExpr( div(var("∂"),var("∂"+nameExchange.getOrDefault(e.getVar().toString(), e.getVar().toString()))) );
+				diffImg.makeExpr( Cas.div(Cas.var("∂"),Cas.var("∂"+nameExchange.getOrDefault(e.getVar().toString(), e.getVar().toString()))) );
 				
 				ExprImg eImg = newExprImg();
 				
