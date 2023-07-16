@@ -365,5 +365,19 @@ public class Cas {
 		out.add(e);
 		return out;
 	}
+	public static Func comparison(Expr e) {
+		Func out = (Func) FunctionsLoader.comparison.copy();
+		out.add(e);
+		return out;
+	}
 	
+	public static Func getFunction(String name,Expr... params) {
+		Func out = null;
+		try {
+			out = (Func) FunctionsLoader.getFuncByName(name, params);
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+		return out;
+	}
 }

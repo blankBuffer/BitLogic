@@ -1,13 +1,17 @@
 package test;
 import java.io.File;
+import java.util.Random;
 import java.util.Scanner;
 
 import cas.base.CasInfo;
 import cas.base.Expr;
 import cas.base.FunctionsLoader;
+import cas.base.StandardRules;
 import cas.lang.Ask;
+import cas.lang.Interpreter;
 import cas.lang.MetaLang;
-import cas.lang.RpnInterpreter;
+import cas.lang.Unit;
+import cas.primitive.Var;
 
 import static cas.Cas.*;
 
@@ -196,9 +200,24 @@ public class Tester {
 	}
 	
 	private boolean testParse(String toParse,Expr expected) {
-		boolean passed = createExpr(toParse).equals(expected);
+		boolean passed = true;
+		
+		Expr whatGotParsed = null;
+		try {
+			whatGotParsed = createExpr(toParse);
+			passed = whatGotParsed.equals(expected);
+		}catch(Exception e) {
+			passed &= false;
+		}
+		
 		if(verbose) System.out.println("parsed "+toParse+" : "+passed);
 		if(!passed) System.out.println("failed to parse '"+toParse+"' correctly");
+		
+		if(!passed && whatGotParsed != null) {
+			String treeStructure = whatGotParsed.toStringTree(0);
+			System.out.println(treeStructure);
+		}
+		
 		return passed;
 	}
 	
@@ -223,13 +242,27 @@ public class Tester {
 			passes = passes & testParse("-2^3",neg(power(num(2), num(3))));
 			passes = passes & testParse("2^-3",power(num(2), num(-3)));
 			passes = passes & testParse("2/3",div(num(2), num(3)));
-			passes = passes & testParse("-2/3",div(num(-2), num(3)));
+			passes = passes & testParse("-2/3",neg(div(num(2), num(3))));
 			passes = passes & testParse("2/-3",div(num(2), num(-3)));
+		}
+		
+		{//boolean parsing
+			passes = passes & testParse("x|y&~z",or(var("x"),and(var("y"),not(var("z")))));
+			passes = passes & testParse("comparison(2>3)?x:y", ternary(comparison(equGreater(num(2),num(3))),var("x"),var("y")) );
 		}
 		
 		{//functions
 			passes = passes & testParse("sin(x)",sin(var("x")));
 			passes = passes & testParse("integrate(sin(3*x),x)",integrate(sin(prod(num(3),var("x"))), var("x")));
+		}
+		
+		{//other
+			passes = passes & testParse("x:=5",define(var("x"),num(5)));
+			passes = passes & testParse("f(x,y):=x+y", define(getFunction("f",var("x"),var("y")),sum(var("x"),var("y"))) );
+		}
+		
+		{//parenthesis
+			passes = passes & testParse("2*(x+y)",prod(num(2),sum(var("x"),var("y"))));
 		}
 		
 		if(verbose) System.out.println("passed parsing test: "+passes);
@@ -240,22 +273,28 @@ public class Tester {
 		boolean passes = true;
 		if(verbose) System.out.println("running all tests");
 		
-		FunctionsLoader.specializedLoaders();
 		
-		MetaLang.init();
-		RpnInterpreter.test();
+		MetaLang.init();//load the meta language
+		Interpreter.init();//load bit logic standard syntax
+		FunctionsLoader.load();//load functions into memory
+		FunctionsLoader.FUNCTION_UNLOCKED = true;//on the fly function generation now permitted since everything is loaded
+		Var.init();//initialize var specific stuff
 		
-		/*
+		CasInfo casInfo = new CasInfo();
 		
 		passes = passes & parseTest();
-		
-		load();
-		CasInfo casInfo = new CasInfo();
 		passes = passes & arithmeticTest(casInfo);
 		passes = passes & basicAlgebraTest(casInfo);
 		
+		StandardRules.loadRules();//load additional shared rules
+		
+		Unit.init();//initialize unit conversion information
+		
+		Expr.random = new Random(761234897);//initialize random variable
+		
+		Ask.loadBasicQuestions();//load Q and A file
+		
 		if(verbose) System.out.println("passed all tests: "+passes);
-		*/
 		return passes;
 		
 	}
